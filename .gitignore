@@ -1,0 +1,21 @@
+# ignore ALL .log files
+*.log
+
+# ignore ALL .ini files
+*.ini
+
+# ignore ALL .lock files
+*.lock
+
+# ignore ALL files in ANY directory named vendor
+vendor/
+
+# ignore ALL files in ANY directory named tmp
+tmp/
+
+# ignore ALL files in ANY directory named media
+media/
+
+# ignore other folders
+utils/communication/Mail
+utils/communication/Messaging/AT
