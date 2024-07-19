@@ -284,10 +284,6 @@ class ViewGroup{
      }
 
      private function extract_view_rows_from_dao(IModel $dao, $context, $sdata, $del_data, $gindex, $relations){
-     	 /*Set relations if there are any before anything else*/
-     	 if(array_key_exists($dao::class, $relations)){
-     	 	$dao->set_meta_relations(relations: $relations[$dao::class], merge: true);
-     	 }
      	 $reflector          = new \ReflectionClass($dao);
          $properties         = $reflector->getProperties();
          $rows               = [];
@@ -300,18 +296,11 @@ class ViewGroup{
 			 }
 
 			 /*If this is a navigation field or a foreign key field, nest or merge the foreign data access object*/
-			 $fn_key_instance = $dao->get_property_relation($property_name);
-			 if(is_bool($fn_key_instance) && !$fn_key_instance){
-			 	continue;
-			 }
+			 $nav_attributes = array_merge($p->getAttributes(NavigationKey::class), $p->getAttributes(ForeignKey::class));
+		     if(!$nav_attributes)
+		 	     continue;
 
-			 if(!$fn_key_instance){
-			 	 $nav_attributes = array_merge($p->getAttributes(NavigationKey::class), $p->getAttributes(ForeignKey::class));
-			     if(!$nav_attributes)
-			 	     continue;
-
-			 	 $fn_key_instance = $nav_attributes[0]->newInstance();
-			 }
+			 $fn_key_instance = $nav_attributes[0]->newInstance();
 
 			 if(!$fn_key_instance->get_include())
 			 	continue;

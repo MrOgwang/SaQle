@@ -26,7 +26,7 @@ class Translator implements ITranslator{
 	 protected ?IFilter $filter = null;
 	 protected ?IDbContextTracker $context_tracker  = null;
 
-	 public function get_filter() : IFilter{
+	 public function get_filter() : ?IFilter{
 	 	return $this->filter;
 	 }
 

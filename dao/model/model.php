@@ -5,6 +5,7 @@ use SaQle\Dao\Field\FieldCollection;
 use SaQle\Dao\Field\Interfaces\IField;
 use SaQle\Dao\Field\Field;
 use SaQle\Dao\Field\Attributes\{ForeignKey, NavigationKey};
+use SaQle\Dao\Model\Attributes\{CreateModifyDateTimeFields, CreatorModifierFields, SoftDeleteFields};
 use ReflectionProperty;
 
 class Model implements IModel{
@@ -13,12 +14,18 @@ class Model implements IModel{
 	 public function __construct(private IModel $dao){
 	 	 $this->fields = new FieldCollection();
 		 $reflector = new \ReflectionClass($dao);
-         $properties = $reflector->getProperties(ReflectionProperty::IS_PUBLIC);
          $this->attributes = $this->set_attributes($reflector->getAttributes());
+         $properties = $reflector->getProperties(ReflectionProperty::IS_PUBLIC);
 		 foreach($properties as $p){
 		 	 //property types come with a ? if it was declared nullable, so remove it.
 			 $property_type       = str_replace("?", "", $p->getType()); 
-			 $property_attributes = $this->set_attributes($p->getAttributes());
+			 if($property_type === "SaQle\Dao\Field\Interfaces\IField"){
+			 	$pinstance = $p->getValue($dao);
+			 	$property_attributes = $pinstance->get_attributes();
+			 	$property_type = $pinstance->get_data_type();
+			 }else{
+			 	$property_attributes = $this->set_attributes($p->getAttributes());
+			 }
 			 $property_name = $p->getName();
 		 	 $property_default_value = $p->getDefaultValue();
 			 $field = new Field();
@@ -48,6 +55,7 @@ class Model implements IModel{
 	     }
 	     return $result;
      }
+
      public function get_primary_key_field() : Field | null{
      	 return $this->fields->get_primary_key_field();
      }
@@ -78,17 +86,30 @@ class Model implements IModel{
          }
          return sprintf('%04X%04X-%04X-%04X-%04X-%04X%04X%04X', mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(16384, 20479), mt_rand(32768, 49151), mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(0, 65535));
      }
-     public function has_creatormodifierfields(){
-     	 return array_key_exists("SaQle\Dao\Model\Attributes\CreatorModifierFields", $this->attributes);
-     }
-     public function has_createmodifydatetimefields(){
-     	 return array_key_exists("SaQle\Dao\Model\Attributes\CreateModifyDateTimeFields", $this->attributes);
-     }
-     public function has_softdeletefields(){
-     	 return array_key_exists("SaQle\Dao\Model\Attributes\SoftDeleteFields", $this->attributes);
-     }
      public function get_include_field(string $field){
      	return $this->fields->get_include_field($field);
+     }
+
+     public function has_creatormodifierfields(){
+     	 $has = array_key_exists(CreatorModifierFields::class, $this->attributes);
+     	 if(!$has){
+     	 	$has = $this->dao->get_auto_cm();
+     	 }
+     	 return $has;
+     }
+     public function has_createmodifydatetimefields(){
+     	 $has = array_key_exists(CreateModifyDateTimeFields::class, $this->attributes);
+     	 if(!$has){
+     	 	 $has = $this->dao->get_auto_cmdt();
+     	 }
+     	 return $has;
+     }
+     public function has_softdeletefields(){
+     	 $has = array_key_exists(SoftDeleteFields::class, $this->attributes);
+     	 if(!$has){
+     	 	$has = $this->dao->get_soft_delete();
+     	 }
+     	 return ;
      }
 }
 ?>
