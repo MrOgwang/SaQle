@@ -47,8 +47,17 @@ abstract class Scalar extends Simple{
              * */
 	 	    'choices' => 'options',
 
-            /**
+             /**
              * The default value to display on the control
+             * */
+	 	    'default' => 'default',
+		]);
+	}
+
+	protected function get_field_properties(){
+		return array_merge(parent::get_field_properties(), [
+			/**
+             * The default value to use if a value is not provided.
              * */
 	 	    'default' => 'default',
 		]);

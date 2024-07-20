@@ -5,10 +5,11 @@ use SaQle\Dao\Field\Relations\Interfaces\IRelation;
 
 abstract class Relation extends Simple{
 	protected IRelation $relation;
+	private bool $isnav;
 	public function __construct(...$kwargs){
 		parent::__construct(...$kwargs);
+		$this->isnav = array_key_exists('isnav', $kwargs) ? $kwargs['isnav'] : false;
 	}
-
 	protected function get_relation_properties(){
 		return [
 			/**
@@ -41,6 +42,9 @@ abstract class Relation extends Simple{
 			 * */
 			'multiple' => 'multiple'
 		];
+	}
+	public function is_navigation(){
+		return $this->isnav;
 	}
 }
 ?>

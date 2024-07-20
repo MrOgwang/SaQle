@@ -45,6 +45,7 @@ class Model implements IModel{
 	 public function get_fields(){
 	 	return $this->fields->get_fields();
 	 }
+	 
 	 public function get_field_names(){
 	 	return $this->fields->get_field_names();
 	 }

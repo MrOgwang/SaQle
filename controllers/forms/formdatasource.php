@@ -36,21 +36,26 @@ class FormDataSource{
 		$dmodel        = null;
 		if(!$fields){
 			 $reflector     = new \ReflectionClass($dao);
-	         $properties    = $reflector->getProperties();
+	         $properties    = $reflector->getProperties(\ReflectionProperty::IS_PUBLIC);
 			 foreach($properties as $p){
+			 	 $property_type   = str_replace("?", "", $p->getType()); 
 				 $property_name   = $p->getName();
-				 $property_value  = $p->getDefaultValue();
-				 $attributes      = $p->getAttributes(FieldDataSource::class);
-
-				 if($attributes){
-				 	$ctrl_attributes = $p->getAttributes(FormControl::class);
-				 	if($ctrl_attributes){
-				 		$control_instance = $ctrl_attributes[0]->newInstance();
-				 		$this->fields[$property_name] = (new FieldDataSource(name: $property_name, source: 'form', control: $control_instance->get_name(), value: $property_value, is_file: $control_instance->get_type() == 'file' ? true : false));
-				 		$control_instance = null;
-				 	}else{
-				 		 $this->fields[$property_name] = (new FieldDataSource(name: $property_name, source: 'defined', control: $property_name, value: $property_value));
-				 	}
+				 if($property_type === "SaQle\Dao\Field\Interfaces\IField"){
+				 	 $pinstance = $p->getValue($dao);
+				 	 $this->fields[$property_name] = $pinstance->get_field_data_source();
+				 }else{
+				 	 $property_value  = $p->getDefaultValue();
+				     $attributes      = $p->getAttributes(FieldDataSource::class);
+					 if($attributes){
+					 	$ctrl_attributes = $p->getAttributes(FormControl::class);
+					 	if($ctrl_attributes){
+					 		$control_instance = $ctrl_attributes[0]->newInstance();
+					 		$this->fields[$property_name] = (new FieldDataSource(name: $property_name, source: 'form', control: $control_instance->get_name(), value: $property_value, is_file: $control_instance->get_type() == 'file' ? true : false));
+					 		$control_instance = null;
+					 	}else{
+					 		 $this->fields[$property_name] = (new FieldDataSource(name: $property_name, source: 'defined', control: $property_name, value: $property_value));
+					 	}
+					 }
 				 }
 
 				 $nav_attributes  = array_merge($p->getAttributes(NavigationKey::class), $p->getAttributes(ForeignKey::class));

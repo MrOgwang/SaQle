@@ -3,7 +3,7 @@
 namespace SaQle\Dao\Field\Types\Base;
 
 use SaQle\Dao\Field\Interfaces\IValidator;
-use SaQle\Dao\Field\Types\{Pk, Text, Number, File};
+use SaQle\Dao\Field\Types\{Pk, Text, Number, File, OneToOne, OneToMany, ManyToMany};
 use SaQle\Dao\Field\Types\Base\Relation;
 use SaQle\Dao\Field\Attributes\{TextFieldValidation, NumberFieldValidation, FileFieldValidation};
 use SaQle\Controllers\Forms\FieldDataSource;
@@ -13,7 +13,9 @@ abstract class Simple{
 	protected array $attributes = [];
 	protected IValidator $validator;
 	protected IControl   $control;
+	protected array      $kwargs;
 	public function __construct(...$kwargs){
+		$this->kwargs = $kwargs;
 		$this->set_validator(...$kwargs);
 		$this->set_control(...$kwargs);
 		$this->is_data_source(...$kwargs);
@@ -125,6 +127,25 @@ abstract class Simple{
 		];
 	}
 
+	protected function get_field_properties(){
+		return [
+			/**
+			 * The name of the field. This will probably be derived automattically.
+			 * */
+	 	    'name' => 'name',
+
+	 	    /**
+			 * The data type.
+			 * */
+			'dtype' => 'type',
+
+	 	    /**
+	 	     * The value assigned to field.
+	 	     * */
+	 	    'value' => 'value',
+		];
+	}
+
 	protected function set_validator(...$kwargs){
 		 $validation_properties = $this->get_validation_properties();
 		 $newprops = $this->translate_properties($validation_properties, $kwargs);
@@ -159,9 +180,17 @@ abstract class Simple{
 
 	protected function translate_properties($propmap, $incoming){
 		$newprops = [];
-		foreach($propmap as $key => $name){
-			if(array_key_exists($key, $incoming)){
-				$newprops[$name] = $incoming[$key];
+		if(array_key_exists("reverse", $incoming)){
+			foreach($propmap as $key => $name){
+				if(array_key_exists($name, $incoming)){
+					$newprops[$name] = $incoming[$name];
+				}
+			}
+		}else{
+			foreach($propmap as $key => $name){
+				if(array_key_exists($key, $incoming)){
+					$newprops[$name] = $incoming[$key];
+				}
 			}
 		}
 		return $newprops;
@@ -202,8 +231,6 @@ abstract class Simple{
           * If all fails, return string.
           * */
 		 $this->dtype = 'string';
-
-
 	}
 
 	public function get_data_type(){
@@ -212,6 +239,29 @@ abstract class Simple{
 
 	public function get_attributes(){
 		return $this->attributes;
+	}
+
+	public function get_field_data_source(){
+
+	}
+
+	public function get_validation_configurations(){
+		 if($this instanceof Text){
+		 	 return $this->attributes[TextFieldValidation::class] ?? [];
+		 }
+
+		 if($this instanceof Number){
+		 	 return $this->attributes[NumberFieldValidation::class] ?? [];
+		 }
+
+		 if($this instanceof File){
+		 	 return $this->attributes[FileFieldValidation::class] ?? [];
+		 }
+         
+         /**
+          * Primary keys and Relation keys will be by passed for now.
+          * */
+		 return [];
 	}
 }
 ?>

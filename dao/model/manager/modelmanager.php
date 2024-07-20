@@ -53,7 +53,6 @@ class ModelManager extends IModelManager{
 	 }
 
      //filtering
-
 	 public function where(string $field_name, $value){
 	 	 $this->fmanager->simple_aggregate([$field_name, $value, "&"]);
 	 	 return $this;
@@ -129,13 +128,11 @@ class ModelManager extends IModelManager{
      }
 	 
 	 //grouping
-
 	 public function group_by(string $field_name, ?string $table_name = null, ?string $database_name = null){
 
 	 }
 
 	 //limiting
-
      /**
      * Limit the number of rows returned by a select query.
      * @param int $page - the page to fetch
@@ -147,7 +144,6 @@ class ModelManager extends IModelManager{
 	 }
 
 	 //ordering
-
 	 /**
      * Order the results returned by a select query.
      * @param array $fields - the field names to order based on
@@ -159,7 +155,6 @@ class ModelManager extends IModelManager{
 	 }
 
 	 //fetching
-
 	 /*
 	 * return all the rows found.
 	 */
@@ -188,7 +183,7 @@ class ModelManager extends IModelManager{
 	 }
 
      /*
-     * rteurn the last row if its available otherwise throw an error
+     * reteurn the last row if its available otherwise throw an error
      */
 	 public function last(bool $todao = false){
 	 	 $response = $this->get($todao);
@@ -204,10 +199,6 @@ class ModelManager extends IModelManager{
 	 public function last_or_default(bool $todao = false){
 	 	 $response = $this->get($todao);
 	 	 return $response ? $response[count($response) - 1] : null;
-	 }
-	 public function ignore_soft_delete(){
-	 	 $this->_ignore_soft_delete = true;
-	 	 return $this;
 	 }
 	 private function get(bool $todao = false){
 	 	 #acquire the table being processed
@@ -367,7 +358,6 @@ class ModelManager extends IModelManager{
 
 	 	 return $rows;
 	 }
-
 	 public function total(){
 	 	 /*setup a select command*/
 	 	 $this->crud_command = new TotalCommand(
@@ -461,17 +451,6 @@ class ModelManager extends IModelManager{
      	 }
 	 }
 
-	 private function rename_uploaded_files(&$clean_data, $file_key, $dao_instance, $rename_callback){
-	 	$original_clean_data = $clean_data;
-	 	if(is_array($clean_data[$file_key]['name'])){
-             foreach($clean_data[$file_key]['name'] as $n_index => $n){
-                 $clean_data[$file_key]['name'][$n_index] = $dao_instance->$rename_callback((Object)$original_clean_data, $clean_data[$file_key]['name'][$n_index], $n_index);
-             }
-         }else{
-             $clean_data[$file_key]['name'] = $dao_instance->$rename_callback((Object)$original_clean_data, $clean_data[$file_key]['name']);
-         }
-	 }
-
      private function save_changes(){
 	 	 /*setup an insert command*/
 	 	 $this->crud_command = new InsertCommand(
@@ -492,241 +471,18 @@ class ModelManager extends IModelManager{
 	 	 return $result;
      }
  
-     public function set(array $data, bool $partial = true){
-     	 /*get the name of the current table being manipulated*/
-     	 $table = $this->get_context_tracker()->find_table_name(0);
-     	 /*throw a model not found exception if this table is not registered*/
-     	 modelnotfoundexception($table, $this->_model_references, $this->get_context_options()->get_name());
-     	 /*get the model associated with this table*/
-     	 $model = $this->get_model($table);
-     	 /*get the validation configurations*/
-     	 $validation_configurations = $model->get_validation_configurations($partial ? array_keys($data) : null);
-
-     	 /*primary key values must not be updated, therefore remove them.*/
-     	 $primary_key               = $model->get_primary_key_field();
-     	 $removed_primary_key_name  = "";
-     	 $removed_primary_key_value = "";
-     	 if($primary_key){
-     	 	 $primary_key_name = $primary_key->get_name();
-	     	 if(array_key_exists($primary_key_name, $validation_configurations)){
-	     	 	 unset($validation_configurations[$primary_key_name]);
-	     	 }
-	     	 if(array_key_exists($primary_key_name, $data)){
-	     	 	 $removed_primary_key_name  = $primary_key_name;
-	     	 	 $removed_primary_key_value = $data[$primary_key_name];
-	     	 	 unset($data[$primary_key_name]);
-	     	 }
-     	 }
-
-     	 /**
-     	  * Navigation fields not updated, therefore remove them: 
-     	  * TO DO: make foreign key fields updatable in future
-     	 */
-     	 $navigation_keys = $model->get_navigation_field_names();
-     	 foreach($navigation_keys as $nk){
-     	 	 if(array_key_exists($nk, $validation_configurations)){
-	     	 	 unset($validation_configurations[$nk]);
-	     	 }
-	     	 if(array_key_exists($nk, $data)){
-	     	 	 unset($data[$nk]);
-	     	 }
-     	 }
-
-     	 /**
-     	  * Any file field whose value is just a file name should be excepmted from file validation
-     	  * */
-     	 $only_file_names = [];
-     	 foreach($validation_configurations as $validation_field_name => $validation_field_config ){
-     	 	 if($validation_field_config['type'] === 'file'){
-     	 	 	 if(array_key_exists($validation_field_name, $data) && !is_array($data[$validation_field_name])){
-     	 	 	 	 $only_file_names[$validation_field_name] = $data[$validation_field_name];
-		     	 	 unset($validation_configurations[$validation_field_name]);
-		     	 }
-     	 	 }
-     	 }
-     	
-     	 /**
-     	  * Clean the incoming data
-     	  * */
-     	 $clean_data = array_merge($this->clean_up_data($data, $validation_configurations), $only_file_names);
-
-     	 /**
-     	  * The deleted status should not be updated from here
-     	  * */
-     	 unset($clean_data["deleted"]);
-
-     	 /*if theres a primary key of type GUID, inject it back into data*/
-     	 if($removed_primary_key_name && $removed_primary_key_value){
-     	 	$clean_data[$removed_primary_key_name] = $removed_primary_key_value;
-     	 }
-
-     	 /**
-     	  * Add modifier and modified datetimestamps
-     	  * */
-     	 if($model->has_creatormodifierfields()){
-     	 	 $user = $this->request->session->get('user', false);
-     	 	 $clean_data["modified_by"] = $user ? $user->user_id : 0;
-     	 }
-     	 if($model->has_createmodifydatetimefields()){
-     	 	 $clean_data["last_modified"] = time();
-     	 }
-
-     	 /**
-     	  * if files have been uploaded, extract files information.
-     	  * */
-     	 $file_configurations = $model->get_file_configurations();
-     	 if(count($file_configurations) > 0){
-     	 	$dao_instance = $model->get_dao();
-     	 	foreach($file_configurations as $file_key => $file_config){
-	     	 	if(isset($clean_data[$file_key]) && is_array($clean_data[$file_key]) ){
-	     	 		
-	     	 		//rename files if a rename callback was provided.
-	     	 		if(array_key_exists("rename_callback", $file_configurations[$file_key])){
-	     	 			$rename_callback = $file_configurations[$file_key]['rename_callback'];
-	     	 			if(!$rename_callback || !method_exists($dao_instance, $rename_callback)){
-	     	 				throw new \Exception('The rename callback method provided does not exist!');
-	     	 			}
-	     	 			$this->rename_uploaded_files($clean_data, $file_key, $dao_instance, $rename_callback);
-	     	 		}
-	     	 		//get the file path
-	     	 		$folder_path = $file_configurations[$file_key]['path'] ?? "";
-			        if($folder_path && method_exists($dao_instance, $folder_path)){
-		 				 $folder_path = $dao_instance->$folder_path((Object)$clean_data);
-		 			}
-		 			$folder_path = $file_configurations[$file_key]['path'] = $folder_path;
-	     	 		$this->_file_data[$file_key] = (Object)['file' => $clean_data[$file_key], 'config' => $file_configurations[$file_key]];
-
-	     	 		//reset the file value in clean data to file names only.
-	     	 		$clean_data[$file_key] = is_array($clean_data[$file_key]['name']) ? implode("~", $clean_data[$file_key]['name']) : $clean_data[$file_key]['name'];
-	     	 	}
-	     	 }
-     	 }
-     	 $this->_update_data_container["data"] = array_merge($this->_update_data_container["data"], $clean_data);
-     	 return $this;
-     }
-
-     public function set_multiple(array $data, bool $partial = true){
-     	 foreach($data as $dk => $dv){
-     		$this->set($dv, $partial);
-     	 }
-     	 return $this;
-     }
-
      public function add(array $data, bool $allow_duplicates = true, array $unique_fields = []){
      	 /*get the name of the current table being manipulated*/
      	 $table = $this->get_context_tracker()->find_table_name(0);
-     	 /*throw a model not found exception if this table is not registered*/
-     	 modelnotfoundexception($table, $this->_model_references, $this->get_context_options()->get_name());
      	 /*get the model associated with this table*/
      	 $model = $this->get_model($table);
-     	 /*strip the data array of keys not in the model field names*/
-     	 $tmp_data = [];
-     	 $model_field_names = $model->get_field_names();
-     	 foreach(array_keys($data) as $_dk){
-     	 	if(in_array($_dk, $model_field_names)){
-     	 		$tmp_data[$_dk] = $data[$_dk];
-     	 	}
-     	 }
-     	 $data     = $tmp_data;
-     	 $tmp_data = null;
-
-     	 /*get the validation configurations*/
-     	 $validation_configurations = $model->get_validation_configurations(array_keys($data));
-
-     	 /*primary key values are auto generated, therefore will be excempted from validation*/
-     	 $primary_key = $model->get_primary_key_field();
-     	 if($primary_key){
-     	 	 $primary_key_name = $primary_key->get_name();
-	     	 if(array_key_exists($primary_key_name, $validation_configurations)){
-	     	 	 unset($validation_configurations[$primary_key_name]);
-	     	 }
-	     	 if(array_key_exists($primary_key_name, $data)){
-	     	 	 unset($data[$primary_key_name]);
-	     	 }
-	     	 $this->_insert_data_container["prmkeyname"] = $primary_key_name;
-     	 }
-
-     	 /*navigation fields will be excempted from validation also*/
-     	 $navigation_keys = $model->get_navigation_field_names();
-     	 foreach($navigation_keys as $nk){
-     	 	 if(array_key_exists($nk, $validation_configurations)){
-	     	 	 unset($validation_configurations[$nk]);
-	     	 }
-	     	 if(array_key_exists($nk, $data)){
-	     	 	 $this->_insert_data_container["navigationkeys"][$nk] = $data[$nk];
-	     	 	 unset($data[$nk]);
-	     	 }
-     	 }
-
-     	 /*any file fields whose value is just a file name should be excpemted from file validation*/
-     	 $only_file_names = [];
-     	 foreach($validation_configurations as $validation_field_name => $validation_field_config ){
-     	 	 if($validation_field_config['type'] === 'file'){
-     	 	 	 if(array_key_exists($validation_field_name, $data) && !is_array($data[$validation_field_name])){
-     	 	 	 	 $only_file_names[$validation_field_name] = $data[$validation_field_name];
-		     	 	 unset($validation_configurations[$validation_field_name]);
-		     	 }
-     	 	 }
-     	 }
-     	
-     	 /*clean up the incoming data*/
-     	 $clean_data = array_merge($this->clean_up_data($data, $validation_configurations), $only_file_names);
-
-     	 /*if theres a primary key of type GUID, generate a guid and inject it back into data*/
-     	 if($primary_key){
-     	 	$type = $primary_key->get_primary_key_type();
-     	 	if($type === 'GUID'){
-     	 		$clean_data[$primary_key_name] = $model->guid();
-     	 		$this->_insert_data_container["prmkeyvalues"][] = $clean_data[$primary_key_name];
-     	 	}
-     	 	$this->_insert_data_container["prmkeytype"] = $type;
-     	 }
-
-     	 /*add CreatorModifierFields, CreateModifyDateTimeFields and SoftDeleteFields if these attributes exist on data access object*/
-     	 if($model->has_creatormodifierfields()){
-     	 	 $user = $this->request->session->get('user', false);
-     	 	 $clean_data["added_by"]    = $user ? $user->user_id : 0;
-     	 	 $clean_data["modified_by"] = $user ? $user->user_id : 0;
-     	 }
-     	 if($model->has_createmodifydatetimefields()){
-     	 	 $clean_data["date_added"]    = time();
-     	 	 $clean_data["last_modified"] = time();
-     	 }
-     	 if($model->has_softdeletefields()){
-     	 	 $clean_data["deleted"] = 0;
-     	 }
-
-     	 /**
-     	  * if files have been uploaded, extract files information.
-     	  * */
-     	 $file_configurations = $model->get_file_configurations();
-     	 if(count($file_configurations) > 0){
-     	 	$dao_instance = $model->get_dao();
-     	 	foreach($file_configurations as $file_key => $file_config){
-	     	 	if(isset($clean_data[$file_key]) && is_array($clean_data[$file_key]) ){
-	     	 		
-	     	 		//rename files if a rename callback was provided.
-	     	 		if(array_key_exists("rename_callback", $file_configurations[$file_key])){
-	     	 			$rename_callback = $file_configurations[$file_key]['rename_callback'];
-	     	 			if(!$rename_callback || !method_exists($dao_instance, $rename_callback)){
-	     	 				throw new \Exception('The rename callback method provided does not exist!');
-	     	 			}
-	     	 			$this->rename_uploaded_files($clean_data, $file_key, $dao_instance, $rename_callback);
-	     	 		}
-	     	 		//get the file path
-	     	 		$folder_path = $file_configurations[$file_key]['path'] ?? "";
-			        if($folder_path && method_exists($dao_instance, $folder_path)){
-		 				 $folder_path = $dao_instance->$folder_path((Object)$clean_data);
-		 			}
-		 			$folder_path = $file_configurations[$file_key]['path'] = $folder_path;
-	     	 		$this->_file_data[$file_key] = (Object)['file' => $clean_data[$file_key], 'config' => $file_configurations[$file_key]];
-
-	     	 		//reset the file value in clean data to file names only.
-	     	 		$clean_data[$file_key] = is_array($clean_data[$file_key]['name']) ? implode("~", $clean_data[$file_key]['name']) : $clean_data[$file_key]['name'];
-	     	 	}
-	     	 }
-     	 }
-	     	 
+         /*get the dao associatedwith model*/
+     	 $dao = $model->get_dao();
+     	 [$clean_data, $file_data] = $dao->prepare_insert_data($data);
+     	 $this->_insert_data_container["prmkeyname"] = $dao->get_pk_name();
+     	 $this->_insert_data_container["prmkeyvalues"][] = $clean_data[$dao->get_pk_name()];
+     	 $this->_insert_data_container["prmkeytype"] = $dao->get_pk_type();
+     	 $this->_file_data = array_merge($this->_file_data, $file_data);
      	 $this->_insert_data_container["data"][] = $clean_data;
      	 return $this;
      }
@@ -774,7 +530,32 @@ class ModelManager extends IModelManager{
      	 return $permanently ? $this->hard_delete() : $this->soft_delete();
      }
 
+     public function ignore_soft_delete(){
+	 	 $this->_ignore_soft_delete = true;
+	 	 return $this;
+	 }
+
      //updates
+     public function set(array $data){
+     	 /*get the name of the current table being manipulated*/
+     	 $table = $this->get_context_tracker()->find_table_name(0);
+     	 /*get the model associated with this table*/
+     	 $model = $this->get_model($table);
+         /*get the dao associated with model*/
+     	 $dao = $model->get_dao();
+     	 [$clean_data, $file_data] = $dao->prepare_update_data($data);
+     	 $this->_update_data_container["data"] = array_merge($this->_update_data_container["data"], $clean_data);
+     	 $this->_file_data = array_merge($this->_file_data, $file_data);
+     	 return $this;
+     }
+
+     public function set_multiple(array $data){
+     	 foreach($data as $dk => $dv){
+     		$this->set($dv, $partial);
+     	 }
+     	 return $this;
+     }
+
      public function update(bool $partial = false){
      	 /*setup an update command*/
 	 	 $this->crud_command = new UpdateCommand(
@@ -811,6 +592,7 @@ class ModelManager extends IModelManager{
      	 	 $is_primary       = $f->is_primary_key();
      	 	 $length           = $validation['length'] ?? ($is_numeric ? 11 : 255);
      	 	 $is_required      = $validation['is_required'] ?? false;
+
      	 	 $val              = $f->get_value();
 
      	 	 $field_line       = [$f->get_name()];

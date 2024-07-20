@@ -68,5 +68,9 @@ abstract class Binary extends Simple{
 		 $newprops = $this->translate_properties($custom_properties, $kwargs);
 		 $this->attributes[FileField::class] = $newprops;
 	}
+
+	public function get_field_attributes(){
+		return $this->attributes[FileField::class] ?? [];
+	}
 }
 ?>
