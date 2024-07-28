@@ -7,9 +7,9 @@ class FieldValidationException extends \Exception{
          parent::__construct();
      }
      public function __toString(){
-		 $message = "One or more fields failed field validation as follows: \n";
+		 $message = "Model: ".$this->details['model'].", Operation: ".$this->details['operation'].", Error: One or more fields failed field validation as follows: \n";
 		 $field_index = 0;
-		 foreach($this->details as $field => $error){
+		 foreach($this->details['dirty'] as $field => $error){
 			 $field_index += 1;
 			 $message .= "\n".$field." : ".$error."\n";
 		 }

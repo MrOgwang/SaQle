@@ -22,16 +22,20 @@ declare(strict_types = 1);
 namespace SaQle\Dao\Field\Relations;
 
 use SaQle\Dao\Field\Relations\Base\BaseRelation;
+use SaQle\Dao\Field\Relations\Interfaces\IRelation;
 
-class One2One extends BaseRelation{
+class One2One extends BaseRelation implements IRelation{
 	 public function __construct(
+	 	 string   $pdao,
 	 	 string   $fdao,
 	 	 ?string  $field = null, 
 	 	 ?string  $pk       = null,
 	 	 ?string  $fk       = null,
-	 	 bool     $isnav    = false
+	 	 bool     $isnav    = false,
+	 	 bool     $multiple = false,
+	 	 bool     $eager    = false
 	 ){
-	 	parent::__construct($fdao, $field, $pk, $fk, $isnav, false);
+	 	parent::__construct($pdao, $fdao, $field, $pk, $fk, $isnav, false, $eager);
 	 } 
 }
 ?>

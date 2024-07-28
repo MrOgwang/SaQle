@@ -19,7 +19,13 @@ abstract class AuthService implements IAuthService, Observable{
      abstract public function authenticate();
 	 public function record_signin(string | int $user_id){
 		 $count = $this->context->logins->where('user_id__eq', $user_id)->total();
-		 $this->context->logins->add(['login_count' => $count + 1, 'login_datetime' => time(), 'user_id' => $user_id])->save();
+		 $this->context->logins->add([
+		 	'login_count' => $count + 1, 
+		 	'login_datetime' => time(), 
+		 	'user_id' => $user_id,
+		 	'logout_datetime' => 1,
+		 	'login_span' => 1
+		 ])->save();
 	 }
 	 public function record_signout(string | int $user_id){
 		 $last_login = $this->context->logins->where('user_id__eq', $user_id)->order(["login_id"], "DESC")->limit(1, 1)->first_or_default();

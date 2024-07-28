@@ -60,8 +60,8 @@ class FieldValidator{
 	}
 
 	private static function get_general_type(string $type){
-		 return match($type){
-		 	 "tinyint", "smallint", "int", "float", "mediumint", "bigint", "float", "double", "number" => "number",
+		 return match(strtolower($type)){
+		 	 "tinyint", "smallint", "int", "mediumint", "bigint", "float", "double", "number" => "number",
 		 	 "char", "varchar", "tinytext", "text", "mediumtext", "longtext", "string", "email", "phone", "url", "date", "time", "datetime" => "text",
 		 	 "file" => "upload"
 		 };

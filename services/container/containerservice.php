@@ -38,6 +38,17 @@ class ContainerService{
     }
 
     /**
+     * Create ModelManager object from context class
+     * */
+    public function createContextModelManager($context_class){
+         $container_service = $this->container->get(ContainerService::class);
+         $dbcontextoptions  = $container_service->createDbContextOptions(...DB_CONTEXT_CLASSES[$context_class]);
+         $connection        = $container_service->createConnection(...['context' => $dbcontextoptions]);
+         $modelmanager      = $container_service->createModelManager(...['connection' => $connection]);
+         return $modelmanager;
+    }
+
+    /**
      * Create DbContextObject
      * */
     public function createDbContext($context_class){
@@ -46,6 +57,27 @@ class ContainerService{
          $connection        = $container_service->createConnection(...['context' => $dbcontextoptions]);
          $modelmanager      = $container_service->createModelManager(...['connection' => $connection]);
          return new $context_class($modelmanager);
+    }
+
+    /**
+     * Create MakeMigrations object
+     * */
+    public function createMakeMigrations(...$options){
+
+    }
+
+    /**
+     * Create MigrationsManager
+     * */
+    public function createMigrationsManager(...$options){
+
+    }
+
+    /**
+     * Create ContextManager
+     * */
+    public function createContextManager(...$options){
+
     }
 }
 

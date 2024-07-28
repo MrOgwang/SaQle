@@ -1,7 +1,7 @@
 <?php
 namespace SaQle\Auth\Models;
 
-use SaQle\Dao\Field\Attributes\{PrimaryKey, TextFieldValidation, NumberFieldValidation, FileFieldValidation, ForeignKey, FileField};
+use SaQle\Dao\Field\Attributes\{PrimaryKey, TextFieldValidation, NumberFieldValidation, FileFieldValidation, ForeignKey, FileConfig};
 use SaQle\Dao\Model\Dao;
 use SaQle\Dao\Model\Attributes\{CreatorModifierFields, CreateModifyDateTimeFields, SoftDeleteFields};
 use SaQle\DirManager\DirManager;

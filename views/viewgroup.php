@@ -5,9 +5,8 @@ use SaQle\Dao\Field\Controls\FormControl;
 use SaQle\Dao\Field\Attributes\{PrimaryKey, ForeignKey, NavigationKey};
 use SaQle\Dao\DbContext\DbContext;
 use SaQle\Views\ViewGroupSettings;
-use SaQle\Dao\Model\Model;
 use SaQle\Commons\StringUtils;
-use SaQle\Dao\Model\IModel;
+use SaQle\Dao\Model\Interfaces\IModel;
 use Closure;
 use stdClass;
 
@@ -61,7 +60,7 @@ class ViewGroup{
 	 * @param int             $gindex: the view group index in the collection
 	 */
 	 public function __construct(string $title, string | IModel $dao, DbContext $context, ?stdClass $sdata = null, int $gindex = -1, array $relations = []){
-	 	 $this->primary_field   = is_string($dao) ? (new Model(new $dao()))->get_primary_key_name() : (new Model($dao))->get_primary_key_name();
+	 	 $this->primary_field   = is_string($dao) ? (new $dao())->get_pk_name() : $dao->get_pk_name();
 		 $this->title           = $title;
 		 $this->table           = $context->get_dao_table_name(is_string($dao) ? $dao : $dao::class);
 		 $this->rows            = $this->extract_view_rows_from_dao(is_string($dao) ? new $dao() : $dao, $context, $sdata, $sdata, $gindex, $relations);

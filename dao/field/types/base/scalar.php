@@ -18,11 +18,6 @@ abstract class Scalar extends Simple{
 	protected function get_control_properties(){
 		return array_merge(parent::get_control_properties(), [
 			/**
-			 * An array of choices from which the value can be picked
-			 * */
-			'choices' => 'choices',
-
-			/**
 			 * Given a set of choices, whether to allow multiple values or just one
 			 * */
 			'multiple' => 'multiple',
@@ -54,8 +49,8 @@ abstract class Scalar extends Simple{
 		]);
 	}
 
-	protected function get_field_properties(){
-		return array_merge(parent::get_field_properties(), [
+	protected function get_db_properties(){
+		return array_merge(parent::get_db_properties(), [
 			/**
              * The default value to use if a value is not provided.
              * */

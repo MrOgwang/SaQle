@@ -16,7 +16,6 @@
       use SaQle\Dao\Filter\Parser\Parser;
       use SaQle\Dao\Order\Manager\OrderManager;
       use SaQle\Dao\Connection\Connection;
-      use SaQle\Dao\Model\ModelCollection;
       use SaQle\Dao\Formatter\DataFormatter;
       use SaQle\Dao\Join\Manager\JoinManager;
       use SaQle\Dao\Limit\Manager\LimitManager;
@@ -25,6 +24,8 @@
       use SaQle\Security\Security;
       use SaQle\Http\Request\Request;
       use SaQle\Services\Container\ContainerService;
+      use SaQle\Migration\Managers\{ContextManager, Manager};
+      use SaQle\Migration\Commands\{MakeMigrations, Migrate};
 
 	 return [
              Request::class => function(ContainerInterface $c){
@@ -70,9 +71,6 @@
 	       DataFormatter::class => function(ContainerInterface $c){
 	     	       return new DataFormatter();
 	       },
-	       ModelCollection::class => function(ContainerInterface $c){
-	     	       return new ModelCollection();
-	       },
 	       JoinManager::class => function(ContainerInterface $c){
 	     	       return new JoinManager();
 	       },
@@ -92,13 +90,20 @@
 		     	 	 $c->get(OrderManager::class),
 		     	 	 $c->get(SelectManager::class),
 		     	 	 $c->get(DataFormatter::class ),
-		     	 	 $c->get(ModelCollection::class),
 		     	 	 $c->get(Connection::class),
-		     	 	 $c->get(Security::class)
 	     	       );
 	       },
 	       AccountsDbContext::class => function (ContainerInterface $c){
 	     	       return new AccountsDbContext($c->get(ModelManager::class));
+	       },
+	       ContextManager::class => function (ContainerInterface $c){
+	     	       return new ContextManager();
+	       },
+	       Manager::class => function (ContainerInterface $c){
+	     	       return new Manager($c->get(ContextManager::class));
+	       },
+	       MakeMigrations::class => function (ContainerInterface $c){
+	     	       return new MakeMigrations($c->get(Manager::class));
 	       },
 	       ContainerService::class => DI\create(ContainerService::class)->constructor(DI\get(ContainerInterface::class)),
 	 ];

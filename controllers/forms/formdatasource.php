@@ -32,7 +32,7 @@ class FormDataSource{
 		$this->sdata   = $sdata;
 
 		$dmodel        = new Model(new $dao());
-		$this->primary = $dmodel->get_primary_key_name();
+		$this->primary = (new $dao())->get_pk_name();
 		$dmodel        = null;
 		if(!$fields){
 			 $reflector     = new \ReflectionClass($dao);
@@ -42,7 +42,7 @@ class FormDataSource{
 				 $property_name   = $p->getName();
 				 if($property_type === "SaQle\Dao\Field\Interfaces\IField"){
 				 	 $pinstance = $p->getValue($dao);
-				 	 $this->fields[$property_name] = $pinstance->get_field_data_source();
+				 	 $this->fields[$property_name] = $pinstance->get_source_attributes();
 				 }else{
 				 	 $property_value  = $p->getDefaultValue();
 				     $attributes      = $p->getAttributes(FieldDataSource::class);
@@ -72,7 +72,7 @@ class FormDataSource{
 			 	 $fn_sproperty = $fn_key_instance->get_field();
 
 			 	 $model        = new Model(new $fdao());
-			 	 $primary_key  = $model->get_primary_key_name();
+			 	 $primary_key  = (new $fdao())->get_pk_name();
 			 	 $model        = null;
 			 	 
 			 	 $fds_settings = $fds_attributes[0]->newInstance();

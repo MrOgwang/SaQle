@@ -23,10 +23,10 @@ class Login extends Dao{
 	 #[NumberFieldValidation(is_required: true, is_absolute: true, allow_null: false, allow_zero: false)]
 	 public int $login_datetime;
 	 
-	 #[NumberFieldValidation(is_required: true, is_absolute: true, allow_null: true, allow_zero: false)]
+	 #[NumberFieldValidation(is_required: false, is_absolute: true, allow_null: true, allow_zero: false)]
 	 public int $logout_datetime;
 	 
-	 #[NumberFieldValidation(is_required: true, is_absolute: true, allow_null: true, allow_zero: false)]
+	 #[NumberFieldValidation(is_required: false, is_absolute: true, allow_null: true, allow_zero: false)]
 	 public int $login_span;
 	 
 	 #[TextFieldValidation(is_required: false, is_strict: false, allow_null: true, allow_empty: true)]

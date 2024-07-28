@@ -444,11 +444,45 @@ trait FileUtils{
 			 fclose($output);  
 	     }  
 	 }
-	 
-	 
-	 
-	 
-	 
-	 
+
+	 /**
+	 * Return an array of file paths representing the contents of the target
+	 * directory, ordered by date instead of by filename.
+	 * 
+	 * @param string $path The target directory path
+	 * @param bool $reverse Whether to sort in reverse date order (oldest first)
+	 * @param array $exts If set, only find files with these extensions
+	 * @return array A sorted array of absolute filesystem paths
+	 */
+	 function scandir_chrono(string $path, bool $reverse = false, ?array $exts = []): array {
+
+	    /* Fail if the directory can't be opened */
+	    if (!(is_dir($path) && $dir = opendir($path))) {
+	        return [];
+	    }
+
+	    /* An array to hold the results */
+	    $files = [];
+
+	    while (($file = readdir($dir)) !== false) {
+	        /* Skip anything that's not a regular file */
+	        if (filetype($path . '/' . $file) !== 'file') {
+	            continue;
+	        }
+	        /* If extensions were provided and this file doesn't match, skip it */
+	        if (!empty($exts) && !in_array(pathinfo($path . '/' . $file,
+	                                PATHINFO_EXTENSION), $exts)) {
+	            continue;
+	        }
+	        /* Add this file to the array with its modification time as the key */
+	        $files[filemtime($path . '/' . $file)] = $file;
+	    }
+	    closedir($dir);
+
+	    /* Sort and return the array */
+	    $fn = $reverse ? 'krsort' : 'ksort';
+	    $fn($files);
+	    return $files;
+	 }
 }
 ?>

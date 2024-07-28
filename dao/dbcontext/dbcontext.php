@@ -8,6 +8,7 @@ use function SaQle\Exceptions\{modelnotfoundexception};
 use SaQle\Dao\Model\Model;
 use SaQle\Dao\Model\Manager\ModelManager;
 use SaQle\Services\Container\Cf;
+use SaQle\Services\Container\ContainerService;
 
 abstract class DbContext{
 	private bool $is_dirty = false;
@@ -16,7 +17,7 @@ abstract class DbContext{
 	}
 	private function init(){
 		 if(is_null($this->_model_manager) || $this->is_dirty){
-	         $this->_model_manager = Cf::create(ModelManager::class);
+		 	 $this->_model_manager = Cf::create(ContainerService::class)->createContextModelManager($this::class);
 		 }
 		 $this->_model_manager->set_model_references($this->get_models());
 		 /**
@@ -25,37 +26,21 @@ abstract class DbContext{
 		 $this->_model_manager->set_dbcontext_class($this::class);
 	}
 	static public abstract function get_models();
+	public final function get_defined_models(){
+
+	}
 	public function __get($name){
 		 return $this->get($name);
     }
     public function get($name){
     	 $this->is_dirty = true;
 		 $this->init();
-		 $model_references = $this->_model_manager->get_model_references();
-		 modelnotfoundexception($name, $model_references, $this::class);
-		 $dao_class    = $model_references[$name];
-		 $dao_instance = new $dao_class();
-		 $dao_instance->set_request($this->_model_manager->get_request());
-		 $model        = new Model($dao_instance);
-		 /*register model with the model manager*/
-		 $this->_model_manager->add_model($name, $model);
-		 /*register model info with the context tracker*/
-		 $this->_model_manager->register_to_context_tracker(
-		 	 table_name:    $name,
-		 	 table_aliase:  "",
-		 	 database_name: $this->_model_manager->get_context_options()->get_name(),
-		 	 field_list:    $model->get_field_names()
-		 );
+		 $this->_model_manager->register_joining_model($name);
 		 return $this->_model_manager;
     }
-    public function get_dao_table_name(string $dao_class_name) : string | null{
-    	 $models = $this->get_models();
-    	 foreach($models as $tn => $dn){
-    	 	if($dn === $dao_class_name){
-    	 		return $tn;
-    	 	}
-    	 }
-    	 return null;
+    public static function get_dao_table_name(string $dao_class_name) : string | null{
+    	 $contextclass = get_called_class();
+    	 return array_flip($contextclass::get_models())[$dao_class_name] ?? null;
     }
 }
 ?>

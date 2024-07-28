@@ -11,7 +11,7 @@
  use SaQle\Dao\Order\Manager\IOrderManager;
  use SaQle\Dao\Select\Manager\ISelectManager;
  use SaQle\Dao\Formatter\IDataFormatter;
- use SaQle\Dao\Model\IModel;
+ use SaQle\Dao\Model\Interfaces\IModel;
  use SaQle\Dao\Connection\Interfaces\IConnection;
  use SaQle\Dao\DbContext\Trackers\DbContextTracker;
  use SaQle\Dao\DbContext\Attributes\IDbContextOptions;
@@ -19,7 +19,6 @@
  use SaQle\Security\Models\ModelValidator;
  use SaQle\Security\Security;
  use SaQle\Dao\Field\Exceptions\FieldValidationException;
- use SaQle\Dao\Model\ModelCollection;
  use SaQle\Dao\Model\Model;
      
  abstract class IModelManager{
@@ -32,6 +31,7 @@
  	 protected array  $_update_data_container;
  	 protected array  $_file_data;
  	 protected string $current_dbcontext_class;
+ 	 protected array  $_models = [];
 
  	 /**
  	  * Whether to include author information in result objects
@@ -59,16 +59,13 @@
 	 public function __construct(
 	 	 protected Request           $request, //can be made a singleton
 	     protected IFilterManager    $fmanager, 
-
 		 private   DbContextTracker  $_context_tracker,
 		 private   JoinManager       $_join_manager,
 		 private   ILimitManager     $_limit_manager,
 		 private   IOrderManager     $_order_manager,
 		 private   ISelectManager    $_select_manager,
 		 private   IDataFormatter    $_data_formatter, //can be removed entirely
-		 private   IModel            $_models,
 		 private   IConnection       $_connection, //can be madea singleton
-		 private   Security          $_security //can be removed entirely
 	 ){
 	 	$this->_insert_data_container = ["prmkeytype" => "", "data" => [], "prmkeyname" => "", "prmkeyvalues" => [], "navigationkeys" => []];
 	 	$this->_update_data_container = ["data" => []];
@@ -179,19 +176,11 @@
      }
 
      /**
-     * Get the model collection
-     * @return ModelCollection
-     */
-     protected function get_model_collection() : ModelCollection{
-     	return $this->_models;
-     }
-
-     /**
      * Get the models
      * @return array of Model objects
      */
      protected function get_models() : array{
-     	return $this->_models->get_all();
+     	return $this->_models;
      }
 
      /**
@@ -200,7 +189,7 @@
      * @return Model
      */
      protected function get_model(string $name) : IModel{
-     	return $this->_models->get($name);
+     	return $this->_models[$name];
      }
 
      /**
@@ -220,6 +209,17 @@
      }
 
      // utilities
+
+     /**
+      * Initilialize a model manager
+      * */
+     public function initialize(string $table_name, ?string $dbcontext_class = null){
+     	 if($dbcontext_class){
+     	 	 $this->set_model_references($dbcontext_class::get_models());
+             $this->set_dbcontext_class($dbcontext_class);
+     	 }
+     	 $this->register_joining_model(table: $table_name);
+     }
 
      /**
      * Register to context tracker
@@ -242,21 +242,20 @@
 	 * @param string $to:    the name of the field of joining table
 	 * @param string $as:    the aliase name of the joining table.
 	 */
-	 protected function register_joining_model(string $table, ?string $as = null){
+	 public function register_joining_model(string $table, ?string $as = null){
 	 	 $model_references = $this->get_model_references();
 	 	 modelnotfoundexception($table, $model_references, $this->get_context_options()->get_name());
 		 $dao_class    = $model_references[$table];
 		 $dao_instance = new $dao_class();
 		 $dao_instance->set_request($this->request);
-		 $model        = new Model($dao_instance);
 		 #register model with the model manager
-		 $this->add_model($table, $model);
+		 $this->add_model($table, $dao_instance);
 		 #register model info with the context tracker
 		 $this->register_to_context_tracker(
 		 	 table_name:    $table,
 		 	 table_aliase:  !is_null($as) ? $as : "",
 		 	 database_name: $this->get_context_options()->get_name(),
-		 	 field_list:    $model->get_field_names()
+		 	 field_list:    $dao_instance->get_field_names()
 		 );
 	 }
 
@@ -266,7 +265,7 @@
      * @param IModel $model
      */
 	 public function add_model(string $name, IModel $model){
-		 $this->_models->add($name, $model);
+		 $this->_models[$name] = $model;
 	 }
 
      /**
@@ -286,26 +285,6 @@
 	 protected function set_order(array $fields, string $direction = "ASC"){
 	 	$this->_order_manager->set_order(fields: $fields, direction: $direction);
 	 }
-     
-     protected function clean_up_data(array $field_values, array $validation_configurations) : array{
-     	 if(MODEL_VALIDATION_VERSION === 1){
-     	 	 $validation_feedback = $this->_security->extract_input($validation_configurations, "param", $field_values);
-     	 	 if($validation_feedback["status"] !== 0){
-			     throw new FieldValidationException($validation_feedback['feedback']['dirty']);
-		     }
-		     return $validation_feedback['feedback']['clean'];
-     	 }
-
-         $validation_feedback = ModelValidator::validate($validation_configurations, $field_values);
-		 if($validation_feedback["status"] !== 0){
-			 throw new FieldValidationException($validation_feedback['dirty']);
-		 }
-		 return $validation_feedback['clean'];
-     }
-
-
-
-
 
 
 

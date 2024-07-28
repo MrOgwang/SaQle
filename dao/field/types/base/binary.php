@@ -2,12 +2,24 @@
 namespace SaQle\Dao\Field\Types\Base;
 
 use SaQle\Dao\Field\Interfaces\ICustom;
-use SaQle\Dao\Field\Attributes\FileField;
+use SaQle\Dao\Field\Attributes\FileConfig;
+use SaQle\Dao\Field\FormControlTypes;
 
 abstract class Binary extends Simple{
 	protected ICustom $custom;
 	public function __construct(...$kwargs){
-		$this->set_custom(...$kwargs);
+		/**
+		 * Fill in the data types.
+		 * */
+		$kwargs['dtype'] = "VARCHAR";
+		$kwargs['ctype'] = isset($kwargs['ctype']) ? $kwargs['ctype'] : FormControlTypes::FILE->value;
+		$kwargs['ptype'] = "file";
+		
+		/**
+		 * Fill in the validation props
+		 * */
+		$kwargs['length'] = 255;
+		$kwargs['max'] = 255;
 		parent::__construct(...$kwargs);
 	}
 
@@ -66,11 +78,16 @@ abstract class Binary extends Simple{
 	protected function set_custom(...$kwargs){
 		 $custom_properties = $this->get_custom_properties();
 		 $newprops = $this->translate_properties($custom_properties, $kwargs);
-		 $this->attributes[FileField::class] = $newprops;
+		 $this->attributes[FileConfig::class] = $newprops;
 	}
 
 	public function get_field_attributes(){
-		return $this->attributes[FileField::class] ?? [];
+		return $this->attributes[FileConfig::class] ?? [];
+	}
+
+	public function initialize(){
+		 parent::initialize();
+		 $this->set_custom(...$this->kwargs);
 	}
 }
 ?>

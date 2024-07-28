@@ -148,7 +148,9 @@ class Config{
 		  * */
 		 define("SYSTEM_ADMINISTRATOR_EMAIL", $settings['system_admin_email'] ?? 'wycliffomondiotieno@gmail.com');
 		 define("SYSTEM_ADMINISTRATOR_NAME",  $settings['system_admin_name']  ?? 'Wycliffe Omondi');
-		 define("DI_CONTAINER",  dirname($_SERVER['DOCUMENT_ROOT'])."/saqle/services/container/container.php");
+		 define("DI_CONTAINER",  php_sapi_name() === 'cli' ? realpath(__DIR__ .'/../services/container/container.php')
+		 	: dirname($_SERVER['DOCUMENT_ROOT'])."/saqle/services/container/container.php");
+
 	 }
 }
 ?>

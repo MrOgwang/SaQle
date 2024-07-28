@@ -5,7 +5,7 @@ namespace SaQle\Dao\Field\Types;
 use SaQle\Dao\Field\Types\Base\Scalar;
 use SaQle\Dao\Field\Interfaces\IField;
 
-class Text extends Scalar implements IField{
+class TextType extends Scalar implements IField{
 	public function __construct(...$kwargs){
 		parent::__construct(...$kwargs);
 	}

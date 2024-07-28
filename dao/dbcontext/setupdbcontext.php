@@ -4,6 +4,7 @@ namespace SaQle\Dao\DbContext;
 
 use SaQle\Auth\Models\{Login, Contact, Vercode, UserRole, RolePermission, UserPermission, Permission};
 use SaQle\Session\Models\Session;
+use SaQle\Migration\Models\Migration;
 
 class SetupDbContext extends DbContext{
 	 static public function get_models(){
@@ -18,6 +19,7 @@ class SetupDbContext extends DbContext{
 			 'rolepermissions'     => RolePermission::class,
 			 'userroles'           => UserRole::class,
 			 'userpermissions'     => UserPermission::class,
+			 'migrations'          => Migration::class
 		 ];
 	 }
 }

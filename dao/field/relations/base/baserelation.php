@@ -21,7 +21,6 @@ namespace SaQle\Dao\Field\Relations\Base;
 use SaQle\Dao\Field\Relations\Interfaces\IRelation;
 
 class BaseRelation implements IRelation{
-	 private ?string $pdao = null;
 	 /**
 	  *  Create a one to one relation instance
 	  * @param          string $pdao:  The model class name for table A, where primary key is defined.
@@ -34,12 +33,14 @@ class BaseRelation implements IRelation{
 	  * @param bool     multiple:      Whether to return single object or multiple objects on fetch 
 	  */
 	 public function __construct(
+	 	 private string   $pdao,
 	 	 private string   $fdao,
 	 	 private ?string  $field    = null, 
 	 	 private ?string  $pk       = null,
 	 	 private ?string  $fk       = null,
 	 	 private bool     $isnav    = false,
-	 	 private bool     $multiple = false
+	 	 private bool     $multiple = false,
+	 	 private bool     $eager    = false
 	 ){}
 
 	 /**
@@ -91,6 +92,13 @@ class BaseRelation implements IRelation{
 	 	return $this->multiple;
 	 }
 
+	 /**
+	  * Get eager setting
+	  * */
+	 public function get_eager() : bool{
+	 	return $this->eager;
+	 }
+
 
 	  /**
 	  * Set the primary model class
@@ -139,6 +147,13 @@ class BaseRelation implements IRelation{
 	  * */
 	 public function set_multiple(bool $multiple){
 	 	$this->multiple = $multiple;
+	 }
+
+	 /**
+	  * Set eager setting
+	  * */
+	 public function set_eager(bool $eager){
+	 	$this->eager = $eager;
 	 }
 }
 ?>

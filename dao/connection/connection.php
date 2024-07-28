@@ -47,7 +47,7 @@ class Connection implements IConnection{
 			 $this->pdo = new \PDO($connection_string, $this->context->get_username(), $this->context->get_password());
 			 $this->pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 		 }catch(\Exception $ex){
-			 echo $ex;
+			 throw $ex;
 		 }
 	 }
 
@@ -57,21 +57,30 @@ class Connection implements IConnection{
 	 public function execute(string $sql, ?array $data = null, ?string $operation = null, string $prmkeytype = ""){
 	 	 $this->connect();
 	 	 $last_insert_id = null;
+	 	 $response       = false;
 		 try{
 			 $this->pdo->beginTransaction();
 			 $statement = $this->pdo->prepare($sql);
-			 if($statement->execute($data) === FALSE){
+			 $response  = $statement->execute($data);
+
+			 if($response === false && $this->pdo->inTransaction()){
 				 $this->pdo->rollback();
 			 }else{
 			 	 if($operation && $operation === "insert" && $prmkeytype === "AUTO"){
 			 	 	 $last_insert_id = $this->pdo->lastInsertId();
 			 	 }
-				 $this->pdo->commit();
+			 	 if($this->pdo->inTransaction()){
+			 	 	 $this->pdo->commit();
+			 	 }
 			 }
 	     }catch(\Exception $ex){
-			 echo $ex;
+	     	 if($this->pdo->inTransaction()){
+		 	 	 $this->pdo->rollback();
+		 	 }
+			 throw $ex;
 		 }
-		 return $last_insert_id ? ['statement' => $statement, 'last_insert_id' => $last_insert_id] : ['statement' => $statement];
+		 return $last_insert_id ? ['statement' => $statement, 'last_insert_id' => $last_insert_id, 'response' => $response] : 
+		 ['statement' => $statement, 'response' => $response];
 	 }
 }
 ?>

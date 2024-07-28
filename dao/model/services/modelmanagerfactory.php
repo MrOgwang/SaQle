@@ -29,9 +29,7 @@ class ModelManagerFactory{
                 $container->get(OrderManager::class),
                 $container->get(SelectManager::class),
                 $container->get(DataFormatter::class ),
-                $container->get(ModelCollection::class),
-                $kwargs['connection'],
-                $container->get(Security::class)
+                $kwargs['connection']
         );
      }
 }

@@ -5,7 +5,7 @@ namespace SaQle\Dao\Field\Attributes;
 use Closure;
 
 #[\Attribute(Attribute::TARGET_PROPERTY)]
-class FileField{
+class FileConfig{
 	 /**
 	 * Create a new file field instance
 	 * @param Closure | string $path

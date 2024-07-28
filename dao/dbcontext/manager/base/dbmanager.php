@@ -1,8 +1,8 @@
 <?php
-namespace SaQle\Dao;
-require_once 'connection.php';
+namespace SaQle\Dao\DbContext\Manager\Base;
+
 abstract class DbManager{
-	 public static $charset_and_collations = [
+	 public array $charset_and_collations = [
 	     'big5'     => ['description' => 'Big5 Traditional Chinese',    'collations' => ['big5_chinese_ci']],
 		 'dec8'     => ['description' => 'DEC West European',           'collations' => ['dec8_swedish_ci']],
 		 'cp850'    => ['description' => 'DOS West European',           'collations' => ['cp850_general_ci']],
@@ -45,43 +45,9 @@ abstract class DbManager{
 		 'eucjpms'  => ['description' => 'UJIS for Windows Japanese',   'collations' => ['eucjpms_japanese_ci']],
 	 ];
 	 protected $connection = null;
-	 abstract public function create_database(...$db_configurations);
+	 protected $vconnection = null;
+	 protected $connection_params = null;
+	 abstract public function create_database();
 }
-class MySQLDbManager extends DbManager{
-	 public function __construct($db_name, $db_user, $db_password, $db_host = 'localhost'){
-		 $this->connection = MySQLConnection::connect_to_database([
-			 "db_name" => $db_name, 
-			 "db_user" => $db_user, 
-			 "db_password" => $db_password,
-			 "db_host" => $db_host
-	     ]);
-	 }
-	 public function create_database(...$db_configurations){
-		 $char_set = $db_configurations['char_set'] ?? 'utf8';
-		 $collation = $db_configurations['collation'] ?? $this->charset_and_collations['utf8']['collations'][0];
-		 $db_name = $db_configurations['db_name'];
-		 $sql = "CREATE DATABASE IF NOT EXISTS $db_name CHARACTER SET $char_set COLLATE $collation";
-		 $statement = MySQLConnection::make_statement(["db" => $this->connection, "sql" => $sql]);
-		 print_r($statement);
-	 }
-}
-class PostgressSQLDbManager extends DbManager{
-	 public function create_database(...$db_configurations){
-		 return true;
-	 }
-}
-class DbManagerFactory{
-	 const MYSQL = 1;
-	 const POSTGRESS = 2;
-	 public function __construct($manager_type, $db_name, $db_user, $db_password, $db_host = 'localhost'){
-		 switch($manager_type){
-			 case self::MYSQL:
-			     return new MySQLDbManager($db_name, $db_user, $db_password, $db_host);
-			 break;
-			 case self::POSTGRESS:
-			     return new PostgressSQLDbManager();
-			 break;
-		 }
-	 }
-}
+
 ?>

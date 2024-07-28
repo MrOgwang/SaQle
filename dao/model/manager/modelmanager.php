@@ -5,7 +5,6 @@
  use SaQle\Dao\Operations\Crud\{SelectOperation, InsertOperation, DeleteOperation, UpdateOperation, TotalOperation, TableCreateOperation, RunOperation};
  use SaQle\Dao\Commands\ICommand;
  use SaQle\Dao\Model\Exceptions\NullObjectException;
- use SaQle\Dao\Model\IModel;
  use function SaQle\Exceptions\{modelnotfoundexception};
  use SaQle\Dao\Model\Model;
  use SaQle\Image\Image;
@@ -13,6 +12,7 @@
  use SaQle\Commons\{DateUtils, UrlUtils, StringUtils};
  use SaQle\Services\Container\ContainerService;
  use SaQle\Services\Container\Cf;
+ use SaQle\Dao\Field\Relations\One2One;
 
 class ModelManager extends IModelManager{
 	 use DateUtils, UrlUtils, StringUtils;
@@ -77,18 +77,12 @@ class ModelManager extends IModelManager{
      	 #if the database is not provided, assume the joining table is in the same database as the base table.
      	 $database = $database ?: $this->get_context_tracker()->find_database_name(0);
 
-     	 #get model references
-     	 $model_references = $this->get_model_references();
-
      	 #if the from/to field is not provided, assume it is the primary key of the base table
-     	 $dao_class    = $model_references[$table];
-		 $dao_instance = new $dao_class();
-		 $dao_instance->set_request($this->request);
-		 $model        = new Model($dao_instance);
-		 $primary_key_name = $model->get_primary_key_name();
+     	 $model   = $this->get_model($table);
+		 $pk_name = $model->get_pk_name();
 
-     	 $from = $from ?: $primary_key_name;
-     	 $to   = $to   ?: $primary_key_name;
+     	 $from = $from ?: $pk_name;
+     	 $to   = $to   ?: $pk_name;
      	 $this->get_join_manager()->add_join(type: $type, table: $table, from: $from, to: $to, as: $as, database: $database);
      }
 	 public function inner_join(string $table, ?string $from = null, ?string $to = null, ?string $as = null, ?string $database = null){
@@ -200,12 +194,13 @@ class ModelManager extends IModelManager{
 	 	 $response = $this->get($todao);
 	 	 return $response ? $response[count($response) - 1] : null;
 	 }
+
 	 private function get(bool $todao = false){
 	 	 #acquire the table being processed
 	 	 $table_name   = $this->get_context_tracker()->find_table_name(0);
 	 	 #acquire the dao model.
-	 	 $model        = $this->get_model($table_name);
-	 	 $dao_class    = $model->get_dao()::class;
+	 	 $model_instance = $this->get_model($table_name);
+	 	 $model_class    = $model_instance::class;
 
 	 	 #apply a default limit if one was not provided
 	 	 $limit_clause = $this->get_limit_clause();
@@ -215,7 +210,7 @@ class ModelManager extends IModelManager{
 	 	 }
 
 	 	 #apply a soft delete filter if the current dao has a soft delete attribute
-	 	 if($model->has_softdeletefields() && !$this->_ignore_soft_delete){
+	 	 if($model_instance->get_soft_delete() && !$this->_ignore_soft_delete){
      	 	 $this->where($table_name.'.deleted__eq', 0);
      	 }
 
@@ -231,7 +226,7 @@ class ModelManager extends IModelManager{
 	 	 	 table_aliase:  $this->get_context_tracker()->find_table_aliase(0),
 	 	 	 database_name: $this->get_context_tracker()->find_database_name(0),
 	 	 	 todao:         $todao,
-	 	 	 daoclass:      $dao_class
+	 	 	 daoclass:      $model_class
 	 	 );
 
 	 	 #execute command and return response
@@ -239,61 +234,39 @@ class ModelManager extends IModelManager{
 
          #get explicit includes
 	 	 $select_manager = $this->get_select_manager();
-	 	 $includes       = $select_manager->get_includes();
+	 	 $includes       = $select_manager->get_includes(); //still refers to classic includes.
 
 	 	 #get implicit includes.
-     	 $navigation_fields = $model->get_navigation_fields();
-     	 $foreign_keys      = $model->get_foreign_keys();
-     	 $auto_includes     = [];
-     	 foreach(array_merge($navigation_fields, $foreign_keys) as $if){
-     	 	 $attribs = $if->get_raw_attributes();
-     	 	 foreach($attribs as $attr){
-     	 	 	$ins = $attr->newInstance();
-     	 	 	if($ins->get_include()){
-     	 	 		$auto_includes[] = $attr;
-     	 	 	}
-     	 	 }
-     	 }
-         $includes          = array_merge($includes, $auto_includes);
-         $include_instances = [];
-     	 foreach($includes as $in){
- 	 	 	 $include_instances[] = $in->newInstance();
- 	 	 }
+	 	 $auto_includes = $model_instance->get_auto_include();
 
+	 	 $include_instances = $auto_includes; //array_merge($includes, $auto_includes);
+	 	 
 	 	 #include authors and modifiers information
-	 	 if($this->include_authors && $model->has_creatormodifierfields()){
-	 	 	 $include_instances[] = new NavigationKey(pdao: '', fdao: AUTH_MODEL_CLASS, multiple: false, field: 'author',   include: true, pfkeys: 'added_by=>user_id');
-	 	 	 $include_instances[] = new NavigationKey(pdao: '', fdao: AUTH_MODEL_CLASS, multiple: false, field: 'modifier', include: true, pfkeys: 'modified_by=>user_id');
+	 	 if($this->include_authors && $model_instance->get_auto_cm()){
+	 	 	 $include_instances[] = new One2One(pdao: '', fdao: AUTH_MODEL_CLASS, field: 'author', pk: 'added_by', fk: 'user_id', isnav: true, multiple: false, eager: 1);
+	 	 	 $include_instances[] = new One2One(pdao: '', fdao: AUTH_MODEL_CLASS, field: 'modifier', pk: 'modified_by', fk: 'user_id', isnav: true, multiple: false, eager: 1);
 	 	 }
 
 	 	 #include tenant information
 	 	 if($this->include_tenant){
-	 	 	 $include_instances[] = new NavigationKey(pdao: '', fdao: TENANT_MODEL_CLASS, multiple: false, field: 'tenant',   include: true, pfkeys: 'tenant_id=>tenant_id');
+	 	 	 $include_instances[] = new One2One(pdao: '', fdao: TENANT_MODEL_CLASS, field: 'tenant', pk: 'tenant_id', fk: 'tenant_id', isnav: true, multiple: false, eager: 1);
 	 	 }
 
 	 	 $include_rows = [];
-	 	 if($include_instances){
-	 	 	 $dbcontext_class = $this->get_dbcontext_class();
-             $dbcontext = Cf::create(ContainerService::class)->createDbContext($dbcontext_class);
-	 	 	 foreach($include_instances as $ins){
-	 	 	 	 $current_table = $dbcontext->get_dao_table_name($ins->get_fdao());
-	 	 	 	 if($current_table){
-     	 		 	 $pfkeys       = explode("=>", $ins->get_pfkeys());
-		 		 	 $pkey         = $pfkeys[0];
-		 		 	 $fkey         = $pfkeys[1];
-		 		 	 $pkey_values  = array_column($rows, $pkey);
-		 		 	 $results      = $dbcontext->get($current_table)->limit(records: 1000, page: 1)->where("{$fkey}__in", $pkey_values)->all();
-		 		 	 $formatted_results = [];
-		 		 	 foreach($results as $r){
-		                 $formatted_results[$r->$fkey][] = $r;
-		             }
-		             $include_rows[$ins->get_field()] = ['data' => $formatted_results, 'key' => $pkey, 'multiple' => $ins->get_multiple()];
-     	 		 } 
-		 	 }
+ 	 	 foreach($include_instances as $ins){
+ 	 	 	 $fdao         = $ins->get_fdao();
+ 	 	 	 $pkey         = $ins->get_pk();
+ 		 	 $fkey         = $ins->get_fk();
+ 		 	 $pkey_values  = array_column($rows, $pkey);
+ 		 	 $results      = $fdao::db()->limit(records: 1000, page: 1)->where("{$fkey}__in", $pkey_values)->all();
+ 		 	 $formatted_results = [];
+ 		 	 foreach($results as $r){
+                 $formatted_results[$r->$fkey][] = $r;
+             }
+             $include_rows[$ins->get_field()] = ['data' => $formatted_results, 'key' => $pkey, 'multiple' => $ins->get_multiple()];
 	 	 }
 
-         $file_configurations = $model->get_file_configurations();
-         $dao_instance = $model->get_dao();
+         $file_configurations = $model_instance->get_file_configurations();
 	 	 foreach($rows as $row){
 	 	 	 #set includes
 	 	 	 if($include_rows){
@@ -309,7 +282,7 @@ class ModelManager extends IModelManager{
 	 	     }
 	 	 	 
 	 	 	 #format date and timestamps.
-	     	 if($model->has_createmodifydatetimefields()){
+	     	 if($model_instance->get_auto_cmdt()){
 	     	 	 if(isset($row->date_added)){
 				     $row->date_added_display = self::format_date($row->date_added, DATE_ADDED_FORMAT);
 				     $row->datetime_added_display = self::format_date($row->date_added, DATETIME_DISPLAY_FORMAT);
@@ -325,8 +298,8 @@ class ModelManager extends IModelManager{
 	     	 	 foreach($file_configurations as $file_key => $file_config){
 	     	 		 //get the file path
 		     	     $folder_path = $file_configurations[$file_key]['path'] ?? "";
-			         if($folder_path && method_exists($dao_instance, $folder_path)){
-		 				 $folder_path = $dao_instance->$folder_path($row);
+			         if($folder_path && method_exists($model_instance, $folder_path)){
+		 				 $folder_path = $model_instance->$folder_path($row);
 		 			 }
 
 		 			 //echo "$folder_path\n";
@@ -336,8 +309,8 @@ class ModelManager extends IModelManager{
 		 			 if( isset($row->$file_key) && $row->$file_key){
 		 			 	if(HIDDEN_MEDIA_FOLDER){
 		 			 		$show_file = $file_configurations[$file_key]['show_file'] ?? "";
-		 			 		if($show_file && method_exists($dao_instance, $show_file)){
-				 				 $show_file = $dao_instance->$show_file($row);
+		 			 		if($show_file && method_exists($model_instance, $show_file)){
+				 				 $show_file = $model_instance->$show_file($row);
 				 			}
 				 			$folder_path = $this->encrypt($folder_path, $row->$file_key);
 				 			$file_url = $this->add_url_parameter($show_file, ['file', 'xyz'], [$row->$file_key, $folder_path]);
@@ -347,17 +320,17 @@ class ModelManager extends IModelManager{
 		 			 	$row->$file_key = $file_url;
 		 			 }else{
 		 			 	 $default = $file_configurations[$file_key]['default'] ?? "";
-		 			 	 if($default && method_exists($dao_instance, $default)){
-		 			 	 	 $row->$file_key = $dao_instance->$default($row);
+		 			 	 if($default && method_exists($model_instance, $default)){
+		 			 	 	 $row->$file_key = $model_instance->$default($row);
 		 			     }
 		 			 }
 		     	 }
 	     	 }
 
  	 	 }
-
 	 	 return $rows;
 	 }
+
 	 public function total(){
 	 	 /*setup a select command*/
 	 	 $this->crud_command = new TotalCommand(
@@ -375,32 +348,27 @@ class ModelManager extends IModelManager{
 	 }
 
 	 //includes
-	 public function include(string $field){
+	 public function with(string $field){
 	 	 #Make sure this field is a navigation or foreign key field
      	 $table = $this->get_context_tracker()->find_table_name(0);
-     	 #throw a model not found exception if this table is not registered
-     	 modelnotfoundexception($table, $this->_model_references, $this->get_context_options()->get_name());
      	 #get the model associated with this table
      	 $model = $this->get_model($table);
      	 #get include field
-     	 $include_field = $model->get_include_field($field);
+     	 $include_field = $model->is_include($field);
      	 if(!$include_field){
      	 	throw new \Exception("{$field} This is not an includable field!");
      	 }
-     	 $attribites = $include_field->get_raw_attributes();
-     	 if($attribites){
-     	 	 $select_manager = $this->get_select_manager();
-	 	     $select_manager->add_include($attribites[0]);
-     	 }
+     	 $select_manager = $this->get_select_manager();
+	 	 $select_manager->add_include($include_field);
 	 	 return $this;
 	 }
 
-	 public function include_authors(){
+	 public function with_authors(){
 	 	 $this->include_authors = true;
 	 	 return $this;
 	 }
 
-	 public function include_tenant(){
+	 public function with_tenant(){
 	 	 $this->include_tenant = true;
 	 	 return $this;
 	 }
@@ -476,12 +444,11 @@ class ModelManager extends IModelManager{
      	 $table = $this->get_context_tracker()->find_table_name(0);
      	 /*get the model associated with this table*/
      	 $model = $this->get_model($table);
-         /*get the dao associatedwith model*/
-     	 $dao = $model->get_dao();
-     	 [$clean_data, $file_data] = $dao->prepare_insert_data($data);
-     	 $this->_insert_data_container["prmkeyname"] = $dao->get_pk_name();
-     	 $this->_insert_data_container["prmkeyvalues"][] = $clean_data[$dao->get_pk_name()];
-     	 $this->_insert_data_container["prmkeytype"] = $dao->get_pk_type();
+     	 [$clean_data, $file_data] = $model->prepare_insert_data($data);
+     	 
+     	 $this->_insert_data_container["prmkeyname"] = $model->get_pk_name();
+     	 $this->_insert_data_container["prmkeyvalues"][] = $clean_data[$model->get_pk_name()];
+     	 $this->_insert_data_container["prmkeytype"] = $model->get_pk_type();
      	 $this->_file_data = array_merge($this->_file_data, $file_data);
      	 $this->_insert_data_container["data"][] = $clean_data;
      	 return $this;
@@ -541,9 +508,7 @@ class ModelManager extends IModelManager{
      	 $table = $this->get_context_tracker()->find_table_name(0);
      	 /*get the model associated with this table*/
      	 $model = $this->get_model($table);
-         /*get the dao associated with model*/
-     	 $dao = $model->get_dao();
-     	 [$clean_data, $file_data] = $dao->prepare_update_data($data);
+     	 [$clean_data, $file_data] = $model->prepare_update_data($data);
      	 $this->_update_data_container["data"] = array_merge($this->_update_data_container["data"], $clean_data);
      	 $this->_file_data = array_merge($this->_file_data, $file_data);
      	 return $this;
@@ -551,7 +516,7 @@ class ModelManager extends IModelManager{
 
      public function set_multiple(array $data){
      	 foreach($data as $dk => $dv){
-     		$this->set($dv, $partial);
+     		$this->set($dv);
      	 }
      	 return $this;
      }
@@ -573,62 +538,6 @@ class ModelManager extends IModelManager{
 	 	 	 $this->auto_save_files();
 	 	 }
 	 	 return $result;
-     }
-
-     /**
-      * Create a new database table.
-      * */
-     public function create_table(){
-     	 /*get the name of the current table being manipulated*/
-     	 $table  = $this->get_context_tracker()->find_table_name(0);
-     	 /*get the model associated with this table*/
-     	 $model  = $this->get_model($table);
-     	 $fields = $model->get_fields();
-
-     	 $field_properties = [];
-     	 foreach($fields as $f){
-     	 	 $validation       = $f->get_validation_attributes();
-     	 	 $is_numeric       = $f->is_numeric();
-     	 	 $is_primary       = $f->is_primary_key();
-     	 	 $length           = $validation['length'] ?? ($is_numeric ? 11 : 255);
-     	 	 $is_required      = $validation['is_required'] ?? false;
-
-     	 	 $val              = $f->get_value();
-
-     	 	 $field_line       = [$f->get_name()];
-     	 	 $field_line[]     = $is_numeric ? 'INT('.$length.')' : 'VARCHAR('.$length.')';
-     	 	 if($is_primary){
-     	 	 	 $field_line[] = $is_numeric ? 'AUTO_INCREMENT PRIMARY KEY' : 'PRIMARY KEY';
-     	 	 }
-
-     	 	 $field_line[]     = $is_required || $is_primary ? 'NOT NULL' : 'NULL';
-     	 	 $field_line[]     = $val ? 'DEFAULT '.$val : '';
-
- 	 	 	 $field_properties[] = implode(" ", $field_line);
-     	 }
-
-     	 /*add CreatorModifierFields, CreateModifyDateTimeFields and SoftDeleteFields if these attributes exist on data access object*/
-     	 if($model->has_creatormodifierfields()){
-     	 	 $field_properties[] = "added_by VARCHAR(100) NOT NULL";
-     	 	 $field_properties[] = "modified_by VARCHAR(100) NOT NULL";
-     	 }
-     	 if($model->has_createmodifydatetimefields()){
-     	 	 $field_properties[] = "date_added BIGINT(20) NOT NULL";
-     	 	 $field_properties[] = "last_modified BIGINT(20) NOT NULL";
-     	 }
-     	 if($model->has_softdeletefields()){
-     	 	 $field_properties[] = "deleted TINYINT(1) NOT NULL";
-     	 }
-
-     	 /*setup a create command*/
-	 	 $this->crud_command = new TableCreateCommand(
-	 	 	 new TableCreateOperation($this->get_connection()),
-	 	 	 table:  $table,
-	 	 	 fields: implode(", ", $field_properties)
-	 	 );
-
-	 	 /*execute command and return response*/
-	 	 return $this->crud_command->execute();
      }
 
      /**
