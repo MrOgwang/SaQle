@@ -43,21 +43,6 @@ class MySQLDbManager extends DbManager{
      public function create_table($table, $model_class){
      	 $model = new $model_class();
      	 $defs  = $model->get_field_definitions();
-     	 /*add CreatorModifierFields, CreateModifyDateTimeFields and SoftDeleteFields if these attributes exist on data access object*/
-     	 if($model->get_auto_cm()){
-     	 	 $auto_cm_fields = $model->get_auto_cm_fields();
-     	 	 $defs[] = $auto_cm_fields[0]." VARCHAR(100) NOT NULL";
-     	 	 $defs[] = $auto_cm_fields[1]." VARCHAR(100) NOT NULL";
-     	 }
-     	 if($model->get_auto_cmdt()){
-     	 	 $auto_cmdt_fields = $model->get_auto_cmdt_fields();
-     	 	 $defs[] = $auto_cmdt_fields[0]." BIGINT(20) NOT NULL";
-     	 	 $defs[] = $auto_cmdt_fields[1]." BIGINT(20) NOT NULL";
-     	 }
-     	 if($model->get_soft_delete()){
-     	 	 $soft_delete_fields = $model->get_soft_delete_fields();
-     	 	 $defs[] = $soft_delete_fields[0]." TINYINT(1) NOT NULL";
-     	 }
 
      	 /*setup a create command*/
 	 	 $this->crud_command = new TableCreateCommand(

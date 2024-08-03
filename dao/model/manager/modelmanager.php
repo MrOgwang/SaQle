@@ -420,6 +420,10 @@ class ModelManager extends IModelManager{
 	 }
 
      private function save_changes(){
+     	 if($this->_is_operation_aborted || !$this->_insert_data_container["data"]){
+     	 	 return null;
+     	 }
+
 	 	 /*setup an insert command*/
 	 	 $this->crud_command = new InsertCommand(
 	 	 	 new InsertOperation($this->get_connection()),
@@ -445,7 +449,28 @@ class ModelManager extends IModelManager{
      	 /*get the model associated with this table*/
      	 $model = $this->get_model($table);
      	 [$clean_data, $file_data] = $model->prepare_insert_data($data);
-     	 
+
+     	 $duplicate_actions = ['IGNORE_DUPLICATE', 'ABORT_WITHOUT_ERROR', 'ABORT_WITH_ERROR'];
+     	 if(in_array($clean_data, $duplicate_actions)){
+     	 	 /**
+     	 	  * The model found a duplicate, and returned an action that is supposed to be taken.
+     	 	  * The model manager will decide what to do depending on the following scenarios.
+     	 	  * 
+     	 	  * 1. If any ABORT action is set, the entire operation will be aborted. This includes aborting the insertion of
+     	 	  *     other records bundled in this operation.
+     	 	  * 2. If the ABORT_WITH_ERROR is set, an exception will be thrown.
+     	 	  * 3. If IGNORE_DUPLICATE is set, this record will be ignored. However, if this is the only record being inserted, 
+     	 	  *    the operation will be abroted.
+     	 	  * */
+     	 	 if($clean_data == 'ABORT_WITHOUT_ERROR' || $clean_data == 'ABORT_WITH_ERROR'){
+     	 	 	 $this->_is_operation_aborted = true;
+     	 	 	 if($clean_data == 'ABORT_WITH_ERROR'){
+     	 	 	 	 throw new \Exception("Insert operation aborted! Duplicate entries detected.");
+     	 	 	 }
+     	 	     return $this;
+     	 	 }
+     	 }
+
      	 $this->_insert_data_container["prmkeyname"] = $model->get_pk_name();
      	 $this->_insert_data_container["prmkeyvalues"][] = $clean_data[$model->get_pk_name()];
      	 $this->_insert_data_container["prmkeytype"] = $model->get_pk_type();
@@ -463,7 +488,7 @@ class ModelManager extends IModelManager{
 
      public function save(bool $multiple = false){
      	 $saved_data = $this->save_changes();
-     	 return $multiple ? $saved_data : $saved_data[0];
+     	 return !$saved_data ? $saved_data : ($multiple ? $saved_data : $saved_data[0]);
      }
 
      // deletes
@@ -509,6 +534,28 @@ class ModelManager extends IModelManager{
      	 /*get the model associated with this table*/
      	 $model = $this->get_model($table);
      	 [$clean_data, $file_data] = $model->prepare_update_data($data);
+     	 
+     	 $duplicate_actions = ['IGNORE_DUPLICATE', 'ABORT_WITHOUT_ERROR', 'ABORT_WITH_ERROR'];
+     	 if(in_array($clean_data, $duplicate_actions)){
+     	 	 /**
+     	 	  * The model found a duplicate, and returned an action that is supposed to be taken.
+     	 	  * The model manager will decide what to do depending on the following scenarios.
+     	 	  * 
+     	 	  * 1. If any ABORT action is set, the entire operation will be aborted. This includes aborting the insertion of
+     	 	  *     other records bundled in this operation.
+     	 	  * 2. If the ABORT_WITH_ERROR is set, an exception will be thrown.
+     	 	  * 3. If IGNORE_DUPLICATE is set, this record will be ignored. However, if this is the only record being inserted, 
+     	 	  *    the operation will be abroted.
+     	 	  * */
+     	 	 if($clean_data == 'ABORT_WITHOUT_ERROR' || $clean_data == 'ABORT_WITH_ERROR'){
+     	 	 	 $this->_is_operation_aborted = true;
+     	 	 	 if($clean_data == 'ABORT_WITH_ERROR'){
+     	 	 	 	 throw new \Exception("Update operation aborted! Duplicate entries detected.");
+     	 	 	 }
+     	 	     return $this;
+     	 	 }
+     	 }
+
      	 $this->_update_data_container["data"] = array_merge($this->_update_data_container["data"], $clean_data);
      	 $this->_file_data = array_merge($this->_file_data, $file_data);
      	 return $this;
@@ -522,6 +569,10 @@ class ModelManager extends IModelManager{
      }
 
      public function update(bool $partial = false){
+     	 if($this->_is_operation_aborted || !$this->_update_data_container["data"]){
+     	 	 return null;
+     	 }
+
      	 /*setup an update command*/
 	 	 $this->crud_command = new UpdateCommand(
 	 	 	 new UpdateOperation($this->get_connection()),

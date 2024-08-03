@@ -32,6 +32,7 @@
  	 protected array  $_file_data;
  	 protected string $current_dbcontext_class;
  	 protected array  $_models = [];
+ 	 protected bool   $_is_operation_aborted = false;
 
  	 /**
  	  * Whether to include author information in result objects

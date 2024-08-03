@@ -13,5 +13,25 @@ class ManyToMany extends Relation implements IField{
 		$kwargs['isnav'] = true;
 		parent::__construct(...$kwargs);
 	}
+
+	public function add(){
+
+	}
+
+	public function remove(){
+
+	}
+
+	public function commit(){
+
+	}
+
+	public function attach(){
+
+	}
+
+	public function detach(){
+		
+	}
 }
 ?>

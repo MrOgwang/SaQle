@@ -3,7 +3,7 @@
 namespace SaQle\Dao\Field\Types\Base;
 
 use SaQle\Dao\Field\Interfaces\IValidator;
-use SaQle\Dao\Field\Types\{Pk, TextType, NumberType, FileField, OneToOne, OneToMany, ManyToMany};
+use SaQle\Dao\Field\Types\{Pk, TextType, NumberType, FileField, OneToOne, OneToMany, ManyToMany, TimestampField};
 use SaQle\Dao\Field\Types\Base\Relation;
 use SaQle\Dao\Field\Attributes\{TextFieldValidation, NumberFieldValidation, FileFieldValidation};
 use SaQle\Controllers\Forms\FieldDataSource;
@@ -358,8 +358,27 @@ abstract class Simple{
 		 	$def[] = $this->kwargs['dtype'] === "VARCHAR" ? "PRIMARY KEY" : "AUTO_INCREMENT PRIMARY KEY";
 		 }
 		 $def[] = $this->kwargs['required'] ? "NOT NULL" : "NULL";
-		 $def[] = isset($this->kwargs['value']) ? 'DEFAULT '.$this->kwargs['value'] : '';
+		 if($this instanceof TimestampField){
+		     $def[] = $this->kwargs['db_auto_init'] ? "DEFAULT CURRENT_TIMESTAMP" : "";
+		     $def[] = $this->kwargs['db_auto_update'] ? "ON UPDATE CURRENT_TIMESTAMP" : "";
+		 }else{
+		 	 $def[] = isset($this->kwargs['value']) ? 'DEFAULT '.$this->kwargs['value'] : '';
+		 }
  	 	 return implode(" ", $def);
+	}
+
+    /**
+     * Set the raw value for this field
+     * */
+	public function value(mixed $value){
+		 $this->kwargs['value'] = $value;
+	}
+
+	/**
+	 * Get the raw value for this field
+	 * */
+	public function get_value(){
+		return $this->kwargs['value'] ?? "";
 	}
 }
 ?>

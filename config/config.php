@@ -151,6 +151,77 @@ class Config{
 		 define("DI_CONTAINER",  php_sapi_name() === 'cli' ? realpath(__DIR__ .'/../services/container/container.php')
 		 	: dirname($_SERVER['DOCUMENT_ROOT'])."/saqle/services/container/container.php");
 
+		 /**
+		  * 1. Handling db column of type timestamp
+		  * 2. These flags can also be set on a model's meta array, and if that's the case, will override the values set here
+		  * */
+		 define("DB_AUTO_INIT_TIMESTAMP", $settings['db_auto_init_timestamp'] ?? true);
+		 define("DB_AUTO_UPDATE_TIMESTAMP", $settings['db_auto_update_timestamp'] ?? true);
+
+		 /**
+		  * 1. Set which type of time and/or date entry you want for created and modified at field for your models.
+		  * 2. This flag can also be set on a model's meta array, and if that's the case, will override the value set here.
+		  * Options: DATE, DATETIME, TIME, TIMESTAMP, PHPTIMESTAMP.
+		  * 
+		  * Defaults to PHPTIMESTAMP
+		  * */
+		 define("DB_AUTO_CMDT_TYPE", $settings['db_auto_cmdt_type'] ?? 'PHPTIMESTAMP');
+
+		 /**
+		  * When creating models, usually you want to keep track of 
+		  * 1. Who added a row
+		  * 2. Who modified a row
+		  * 3. Who deleted a row
+		  * 4. When was a row added
+		  * 5. When was a row modified
+		  * 6. When was a row deleted
+		  * 
+		  * The settings below will enable automatic inclusion of these fields without explicitly defining them 
+		  * in all the models.
+		  * 
+		  * MODEL_AUTO_CM_FIELDS
+		  * - This flag tells the model to generate Created By and Modified By fields. The field type will be GUID or AUTO(INT)
+		  *   depending on what the PRIMARY_KEY_TYPE flag is set to.
+		  * - The specific names of the fields will be set by adding the flags MODEL_CREATED_BY_FIELD and MODEL_MODIFIED_BY_FIELD
+		  * 
+		  * MODEL_AUTO_CMDT_FIELDS
+		  * - This flag tells the model to generate Created At and Modified At date/datetime/time/timestamp fields. The field type will be derived from
+		  *   the DB_AUTO_CMDT_TYPE flag
+		  * - The specific names of the fields will be set by adding the flags MODEL_CREATED_AT_FIELD and MODEL_MODIFIED_AT_FIELD
+		  * 
+		  * MODEL_SOFT_DELETE
+		  * - This flag tells the model to generate Is Deleted, Deleted By and Deleted At fields. The Deleted By type will
+		  *   deoend on the PRIMARY_KEY_TYPE flag and Deleted At type will depend on the DB_AUTO_CMDT_TYPE flag.
+		  * - The specific names of the fields will be set by adding the flags MODEL_DELETED_AT_FIELD and MODEL_DELETED_BY_FIELD and MODEL_DELETED_FIELD
+		  * 
+		  * All the flags below have model specific equivalents that can be used to override behavior from model to model
+		  * if that need arises.
+		  * */
+		 define("MODEL_AUTO_CM_FIELDS", $settings['model_auto_cm_fields'] ?? false);
+		 define("MODEL_CREATED_BY_FIELD", $settings['model_created_by_field'] ?? 'added_by');
+		 define("MODEL_MODIFIED_BY_FIELD", $settings['model_modified_by_field'] ?? 'modified_by');
+
+		 define("MODEL_AUTO_CMDT_FIELDS", $settings['model_auto_cmdt_fields'] ?? false);
+		 define("MODEL_CREATED_AT_FIELD", $settings['model_created_at_field'] ?? 'date_added');
+		 define("MODEL_MODIFIED_AT_FIELD", $settings['model_modified_at_field'] ?? 'last_modified');
+
+		 define("MODEL_SOFT_DELETE", $settings['model_soft_delete'] ?? false);
+		 define("MODEL_DELETED_AT_FIELD", $settings['model_deleted_at_field'] ?? 'deleted_at');
+		 define("MODEL_DELETED_By_FIELD", $settings['model_deleted_by_field'] ?? 'deleted_by');
+		 define("MODEL_DELETED_FIELD", $settings['model_deleted_field'] ?? 'deleted');
+
+		 /**
+          * What happens when duplicate data is encoiuntered during insert or update operations.
+          * 
+          * Options include: 
+          * IGNORE_DUPLICATE - just ignore the duplicate data and add the rest if there are multiple records to add
+          * ABORT_WITH_ERROR - Abort the insert or update operation and throw an exception
+          * ABORT_WITHOUT_ERROR - Abort the insert or update operation without throwing an exception.d
+          * 
+          * Defaults to IGNORE_DUPLICATE
+          * 
+          * */
+		 define("MODEL_ACTION_ON_DUPLICATE", $settings['model_action_on_duplicate'] ?? 'IGNORE_DUPLICATE');
 	 }
 }
 ?>

@@ -4,6 +4,7 @@ namespace SaQle\Migration\Commands;
 use SaQle\Dao\DbContext\Manager\DbManagerFactory;
 use SaQle\Commons\FileUtils;
 use SaQle\Migration\Models\Migration;
+use SaQle\Migration\Tracker\MigrationTracker;
 
 class Migrate{
      use FileUtils;
@@ -13,7 +14,18 @@ class Migrate{
 
      public function execute(string $project_root){
          $migrations_folder = $project_root."/migrations";
-         $migration_files   = $this->scandir_chrono(path: $migrations_folder, reverse: false, exts: ['php']);
+         $migration_tracker_file = $project_root."/migrations/migrationstracker.bin";
+         $tracker = $this->unserialize_from_file($migration_tracker_file);
+         $migration_files = [];
+         if($tracker){
+             $migration_files = $tracker->get_migration_files();
+         }
+
+         if(!$migration_files){
+             $migration_files = $this->scandir_chrono(path: $migrations_folder, reverse: false, exts: ['php']);
+         }
+
+         print_r($migration_files);
          $mfc               = count($migration_files);
          echo "Starting migrations!\n";
          for($m = 0; $m < $mfc; $m++){

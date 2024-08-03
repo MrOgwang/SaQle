@@ -2,8 +2,11 @@
 namespace SaQle\Migration\Commands;
 
 use SaQle\Migration\Managers\Interfaces\IMigrationManager;
+use SaQle\Migration\Tracker\MigrationTracker;
+use SaQle\Commons\FileUtils;
 
 class MakeMigrations{
+     use FileUtils;
      public function __construct(private IMigrationManager $manager){
 
      }
@@ -15,8 +18,8 @@ class MakeMigrations{
          foreach($snapshot as $sk => $sv){
              $added_models = $sv['tables'][0];
              $removed_models = $sv['tables'][1];
-             $added_columns = $sv['columns'][0];
-             $removed_columns = $sv['columns'][1];
+             $added_columns = $sv['columns'][0] ?? [];
+             $removed_columns = $sv['columns'][1] ?? [];
              $up .= "\t\t\t'".$sk."' => [\n";
              $down .= "\t\t\t'".$sk."' => [\n";
              foreach($added_models as $an => $am){
@@ -100,7 +103,16 @@ class MakeMigrations{
             mkdir($migrations_folder);
          }
 
-         file_put_contents($file_name, $template);
-         echo "Migration created: {$file_name}\n";
+         if(file_put_contents($file_name, $template) !== false){
+             echo "Migration created: {$file_name}\n";
+             $file_name2 = $migrations_folder."/migrationstracker.bin";
+             $tracker = $this->unserialize_from_file($file_name2);
+             if(!$tracker){
+                 $tracker = new MigrationTracker();
+             }
+
+             $tracker->add_migration($class_name.".php");
+             $this->serialize_to_file($file_name2, $tracker);
+         }
      }
 }

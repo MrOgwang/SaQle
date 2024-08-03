@@ -16,11 +16,14 @@ class Migration extends Dao{
 		 $this->migration_name = new TextField(required: true, strict: false);
 		 $this->migration_timestamp = new BigIntegerField(required: true, absolute: true, zero: false);
 		 $this->is_migrated = new BooleanField(required: true, absolute: true, zero: true);
-		 parent::__construct();
 
 		 $this->set_meta([
-   	 	     'auto_cmdt_fields' => true
+   	 	     'auto_cm_fields'   => false,
+	 	 	 'auto_cmdt_fields' => false,
+	 	 	 'soft_delete'      => false
          ]);
+         
+		 parent::__construct();
 	}
 }
 ?>

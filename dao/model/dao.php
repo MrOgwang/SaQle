@@ -9,7 +9,7 @@ use SaQle\Services\Container\Cf;
 use SaQle\Dao\Model\Attributes\{CreatorModifierFields, CreateModifyDateTimeFields, SoftDeleteFields};
 use SaQle\Dao\Field\Interfaces\IField;
 use SaQle\Dao\Field\Attributes\{PrimaryKey, ForeignKey, NavigationKey, TextFieldValidation, NumberFieldValidation, FileFieldValidation, FileConfig};
-use SaQle\Dao\Field\Types\{Pk, TextField, OneToOne, OneToMany, FloatField, IntegerField, ManyToMany, FileField};
+use SaQle\Dao\Field\Types\{Pk, TextField, OneToOne, OneToMany, FloatField, IntegerField, BigIntegerField, PhpTimestampField, ManyToMany, FileField, TinyTextField, DateField, TimeField, DateTimeField, TimestampField, BooleanField};
 use SaQle\Dao\Field\Exceptions\FieldValidationException;
 use SaQle\Security\Models\ModelValidator;
 use SaQle\Commons\StringUtils;
@@ -44,9 +44,21 @@ abstract class Dao implements IModel{
 	 	 * */
 	 private array $meta = [];
 
+     /**
+      * Create new model instance
+      * @param array $kwargs: a key => value array with values to set.
+      * */
 	 public function __construct(...$kwargs){
 	 	 $this->initialize();
-	 	 //print_r($this->meta);
+	 	 if($kwargs){
+	 	 	 foreach($this->meta['fields'] as $fn => $fv){
+		 	 	 $col_name = $fv->get_db_column_name();
+		 	 	 $val = $kwargs[$fn] ?? ($kwargs[$col_name] ?? null);
+		 	 	 if($val){
+		 	 	 	 $fv->value($val);
+		 	 	 }
+		 	 }
+	 	 }
 	 }
      
      /**
@@ -152,10 +164,76 @@ abstract class Dao implements IModel{
 	 }
 
 	 /**
+	  * Get all the defined fields. These are fields explicitly defined on the model.
+	  * */
+	 public function get_defined_fields(){
+	 	 //return $this->meta['fields'];
+	 }
+
+	 /**
+	  * Get all non defined fields. These are fields introduced automatically by: auto_cm_fields,
+	  * auto_cmdt_fields and soft_delete meta flags
+	  * */
+     private function get_nondefined_fields(){
+     	 $non_defined = [];
+     	 if( isset($this->meta['auto_cm_fields']) && $this->meta['auto_cm_fields'] ){
+     	 	 if(PRIMARY_KEY_TYPE === "GUID"){
+     	 	 	 $non_defined[$this->meta['created_by_field']] = new TinyTextField(required: true, strict: false);
+     	 	 	 $non_defined[$this->meta['modified_by_field']] = new TinyTextField(required: true, strict: false);
+     	 	 }else{
+     	 	 	 $non_defined[$this->meta['created_by_field']] = new IntegerField(required: true, zero: false, absolute: true);
+     	 	 	 $non_defined[$this->meta['modified_by_field']] = new IntegerField(required: true, zero: false, absolute: true);
+     	 	 }
+     	 }
+
+     	 if( isset($this->meta['auto_cmdt_fields']) && $this->meta['auto_cmdt_fields'] ){
+     	 	 if($this->meta['db_auto_cmdt_type'] === "PHPTIMESTAMP"){
+     	 	 	 $non_defined[$this->meta['created_at_field']] = new PhpTimestampField(required: true, zero: false, absolute: true);
+     	 	 	 $non_defined[$this->meta['modified_at_field']] = new PhpTimestampField(required: true, zero: false, absolute: true);
+     	 	 }elseif($this->meta['db_auto_cmdt_type'] === "DATE"){
+     	 	 	 $non_defined[$this->meta['created_at_field']] = new DateField(required: true, strict: false);
+     	 	 	 $non_defined[$this->meta['modified_at_field']] = new DateField(required: true, strict: false);
+     	 	 }elseif($this->meta['db_auto_cmdt_type'] === "DATETIME"){
+     	 	 	 $non_defined[$this->meta['created_at_field']] = new DateTimeField(required: true, strict: false);
+     	 	 	 $non_defined[$this->meta['modified_at_field']] = new DateTimeField(required: true, strict: false);
+     	 	 }elseif($this->meta['db_auto_cmdt_type'] === "TIME"){
+     	 	 	 $non_defined[$this->meta['created_at_field']] = new TimeField(required: true, strict: false);
+     	 	 	 $non_defined[$this->meta['modified_at_field']] = new TimeField(required: true, strict: false);
+     	 	 }elseif($this->meta['db_auto_cmdt_type'] === "TIMESTAMP"){
+     	 	 	 $non_defined[$this->meta['created_at_field']] = new TimestampField(required: true, strict: false);
+     	 	 	 $non_defined[$this->meta['modified_at_field']] = new TimestampField(required: true, strict: false);
+     	 	 }
+     	 }
+
+     	 if( isset($this->meta['soft_delete']) && $this->meta['soft_delete'] ){
+     	 	 $non_defined[$this->meta['deleted_field']] = new BooleanField(required: true, zero: true, absolute: true);
+     	 	 if(PRIMARY_KEY_TYPE === "GUID"){
+     	 	 	 $non_defined[$this->meta['deleted_by_field']] = new TinyTextField(required: true, strict: false);
+     	 	 }else{
+     	 	 	 $non_defined[$this->meta['deleted_by_field']] = new IntegerField(required: true, zero: false, absolute: true);
+     	 	 }
+
+     	 	 if($this->meta['db_auto_cmdt_type'] === "PHPTIMESTAMP"){
+     	 	 	 $non_defined[$this->meta['deleted_at_field']] = new PhpTimestampField(required: true, zero: false, absolute: true);
+     	 	 }elseif($this->meta['db_auto_cmdt_type'] === "DATE"){
+     	 	 	 $non_defined[$this->meta['deleted_at_field']] = new DateField(required: true, strict: false);
+     	 	 }elseif($this->meta['db_auto_cmdt_type'] === "DATETIME"){
+     	 	 	 $non_defined[$this->meta['deleted_at_field']] = new DateTimeField(required: true, strict: false);
+     	 	 }elseif($this->meta['db_auto_cmdt_type'] === "TIME"){
+     	 	 	 $non_defined[$this->meta['deleted_at_field']] = new TimeField(required: true, strict: false);
+     	 	 }elseif($this->meta['db_auto_cmdt_type'] === "TIMESTAMP"){
+     	 	 	 $non_defined[$this->meta['deleted_at_field']] = new TimestampField(required: true, strict: false);
+     	 	 }
+     	 }
+
+     	 return $non_defined;
+     }
+
+	 /**
 	  * Get all the fields.
 	  * */
 	 public function get_all_fields(){
-	 	return $this->meta['fields'];
+	 	 return $this->meta['fields'];
 	 }
 
 	 /**
@@ -242,10 +320,10 @@ abstract class Dao implements IModel{
 	 private function initialize(){
 	 	 /**
 	 	  * Inspect the class and initialize state based on the configurations
-	 	  * declared on class and field attributes, or the fields themeselevs.
+	 	  * declared on class and field attributes, or the fields themeselves.
 	 	  * 
 	 	  * All state data will be stored in the meta property in a key => value
-	 	  * fashion as explained in meta above.$p->getAttributes(NavigationKey::class)
+	 	  * fashion as explained in meta above.
 	 	  * */
 
          [$db_class, $table_name] = self::get_table_n_dbcontext();
@@ -258,41 +336,78 @@ abstract class Dao implements IModel{
 	 	  * Check CreatorModifierFields attribute on class
 	 	  * */
          $cmattributes = $reflector->getAttributes(CreatorModifierFields::class);
-         $this->meta['auto_cm_fields'] = $cmattributes ? true : false;
-         $this->meta['created_by_field'] = 'added_by'; #Override by calling set meta
-         $this->meta['modified_by_field'] = "modified_by"; #Override by calling set_meta
+         $this->meta['auto_cm_fields'] = $this->meta['auto_cm_fields'] ?? ($cmattributes ? true : MODEL_AUTO_CM_FIELDS);
+         $this->meta['created_by_field'] = $this->meta['created_by_field'] ?? MODEL_CREATED_BY_FIELD; #Override by calling set meta
+         $this->meta['modified_by_field'] = $this->meta['modified_by_field'] ?? MODEL_MODIFIED_BY_FIELD; #Override by calling set_meta
 
          /**
           * Check CreateModifyDateTimeFields attribute on class
           * */
          $cmdtattributes = $reflector->getAttributes(CreateModifyDateTimeFields::class);
-         $this->meta['auto_cmdt_fields'] = $cmdtattributes ? true : false;
-         $this->meta['created_at_field'] = 'date_added'; #Override by calling set_meta
-         $this->meta['modified_at_field'] = 'last_modified'; #Override by calling set_meta
+         $this->meta['auto_cmdt_fields'] = $this->meta['auto_cmdt_fields'] ?? ($cmdtattributes ? true : MODEL_AUTO_CMDT_FIELDS);
+         $this->meta['created_at_field'] = $this->meta['created_at_field'] ?? MODEL_CREATED_AT_FIELD; #Override by calling set_meta
+         $this->meta['modified_at_field'] = $this->meta['modified_at_field'] ?? MODEL_MODIFIED_AT_FIELD; #Override by calling set_meta
+         $this->meta['db_auto_cmdt_type'] = $this->meta['db_auto_cmdt_type'] ?? DB_AUTO_CMDT_TYPE; #Override by calling set_meta
+         $this->meta['db_auto_init_timestamp'] = $this->meta['db_auto_init_timestamp'] ?? DB_AUTO_INIT_TIMESTAMP;
+         $this->meta['db_auto_update_timestamp'] = $this->meta['db_auto_update_timestamp'] ?? DB_AUTO_UPDATE_TIMESTAMP;
 
          /**
           * Check SoftDeleteFields attribute on class
           * */
          $delattributes = $reflector->getAttributes(SoftDeleteFields::class);
-         $this->meta['soft_delete'] = $delattributes ? true : false;
-         $this->meta['deleted_by_field'] = 'deleted_by'; #Override by calling set_meta;
-         $this->meta['deleted_at_field'] = 'deleted_at'; #Override by calling set_meta;
-         $this->meta['deleted_field'] = 'deleted'; #Overrideby calling set_meta;
+         $this->meta['soft_delete'] = $this->meta['soft_delete'] ?? ($delattributes ? true : MODEL_SOFT_DELETE);
+         $this->meta['deleted_by_field'] = $this->meta['deleted_by_field'] ?? MODEL_DELETED_By_FIELD; #Override by calling set_meta;
+         $this->meta['deleted_at_field'] = $this->meta['deleted_at_field'] ?? MODEL_DELETED_AT_FIELD; #Override by calling set_meta;
+         $this->meta['deleted_field'] = $this->meta['deleted_field'] ?? MODEL_DELETED_FIELD; #Overrideby calling set_meta;
 
          $this->meta['fields'] = [];
          $this->meta['nav_field_names'] = [];
          $this->meta['fk_field_names'] = [];
          $this->meta['file_field_names'] = [];
+         $this->meta['defined_field_names'] = [];
+         $this->meta['db_columns'] = [];
+
+         /**
+          * Avoid duplicate data in your table by setting the unique fields key below,
+          * it defaults to an empty array to indicate that rows in this table can contain duplicate
+          * data.
+          * */
+         $this->meta['unique_fields'] = $this->meta['unique_fields'] ?? [];
+
+         /**
+          * When you have provided more than one unique field,
+          * tell the model whether you want to have them be unique together
+          * or unique individually. Defaults to false
+          * */
+         $this->meta['unique_together'] = $this->meta['unique_together'] ?? false;
+
+         /**
+          * Tell the model the action to take when an attempt to insert
+          * duplicate data is made.
+          * 
+          * Options include: 
+          * IGNORE_DUPLICATE - just ignore the duplicate data and add the rest if there are multiple records to add
+          * ABORT_WITH_ERROR - Abort the insert or update operation and throw an exception
+          * ABORT_WITHOUT_ERROR - Abort the insert or update operation without throwing an exception.d
+          * 
+          * Defaults to IGNORE_DUPLICATE
+          * 
+          * */
+         $this->meta['action_on_duplicate'] = $this->meta['action_on_duplicate'] ?? MODEL_ACTION_ON_DUPLICATE;
+
          $properties = $reflector->getProperties(\ReflectionProperty::IS_PUBLIC);
          for($pc = 0; $pc < count($properties); $pc++){
          	 $p = $properties[$pc];
 		 	 
 		 	 /**
-		 	  * Property types come with a ? if declared nullable, remove it.
+		 	  * Property types may come with a ? if declared nullable, remove it.
 		 	  * */
 			 $property_type = str_replace("?", "", $p->getType()); 
 			 $property_name = $p->getName();
 
+             /**
+              * Only take initialized properties.
+              * */
 			 $rp = new \ReflectionProperty($this::class, $property_name);
 			 if( !$rp->isInitialized($this) && $property_type === IField::class ){
 			 	 continue;
@@ -303,32 +418,39 @@ abstract class Dao implements IModel{
 			  * */
 			 $pinstance = $property_type === IField::class ? $p->getValue($this) : $this->convert_property_from_classic_to_modern($p, $property_type);
 			 if($pinstance){
-				 //set internal field name.
-			 	 $pinstance->set_property_name($property_name);
-			 	 //set the name of the class of field model.
-				 $pinstance->set_model_class($this::class);
-				 if($pinstance instanceof Pk){
-			 	 	$this->meta['pk_name'] = $property_name;
-			 	 	$this->meta['pk_type'] = $pinstance->get_key_type();
-			 	 }elseif($pinstance instanceof OneToOne || $pinstance instanceof OneToMany || $pinstance instanceof ManyToMany){
-			 	 	 if($pinstance->is_navigation()){
-			 	 	 	$this->meta['nav_field_names'][] = $property_name;
-			 	 	 }else{
-			 	 	 	$this->meta['fk_field_names'][] = $property_name;
-			 	 	 }
-			 	 }elseif($pinstance instanceof FileField){
-			 	 	$this->meta['file_field_names'][] = $property_name;
-			 	 }
 			 	 $this->meta['fields'][$property_name] = $pinstance;
+			 	 $this->meta['defined_field_names'][] = $property_name;
+			 	 if($pinstance instanceof Pk){
+			 	 	 $this->meta['pk_name'] = $property_name;
+			 	 	 $this->meta['pk_type'] = $pinstance->get_key_type();
+			 	 }
 			 }
-			 
 		 }
 
-		 foreach($this->meta['fields'] as $mf){
+         /**
+          * Acquire non defined fields and combine them with defined fields.
+          * */
+         $this->meta['fields'] = array_merge($this->meta['fields'], $this->get_nondefined_fields());
+		 foreach($this->meta['fields'] as $_k => $mf){
+		 	 //set internal field name.
+			 $mf->set_property_name($_k);
+			 //set the name of the class of field model.
+			 $mf->set_model_class($this::class);
 		 	 //set the model class pk name
 			 $mf->set_model_class_pk($this->meta['pk_name']);
 			 //initialize state
 			 $mf->initialize();
+
+			 if($mf instanceof FileField){
+		 	 	 $this->meta['file_field_names'][] = $_k;
+		 	 }elseif($mf instanceof Relation){
+		 	 	 if($mf->is_navigation()){
+		 	 	 	$this->meta['nav_field_names'][] = $_k;
+		 	 	 }else{
+		 	 	 	$this->meta['fk_field_names'][] = $_k;
+		 	 	 }
+		 	 }
+			 $this->meta['db_columns'][$_k] = $mf->get_db_column_name();
 		 }
 	 }
 
@@ -486,10 +608,11 @@ abstract class Dao implements IModel{
      public function get_validation_configurations(?array $field_names = null){
      	 $vc = [];
      	 foreach($this->meta['fields'] as $fn => $fv){
-     	 	 if(!$field_names || ($field_names && in_array($fn, $field_names)) ){
+     	 	 $column_name = $fv->get_db_column_name();
+     	 	 if(!$field_names || (($field_names && in_array($fn, $field_names)) || ($field_names && in_array($column_name, $field_names)))){
      	 	 	 $fvc = $fv->get_validation_configurations();
 	     	 	 if($fvc){
-	     	 	 	 $vc[$fn] = $fvc;
+	     	 	 	 $vc[$column_name] = $fvc;
 	     	 	 }
      	 	 }
      	 }
@@ -503,8 +626,9 @@ abstract class Dao implements IModel{
 	 	  * 2. PrimaryKey key: GUID key values will be auto generated by the application,
 	 	  *    while AUTO key values are generated by the db engine on insert
 	 	  * */
+	 	 //print_r($data);
      	 $tmp_data = [];
-     	 $model_field_names = array_keys($this->meta['fields']);
+     	 $model_field_names = array_merge(array_keys($this->meta['db_columns']), array_values($this->meta['db_columns']));
      	 foreach(array_keys($data) as $_dk){
      	 	if(in_array($_dk, $model_field_names) && $_dk != $this->meta['pk_name'] && !in_array($_dk, $this->meta['nav_field_names'])){
      	 		$tmp_data[$_dk] = $data[$_dk];
@@ -519,6 +643,7 @@ abstract class Dao implements IModel{
           *    to validate just the file name.
           * */
 	 	 $vc = $operation == 'update' ? $this->get_validation_configurations(array_keys($data)) : $this->get_validation_configurations();
+	 	 //print_r($vc);
 	 	 $file_names_only = [];
 	 	 foreach($this->meta['file_field_names'] as $ffn){
 	 	 	if(isset($data[$ffn]) && !is_array($data[$ffn])){
@@ -533,6 +658,7 @@ abstract class Dao implements IModel{
 	 	 	}
 	 	 }
 
+         //print_r($data);
 	 	 $validation_feedback = ModelValidator::validate($vc, $data);
 		 if($validation_feedback["status"] !== 0){
 			 throw new FieldValidationException([
@@ -604,16 +730,69 @@ abstract class Dao implements IModel{
 	 	 return $file_data;
 	 }
 
+	 private function check_if_duplicate($data){
+	 	 if(!$this->meta['unique_fields']){
+	 	 	 return false;
+	 	 }
+
+	 	 /**
+	 	  * Check that the fields provided are defined in model.
+	 	  * */
+	 	 $all_defined = true;
+	 	 $unique_fields = [];
+	 	 for($f = 0; $f < count($this->meta['unique_fields']); $f++){
+	 	 	 if( !isset($this->meta['fields'][$this->meta['unique_fields'][$f]]) ){
+	 	 	 	 $all_defined = false;
+	 	 	 }
+	 	 	 if(isset($data[$this->meta['unique_fields'][$f]])){
+	 	 	 	 $unique_fields[$this->meta['unique_fields'][$f]] = $data[$this->meta['unique_fields'][$f]];
+	 	 	 }
+	 	 }
+
+	 	 if(!$all_defined){
+	 	 	throw new \Exception("One or more field names provided in meta unique_fields key is not valid!");
+	 	 }
+
+	 	 if(!$unique_fields){
+	 	 	 return false;
+	 	 }
+
+         $unique_field_keys = array_keys($unique_fields);
+         $first_field = array_shift($unique_field_keys);
+         $manager = self::db()->where($first_field."__eq", $unique_fields[$first_field]);
+	 	 foreach($unique_field_keys as $uf){
+	 	 	 $manager = $this->meta['unique_together'] ? $manager->where($uf."__eq", $unique_fields[$uf]) : $manager->or_where($uf."__eq", $unique_fields[$uf]);
+	 	 }
+	 	 $exists = $manager->limit(records: 1, page: 1)->all();
+
+	 	 if(!$exists){
+	 	 	 return false;
+	 	 }
+
+	 	 return true;
+	 }
+
      private function swap_properties_with_columns($clean_data){
      	 $swapped = [];
-     	 foreach($clean_data as $pk => $pv){
+     	 foreach($this->meta['fields'] as $pk => $pv){
      	 	 $ck = $this->meta['fields'][$pk]->get_db_column_name();
-     	 	 $swapped[$ck] = $pv;
+     	 	 if( array_key_exists($ck, $clean_data) || array_key_exists($pk, $clean_data) ){
+     	 	 	 $swapped[$ck] = $clean_data[$ck] ?? $clean_data[$pk];
+     	 	 }
      	 }
      	 return $swapped;
      }
 
 	 public function prepare_insert_data($data){
+	 	/**
+	 	 * Before anything else happens,
+	 	 * check an attempt to insert duplicate data.
+	 	 * */
+	 	 $is_duplicate = $this->check_if_duplicate($data);
+	 	 if($is_duplicate){
+	 	 	 return [$this->meta['action_on_duplicate'], $this->meta['action_on_duplicate']];
+	 	 }
+
 	 	 /**
 	 	  * Get validated data.
 	 	  * */
@@ -637,8 +816,6 @@ abstract class Dao implements IModel{
 		  * */
 	 	 $clean_data = $this->swap_properties_with_columns($clean_data);
 
-	 	 //print_r($clean_data);
-
 	 	 /**
 	 	  * Inject creator and modifier fields, created and modified date time fields and deleted
 	 	  * fields
@@ -661,6 +838,19 @@ abstract class Dao implements IModel{
 	 }
 
 	 public function prepare_update_data($data){
+	 	 /**
+	 	 * Before anything else happens,
+	 	 * check an attempt to insert duplicate data.
+	 	 * */
+	 	 $is_duplicate = $this->check_if_duplicate($data);
+	 	 if($is_duplicate){
+	 	 	 return [$this->meta['action_on_duplicate'], $this->meta['action_on_duplicate']];
+	 	 }
+	 	 
+
+	 	 /**
+	 	  * Get validated data
+	 	  * */
 	 	 $clean_data = $this->get_clean_data($data, "update");
 
 	 	 /**
@@ -668,6 +858,17 @@ abstract class Dao implements IModel{
 	 	  * must not be updated from here.
 	 	  * */
 	 	 unset($clean_data[$this->meta['deleted_field']]);
+
+	 	  /**
+	 	  * Prepare file data.
+	 	  * */
+	 	 $file_data = $this->prepare_file_data($clean_data);
+
+	 	 /**
+		  * Make sure the keys in in clean data represent column names of the table associated with dao
+		  * and not property names.
+		  * */
+	 	 $clean_data = $this->swap_properties_with_columns($clean_data);
 
 	 	 /**
 	 	  * Inject modifier and modified date time fields
@@ -678,11 +879,6 @@ abstract class Dao implements IModel{
 	 	 if($this->meta['auto_cmdt_fields']){
 	 	 	 $clean_data[$this->meta['modified_at_field']] = time(); #Current date time
 	 	 }
-
-	 	 /**
-	 	  * Prepare file data.
-	 	  * */
-	 	 $file_data = $this->prepare_file_data($clean_data);
 
 	 	 return [$clean_data, $file_data];
 	 }
@@ -767,6 +963,52 @@ abstract class Dao implements IModel{
 	 	 $nameparts = explode("\\", $this::class);
 	 	 array_pop($nameparts);
 	 	 return implode("\\", $nameparts);
+	 }
+
+	 /**
+	  * Get the raw values of fields
+	  * @param bool $with_db_names: Whether the returned values should have db column names
+	  * or regular model property names.
+	  * @return array
+	  * */
+	 public function get_raw_values(bool $with_db_names = false, bool $partial = false) : array{
+	 	 $values = [];
+	 	 if($with_db_names){
+	 	 	 foreach($this->meta['fields'] as $fn => $fv){
+	 	 	 	 $col_name = $fv->get_db_column_name();
+	 	 	 	 $values[$col_name] = $fv->get_value();
+	 	     }
+	 	 }else{
+	 	 	 foreach($this->meta['fields'] as $fn => $fv){
+	 	 	     $values[$fn] = $fv->get_value();
+	 	     }
+	 	 }
+
+	 	 if($partial){
+	 	 	 $filtered = [];
+	 	 	 foreach($values as $k => $v){
+	 	 	 	 if($v){
+	 	 	 	 	 $filtered[] = $v;
+	 	 	 	 }
+	 	 	 }
+	 	 	 return $filtered;
+	 	 }
+	 	 
+	 	 return $values;
+	 }
+
+	 //database manipulation utils.
+
+	 /**
+	  * This save assumes the data was set via the model instructor.
+	  * */
+	 public function save(){
+	 	 $data = $this->get_raw_values(with_db_names: true);
+	 	 return $this->db()->add($data)->save();
+	 }
+
+	 public function update(bool $partial = false){
+	 	 //$data = $this->get_raw_values(with_db_names: true, partial: true);
 	 }
 }
 ?>

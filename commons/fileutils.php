@@ -454,7 +454,7 @@ trait FileUtils{
 	 * @param array $exts If set, only find files with these extensions
 	 * @return array A sorted array of absolute filesystem paths
 	 */
-	 function scandir_chrono(string $path, bool $reverse = false, ?array $exts = []): array {
+	 public static function scandir_chrono(string $path, bool $reverse = false, ?array $exts = []): array {
 
 	    /* Fail if the directory can't be opened */
 	    if (!(is_dir($path) && $dir = opendir($path))) {
@@ -483,6 +483,51 @@ trait FileUtils{
 	    $fn = $reverse ? 'krsort' : 'ksort';
 	    $fn($files);
 	    return $files;
+	 }
+
+     /**
+      * Restore a serialized object from file.
+      * @param string $filename : The name of the file from which to get serialized object.
+      * @param bool   $throw_error: Whether to fail loudly or quietly
+      * */
+	 public static function unserialize_from_file(string $filename, bool $throw_error = false) : mixed{
+	 	 if(!file_exists($filename)){
+	 	 	 if($throw_error){
+	 	 	 	 throw new \Exception("The file to unserialize does not exist!");
+	 	 	 }
+
+	 	 	 return false;
+	 	 }
+
+	 	 $contents = file_get_contents($filename);
+	 	 if($contents === false){
+	 	 	 if($throw_error){
+	 	 	 	 throw new \Exception("Could not load file contents!");
+	 	 	 }
+
+	 	 	 return false;
+	 	 }
+
+	 	 $tracker = unserialize($contents);
+	 	 if($tracker === false){
+	 	 	 if($throw_error){
+	 	 	 	 throw new \Exception("Could not unserialize file contents!");
+	 	 	 }
+
+	 	 	 return false;
+	 	 }
+
+         return $tracker;
+	 }
+
+     /**
+      * Serialize an object and save the serialized object to file.
+      * @param string $filename: The path and file name to save.
+      * @param mixed  $object:   The object to serialize.
+      * */
+	 public static function serialize_to_file(string $filename, mixed $object) : bool{
+	 	 $ser = serialize($object);
+         return file_put_contents($filename, $ser);
 	 }
 }
 ?>

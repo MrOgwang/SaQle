@@ -6,8 +6,51 @@ use SaQle\Services\Container\Cf;
 use SaQle\Services\Container\ContainerService;
 use SaQle\Migration\Models\Migration;
 use SaQle\Dao\Field\Types\ManyToMany;
+use SaQle\Commons\FileUtils;
+use SaQle\Migration\Tracker\MigrationTracker;
 
 class ContextManager implements IMigrationManager{
+     use FileUtils;
+
+     private function update_db_context_class($ctx_class, $through_models, $project_root){
+         $parts = explode("\\", $ctx_class);
+         $ctx_name = array_pop($parts);
+         $namespace = implode("\\", $parts);
+
+         $file_path = $this->get_path_from_namespace($namespace, $project_root)."/".strtolower($ctx_name).".php";
+
+         // Read the file content
+         $file_content = file_get_contents($file_path);
+
+         $new_models = [
+            'messagetypes'      => 'VidMessageType',
+            'messageoccasions'  => 'VidMessageOccasion'
+         ];
+
+         // Convert the through models to a string format suitable for inserting into the array
+         $new_models_string = '';
+         $count = 0;
+         foreach($through_models as $key => $value){
+             $model_parts = explode("\\", $value);
+             $model_name = end($model_parts);
+             $new_models_string .= $count === 0 ? "\t'$key' => $model_name::class," : "\n\t\t\t'$key' => $model_name::class,";
+             $count++;
+         }
+
+         // Find the position to insert the new models, which is just before the closing bracket of the array
+         $insert_position = strrpos($file_content, '];');
+
+         // Prepare the new content to insert
+         $insert_content = "$new_models_string\n\t\t";
+
+         // Insert the new content at the specified position
+         $new_file_content = substr_replace($file_content, $insert_content, $insert_position, 0);
+
+         // Write the updated content back to the file
+         file_put_contents($file_path, $new_file_content);
+
+         echo "Models: ".implode(',', array_values($through_models))." added to context: {$ctx_class} successfully.\n";
+     }
      
      private function is_model_defined($model_class, $project_root){
          $mnparts = explode("\\", $model_class);
@@ -74,13 +117,18 @@ class ContextManager implements IMigrationManager{
 
          require_once $file_name;
 
-         $instance     = new $class_name();
-         $raw_models   = $instance->get_models();
-         $raw_fields   = $instance->get_model_fields();
+         $instance      = new $class_name();
+         $raw_models    = $instance->get_models();
+         $raw_fields    = $instance->get_model_fields();
+         $raw_t_models  = $instance->get_through_models();
+         $raw_t_fields  = $instance->get_through_model_fields();
 
 
-         $clean_models = [];
-         $clean_fields = [];
+         $clean_models   = [];
+         $clean_fields   = [];
+         $clean_t_models = [];
+         $clean_t_fields = [];
+
          foreach($raw_models as $n => $m){
              if($this->is_model_defined($m, $project_root)){
                  $clean_models[$n] = $m;
@@ -92,7 +140,20 @@ class ContextManager implements IMigrationManager{
                  }
              }
          }
-         return [$clean_models, $clean_fields];
+
+         foreach($raw_t_models as $n => $m){
+             if($this->is_model_defined($m, $project_root)){
+                 $clean_t_models[$n] = $m;
+
+                 if(isset($raw_t_fields[$n]) && is_array($raw_t_fields[$n])){
+                     $clean_t_fields[$n] = array_filter($raw_t_fields[$n], function($value, $key){
+                         return $value['def'] !== '';
+                     }, ARRAY_FILTER_USE_BOTH);
+                 }
+             }
+         }
+
+         return [$clean_models, $clean_fields, $clean_t_models, $clean_t_fields];
      }
 
      private function get_path_from_namespace(string $namespace, $project_root){
@@ -140,14 +201,14 @@ class ContextManager implements IMigrationManager{
          /**
           * Define the constructor
           * */
-         $template .= "\tpublic function __construct(){\n";
+         $template .= "\tpublic function __construct(...$"."kwargs){\n";
          $template .= "\t\t$"."this->id = new Pk(type: PRIMARY_KEY_TYPE);\n";
          $template .= "\t\t$"."this->".$pmodel_name." = new OneToOne(fdao: ".$o_pmodel_name."::class, pk: '".$pmodel_pk."', fk: '".$pmodel_pk."', dname: '".$pmodel_pk."');\n";
          $template .= "\t\t$"."this->".$fmodel_name." = new OneToOne(fdao: ".$o_fmodel_name."::class, pk: '".$fmodel_pk."', fk: '".$fmodel_pk."', dname: '".$fmodel_pk."');\n";
-         $template .= "\t\tparent::__construct();\n\n";
-         $template .= "\t\t$"."this->set_meta([\n";
+         $template .= "\t\tparent::__construct(...$"."kwargs);\n\n";
+         /*$template .= "\t\t$"."this->set_meta([\n";
          $template .= "\t\t\t'auto_cmdt_fields' => true\n";
-         $template .= "\t\t]);\n\n";
+         $template .= "\t\t]);\n\n";*/
          $template .= "\t}\n\n";
          /**
           * Define get related models function
@@ -168,7 +229,7 @@ class ContextManager implements IMigrationManager{
          return $pnamespace."\\".$classname;
      }
 
-     private function extract_model_fields($models, $project_root, &$manytomany_throughs){
+     private function extract_model_fields($models, $project_root, &$manytomany_throughs, $ctx_class, $ctx_throughs, $generate_throughs = true){
          $model_fields = [];
          $through_models = [];
          foreach($models as $n => $m){
@@ -182,31 +243,50 @@ class ContextManager implements IMigrationManager{
                          $model_fields[$n][$mfn] = ['field' => $mfv::class, 'params' => $mfv->get_kwargs(), 'def' => $mfvdef];
                      }
 
-                     /**
-                      * ManyToMany fields defined on respective tables will generate a new through table
-                      * automatically. This is where that through table is determine. 
-                      * */
-                     if($mfv instanceof ManyToMany){
-                         #get the relation object.
-                         $relation = $mfv->get_relation();
-                         #get the foreign model.
-                         $fmodel = $relation->get_fdao();
+                     if($generate_throughs){
+
                          /**
-                          * 1. Foreign key model must have a ManyToMany field pointing to current table also defined on it.
-                          * 2. Foreign key model must also be defined for the through table to be generated
-                          * 3. The name of the through table will be generated by combining the two class names names.
+                          * ManyToMany fields defined on respective tables will generate a new through table
+                          * automatically. This is where that through table is determined. 
                           * */
-                         if($this->is_model_defined($fmodel, $project_root)){
-                             $fmodel_instance = new $fmodel();
-                             $relationship_field = $fmodel_instance->has_manytomany_relationship_with($m);
-                             if($relationship_field !== false){
-                                 $first_pointer = strtolower($mi->get_class_name().$fmodel_instance->get_class_name());
-                                 $other_pointer = strtolower($fmodel_instance->get_class_name().$mi->get_class_name());
-                                 if(!in_array($first_pointer, $manytomany_throughs) && !in_array($other_pointer, $manytomany_throughs)){
-                                     array_push($manytomany_throughs, $first_pointer);
-                                     array_push($manytomany_throughs, $other_pointer);
-                                     $tm = $this->write_through_model($mi, $fmodel_instance, $project_root);
-                                     $through_models[$first_pointer] = $tm;
+                         if($mfv instanceof ManyToMany){
+                             echo "Generating throughs for {$mfn}!\n";
+                             #get the relation object.
+                             $relation = $mfv->get_relation();
+                             #get the foreign model.
+                             $fmodel = $relation->get_fdao();
+                             /**
+                              * 1. Foreign key model must have a ManyToMany field pointing to current table also defined on it.
+                              * 2. Foreign key model must also be defined for the through table to be generated
+                              * 3. The name of the through table will be generated by combining the two class names names.
+                              * */
+                             if($this->is_model_defined($fmodel, $project_root)){
+                                 echo "The foreign model {$fmodel} is defined\n";
+                                 $fmodel_instance = new $fmodel();
+                                 $relationship_field = $fmodel_instance->has_manytomany_relationship_with($m);
+                                 if($relationship_field !== false){
+                                     echo "The foreign model {$fmodel} has a relationship with primary model: {$m}\n";
+                                     $first_pointer = strtolower($mi->get_class_name().$fmodel_instance->get_class_name());
+                                     $other_pointer = strtolower($fmodel_instance->get_class_name().$mi->get_class_name());
+                                     if(!in_array($first_pointer, $manytomany_throughs) && !in_array($other_pointer, $manytomany_throughs)){
+                                         echo "A through field has not been generated for current run!\n";
+                                         //don't regenerate a through model that is already existing.
+                                         if(!array_key_exists($first_pointer, $ctx_throughs) && !array_key_exists($other_pointer, $ctx_throughs)){
+                                             echo "A through field doesn't exists in the records! Generating now!\n";
+                                             $tm = $this->write_through_model($mi, $fmodel_instance, $project_root);
+                                             $through_models[$first_pointer] = $tm;
+                                         }else{
+                                             echo "A through field exists in the records! Fetching now!\n";
+                                             if(isset($ctx_throughs[$first_pointer])){
+                                                 $through_models[$first_pointer] = $ctx_throughs[$first_pointer];
+                                             }elseif(isset($ctx_throughs[$other_pointer])){
+                                                 $through_models[$other_pointer] = $ctx_throughs[$other_pointer];
+                                             }
+                                         }
+                                         print_r($through_models);
+                                         array_push($manytomany_throughs, $first_pointer);
+                                         array_push($manytomany_throughs, $other_pointer);
+                                     }
                                  }
                              }
                          }
@@ -214,10 +294,12 @@ class ContextManager implements IMigrationManager{
                  }
              }
          }
+         //add through models to db context.
+         //$this->update_db_context_class($ctx_class, $through_models, $project_root); //this was a terrible idea. remove this from here
          return [$model_fields, $through_models];
      }
 
-     private function write_database_snapshot($migration_name, $timestamp, $models, $dirname, $ctxname, $project_root){
+     private function write_database_snapshot($migration_name, $timestamp, $models, $through_models, $dirname, $ctxname, $project_root){
          $class_name  = "{$ctxname}_{$timestamp}_{$migration_name}";
          $snap_folder = $dirname."/snapshots";
          $file_name   = $snap_folder."/".$class_name.".php";
@@ -256,6 +338,40 @@ class ContextManager implements IMigrationManager{
              }
          }
 
+         $through_models_template = "";
+         $through_fields_template = "";
+         foreach($through_models as $n => $m){
+             if($this->is_model_defined($m, $project_root)){
+                 $through_models_template .= "\t\t\t'".$n."' => '".$m."',\n";
+
+                 $mi = new $m();
+                 $mfields = $mi->get_all_fields();
+                 $through_fields_template .= "\t\t\t'".$n."' => [\n";
+                 foreach($mfields as $mfn => $mfv){
+                     $through_fields_template .= "\t\t\t\t'".$mfn."' => [\n";
+                     $through_fields_template .= "\t\t\t\t\t'field' => '".$mfv::class."',\n";
+                     $through_fields_template .= "\t\t\t\t\t'def' => '".$mfv->get_field_definition()."',\n";
+                     $through_fields_template .= "\t\t\t\t\t'params' => [\n"; 
+
+                     $params = $mfv->get_kwargs();
+                     foreach($params as $pk => $pv){
+                         if(is_array($pv)){
+                            $pvv = array_map(function($_pv){
+                                return "'".$_pv."'";
+                            }, $pv);
+                            $pvv = "[".implode(", ", $pvv)."]";
+                         }else{
+                            $pvv = "'".(string)$pv."'";
+                         }
+                         $through_fields_template .= "\t\t\t\t\t\t'".(string)$pk."' => ".(string)$pvv.",\n";
+                     }
+                     $through_fields_template .= "\t\t\t\t\t],\n";
+                     $through_fields_template .= "\t\t\t\t],\n";
+                 }
+                 $through_fields_template .= "\t\t\t],\n";
+             }
+         }
+
          $template = "<?php\n";
          $template .= "use SaQle\\Migration\\Base\\DbSnapshot;\n\n";
          $template .= "class {$class_name} extends DbSnapshot{\n";
@@ -275,6 +391,23 @@ class ContextManager implements IMigrationManager{
          $template .= $fields_template;
          $template .= "\t\t];\n";
          $template .= "\t}\n\n";
+         /**
+          * Get the through models.
+          * */
+         $template .= "\tpublic function get_through_models(){\n";
+         $template .= "\t\treturn [\n";
+         $template .= $through_models_template;
+         $template .= "\t\t];\n";
+         $template .= "\t}\n\n";
+         /**
+          * Get the through model fields.
+          * */
+         $template .= "\tpublic function get_through_model_fields(){\n";
+         $template .= "\t\treturn [\n";
+         $template .= $through_fields_template;
+         $template .= "\t\t];\n";
+         $template .= "\t}\n\n";
+
          $template .= "}\n";
 
          //create migrations folder
@@ -293,16 +426,37 @@ class ContextManager implements IMigrationManager{
          $timestamp      = $options['timestamp'] ?? null;
          $context_classes = $this->get_context_classes($db_context);
          $context_snapshot = [];
-         $manytomany_throughs = [];
+         $manytomany_throughs = []; //this array makes sure only one through model is generated for a pair of related manytomany models.
+         $generated_throughs = []; //collects the generated through models for each database context class.
+
+         $trackerfile = $project_root."/migrations/migrationstracker.bin";
+         $tracker = $this->unserialize_from_file($trackerfile);
+         if(!$tracker){
+             $tracker = new MigrationTracker();
+         }
+         $last_throughs = $tracker->get_through_models();
+
          foreach($context_classes as $ctx){
              $context_snapshot[$ctx] = [];
              $ctxparts = explode("\\", $ctx);
              $ctxname  = end($ctxparts);
+             $ctx_last_throughs = $last_throughs[$ctx] ?? [];
 
-             $models   = $ctx::get_models(); //Add a get defined models to db context to ensure that medels coming in are defined
-             [$model_fields, $through_models] = $this->extract_model_fields($models, $project_root, $manytomany_throughs);
-             $models = array_merge($models, $through_models);
-
+             /**
+              * Acquire models registered with db context
+              * */
+             $models   = $ctx::get_models(); 
+             /**
+              * Acquire model fields for models registered with db context and at the same time
+              * generate through_models from those fields.
+              * */
+             [$model_fields, $through_models] = $this->extract_model_fields($models, $project_root, $manytomany_throughs, $ctx, $ctx_last_throughs);
+             $generated_throughs[$ctx] = $through_models;
+             /**
+              * Then acquire model fields for the generated through_models.
+              * */
+             [$through_model_fields] = $this->extract_model_fields($through_models, $project_root, $manytomany_throughs, $ctx, $ctx_last_throughs, false);
+             
              $a        = new \ReflectionClass($ctx);
              $filename = $a->getFileName();
              $dirname  = pathinfo($filename)['dirname'];
@@ -311,12 +465,12 @@ class ContextManager implements IMigrationManager{
                  ['context' => (Cf::create(ContainerService::class))->createDbContextOptions(...DB_CONTEXT_CLASSES[$ctx])
              ]);
 
-             $this->write_database_snapshot($migration_name, $timestamp, $models, $dirname, $ctxname, $project_root);
+             $this->write_database_snapshot($migration_name, $timestamp, $models, $through_models, $dirname, $ctxname, $project_root);
 
-             $added_models    = $models;
+             $added_models    = array_merge($models, $through_models);
              $removed_models  = [];
 
-             $added_coulmns   = [];
+             $added_columns   = [];
              $removed_columns = [];
 
              try{
@@ -330,12 +484,12 @@ class ContextManager implements IMigrationManager{
                      * Database exists, acquire the timestamp for the last snapshot.
                      * */
                      $last_migration = Migration::db()
-                     ->order(fields: ['date_added'], direction: 'DESC')
+                     ->order(fields: ['migration_timestamp'], direction: 'DESC')
                      ->limit(page: 1, records: 1)
                      ->first_or_default();
                      if($last_migration){
 
-                         [$last_models, $last_model_fields] = $this->get_snapshot(
+                         [$last_models, $last_model_fields, $last_through_models, $last_through_model_fields] = $this->get_snapshot(
                             $last_migration->migration_name, 
                             $last_migration->migration_timestamp, 
                             $dirname, 
@@ -346,20 +500,24 @@ class ContextManager implements IMigrationManager{
                          /**
                           * Which new models have been added.
                           * */
-                         $added_models = array_diff($models, $last_models);
+                         $added_models = array_merge(array_diff($models, $last_models), array_diff($through_models, $last_through_models));
 
                          /**
                           * Which models have been removed
                           * */
-                         $removed_models = array_diff($last_models, $models);
+                         $removed_models = array_merge(array_diff($last_models, $models), array_diff($last_through_models, $through_models));
 
                          /**
                           * Which models have been maintained.
                           * */
-                         $maintained_models = array_intersect($models, $last_models);
+                         $maintained_models = array_merge(array_intersect($models, $last_models), array_intersect($through_models, $last_through_models));
+                         $all_model_fields = array_merge($model_fields, $through_model_fields);
+                         $all_last_model_fields = array_merge($last_model_fields, $last_through_model_fields);
+
                          foreach($maintained_models as $table_name => $model_name){
-                             $current_column_keys  = array_keys($model_fields[$table_name]);
-                             $previous_column_keys = array_keys($last_model_fields[$table_name]);
+                             echo "$table_name\n";
+                             $current_column_keys  = array_keys($all_model_fields[$table_name]);
+                             $previous_column_keys = array_keys($all_last_model_fields[$table_name]);
 
                              $added_column_keys = array_diff($current_column_keys, $previous_column_keys);
                              $removed_column_keys = array_diff($previous_column_keys, $current_column_keys);
@@ -368,14 +526,14 @@ class ContextManager implements IMigrationManager{
                              if($added_column_keys){
                                  $added_settings = ['name' => $table_name, 'model' => $model_name, 'columns' => []];
                                  foreach($added_column_keys as $ack){
-                                     $added_settings['columns'][$ack] = $model_fields[$table_name][$ack]['def'];
+                                     $added_settings['columns'][$ack] = $all_model_fields[$table_name][$ack]['def'];
                                  }
                                  $added_columns[] = $added_settings;
                              }
                              if($removed_column_keys){
                                  $removed_settings = ['name' => $table_name, 'model' => $model_name, 'columns' => []];
                                  foreach($removed_column_keys as $rck){
-                                     $removed_settings['columns'][$rck] = $last_model_fields[$table_name][$rck]['def'];
+                                     $removed_settings['columns'][$rck] = $all_last_model_fields[$table_name][$rck]['def'];
                                  }
                                  $removed_columns[] = $removed_settings;
                              }
@@ -388,6 +546,10 @@ class ContextManager implements IMigrationManager{
              $context_snapshot[$ctx]['tables'] = [$added_models, $removed_models];
              $context_snapshot[$ctx]['columns'] = [$added_columns, $removed_columns];
          }
+
+         $tracker->set_through_models($generated_throughs);
+         $this->serialize_to_file($trackerfile, $tracker);
+
          return $context_snapshot;
      }
 }
