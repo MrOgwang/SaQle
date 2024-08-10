@@ -9,11 +9,12 @@ abstract class IOperation{
 	 public function settings($settings){
 	 	$this->settings = $settings;
 	 }
-	 protected function getpdo($response, $operation_type = "", $todao = false, $daoclass = ""){
+	 protected function getpdo($response, $operation_type = "", $tomodel = false, $daoclass = ""){
+	 	 $tomodel = false;
 		 $statement = $response['statement'];
 		 $pdo_statement_object = array("error_code" => $statement->errorCode(), "row_count" => $statement->rowCount(), "rows" => []);
 		 if($operation_type == "select"){
-		 	 $daoclass = $todao ? $daoclass : "stdClass";
+		 	 $daoclass = $tomodel ? $daoclass : "stdClass";
 		     while($row = $statement->fetchObject($daoclass)){
 				 array_push($pdo_statement_object['rows'], $row);
 			 }

@@ -1,29 +1,25 @@
 <?php
 namespace SaQle\Migration\Models;
 
-use SaQle\Dao\Field\Types\{Pk, TextField, BigIntegerField, BooleanField, FileField, OneToOne, OneToMany, ManyToMany};
-use SaQle\Dao\Field\Interfaces\IField;
-use SaQle\Dao\Model\Dao;
+use SaQle\Migration\Models\Schema\MigrationSchema;
+use SaQle\Dao\Model\Model;
 
-class Migration extends Dao{
-	public IField $migration_id;
-	public IField $migration_name;
-	public IField $migration_timestamp;
-	public IField $is_migrated;
+#[\AllowDynamicProperties]
+class Migration extends Model{
 
-	public function __construct(){
-		 $this->migration_id = new Pk(type: 'GUID');
-		 $this->migration_name = new TextField(required: true, strict: false);
-		 $this->migration_timestamp = new BigIntegerField(required: true, absolute: true, zero: false);
-		 $this->is_migrated = new BooleanField(required: true, absolute: true, zero: true);
+	public string $migration_id;
+	public string $migration_name;
+	public int $migration_timestamp;
+	public int $is_migrated;
 
-		 $this->set_meta([
-   	 	     'auto_cm_fields'   => false,
-	 	 	 'auto_cmdt_fields' => false,
-	 	 	 'soft_delete'      => false
-         ]);
-         
-		 parent::__construct();
+
+	public function __construct(...$kwargs){
+		parent::__construct(...$kwargs);
 	}
+
+	protected static function get_schema(){
+		return MigrationSchema::state();
+	}
+
 }
 ?>

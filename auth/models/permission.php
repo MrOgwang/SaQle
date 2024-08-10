@@ -1,36 +1,28 @@
 <?php
 namespace SaQle\Auth\Models;
 
-use SaQle\Dao\Field\Attributes\{PrimaryKey, TextFieldValidation, NavigationKey};
-use SaQle\Dao\Model\Dao;
-use SaQle\Dao\Model\Attributes\{CreatorModifierFields, CreateModifyDateTimeFields, SoftDeleteFields};
-use SaQle\Controllers\Forms\FieldDataSource;
-use SaQle\Dao\Field\Controls\FormControl;
-use SaQle\Dao\Field\FormControlTypes;
+use SaQle\Auth\Models\Schema\PermissionSchema;
+use SaQle\Dao\Model\Model;
 
-#[CreatorModifierFields()]
-#[CreateModifyDateTimeFields()]
-#[SoftDeleteFields()]
-class Permission extends Dao{
-	 public function __construct(...$field_values){
-     	 parent::__construct(...$field_values);
-     	 $this->set_meta([
-     	 	'name_property' => 'permission_name'
-     	 ]);
-     }
+#[\AllowDynamicProperties]
+class Permission extends Model{
 
-	 #[PrimaryKey(type: 'GUID')]
-	 #[TextFieldValidation(is_required: true, is_strict: false, allow_null: false, allow_empty: false, length: 100)]
-	 public string $permission_id;
-	 
-	 #[FormControl(type: FormControlTypes::TEXT->value, label: 'Permission Name', name: 'permission_name', autocomplete: false, required: true)]
-	 #[FieldDataSource()]
-	 #[TextFieldValidation(is_required: true, is_strict: false, allow_null: false, allow_empty: false, length: 100)]
-	 public string $permission_name;
-	 
-	 #[FormControl(type: FormControlTypes::TEXTAREA->value, label: 'Permission Description', name: 'permission_description', autocomplete: false, required: true)]
-	 #[FieldDataSource()]
-	 #[TextFieldValidation(is_required: true, is_strict: false, allow_null: false, allow_empty: false, length: 1000)]
-	 public string $permission_description;
+	public string $permission_id;
+	public string $permission_name;
+	public string $permission_description;
+	public int $date_added;
+	public int $last_modified;
+	public int $deleted;
+	public int $deleted_at;
+
+
+	public function __construct(...$kwargs){
+		parent::__construct(...$kwargs);
+	}
+
+	protected static function get_schema(){
+		return PermissionSchema::state();
+	}
+
 }
 ?>

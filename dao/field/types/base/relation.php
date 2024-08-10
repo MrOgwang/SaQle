@@ -3,8 +3,9 @@ namespace SaQle\Dao\Field\Types\Base;
 
 use SaQle\Dao\Field\Relations\Interfaces\IRelation;
 use SaQle\Dao\Field\Relations\{One2One, One2Many, Many2Many};
-use SaQle\Dao\Field\Types\{OneToOne, OneToMany, ManyToMany};
+use SaQle\Dao\Field\Types\{Pk, OneToOne, OneToMany, ManyToMany};
 use SaQle\Dao\Field\FormControlTypes;
+use SaQle\Dao\Field\Attributes\{PrimaryKey};
 
 abstract class Relation extends Simple{
 	protected IRelation $relation;
@@ -108,10 +109,24 @@ abstract class Relation extends Simple{
 		 }
 		 
 		 $pdao = $this->get_model_class();
-		 $fdao = $this->kwargs['fdao']; //throw an exception here if fdao doesn't exist.
+		 $fdao = $this->kwargs['fdao']; 
 		 $field = $this->kwargs['field'] ?? $this->property_name;
-		 $pk = $this->kwargs['pk'] ?? $this->model_class_pk; //if pk is not provided, should default to the pk name of current model.
-		 $fk = $this->kwargs['fk'] ?? $this->model_class_pk; //if fk is not provided, should default to the pk name of current model.
+          /**
+           * Default pk to the name of property this type is assigned to
+           * */
+		 $pk = $this->kwargs['pk'] ?? ($this->kwargs['dname'] ?? $this->property_name); 
+		 /**
+		  * Default fk to the name of primary key property of the foreign model.
+		  * */
+		 if(!isset($this->kwargs['fk'])){
+		 	 $state = $fdao::state();
+		 	 echo "$fdao\n";
+		 	 $fk = $state->get_pk_name();
+		 	 echo "Fk: $fk\n\n";
+		 	 $this->kwargs['fk'] = $fk;
+		 }
+		 $fk = $this->kwargs['fk'];
+
 		 $isnav = $this->kwargs['isnav'] ?? false;
 		 $multiple = $this->kwargs['multiple'] ?? false;
 		 $eager = $this->kwargs['eager'] ?? false;

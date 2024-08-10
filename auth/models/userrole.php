@@ -1,27 +1,27 @@
 <?php
 namespace SaQle\Auth\Models;
 
-use SaQle\Dao\Field\Attributes\{PrimaryKey, TextFieldValidation, NavigationKey, ForeignKey};
-use SaQle\Dao\Model\Dao;
-use SaQle\Dao\Model\Attributes\{CreatorModifierFields, CreateModifyDateTimeFields, SoftDeleteFields};
-use SaQle\Controllers\Forms\FieldDataSource;
+use SaQle\Auth\Models\Schema\UserRoleSchema;
+use SaQle\Dao\Model\Model;
 
-#[CreatorModifierFields()]
-#[CreateModifyDateTimeFields()]
-#[SoftDeleteFields()]
-class UserRole extends Dao{
+#[\AllowDynamicProperties]
+class UserRole extends Model{
 
-	 #[PrimaryKey(type: 'GUID')]
-	 #[TextFieldValidation(is_required: true, is_strict: false, allow_null: false, allow_empty: false, length: 100)]
-	 public string $id;
+	public string $id;
+	public string $user_id;
+	public int $date_added;
+	public int $last_modified;
+	public int $deleted;
+	public int $deleted_at;
 
-	 #[FieldDataSource()]
-	 #[TextFieldValidation(is_required: true, is_strict: false, allow_null: false, allow_empty: false, length: 100)]
-     #[ForeignKey(pdao: UserRole::class, fdao: ROLE_MODEL_CLASS, multiple: false, include: true, pfkeys: "role_id=>role_id", field: "role")]
-	 public string $role_id;
 
-	 #[FieldDataSource()]
-	 #[TextFieldValidation(is_required: true, is_strict: false, allow_null: false, allow_empty: false, length: 100)]
-	 public string $user_id;
+	public function __construct(...$kwargs){
+		parent::__construct(...$kwargs);
+	}
+
+	protected static function get_schema(){
+		return UserRoleSchema::state();
+	}
+
 }
 ?>

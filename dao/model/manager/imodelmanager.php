@@ -11,7 +11,7 @@
  use SaQle\Dao\Order\Manager\IOrderManager;
  use SaQle\Dao\Select\Manager\ISelectManager;
  use SaQle\Dao\Formatter\IDataFormatter;
- use SaQle\Dao\Model\Interfaces\IModel;
+ use SaQle\Dao\Model\Interfaces\ITableSchema;
  use SaQle\Dao\Connection\Interfaces\IConnection;
  use SaQle\Dao\DbContext\Trackers\DbContextTracker;
  use SaQle\Dao\DbContext\Attributes\IDbContextOptions;
@@ -33,18 +33,6 @@
  	 protected string $current_dbcontext_class;
  	 protected array  $_models = [];
  	 protected bool   $_is_operation_aborted = false;
-
- 	 /**
- 	  * Whether to include author information in result objects
- 	  * @var bool
- 	  * */
- 	 protected bool $include_authors = false;
-
- 	 /**
- 	  * Whether to include tenant information in result objects
- 	  * @var bool
- 	  * */
- 	 protected bool $include_tenant = false;
 
  	 /**
  	  * Whether to ignore soft delete filter on fectched results
@@ -189,7 +177,7 @@
      * @param string $name
      * @return Model
      */
-     protected function get_model(string $name) : IModel{
+     protected function get_model(string $name) : ITableSchema{
      	return $this->_models[$name];
      }
 
@@ -247,7 +235,7 @@
 	 	 $model_references = $this->get_model_references();
 	 	 modelnotfoundexception($table, $model_references, $this->get_context_options()->get_name());
 		 $dao_class    = $model_references[$table];
-		 $dao_instance = new $dao_class();
+		 $dao_instance = $dao_class::state();
 		 $dao_instance->set_request($this->request);
 		 #register model with the model manager
 		 $this->add_model($table, $dao_instance);
@@ -263,9 +251,9 @@
      /**
      * Add a model to the model manager
      * @param string $name
-     * @param IModel $model
+     * @param ITableSchema $model
      */
-	 public function add_model(string $name, IModel $model){
+	 public function add_model(string $name, ITableSchema $model){
 		 $this->_models[$name] = $model;
 	 }
 

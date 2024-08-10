@@ -13,6 +13,9 @@
  use SaQle\Services\Container\ContainerService;
  use SaQle\Services\Container\Cf;
  use SaQle\Dao\Field\Relations\One2One;
+ use SaQle\Dao\Model\Manager\Handlers\{PathsToUrls, EagerLoadAssign, TypeCast, FormatCmdt};
+ use SaQle\Core\Chain\{Chain, DefaultHandler};
+ use SaQle\Dao\Model\Manager\Trackers\EagerTracker;
 
 class ModelManager extends IModelManager{
 	 use DateUtils, UrlUtils, StringUtils;
@@ -149,18 +152,22 @@ class ModelManager extends IModelManager{
 	 }
 
 	 //fetching
+	 private function eager_load(bool $tomodel = false){
+	 	 return $this->get(tomodel: $tomodel, tracker_active: true);
+	 }
+
 	 /*
 	 * return all the rows found.
 	 */
-	 public function all(bool $todao = false){
-	 	 return $this->get($todao);
+	 public function all(bool $tomodel = false){
+	 	 return $this->get($tomodel);
 	 }
 
 	 /*
 	 * return the first row if its available otherwise throw an error
 	 */
-	 public function first(bool $todao = false){
-	 	 $response = $this->get($todao);
+	 public function first(bool $tomodel = false){
+	 	 $response = $this->get($tomodel);
 	 	 if(!$response){
 	 	 	$table = $this->get_context_tracker()->find_table_name(0);
 	 	 	throw new NullObjectException(table: $table);
@@ -171,16 +178,16 @@ class ModelManager extends IModelManager{
 	 /*
 	    return the first row if its available otherwise return null
 	 */
-	 public function first_or_default(bool $todao = false){
-	 	 $response = $this->get($todao);
+	 public function first_or_default(bool $tomodel = false){
+	 	 $response = $this->get($tomodel);
 	 	 return $response ? $response[0] : null;
 	 }
 
      /*
      * reteurn the last row if its available otherwise throw an error
      */
-	 public function last(bool $todao = false){
-	 	 $response = $this->get($todao);
+	 public function last(bool $tomodel = false){
+	 	 $response = $this->get($tomodel);
 	 	 if(!$response){
 	 	 	throw NullObjectException(table: $this->get_context_tracker()->find_table_name(0));
 	 	 }
@@ -190,17 +197,29 @@ class ModelManager extends IModelManager{
 	 /*
 	 * return the last row if its available otherwise return null
 	 */
-	 public function last_or_default(bool $todao = false){
-	 	 $response = $this->get($todao);
+	 public function last_or_default(bool $tomodel = false){
+	 	 $response = $this->get($tomodel);
 	 	 return $response ? $response[count($response) - 1] : null;
 	 }
 
-	 private function get(bool $todao = false){
+	 private function get(bool $tomodel = false, bool $tracker_active = false){
 	 	 #acquire the table being processed
 	 	 $table_name   = $this->get_context_tracker()->find_table_name(0);
 	 	 #acquire the dao model.
 	 	 $model_instance = $this->get_model($table_name);
 	 	 $model_class    = $model_instance::class;
+	 	 $ass_model_class = $model_instance->get_associated_model_class();
+
+	 	 /**
+	 	  * activate tracker and add current model to it.
+	 	  * */
+	 	 $tracker = EagerTracker::activate();
+	 	 if(!$tracker_active){
+	 	 	 $tracker::reset();
+	 	 }
+	 	 $tracker->add_model($model_class);
+
+	 	 //print_r($tracker::get_loaded_models());
 
 	 	 #apply a default limit if one was not provided
 	 	 $limit_clause = $this->get_limit_clause();
@@ -225,7 +244,7 @@ class ModelManager extends IModelManager{
 	 	 	 table_name:    $table_name,
 	 	 	 table_aliase:  $this->get_context_tracker()->find_table_aliase(0),
 	 	 	 database_name: $this->get_context_tracker()->find_database_name(0),
-	 	 	 todao:         $todao,
+	 	 	 tomodel:         $tomodel,
 	 	 	 daoclass:      $model_class
 	 	 );
 
@@ -234,101 +253,82 @@ class ModelManager extends IModelManager{
 
          #get explicit includes
 	 	 $select_manager = $this->get_select_manager();
-	 	 $includes       = $select_manager->get_includes(); //still refers to classic includes.
+	 	 $includes       = $select_manager->get_includes();
 
 	 	 #get implicit includes.
 	 	 $auto_includes = $model_instance->get_auto_include();
 
-	 	 $include_instances = $auto_includes; //array_merge($includes, $auto_includes);
-	 	 
-	 	 #include authors and modifiers information
-	 	 if($this->include_authors && $model_instance->get_auto_cm()){
-	 	 	 $include_instances[] = new One2One(pdao: '', fdao: AUTH_MODEL_CLASS, field: 'author', pk: 'added_by', fk: 'user_id', isnav: true, multiple: false, eager: 1);
-	 	 	 $include_instances[] = new One2One(pdao: '', fdao: AUTH_MODEL_CLASS, field: 'modifier', pk: 'modified_by', fk: 'user_id', isnav: true, multiple: false, eager: 1);
-	 	 }
+	 	 $include_instances = array_merge($includes, $auto_includes);
 
-	 	 #include tenant information
-	 	 if($this->include_tenant){
-	 	 	 $include_instances[] = new One2One(pdao: '', fdao: TENANT_MODEL_CLASS, field: 'tenant', pk: 'tenant_id', fk: 'tenant_id', isnav: true, multiple: false, eager: 1);
-	 	 }
+	 	 /**
+	 	  * Activate eager loading tracker if it hasn't been activated.
+	 	  * */
 
 	 	 $include_rows = [];
  	 	 foreach($include_instances as $ins){
+ 	 	 	 //print_r($ins);
  	 	 	 $fdao         = $ins->get_fdao();
- 	 	 	 $pkey         = $ins->get_pk();
- 		 	 $fkey         = $ins->get_fk();
- 		 	 $pkey_values  = array_column($rows, $pkey);
- 		 	 $results      = $fdao::db()->limit(records: 1000, page: 1)->where("{$fkey}__in", $pkey_values)->all();
- 		 	 $formatted_results = [];
- 		 	 foreach($results as $r){
-                 $formatted_results[$r->$fkey][] = $r;
-             }
-             $include_rows[$ins->get_field()] = ['data' => $formatted_results, 'key' => $pkey, 'multiple' => $ins->get_multiple()];
+ 	 	 	 if(!$tracker::is_loaded($fdao)){
+ 	 	 	 	 $fdaom        = $fdao::get_associated_model_class();
+	 	 	 	 $pkey         = $ins->get_pk();
+	 		 	 $fkey         = $ins->get_fk();
+	 		 	 $pkey_values  = array_unique(array_column($rows, $pkey));
+	 		 	 $results      = $fdaom::db()->limit(records: 1000, page: 1)->where("{$fkey}__in", $pkey_values)->eager_load(tomodel: $tomodel);
+	 		 	 $formatted_results = [];
+	 		 	 foreach($results as $r){
+	                 $formatted_results[$r->$fkey][] = $r;
+	             }
+	             $include_rows[$ins->get_field()] = ['data' => $formatted_results, 'key' => $pkey, 'multiple' => $ins->get_multiple()];
+ 	 	 	 } 
+	 	 } 
+
+	 	 $chain = new Chain();
+	 	 $chain->add(new DefaultHandler());
+
+	 	 /**
+	 	  * Assign eager loaded objects
+	 	  * */
+	 	 if($include_rows){
+	 	 	 $chain->add(new EagerLoadAssign(data: $include_rows));
 	 	 }
+	 	 
+	 	 /**
+	 	  * Format date and timestamps to human readable forms
+	 	  * */
+	     if($model_instance->get_auto_cmdt() && $model_instance->get_format_cmdt() && $model_instance->get_cmdt_type() === 'PHPTIMESTAMP'){
+	     	 $createdat_name = $model_instance->get_created_at_field_name();
+	     	 $modifiedat_name = $model_instance->get_modified_at_field_name();
+	     	 $chain->add(new FormatCmdt(cat_name: $createdat_name, mat_name: $modifiedat_name));
+	     }
 
-         $file_configurations = $model_instance->get_file_configurations();
-	 	 foreach($rows as $row){
-	 	 	 #set includes
-	 	 	 if($include_rows){
-	 	 	 	 foreach($include_rows as $include_field => $include_info){
-	 	 	 	 	$row->$include_field = $include_info['multiple'] ? [] : null;
-	 	 	 	 	$primary_key_name  = $include_info['key'];
-	 	 	 	 	$primary_key_value = $row->$primary_key_name;
-	 	 	 	 	if(array_key_exists($primary_key_value, $include_info['data'])){
-	 	 	 	 		 $row->$include_field = $include_info['multiple'] ? $include_info['data'][$primary_key_value] 
-	 	 	 	 		 : (count($include_info['data'][$primary_key_value]) > 0 ? $include_info['data'][$primary_key_value][0] : null);
-	 	 	 	 	}
-	 	 	 	 }
-	 	     }
-	 	 	 
-	 	 	 #format date and timestamps.
-	     	 if($model_instance->get_auto_cmdt()){
-	     	 	 if(isset($row->date_added)){
-				     $row->date_added_display = self::format_date($row->date_added, DATE_ADDED_FORMAT);
-				     $row->datetime_added_display = self::format_date($row->date_added, DATETIME_DISPLAY_FORMAT);
-				 }
-				 if(isset($row->last_modified)){
-				     $row->last_modified_display = self::format_date($row->last_modified, DATE_ADDED_FORMAT);
-				     $row->datetime_last_modified_display = self::format_date($row->last_modified, DATETIME_DISPLAY_FORMAT);
-				 }
+         /**
+          * Format file paths to urls
+          * */
+	     $file_configurations = $model_instance->get_file_configurations();
+	     if(count($file_configurations) > 0){
+	     	 $chain->add(new PathsToUrls(model: $model_instance, config: $file_configurations));
+	     }
+
+	     /**
+	      * Cast the row data to value object type
+	      * */
+	     if($tomodel){
+	     	 $chain->add(new TypeCast(type: $ass_model_class));
+	     }
+
+	     if($chain->is_active()){
+	     	 $newrows = [];
+	     	 foreach($rows as $row){
+	     	 	$newrows[] = $chain->apply($row);
 	     	 }
+	     	 return $newrows;
+	     }
 
-             #include file urls
-	     	 if(count($file_configurations) > 0){
-	     	 	 foreach($file_configurations as $file_key => $file_config){
-	     	 		 //get the file path
-		     	     $folder_path = $file_configurations[$file_key]['path'] ?? "";
-			         if($folder_path && method_exists($model_instance, $folder_path)){
-		 				 $folder_path = $model_instance->$folder_path($row);
-		 			 }
+	     if(!$tracker_active){
+	     	// $tracker::reset();
+	     }
 
-		 			 //echo "$folder_path\n";
-		 			 //echo str_replace(DOCUMENT_ROOT, ROOT_DOMAIN, $folder_path)."\n";
-		 			 //echo "---------\n";
-
-		 			 if( isset($row->$file_key) && $row->$file_key){
-		 			 	if(HIDDEN_MEDIA_FOLDER){
-		 			 		$show_file = $file_configurations[$file_key]['show_file'] ?? "";
-		 			 		if($show_file && method_exists($model_instance, $show_file)){
-				 				 $show_file = $model_instance->$show_file($row);
-				 			}
-				 			$folder_path = $this->encrypt($folder_path, $row->$file_key);
-				 			$file_url = $this->add_url_parameter($show_file, ['file', 'xyz'], [$row->$file_key, $folder_path]);
-		 			 	}else{
-		 			 		$file_url = str_replace(DOCUMENT_ROOT, ROOT_DOMAIN, $folder_path).$row->$file_key;
-		 			 	}
-		 			 	$row->$file_key = $file_url;
-		 			 }else{
-		 			 	 $default = $file_configurations[$file_key]['default'] ?? "";
-		 			 	 if($default && method_exists($model_instance, $default)){
-		 			 	 	 $row->$file_key = $model_instance->$default($row);
-		 			     }
-		 			 }
-		     	 }
-	     	 }
-
- 	 	 }
-	 	 return $rows;
+	     return $rows;
 	 }
 
 	 public function total(){
@@ -348,28 +348,53 @@ class ModelManager extends IModelManager{
 	 }
 
 	 //includes
-	 public function with(string $field){
+	 private function check_with(string $field){
 	 	 #Make sure this field is a navigation or foreign key field
      	 $table = $this->get_context_tracker()->find_table_name(0);
      	 #get the model associated with this table
      	 $model = $this->get_model($table);
      	 #get include field
      	 $include_field = $model->is_include($field);
+
      	 if(!$include_field){
      	 	throw new \Exception("{$field} This is not an includable field!");
      	 }
+
+     	 return [$include_field, $model];
+	 }
+
+	 public function with(string $field){
+	 	 [$field, $model] = $this->check_with($field);
      	 $select_manager = $this->get_select_manager();
-	 	 $select_manager->add_include($include_field);
+	 	 $select_manager->add_include($field);
 	 	 return $this;
 	 }
 
+     /**
+      * Short cut to eager load author and modifier
+      * user information
+      * */
 	 public function with_authors(){
-	 	 $this->include_authors = true;
+	 	 [$a_field, $model] = $this->check_with("author");
+	 	 [$m_field] = $this->check_with("modifier");
+
+	 	 if($model->get_auto_cm()){
+	 	 	 $select_manager = $this->get_select_manager();
+	 	     $select_manager->add_include($a_field);
+	 	     $select_manager->add_include($m_field);
+	 	 }
 	 	 return $this;
 	 }
 
+     /**
+      * Short cut to eager load tenant information.
+      * */
 	 public function with_tenant(){
-	 	 $this->include_tenant = true;
+	 	 [$field, $model] = $this->check_with("tenant");
+	 	 if($model->is_multitenant()){
+	 	 	 $select_manager = $this->get_select_manager();
+	 	     $select_manager->add_include($field);
+	 	 }
 	 	 return $this;
 	 }
 
@@ -419,10 +444,16 @@ class ModelManager extends IModelManager{
      	 }
 	 }
 
-     private function save_changes(){
+     private function save_changes(bool $tomodel = false){
      	 if($this->_is_operation_aborted || !$this->_insert_data_container["data"]){
      	 	 return null;
      	 }
+
+     	 #acquire the table being processed
+	 	 $table_name   = $this->get_context_tracker()->find_table_name(0);
+	 	 #acquire the dao model.
+	 	 $model_instance = $this->get_model($table_name);
+	 	 $ass_model_class = $model_instance->get_associated_model_class();
 
 	 	 /*setup an insert command*/
 	 	 $this->crud_command = new InsertCommand(
@@ -437,9 +468,19 @@ class ModelManager extends IModelManager{
 	 	 );
 	 	 /*execute command and return response*/
 	 	 $result = $this->crud_command->execute();
-	 	 if($result && $this->_file_data){
-	 	 	 $this->auto_save_files();
+	 	 if($result){
+	 	 	 if($this->_file_data){
+	 	 	 	 $this->auto_save_files();
+	 	 	 }
+	 	 	 if($tomodel){
+	 	 	 	$hydrated = [];
+	 	 	 	foreach($result as $r){
+	 	 	 		 $hydrated[] = new $ass_model_class(...(array)$r);
+	 	 	 	}
+	 	 	 	return $hydrated;
+	 	 	 }
 	 	 }
+
 	 	 return $result;
      }
  
@@ -486,9 +527,15 @@ class ModelManager extends IModelManager{
      	return $this;
      }
 
-     public function save(bool $multiple = false){
-     	 $saved_data = $this->save_changes();
-     	 return !$saved_data ? $saved_data : ($multiple ? $saved_data : $saved_data[0]);
+     public function save(bool $tomodel = false){
+     	 $saved_data = $this->save_changes(tomodel: $tomodel);
+     	 if(!$saved_data)
+     	 	return null;
+
+     	 if(count($this->_insert_data_container["data"]) > 1)
+     	 	return $saved_data;
+
+     	 return $saved_data[0];
      }
 
      // deletes

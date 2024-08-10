@@ -81,6 +81,9 @@ abstract class Simple{
 	protected function set_validator_attributes(...$kwargs){
 		 $validation_properties = $this->get_validation_properties();
 		 $newprops = $this->translate_properties($validation_properties, $kwargs);
+		 if(isset($newprops['choices']) && isset($kwargs['usekeys'])){
+		 	 $newprops['choices'] = array_keys($newprops['choices']);
+		 }
 		 if($this instanceof TextType || (isset($kwargs['vtype']) && $kwargs['vtype'] == 'text')){
 		 	if(!array_key_exists('type', $newprops)){
 		 		$newprops['type'] = 'string';

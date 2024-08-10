@@ -1,45 +1,38 @@
 <?php
 namespace SaQle\Auth\Models;
 
-use SaQle\Dao\Field\Attributes\{PrimaryKey, TextFieldValidation, NumberFieldValidation, ForeignKey};
-use SaQle\Dao\Model\Dao;
-use SaQle\Dao\Model\Attributes\{CreatorModifierFields, CreateModifyDateTimeFields, SoftDeleteFields};
+use SaQle\Auth\Models\Schema\LoginSchema;
+use Morewifi\Apps\Account\Models\User;
+use SaQle\Dao\Model\Model;
 
-#[CreatorModifierFields()]
-#[CreateModifyDateTimeFields()]
-#[SoftDeleteFields()]
-class Login extends Dao{
-	
-	 public function __construct(...$field_values){
-	 	parent::__construct(...$field_values);
-	 }
+#[\AllowDynamicProperties]
+class Login extends Model{
 
-	 #[PrimaryKey(type: 'GUID')]
-	 public string $login_id;
-	 
-	 #[NumberFieldValidation(is_required: true, is_absolute: true, allow_null: false, allow_zero: false)]
-	 public int $login_count;
-	 
-	 #[NumberFieldValidation(is_required: true, is_absolute: true, allow_null: false, allow_zero: false)]
-	 public int $login_datetime;
-	 
-	 #[NumberFieldValidation(is_required: false, is_absolute: true, allow_null: true, allow_zero: false)]
-	 public int $logout_datetime;
-	 
-	 #[NumberFieldValidation(is_required: false, is_absolute: true, allow_null: true, allow_zero: false)]
-	 public int $login_span;
-	 
-	 #[TextFieldValidation(is_required: false, is_strict: false, allow_null: true, allow_empty: true)]
-	 public string $login_location;
-	 
-	 #[TextFieldValidation(is_required: false, is_strict: false, allow_null: true, allow_empty: true)]
-	 public string $login_device;
-	 
-	 #[TextFieldValidation(is_required: false, is_strict: false, allow_null: true, allow_empty: true)]
-	 public string $login_browser;
-	 
-	 #[TextFieldValidation(is_required: true, is_strict: false, allow_null: false, allow_empty: false)]
-	 public string $user_id;
-	 
+	public string $login_id;
+	public int $login_count;
+	public int $login_datetime;
+	public int $logout_datetime;
+	public int $login_span;
+	public string $login_location;
+	public string $login_device;
+	public string $login_browser;
+	public string $user_id;
+	public User $author;
+	public User $modifier;
+	public int $date_added;
+	public int $last_modified;
+	public int $deleted;
+	public User $remover;
+	public int $deleted_at;
+
+
+	public function __construct(...$kwargs){
+		parent::__construct(...$kwargs);
+	}
+
+	protected static function get_schema(){
+		return LoginSchema::state();
+	}
+
 }
 ?>

@@ -4,6 +4,7 @@ namespace SaQle\Migration\Commands;
 use SaQle\Dao\DbContext\Manager\DbManagerFactory;
 use SaQle\Commons\FileUtils;
 use SaQle\Migration\Models\Migration;
+use SaQle\Migration\Models\Schema\MigrationSchema;
 use SaQle\Migration\Tracker\MigrationTracker;
 
 class Migrate{
@@ -25,7 +26,6 @@ class Migrate{
              $migration_files = $this->scandir_chrono(path: $migrations_folder, reverse: false, exts: ['php']);
          }
 
-         print_r($migration_files);
          $mfc               = count($migration_files);
          echo "Starting migrations!\n";
          for($m = 0; $m < $mfc; $m++){
@@ -65,7 +65,7 @@ class Migrate{
                           * Check that current migrations were migrated.
                           * */
                          $exists = Migration::db()
-                         ->order(fields: ['date_added'], direction: 'DESC')
+                         ->order(fields: ['migration_timestamp'], direction: 'DESC')
                          ->limit(page: 1, records: 1)
                          ->where('migration_name__eq', $nameparts[2])
                          ->first_or_default();
@@ -82,7 +82,7 @@ class Migrate{
                         echo "Database {$databasename} was not found and could not be created! Exiting!\n";
                         continue;
                      }
-                     $dbmanager->create_table('migrations', Migration::class);
+                     $dbmanager->create_table('migrations', MigrationSchema::class);
 
                      /**
                       * Get and execute the up operations.

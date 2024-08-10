@@ -29,6 +29,7 @@ class LengthValidator extends ValidatorDecorator{
 		 match($config['general_type']){
 		 	'number' => $this->validate_scalar($feedback, [$this, 'number_length_valid']),
 		 	'text'   => $this->validate_scalar($feedback, [$this, 'text_length_valid']),
+		 	default  => true
 		 };
 		 return $feedback;
 	 }

@@ -25,7 +25,7 @@ class InsertOperation extends IOperation{
 		 $response = $this->getpdo($this->connection->execute($sql, array_merge(...$values), "insert", $prmkeytype), "insert");
 		 if($response->error_code !== "00000"){
 		 	 throw new InsertOperationFailedException(name: $table);
-		 	 return false;
+		 	 return null;
 		 }
 
 		 if($prmkeytype && $prmkeyname && $prmkeyvalues){
@@ -33,13 +33,13 @@ class InsertOperation extends IOperation{
 		 	 $response = $this->getpdo($this->connection->execute($sql2, $prmkeyvalues, "select", $prmkeytype), "select");
 			 if($response->error_code !== "00000"){
 			 	 throw new InsertOperationFailedException(name: $table);
-			 	 return false;
+			 	 return null;
 			 }
 			 return $response->rows;
 		 }
 
 		
-		 return $response->rows_count > 0 ? true : false;
+		 return null;
 	 }
 
 }

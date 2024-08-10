@@ -41,7 +41,7 @@ class MySQLDbManager extends DbManager{
       * Create a new database table.
       * */
      public function create_table($table, $model_class){
-     	 $model = new $model_class();
+     	 $model = $model_class::state();
      	 $defs  = $model->get_field_definitions();
 
      	 /*setup a create command*/

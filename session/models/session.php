@@ -1,25 +1,29 @@
 <?php
 namespace SaQle\Session\Models;
 
-use SaQle\Dao\Field\Attributes\{PrimaryKey, TextFieldValidation};
-use SaQle\Dao\Model\Dao;
-use SaQle\Dao\Model\Attributes\CreateModifyDateTimeFields;
+use SaQle\Session\Models\Schema\SessionSchema;
+use Morewifi\Apps\Account\Models\User;
+use SaQle\Dao\Model\Model;
 
-#[CreateModifyDateTimeFields()]
-class Session extends Dao{
+#[\AllowDynamicProperties]
+class Session extends Model{
 
-	 public function __construct(...$field_values){
-	 	parent::__construct(...$field_values);
-	 }
+	public string $id;
+	public string $session_id;
+	public string $session_data;
+	public User $author;
+	public User $modifier;
+	public int $date_added;
+	public int $last_modified;
 
-	 #[PrimaryKey(type: 'GUID')]
-	 public string $id;
 
-	 #[TextFieldValidation(is_required: true, is_strict: false, allow_null: false, allow_empty: false)]
-	 public string $session_id;
+	public function __construct(...$kwargs){
+		parent::__construct(...$kwargs);
+	}
 
-	 #[TextFieldValidation(is_required: false, is_strict: false, allow_null: true, allow_empty: true)]
-	 public string $session_data;
+	protected static function get_schema(){
+		return SessionSchema::state();
+	}
 
 }
 ?>

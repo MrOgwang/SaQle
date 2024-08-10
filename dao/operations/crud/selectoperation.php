@@ -7,7 +7,7 @@ use SaQle\Dao\Operations\Crud\Exceptions\SelectOperationFailedException;
 class SelectOperation extends IOperation{
 
 	 public function select(){
-	 	 $todao       = $this->settings['todao'];
+	 	 $tomodel       = $this->settings['tomodel'];
 	 	 $daoclass    = $this->settings['daoclass'];
 		 $data        = $this->settings['where_clause']->data;
 		 $select      = $this->settings['select_clause'];
@@ -22,7 +22,7 @@ class SelectOperation extends IOperation{
 		 $sql .= $this->settings['order_clause'];
 		 $sql .= $this->settings['limit_clause'];
 
-		 $response = $this->getpdo($this->connection->execute($sql, $data, "select"), "select", $todao, $daoclass);
+		 $response = $this->getpdo($this->connection->execute($sql, $data, "select"), "select", $tomodel, $daoclass);
 		 if($response->error_code !== "00000"){
 		 	 throw new SelectOperationFailedException(name: $name);
 		 	 return;

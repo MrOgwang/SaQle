@@ -27,10 +27,13 @@ class NullValidator extends ValidatorDecorator{
 
 	 public function validate($input, $config, $code, $message = null){
 	 	 $feedback = $this->execute_next_validator($input, $config, $code, $message);
-	 	 match($config['general_type']){
+	 	 $is_valid = match($config['general_type']){
 		 	'text', 'number' => $this->validate_scalar($feedback, [$this, 'null_valid']),
 		 	'upload' => true
 		 };
+		 if($is_valid && is_null($input)){
+		 	 $feedback['bypass'] = true;
+		 }
 		 return $feedback;
 	 }
 

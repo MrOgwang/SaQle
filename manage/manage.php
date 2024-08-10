@@ -14,7 +14,7 @@ class Manage{
 	 public function __construct($args){
 	 	 $this->command = $args[1] ?? null;
 	 	 $this->arguments = match($this->command){
-	 	 	'makemigrations' => $this->extract_makemigrations_args($args),
+	 	 	'make:migrations' => $this->extract_makemigrations_args($args),
 	 	 	'migrate'        => [],
 	 	 	default          => throw new \Exception("Unknown command!")
 	 	 };
@@ -42,7 +42,7 @@ class Manage{
 
 	 public function __invoke(){
 		 switch ($this->command){
-		     case 'makemigrations':
+		     case 'make:migrations':
 	             $migration_name = $this->arguments['name']    ?? null;
 	             $app_name       = $this->arguments['app']     ?? null;
 	             $db_context     = $this->arguments['context'] ?? null;
@@ -53,6 +53,9 @@ class Manage{
 		         }
 			 break;
 			 case 'migrate':
+			     (Cf::create(Migrate::class))->execute($this->project_root);
+			 break;
+			 case 'make:backoffice':
 			     (Cf::create(Migrate::class))->execute($this->project_root);
 			 break;
 			 default:

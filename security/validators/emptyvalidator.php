@@ -25,10 +25,13 @@ class EmptyValidator extends ValidatorDecorator{
 	 }
 	 public function validate($input, $config, $code, $message = null){
 		 $feedback = $this->execute_next_validator($input, $config, $code, $message);
-	 	 match($config['general_type']){
+	 	 $is_valid = match($config['general_type']){
 		 	'text', 'number' => $this->validate_scalar($feedback, [$this, 'is_empty_valid']),
 		 	'upload' => true
 		 };
+		 if($is_valid && $config['general_type'] !== 'upload' && trim($input) == ""){
+		 	 $feedback['bypass'] = true;
+		 }
 		 return $feedback;
 	 }
 	 public function is_empty_valid($input, $config){

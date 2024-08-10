@@ -17,8 +17,22 @@
 
 namespace SaQle\Config;
 
+use SaQle\Auth\Models\Schema\{BaseRoleSchema, BasePermissionSchema, BaseTenantSchema, BaseUserSchema};
+
 class Config{
+
+	 private function validate_config(){
+	 	
+	 }
+
 	 public function __construct(...$settings){
+	 	/**
+	 	 * Enable role based accesscontrol with the following flags.
+	 	 * */
+	 	define("ENABLE_RBAC", $settings['enable_rbac'] ?? false);
+	 	define("ROLE_MODEL_CLASS", $settings['role_model_class'] ?? BaseRoleSchema::class);
+	 	define("PERMISSION_MODEL_CLASS", $settings['role_model_class'] ?? BasePermissionSchema::class);
+	 	
 	 	/**
 	 	 * Array of all the db context classes.
 	 	 * */
@@ -66,27 +80,19 @@ class Config{
 		 define("PRIMARY_KEY_TYPE", $settings['primary_key_type'] ?? 'GUID');
 
 		 /**
-		  * Model validation version to use.
-		  * */
-		 define("MODEL_VALIDATION_VERSION", $settings['model_validation_version'] ?? 1);
-
-		 /**
 		 * The model class name for authentications 
 		 * This class must be of type User.
 		 * */
-		 define("AUTH_MODEL_CLASS", $settings['auth_model_class']);
+		 define("AUTH_MODEL_CLASS", $settings['auth_model_class'] ?? BaseUserSchema::class);
 
 		 /**
-		 * The model class name for tenant 
-		 * This class must be of type Tenant.
-		 * */
-		 define("TENANT_MODEL_CLASS", $settings['tenant_model_class'] ?? '');
-
-		 /**
-		 * The model class name for role 
-		 * This class must be of type Role.
-		 * */
-		 define("ROLE_MODEL_CLASS", $settings['role_model_class']);
+		  * The following flags will enable or disable multitenancy
+		  * 1. TENANT_MODEL_CLASS  : the clas name of the tanant schema
+		  * 2. ENABLE_MULTITENANCY : Expliclty set this to enable multi tenancy
+		  * */
+		 define("TENANT_MODEL_CLASS", $settings['tenant_model_class'] ?? BaseTenantSchema::class);
+		 define("ENABLE_MULTITENANCY", $settings['enable_multitenancy'] ?? false);
+		 
 
 		 /**
 		 * The authentication backend class
@@ -211,7 +217,7 @@ class Config{
 		 define("MODEL_DELETED_FIELD", $settings['model_deleted_field'] ?? 'deleted');
 
 		 /**
-          * What happens when duplicate data is encoiuntered during insert or update operations.
+          * What happens when duplicate data is encountered during insert or update operations.
           * 
           * Options include: 
           * IGNORE_DUPLICATE - just ignore the duplicate data and add the rest if there are multiple records to add
@@ -222,6 +228,8 @@ class Config{
           * 
           * */
 		 define("MODEL_ACTION_ON_DUPLICATE", $settings['model_action_on_duplicate'] ?? 'IGNORE_DUPLICATE');
+
+		 $this->validate_config();
 	 }
 }
 ?>
