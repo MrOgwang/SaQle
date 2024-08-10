@@ -33,6 +33,7 @@
  	 protected string $current_dbcontext_class;
  	 protected array  $_models = [];
  	 protected bool   $_is_operation_aborted = false;
+ 	 protected array  $_operation_status = [];
 
  	 /**
  	  * Whether to ignore soft delete filter on fectched results

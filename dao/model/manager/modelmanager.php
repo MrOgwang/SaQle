@@ -445,9 +445,27 @@ class ModelManager extends IModelManager{
 	 }
 
      private function save_changes(bool $tomodel = false){
-     	 if($this->_is_operation_aborted || !$this->_insert_data_container["data"]){
+     	 if(!$this->_insert_data_container["data"]){
+     	 	 throw new \Exception("Save attempt on an empty data container!");
      	 	 return null;
      	 }
+
+     	 /*
+     	 $proceed = false;
+     	 if($this->_operation_status['is_duplicate'] === false || 
+     	 ($this->_operation_status['is_duplicate'] === true && $this->_operation_status['duplicate_action'] === 'IGNORE_DUPLICATE')){
+     	 	 $proceed = true;
+     	 }
+
+     	 if($this->_operation_status['is_duplicate'] === true 
+     	 	&& $this->_operation_status['duplicate_action'] === 'BYPASS_DUPLICATE'
+     	    && count($this->_insert_data_container["data"]) > 1){
+     	 	 $proceed = true;
+     	 }
+
+
+     	 $duplicate_actions = [, '', 'ABORT_WITHOUT_ERROR', 'ABORT_WITH_ERROR', 'RETURN_EXISTING', 'UPDATE_ON_DUPLICATE'];*/
+
 
      	 #acquire the table being processed
 	 	 $table_name   = $this->get_context_tracker()->find_table_name(0);
@@ -489,27 +507,15 @@ class ModelManager extends IModelManager{
      	 $table = $this->get_context_tracker()->find_table_name(0);
      	 /*get the model associated with this table*/
      	 $model = $this->get_model($table);
-     	 [$clean_data, $file_data] = $model->prepare_insert_data($data);
+     	 [$clean_data, $file_data, $is_duplicate, $action_on_duplicate] = $model->prepare_insert_data($data);
 
-     	 $duplicate_actions = ['IGNORE_DUPLICATE', 'ABORT_WITHOUT_ERROR', 'ABORT_WITH_ERROR'];
-     	 if(in_array($clean_data, $duplicate_actions)){
-     	 	 /**
-     	 	  * The model found a duplicate, and returned an action that is supposed to be taken.
-     	 	  * The model manager will decide what to do depending on the following scenarios.
-     	 	  * 
-     	 	  * 1. If any ABORT action is set, the entire operation will be aborted. This includes aborting the insertion of
-     	 	  *     other records bundled in this operation.
-     	 	  * 2. If the ABORT_WITH_ERROR is set, an exception will be thrown.
-     	 	  * 3. If IGNORE_DUPLICATE is set, this record will be ignored. However, if this is the only record being inserted, 
-     	 	  *    the operation will be abroted.
-     	 	  * */
-     	 	 if($clean_data == 'ABORT_WITHOUT_ERROR' || $clean_data == 'ABORT_WITH_ERROR'){
-     	 	 	 $this->_is_operation_aborted = true;
-     	 	 	 if($clean_data == 'ABORT_WITH_ERROR'){
-     	 	 	 	 throw new \Exception("Insert operation aborted! Duplicate entries detected.");
-     	 	 	 }
-     	 	     return $this;
+     	 if($is_duplicate){
+     	 	 $this->_operation_status['is_duplicate'] = true;
+     	 	 if(!array_key_exists('duplicate_entries', $this->_operation_status)){
+     	 	 	 $this->_operation_status['duplicate_entries'] = [];
      	 	 }
+     	 	 $this->_operation_status['duplicate_entries'][] = $is_duplicate;
+     	 	 $this->_operation_status['duplicate_action'] = $action_on_duplicate;
      	 }
 
      	 $this->_insert_data_container["prmkeyname"] = $model->get_pk_name();
@@ -580,27 +586,15 @@ class ModelManager extends IModelManager{
      	 $table = $this->get_context_tracker()->find_table_name(0);
      	 /*get the model associated with this table*/
      	 $model = $this->get_model($table);
-     	 [$clean_data, $file_data] = $model->prepare_update_data($data);
-     	 
-     	 $duplicate_actions = ['IGNORE_DUPLICATE', 'ABORT_WITHOUT_ERROR', 'ABORT_WITH_ERROR'];
-     	 if(in_array($clean_data, $duplicate_actions)){
-     	 	 /**
-     	 	  * The model found a duplicate, and returned an action that is supposed to be taken.
-     	 	  * The model manager will decide what to do depending on the following scenarios.
-     	 	  * 
-     	 	  * 1. If any ABORT action is set, the entire operation will be aborted. This includes aborting the insertion of
-     	 	  *     other records bundled in this operation.
-     	 	  * 2. If the ABORT_WITH_ERROR is set, an exception will be thrown.
-     	 	  * 3. If IGNORE_DUPLICATE is set, this record will be ignored. However, if this is the only record being inserted, 
-     	 	  *    the operation will be abroted.
-     	 	  * */
-     	 	 if($clean_data == 'ABORT_WITHOUT_ERROR' || $clean_data == 'ABORT_WITH_ERROR'){
-     	 	 	 $this->_is_operation_aborted = true;
-     	 	 	 if($clean_data == 'ABORT_WITH_ERROR'){
-     	 	 	 	 throw new \Exception("Update operation aborted! Duplicate entries detected.");
-     	 	 	 }
-     	 	     return $this;
+     	 [$clean_data, $file_data, $is_duplicate, $action_on_duplicate] = $model->prepare_update_data($data);
+
+     	 if($is_duplicate){
+     	 	 $this->_operation_status['is_duplicate'] = true;
+     	 	 if(!array_key_exists('duplicate_entries', $this->_operation_status)){
+     	 	 	 $this->_operation_status['duplicate_entries'] = [];
      	 	 }
+     	 	 $this->_operation_status['duplicate_entries'][] = $is_duplicate;
+     	 	 $this->_operation_status['duplicate_action'] = $action_on_duplicate;
      	 }
 
      	 $this->_update_data_container["data"] = array_merge($this->_update_data_container["data"], $clean_data);

@@ -6,7 +6,7 @@ use SaQle\Commons\StringUtils;
 use SaQle\Http\Request\Request;
 use SaQle\Services\Container\Cf;
 use SaQle\Services\Container\ContainerService;
-use SaQle\Core\Collection\Base\TypedCollection;
+use SaQle\Dao\Model\Interfaces\ModelCollection;
 
 #[\AllowDynamicProperties]
 abstract class Model implements IModel{
@@ -61,10 +61,8 @@ abstract class Model implements IModel{
 	  * */
 	 protected static abstract function get_schema();
 
-	 public function get_pk_value(){
-	 	 $schema = $this->get_schema();
-	 	 $pk_name = $schema->get_pk_name();
-	 	 return $this->$pk_name;
+	 public function get_field_value($name){
+	 	 return $this->$name;
 	 }
 
 	 public static function db(){
@@ -73,16 +71,6 @@ abstract class Model implements IModel{
 	 	 $manager = Cf::create(ContainerService::class)->createContextModelManager($db_class);
          $manager->initialize($table_name, $db_class);
          return $manager;
-	 }
-
-     /**
-      * Relation objects will not be saved by default when saving main object, unless they are included
-      * using the 'with' interface.
-      * */
-	 public function with(string $name){
-	 	 if(!in_array($name, $this->save_with)){
-	 	 	 $this->save_with[$name];
-	 	 }
 	 }
 
 	 /**
@@ -96,15 +84,20 @@ abstract class Model implements IModel{
 	 public function save(...$extra){
 	 	 [$savable_simple, $savable_nk, $savable_fk, $pk_name] = $this->get_savable_values();
 
+	 	 //print_r($savable_simple);
+	 	 //print_r($savable_nk);
+	 	 //print_r($savable_fk);
+
 	 	 /**
 	 	  * If there are foreign relations, save them first.
 	 	  * RK relations are one to one, so the save is expected to return a single object.
 	 	  * */
 	 	 $saved_fk_ids = [];
 	 	 foreach($savable_fk as $fk_key => $fk_value){
-	 	 	 $s = $fk_value->save();
+	 	 	 $s = $fk_value[0]->save();
 	 	 	 if($s){
-	 	 	 	 $saved_fk_ids[$fk_key] = $s->get_pk_value();
+	 	 	 	 $fk_name = $fk_value[1]->get_fk();
+	 	 	 	 $saved_fk_ids[$fk_key] = $s->get_field_value($fk_name);
 	 	 	 }
 	 	 }
 
@@ -113,15 +106,17 @@ abstract class Model implements IModel{
 	 	  * */
 	 	 $object = null;
 	 	 if(isset($savable_simple[$pk_name])){
-	 	 	 $object = self::db()->where($pk_name, $savable_simple[$pk_name])->first_or_default(tomodel: true);
+	 	 	 $object = self::db()->where($pk_name, $savable_simple[$pk_name][0])->first_or_default(tomodel: true);
 	 	 }
 
 	 	 if(!$object){
-	 	 	 $object = self::db()->add(array_merge($savable_simple, $saved_fk_ids, $extra))->save(tomodel: true);
+	 	 	 $data = array_combine(array_keys($savable_simple), array_column(array_values($savable_simple), 0));
+	 	 	 $object = self::db()->add(array_merge($data, $saved_fk_ids, $extra))->save(tomodel: true);
 	 	 }
 
 	 	 if(!$object){
-	 	  	 //throw a fail to save exception here!
+	 	  	 throw new \Exception("Save operation aborted! This object could not be saved.");
+	 	  	 return null;
 	 	 }
 
 	 	 /**
@@ -130,23 +125,28 @@ abstract class Model implements IModel{
 	 	  * */
 	 	 $saved_nk_ids = [];
 	 	 foreach($savable_nk as $nk_key => $nk_value){
-	 	 	 if($nk_value instanceof TypedCollection){
-	 	 	 	 $s = $nk_value->save();
- 	 	 	 	 $saved_nk_ids[$nk_key] = $s->get_pk_values();
+	 	 	 $nk_pk_name = $nk_value[1]->get_pk();
+	 	 	 $nk_pk_value = $object->get_field_value($nk_pk_name);
+
+	 	 	 if($nk_value[0] instanceof ModelCollection){
+	 	 	 	 //print_r($nk_value[0]->values());
+	 	 	 	 $s = $nk_value[0]->save();
+ 	 	 	 	 $saved_nk_ids[$nk_key] = [$nk_pk_value, $s->get_field_value($nk_key)];
  	 	 	 }else{
- 	 	 	 	 //$s = $nk_value->save(...[]);
- 	 	 	 	 //$saved_nk_ids[$nk_key] = $s->get_pk_value();
+ 	 	 	 	 $nk_fk_name = $nk_value[1]->get_fk();
+ 	 	 	 	 $s = $nk_value[0]->save(...[$nk_fk_name => $nk_pk_value]);
  	 	 	 }
 	 	 }
 
 	 	 /**
 	 	  * Tie the many to many relations via through model.
 	 	  * */
+	 	 //print_r($saved_nk_ids);
 	 	 foreach($saved_nk_ids as $_nk => $_ids){
-	 	 	 
+
 	 	 }
 
-	 	 return $this->db()->where($pk_name, $object->get_pk_value())->first_or_default(tomodel: true);
+	 	 return $this->db()->where($pk_name, $object->get_field_value($pk_name))->first_or_default(tomodel: true);
 	 }
 
 	 public function get_savable_values(){
@@ -177,11 +177,11 @@ abstract class Model implements IModel{
 			 	 $property_type = str_replace("?", "", $property->getType()); 
 		     	 $property_value = $property->getValue($this);
 		     	 if(in_array($property_name, $simple_fields)){
-		     	 	 $savable_simple[$property_name] = $property_value;
+		     	 	 $savable_simple[$property_name] = [$property_value, false];
 		     	 }elseif(in_array($property_name, $nk_fields)){
-                     $savable_nk[$property_name] = $property_value;
+                     $savable_nk[$property_name] = [$property_value, $schema->is_include($property_name)];
 		     	 }elseif(in_array($property_name, $fk_fields)){
-                     $savable_fk[$property_name] = $property_value;
+                     $savable_fk[$property_name] = [$property_value, $schema->is_include($property_name)];
 		     	 }
 			 }
 	     }

@@ -793,7 +793,7 @@ abstract class TableSchema implements ITableSchema{
 	 	 	 return false;
 	 	 }
 
-	 	 return true;
+	 	 return $exists;
 	 }
 
      private function swap_properties_with_columns($data){
@@ -817,9 +817,6 @@ abstract class TableSchema implements ITableSchema{
 	 	 * check an attempt to insert duplicate data.
 	 	 * */
 	 	 $is_duplicate = $this->check_if_duplicate($data);
-	 	 if($is_duplicate){
-	 	 	 return [$this->meta['action_on_duplicate'], $this->meta['action_on_duplicate']];
-	 	 }
 
 	 	 /**
 	 	  * Inject creator and modifier fields, created and modified date time fields and deleted fields
@@ -855,7 +852,7 @@ abstract class TableSchema implements ITableSchema{
 	 	  * */
 	 	 $file_data = $this->prepare_file_data($clean_data);
 
-	 	 return [$clean_data, $file_data];
+	 	 return [$clean_data, $file_data, $is_duplicate, $this->meta['action_on_duplicate']];
 	 }
 
 	 public function prepare_update_data($data){
@@ -869,9 +866,6 @@ abstract class TableSchema implements ITableSchema{
 	 	 * check an attempt to insert duplicate data.
 	 	 * */
 	 	 $is_duplicate = $this->check_if_duplicate($data);
-	 	 if($is_duplicate){
-	 	 	 return [$this->meta['action_on_duplicate'], $this->meta['action_on_duplicate']];
-	 	 }
 
 	 	 /**
 	 	  * Inject modifier and modified date time fields
@@ -899,7 +893,7 @@ abstract class TableSchema implements ITableSchema{
 	 	  * */
 	 	 $file_data = $this->prepare_file_data($clean_data);
 
-	 	 return [$clean_data, $file_data];
+	 	 return [$clean_data, $file_data, $is_duplicate, $this->meta['action_on_duplicate']];
 	 }
 
 	 public function get_field_definitions(){

@@ -8,7 +8,7 @@ use IteratorAggregate;
 use Traversable;
 
 abstract class ICollection implements IteratorAggregate{
-    public function __construct(private array $elements){
+    public function __construct(protected array $elements){
     }
 
     public static function createEmpty(): static{

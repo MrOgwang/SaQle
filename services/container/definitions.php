@@ -25,7 +25,7 @@
       use SaQle\Http\Request\Request;
       use SaQle\Services\Container\ContainerService;
       use SaQle\Migration\Managers\{ContextManager, Manager};
-      use SaQle\Migration\Commands\{MakeMigrations, Migrate};
+      use SaQle\Migration\Commands\{MakeMigrations, Migrate, MakeCollections, MakeModels};
 
 	 return [
              Request::class => function(ContainerInterface $c){
@@ -104,6 +104,12 @@
 	       },
 	       MakeMigrations::class => function (ContainerInterface $c){
 	     	       return new MakeMigrations($c->get(Manager::class));
+	       },
+	       MakeCollections::class => function (ContainerInterface $c){
+	     	       return new MakeCollections($c->get(Manager::class));
+	       },
+	       MakeModels::class => function (ContainerInterface $c){
+	     	       return new MakeModels($c->get(Manager::class));
 	       },
 	       ContainerService::class => DI\create(ContainerService::class)->constructor(DI\get(ContainerInterface::class)),
 	 ];

@@ -186,62 +186,35 @@ class ContextManager implements IMigrationManager{
          return $path;
      }
 
-     private function write_typed_collection($primary_model_instance, $foreign_model_instance, $project_root){
+     private function write_typed_collection($model_class, $project_root){
+         $primary_model_instance = $model_class::state();
          $p_model_dao_class      = $primary_model_instance->get_associated_model_class();
          $p_model_dao_namespace  = $this->get_class_namespace($p_model_dao_class);
          $p_model_dao_name       = $this->get_class_name($p_model_dao_class);
-
-         $f_model_dao_class      = $foreign_model_instance->get_associated_model_class();
-         $f_model_dao_namespace  = $this->get_class_namespace($f_model_dao_class);
-         $f_model_dao_name       = $this->get_class_name($f_model_dao_class);
-
          $p_collection_namespace = $p_model_dao_namespace."\\Collections";
          $p_collection_name      = $p_model_dao_name."Collection";
-
-         $f_collection_namespace = $f_model_dao_namespace."\\Collections";
-         $f_collection_name      = $f_model_dao_name."Collection";
 
          $ptemplate = "";
          $ptemplate .= "<?php\n";
          $ptemplate .= "declare(strict_types=1);\n\n";
          $ptemplate .= "namespace ".$p_collection_namespace.";\n\n";
          $ptemplate .= "use ".$p_model_dao_class.";\n";
-         $ptemplate .= "use SaQle\Core\Collection\Base\TypedCollection;\n\n";
-         $ptemplate .= "final class ".$p_collection_name." extends TypedCollection{\n";
+         $ptemplate .= "use SaQle\Dao\Model\Interfaces\ModelCollection;\n\n";
+         $ptemplate .= "final class ".$p_collection_name." extends ModelCollection{\n";
          $ptemplate .= "\tprotected function type(): string{\n";
          $ptemplate .= "\t\treturn ".$p_model_dao_name."::class;\n";
          $ptemplate .= "\t}\n";
          $ptemplate .= "}\n";
          $ptemplate .= "?>\n";
 
-         $ftemplate = "";
-         $ftemplate .= "<?php\n";
-         $ftemplate .= "declare(strict_types=1);\n\n";
-         $ftemplate .= "namespace ".$f_collection_namespace.";\n\n";
-         $ftemplate .= "use ".$f_model_dao_class.";\n";
-         $ftemplate .= "use SaQle\Core\Collection\Base\TypedCollection;\n\n";
-         $ftemplate .= "final class ".$f_collection_name." extends TypedCollection{\n";
-         $ftemplate .= "\tprotected function type(): string{\n";
-         $ftemplate .= "\t\treturn ".$f_model_dao_name."::class;\n";
-         $ftemplate .= "\t}\n";
-         $ftemplate .= "}\n";
-         $ftemplate .= "?>\n";
-
          $ppath = $this->get_path_from_namespace($p_collection_namespace, $project_root);
          if(!file_exists($ppath)){
             mkdir($ppath, 0755);
          }
 
-         $fpath = $this->get_path_from_namespace($f_collection_namespace, $project_root);
-         if(!file_exists($fpath)){
-            mkdir($fpath, 0755);
-         }
-
          $pfilename = $ppath."/".strtolower($p_collection_name).".php";
-         $ffilename = $fpath."/".strtolower($f_collection_name).".php";
-
+        
          file_put_contents($pfilename, $ptemplate);
-         file_put_contents($ffilename, $ftemplate);
      }
 
      private function write_through_model($primary_model_instance, $foreign_model_instance, $project_root){
@@ -356,9 +329,6 @@ class ContextManager implements IMigrationManager{
                                              echo "A through field doesn't exists in the records! Generating now!\n";
                                              $tm = $this->write_through_model($mi, $fmodel_instance, $project_root);
                                              $through_models[$first_pointer] = $tm;
-
-                                             //write the model collection class here.
-                                             $this->write_typed_collection($mi, $fmodel_instance, $project_root);
                                          }else{
                                              echo "A through field exists in the records! Fetching now!\n";
                                              if(isset($ctx_throughs[$first_pointer])){
@@ -717,6 +687,7 @@ class ContextManager implements IMigrationManager{
              if($added_models){
                  foreach($added_models as $m){
                     $this->write_associated_dao($m, $project_root);
+                    $this->write_typed_collection($m, $project_root);
                  }
              }
              $context_snapshot[$ctx]['tables'] = [$added_models, $removed_models];
@@ -728,4 +699,25 @@ class ContextManager implements IMigrationManager{
 
          return $context_snapshot;
      }
+
+     public function make_collections(string $project_root, $app_name = null, $db_context = null){
+         $context_classes = $this->get_context_classes($db_context);
+         foreach($context_classes as $ctx){
+             $models   = $ctx::get_models(); 
+             foreach($models as $table_name => $table_schema){
+                 $this->write_typed_collection($table_schema, $project_root);
+             }
+         }
+     }
+
+     public function make_models(string $project_root, $app_name = null, $db_context = null){
+         $context_classes = $this->get_context_classes($db_context);
+         foreach($context_classes as $ctx){
+             $models   = $ctx::get_models(); 
+             foreach($models as $table_name => $table_schema){
+                 $this->write_associated_dao($table_schema, $project_root);
+             }
+         }
+     }
+
 }

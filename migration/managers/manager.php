@@ -13,4 +13,12 @@ class Manager implements IMigrationManager{
      public function get_context_snapshot(...$options){
         return $this->context_manager->get_context_snapshot(...$options);
      }
+
+     public function make_collections(...$options){
+        return $this->context_manager->make_collections(...$options);
+     }
+
+     public function make_models(...$options){
+        return $this->context_manager->make_models(...$options);
+     }
 }

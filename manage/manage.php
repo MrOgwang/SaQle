@@ -1,8 +1,7 @@
 <?php
 namespace SaQle\Manage;
 
-use SaQle\Migration\Commands\MakeMigrations;
-use SaQle\Migration\Commands\Migrate;
+use SaQle\Migration\Commands\{MakeMigrations, Migrate, MakeCollections, MakeModels};
 use SaQle\Services\Container\Cf;
 use Psr\Container\ContainerInterface;
 
@@ -14,17 +13,17 @@ class Manage{
 	 public function __construct($args){
 	 	 $this->command = $args[1] ?? null;
 	 	 $this->arguments = match($this->command){
-	 	 	'make:migrations' => $this->extract_makemigrations_args($args),
-	 	 	'migrate'        => [],
-	 	 	default          => throw new \Exception("Unknown command!")
+	 	 	'make:migrations'  => $this->extract_makemigrations_args($args),
+	 	 	'migrate'          => [],
+	 	 	'make:collections' => $this->extract_makemodels_args($args),
+	 	 	'make:models'      => $this->extract_makemodels_args($args),
+	 	 	default            => throw new \Exception("Unknown command!")
 	 	 };
 	 	 $this->project_root = $args[ count($args) - 1];
 	 	 $this->container = Cf::create(ContainerInterface::class);
 	 }
 
-	 private function extract_makemigrations_args(array $args){
-	 	 $expected_short = ['-n', '-c', '-a'];
-	 	 $expected_long  = ['--name', '--context', '--app'];
+	 private function extract_args(array $expected_short, array $expected_long, array $args){
 	 	 $extracted_args = [];
 	 	 for($x = 2; $x < count($args); $x++){
 	 	 	 $arg_parts = explode("=", $args[$x]);
@@ -38,6 +37,18 @@ class Manage{
 	 	 	 }
 	 	 }
 	 	 return $extracted_args;
+	 }
+
+	 private function extract_makemigrations_args(array $args){
+	 	 $expected_short = ['-n', '-c', '-a'];
+	 	 $expected_long  = ['--name', '--context', '--app'];
+	 	 return $this->extract_args($expected_short, $expected_long, $args);
+	 }
+
+	 private function extract_makemodels_args(array $args){
+	 	 $expected_short = ['-c', '-a'];
+	 	 $expected_long  = ['--context', '--app'];
+	 	 return $this->extract_args($expected_short, $expected_long, $args);
 	 }
 
 	 public function __invoke(){
@@ -56,7 +67,17 @@ class Manage{
 			     (Cf::create(Migrate::class))->execute($this->project_root);
 			 break;
 			 case 'make:backoffice':
-			     (Cf::create(Migrate::class))->execute($this->project_root);
+			     //(Cf::create(MakeBackoffice::class))->execute($this->project_root);
+			 break;
+			 case 'make:collections':
+	             $app_name       = $this->arguments['app']     ?? null;
+	             $db_context     = $this->arguments['context'] ?? null;
+			     (Cf::create(MakeCollections::class))->execute($this->project_root, $app_name, $db_context);
+			 break;
+			 case 'make:models':
+			     $app_name       = $this->arguments['app']     ?? null;
+	             $db_context     = $this->arguments['context'] ?? null;
+			     (Cf::create(MakeModels::class))->execute($this->project_root, $app_name, $db_context);
 			 break;
 			 default:
 			     throw new \Exception("Unknown command!");

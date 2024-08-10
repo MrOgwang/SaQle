@@ -1,6 +1,7 @@
 <?php
 namespace SaQle\Migration\Commands;
 
+use SaQle\Migration\Managers\Interfaces\IMigrationManager;
 use SaQle\Dao\DbContext\Manager\DbManagerFactory;
 use SaQle\Commons\FileUtils;
 use SaQle\Migration\Models\Migration;
@@ -9,7 +10,7 @@ use SaQle\Migration\Tracker\MigrationTracker;
 
 class Migrate{
      use FileUtils;
-     private function run_operation(){
+     public function __construct(private IMigrationManager $manager){
 
      }
 
