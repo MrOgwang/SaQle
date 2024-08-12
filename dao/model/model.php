@@ -11,9 +11,6 @@ use SaQle\Dao\Model\Interfaces\ModelCollection;
 #[\AllowDynamicProperties]
 abstract class Model implements IModel{
 	 use StringUtils;
-
-	 private array $save_with = [];
-
 	 public function __construct(...$kwargs){
 	 	 $reflect = new \ReflectionClass($this);
 	 	
@@ -65,6 +62,12 @@ abstract class Model implements IModel{
 	 	 return $this->$name;
 	 }
 
+	 public static function db2($table_name, $model_class, $db_class){
+	 	 $manager = Cf::create(ContainerService::class)->createContextModelManager($db_class);
+         $manager->initialize($table_name, $db_class, $model_class);
+         return $manager;
+	 }
+
 	 public static function db(){
 	 	 $called_class = get_called_class();
 	 	 [$db_class, $table_name] = $called_class::get_schema()->get_table_n_dbcontext();
@@ -83,10 +86,7 @@ abstract class Model implements IModel{
 	  * */
 	 public function save(...$extra){
 	 	 [$savable_simple, $savable_nk, $savable_fk, $pk_name] = $this->get_savable_values();
-
-	 	 //print_r($savable_simple);
-	 	 //print_r($savable_nk);
-	 	 //print_r($savable_fk);
+	 	 $with_fields = [];
 
 	 	 /**
 	 	  * If there are foreign relations, save them first.
@@ -94,6 +94,7 @@ abstract class Model implements IModel{
 	 	  * */
 	 	 $saved_fk_ids = [];
 	 	 foreach($savable_fk as $fk_key => $fk_value){
+	 	 	 $with_fields[] = $fk_key;
 	 	 	 $s = $fk_value[0]->save();
 	 	 	 if($s){
 	 	 	 	 $fk_name = $fk_value[1]->get_fk();
@@ -125,13 +126,14 @@ abstract class Model implements IModel{
 	 	  * */
 	 	 $saved_nk_ids = [];
 	 	 foreach($savable_nk as $nk_key => $nk_value){
+	 	 	 $with_fields[] = $nk_key;
 	 	 	 $nk_pk_name = $nk_value[1]->get_pk();
+	 	 	 $nk_fk_name = $nk_value[1]->get_fk();
 	 	 	 $nk_pk_value = $object->get_field_value($nk_pk_name);
 
 	 	 	 if($nk_value[0] instanceof ModelCollection){
-	 	 	 	 //print_r($nk_value[0]->values());
 	 	 	 	 $s = $nk_value[0]->save();
- 	 	 	 	 $saved_nk_ids[$nk_key] = [$nk_pk_value, $s->get_field_value($nk_key)];
+ 	 	 	 	 $saved_nk_ids[$nk_key] = [$nk_pk_value, $s->get_field_value($nk_fk_name), $nk_value[1]->get_through_model_schema(), $nk_pk_name, $nk_fk_name];
  	 	 	 }else{
  	 	 	 	 $nk_fk_name = $nk_value[1]->get_fk();
  	 	 	 	 $s = $nk_value[0]->save(...[$nk_fk_name => $nk_pk_value]);
@@ -141,12 +143,27 @@ abstract class Model implements IModel{
 	 	 /**
 	 	  * Tie the many to many relations via through model.
 	 	  * */
-	 	 //print_r($saved_nk_ids);
 	 	 foreach($saved_nk_ids as $_nk => $_ids){
-
+	 	 	 if(count($_ids[1]) > 0){
+		 	 	 $through_model_schema = $_ids[2];
+		 	 	 $through_model = $through_model_schema[1]::state()->get_associated_model_class();
+		 	 	 $data = [];
+		 	 	 $pk_col_name = $_ids[3];
+		 	 	 $fk_col_name = $_ids[4];
+		 	 	 $pk_col_val = $_ids[0];
+		 	 	 foreach($_ids[1] as $fk_col_val){
+		 	 	 	 $data[] = [$pk_col_name => $pk_col_val, $fk_col_name => $fk_col_val];
+		 	 	 }
+		 	 	 $connected = $through_model::db2($through_model_schema[0], $through_model_schema[1], $through_model_schema[2])
+		 	 	 ->add_multiple($data)->save();
+		 	 }
+	 	 }
+	 	 $getmana = $this->db()->where($pk_name, $object->get_field_value($pk_name));
+	 	 if($with_fields){
+	 	 	$getmana->with($with_fields);
 	 	 }
 
-	 	 return $this->db()->where($pk_name, $object->get_field_value($pk_name))->first_or_default(tomodel: true);
+	 	 return $getmana->first_or_default(tomodel: true);
 	 }
 
 	 public function get_savable_values(){
@@ -187,6 +204,17 @@ abstract class Model implements IModel{
 	     }
 
 	     return [$savable_simple, $savable_nk, $savable_fk, $schema->get_pk_name()];
+	 }
+
+	 static public function get_collection_class(){
+	 	 $model_dao_class      = get_called_class();
+	 	 $nameparts            = explode("\\", $model_dao_class);
+	 	 $model_dao_name       = array_pop($nameparts);
+         $model_dao_namespace  = implode("\\", $nameparts);
+
+         $collection_namespace = $model_dao_namespace."\\Collections";
+         $collection_name      = $model_dao_name."Collection";
+         return $collection_namespace."\\".$collection_name;
 	 }
 }
 ?>

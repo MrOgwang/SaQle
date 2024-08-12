@@ -1,7 +1,7 @@
 <?php
 namespace SaQle\Manage;
 
-use SaQle\Migration\Commands\{MakeMigrations, Migrate, MakeCollections, MakeModels};
+use SaQle\Migration\Commands\{MakeMigrations, Migrate, MakeCollections, MakeModels, MakeThroughs};
 use SaQle\Services\Container\Cf;
 use Psr\Container\ContainerInterface;
 
@@ -17,6 +17,7 @@ class Manage{
 	 	 	'migrate'          => [],
 	 	 	'make:collections' => $this->extract_makemodels_args($args),
 	 	 	'make:models'      => $this->extract_makemodels_args($args),
+	 	 	'make:throughs'    => $this->extract_makemodels_args($args),
 	 	 	default            => throw new \Exception("Unknown command!")
 	 	 };
 	 	 $this->project_root = $args[ count($args) - 1];
@@ -78,6 +79,11 @@ class Manage{
 			     $app_name       = $this->arguments['app']     ?? null;
 	             $db_context     = $this->arguments['context'] ?? null;
 			     (Cf::create(MakeModels::class))->execute($this->project_root, $app_name, $db_context);
+			 break;
+			 case 'make:throughs':
+			     $app_name       = $this->arguments['app']     ?? null;
+	             $db_context     = $this->arguments['context'] ?? null;
+			     (Cf::create(MakeThroughs::class))->execute($this->project_root, $app_name, $db_context);
 			 break;
 			 default:
 			     throw new \Exception("Unknown command!");

@@ -9,18 +9,16 @@ abstract class IOperation{
 	 public function settings($settings){
 	 	$this->settings = $settings;
 	 }
-	 protected function getpdo($response, $operation_type = "", $tomodel = false, $daoclass = ""){
-	 	 $tomodel = false;
+	 protected function getpdo($response, $operation_type = ""){
 		 $statement = $response['statement'];
-		 $pdo_statement_object = array("error_code" => $statement->errorCode(), "row_count" => $statement->rowCount(), "rows" => []);
-		 if($operation_type == "select"){
-		 	 $daoclass = $tomodel ? $daoclass : "stdClass";
-		     while($row = $statement->fetchObject($daoclass)){
-				 array_push($pdo_statement_object['rows'], $row);
-			 }
-		 }else if($operation_type == "insert" && $this->settings['prmkeytype'] === "AUTO"){
-			 $pdo_statement_object['last_insert_id'] = $response['last_insert_id'];
+		 $pdo_statement_object = ["error_code" => $statement->errorCode(), "row_count" => $statement->rowCount()];
+
+		 if($operation_type === "select"){
+		 	 $pdo_statement_object['rows'] = $statement->fetchAll(\PDO::FETCH_OBJ);
+		 }elseif($operation_type === "insert" && $this->settings['prmkeytype'] === "AUTO"){
+		 	 $pdo_statement_object['last_insert_id'] = $response['last_insert_id'];
 		 }
+
 		 return (Object)$pdo_statement_object;
 	 }
 }

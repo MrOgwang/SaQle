@@ -29,7 +29,7 @@
  	 protected array  $_model_references;
  	 protected array  $_insert_data_container;
  	 protected array  $_update_data_container;
- 	 protected array  $_file_data;
+ 	 protected array  $_file_data = [];
  	 protected string $current_dbcontext_class;
  	 protected array  $_models = [];
  	 protected bool   $_is_operation_aborted = false;
@@ -59,7 +59,6 @@
 	 ){
 	 	$this->_insert_data_container = ["prmkeytype" => "", "data" => [], "prmkeyname" => "", "prmkeyvalues" => [], "navigationkeys" => []];
 	 	$this->_update_data_container = ["data" => []];
-	 	$this->_file_data             = [];
 	 }
 
 	 //setters
@@ -166,20 +165,15 @@
      }
 
      /**
-     * Get the models
-     * @return array of Model objects
-     */
-     protected function get_models() : array{
-     	return $this->_models;
-     }
-
-     /**
      * Get a single model object from name
      * @param string $name
      * @return Model
      */
      protected function get_model(string $name) : ITableSchema{
-     	return $this->_models[$name];
+     	$model_class = $this->_model_references[$name];
+     	$state = $model_class::state();
+		$state->set_request($this->request);
+		return $state;
      }
 
      /**
@@ -203,9 +197,10 @@
      /**
       * Initilialize a model manager
       * */
-     public function initialize(string $table_name, ?string $dbcontext_class = null){
+     public function initialize(string $table_name, ?string $dbcontext_class = null, ?string $model_class = null){
      	 if($dbcontext_class){
-     	 	 $this->set_model_references($dbcontext_class::get_models());
+     	 	 $model_refs = $model_class ? array_merge($dbcontext_class::get_models(), [$table_name => $model_class]) : $dbcontext_class::get_models();
+     	 	 $this->set_model_references($model_refs);
              $this->set_dbcontext_class($dbcontext_class);
      	 }
      	 $this->register_joining_model(table: $table_name);
@@ -235,27 +230,13 @@
 	 public function register_joining_model(string $table, ?string $as = null){
 	 	 $model_references = $this->get_model_references();
 	 	 modelnotfoundexception($table, $model_references, $this->get_context_options()->get_name());
-		 $dao_class    = $model_references[$table];
-		 $dao_instance = $dao_class::state();
-		 $dao_instance->set_request($this->request);
-		 #register model with the model manager
-		 $this->add_model($table, $dao_instance);
 		 #register model info with the context tracker
 		 $this->register_to_context_tracker(
 		 	 table_name:    $table,
 		 	 table_aliase:  !is_null($as) ? $as : "",
 		 	 database_name: $this->get_context_options()->get_name(),
-		 	 field_list:    $dao_instance->get_field_names()
+		 	 field_list:    $this->get_model($table)->get_field_names()
 		 );
-	 }
-
-     /**
-     * Add a model to the model manager
-     * @param string $name
-     * @param ITableSchema $model
-     */
-	 public function add_model(string $name, ITableSchema $model){
-		 $this->_models[$name] = $model;
 	 }
 
      /**
@@ -275,9 +256,6 @@
 	 protected function set_order(array $fields, string $direction = "ASC"){
 	 	$this->_order_manager->set_order(fields: $fields, direction: $direction);
 	 }
-
-
-
 
      public function get_raw_filter(){
      	return $this->fmanager->get_raw_filter();

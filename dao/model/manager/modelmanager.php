@@ -12,10 +12,11 @@
  use SaQle\Commons\{DateUtils, UrlUtils, StringUtils};
  use SaQle\Services\Container\ContainerService;
  use SaQle\Services\Container\Cf;
- use SaQle\Dao\Field\Relations\One2One;
+ use SaQle\Dao\Field\Relations\{One2One, Many2Many};
  use SaQle\Dao\Model\Manager\Handlers\{PathsToUrls, EagerLoadAssign, TypeCast, FormatCmdt};
  use SaQle\Core\Chain\{Chain, DefaultHandler};
  use SaQle\Dao\Model\Manager\Trackers\EagerTracker;
+ use SaQle\Core\Assert\Assert;
 
 class ModelManager extends IModelManager{
 	 use DateUtils, UrlUtils, StringUtils;
@@ -260,6 +261,8 @@ class ModelManager extends IModelManager{
 
 	 	 $include_instances = array_merge($includes, $auto_includes);
 
+	 	 print_r($include_instances);
+
 	 	 /**
 	 	  * Activate eager loading tracker if it hasn't been activated.
 	 	  * */
@@ -269,16 +272,20 @@ class ModelManager extends IModelManager{
  	 	 	 //print_r($ins);
  	 	 	 $fdao         = $ins->get_fdao();
  	 	 	 if(!$tracker::is_loaded($fdao)){
- 	 	 	 	 $fdaom        = $fdao::get_associated_model_class();
-	 	 	 	 $pkey         = $ins->get_pk();
-	 		 	 $fkey         = $ins->get_fk();
-	 		 	 $pkey_values  = array_unique(array_column($rows, $pkey));
-	 		 	 $results      = $fdaom::db()->limit(records: 1000, page: 1)->where("{$fkey}__in", $pkey_values)->eager_load(tomodel: $tomodel);
-	 		 	 $formatted_results = [];
-	 		 	 foreach($results as $r){
-	                 $formatted_results[$r->$fkey][] = $r;
-	             }
-	             $include_rows[$ins->get_field()] = ['data' => $formatted_results, 'key' => $pkey, 'multiple' => $ins->get_multiple()];
+ 	 	 	 	 if($ins instanceof Many2Many){
+
+ 	 	 	 	 }else{
+ 	 	 	 	 	 $fdaom        = $fdao::get_associated_model_class();
+		 	 	 	 $pkey         = $ins->get_pk();
+		 		 	 $fkey         = $ins->get_fk();
+		 		 	 $pkey_values  = array_unique(array_column($rows, $pkey));
+		 		 	 $results      = $fdaom::db()->limit(records: 1000, page: 1)->where("{$fkey}__in", $pkey_values)->eager_load(tomodel: $tomodel);
+		 		 	 $formatted_results = [];
+		 		 	 foreach($results as $r){
+		                 $formatted_results[$r->$fkey][] = $r;
+		             }
+		             $include_rows[$ins->get_field()] = ['data' => $formatted_results, 'key' => $pkey, 'multiple' => $ins->get_multiple()];
+ 	 	 	 	 }
  	 	 	 } 
 	 	 } 
 
@@ -321,6 +328,15 @@ class ModelManager extends IModelManager{
 	     	 foreach($rows as $row){
 	     	 	$newrows[] = $chain->apply($row);
 	     	 }
+	     	 /**
+	     	  * If to model is on, return a typed model collection instead
+	     	  * of a simple array
+	     	  * */
+	     	 if($tomodel){
+	     	 	$collection_class = $ass_model_class::get_collection_class();
+	     	 	return new $collection_class($newrows);
+	     	 }
+
 	     	 return $newrows;
 	     }
 
@@ -363,10 +379,13 @@ class ModelManager extends IModelManager{
      	 return [$include_field, $model];
 	 }
 
-	 public function with(string $field){
-	 	 [$field, $model] = $this->check_with($field);
-     	 $select_manager = $this->get_select_manager();
-	 	 $select_manager->add_include($field);
+	 public function with(array|string $field){
+	 	 $fields = is_array($field) ? $field : [$field];
+	 	 $select_manager = $this->get_select_manager();
+	 	 foreach($fields as $wf){
+	 	 	 [$field, $model] = $this->check_with($wf);
+	 	 	 $select_manager->add_include($field);
+	 	 }
 	 	 return $this;
 	 }
 
@@ -428,101 +447,214 @@ class ModelManager extends IModelManager{
 	 }
 
      private function auto_save_files(){
-     	 $files = array_values($this->_file_data);
+     	 $files = array_values(array_values($this->_file_data));
      	 foreach($files as $f){
-     	 	/*save original files*/
-	         $crop_dimensions   = $f->config['crop_dimensions'] ?? null;
-	         $resize_dimensions = $f->config['resize_dimensions'] ?? null;
-	         $folder_path       = $f->config['path'] ?? "";
-	         if(is_array($f->file['name'])){
-	             foreach($f->file['name'] as $n_index1 => $n){
-	                 $this->commit_file_todisk($folder_path, $f->file['name'][$n_index1], $f->file['tmp_name'][$n_index1], $crop_dimensions, $resize_dimensions);
-	             }
-	         }else{
-	             $this->commit_file_todisk($folder_path, $f->file['name'], $f->file['tmp_name'], $crop_dimensions, $resize_dimensions);
-	         }
+     	 	 if($f){
+		         $crop_dimensions   = $f->config['crop_dimensions'] ?? null;
+		         $resize_dimensions = $f->config['resize_dimensions'] ?? null;
+		         $folder_path       = $f->config['path'] ?? "";
+		         if(is_array($f->file['name'])){
+		             foreach($f->file['name'] as $n_index1 => $n){
+		                 $this->commit_file_todisk($folder_path, $f->file['name'][$n_index1], $f->file['tmp_name'][$n_index1], $crop_dimensions, $resize_dimensions);
+		             }
+		         }else{
+		             $this->commit_file_todisk($folder_path, $f->file['name'], $f->file['tmp_name'], $crop_dimensions, $resize_dimensions);
+		         }
+		     }
      	 }
 	 }
 
+     private function assert_duplicates(){
+
+     	 if($this->_operation_status['is_duplicate']){
+     	 	 switch($this->_operation_status['duplicate_action']){
+	     	 	 case 'IGNORE_DUPLICATE':
+	     	 	     /**
+	     	 	      * Do nothing. This tells the modelmanager to add records despite the duplicates.
+	     	 	      * */
+	     	 	 break;
+	     	 	 case 'BYPASS_DUPLICATE':
+	     	 	     /**
+	     	 	      * Remove duplicate data from the data container, duplicate entries record and file data if applicable..
+	     	 	      * */
+	     	 	     $duplicate_keys = array_keys($this->_operation_status['duplicate_entries']);
+		     	 	 foreach($duplicate_keys as $key){
+		     	 	 	 Assert::keyExists($this->_insert_data_container["data"], $key);
+		     	 	 	 Assert::keyExists($this->_operation_status['duplicate_entries'], $key);
+
+		     	 	 	 unset($this->_insert_data_container["data"][$key]);
+		     	 	 	 unset($this->_operation_status['duplicate_entries'][$key]);
+
+		     	 	 	 if(isset($this->_file_data[$key])){
+		     	 	 	 	unset($this->_file_data[$key]);
+		     	 	 	 }
+
+		     	 	 	 if(isset($this->_insert_data_container["prmkeyvalues"][$key])){
+		     	 	 	 	unset($this->_insert_data_container["prmkeyvalues"][$key]);
+		     	 	 	 }
+		     	 	 }
+
+		     	 	 Assert::isNonEmptyMap($this->_insert_data_container["data"], "Save attempt on an empty data container after removing duplicates!");
+	     	 	 break;
+	     	 	 case 'ABORT_WITHOUT_ERROR':
+	     	 	 case 'ABORT_WITH_ERROR':
+	     	 	 	 throw new \Exception("Aborting insert operation. Duplicate entries were found in data!");
+	     	 	 break;
+	     	 	 case 'UPDATE_ON_DUPLICATE':
+	     	 	 	 /**
+	     	 	 	  * Remove duplicate data from the data container and leave the duplicate entries as they will be 
+	     	 	 	  * used to update the existing records after saving the rest.
+	     	 	 	  * */
+	     	 	 	 $duplicate_keys = array_keys($this->_operation_status['duplicate_entries']);
+		     	 	 foreach($duplicate_keys as $key){
+		     	 	 	 Assert::keyExists($this->_insert_data_container["data"], $key);
+		     	 	 	 Assert::keyExists($this->_operation_status['duplicate_entries'], $key);
+
+		     	 	 	 unset($this->_insert_data_container["data"][$key]);
+
+		     	 	 	 if(isset($this->_insert_data_container["prmkeyvalues"][$key])){
+		     	 	 	 	unset($this->_insert_data_container["prmkeyvalues"][$key]);
+		     	 	 	 }
+		     	 	 }
+	     	 	 break;
+	     	 	 case 'RETURN_EXISTING':
+	     	 	 	 /**
+	     	 	 	  * Remove duplicate data from the data container and the files container and leave the duplicate entries records as they will be 
+	     	 	 	  * returned as is to the caller.
+	     	 	 	  * */
+	     	 	 	 $duplicate_keys = array_keys($this->_operation_status['duplicate_entries']);
+		     	 	 foreach($duplicate_keys as $key){
+		     	 	 	 Assert::keyExists($this->_insert_data_container["data"], $key);
+		     	 	 	 Assert::keyExists($this->_operation_status['duplicate_entries'], $key);
+
+		     	 	 	 unset($this->_insert_data_container["data"][$key]);
+
+		     	 	 	 if(isset($this->_file_data[$key])){
+		     	 	 	 	unset($this->_file_data[$key]);
+		     	 	 	 }
+
+		     	 	 	 if(isset($this->_insert_data_container["prmkeyvalues"][$key])){
+		     	 	 	 	unset($this->_insert_data_container["prmkeyvalues"][$key]);
+		     	 	 	 }
+		     	 	 }
+	     	 	 break;
+	     	 }
+     	 }
+     }
+
      private function save_changes(bool $tomodel = false){
-     	 if(!$this->_insert_data_container["data"]){
-     	 	 throw new \Exception("Save attempt on an empty data container!");
-     	 	 return null;
-     	 }
+     	 try{
+     	 	 #acquire the table being processed
+ 	         $table_name   = $this->get_context_tracker()->find_table_name(0);
+ 	         #acquire the dao model.
+ 	         $model_instance = $this->get_model($table_name);
+ 	         $ass_model_class = $model_instance->get_associated_model_class();
 
-     	 /*
-     	 $proceed = false;
-     	 if($this->_operation_status['is_duplicate'] === false || 
-     	 ($this->_operation_status['is_duplicate'] === true && $this->_operation_status['duplicate_action'] === 'IGNORE_DUPLICATE')){
-     	 	 $proceed = true;
-     	 }
+     	 	 Assert::isNonEmptyMap($this->_insert_data_container["data"], "$ass_model_class: Save attempt on an empty data container!");
+     	     $this->assert_duplicates();
 
-     	 if($this->_operation_status['is_duplicate'] === true 
-     	 	&& $this->_operation_status['duplicate_action'] === 'BYPASS_DUPLICATE'
-     	    && count($this->_insert_data_container["data"]) > 1){
-     	 	 $proceed = true;
-     	 }
+     	     #At this point, if there is still data to be saved in the data container, save it.
+     	     $results = null;
+     	     if($this->_insert_data_container["data"]){
+	 	         #setup insert command.
+	 	         $this->crud_command = new InsertCommand(
+			 	 	 new InsertOperation($this->get_connection()),
+			 	 	 prmkeytype:   $this->_insert_data_container["prmkeytype"],
+			 	 	 fields:       array_keys(array_values($this->_insert_data_container["data"])[0]),
+			 	 	 data:         array_values($this->_insert_data_container["data"]),
+			 	 	 table:        $this->get_context_tracker()->find_table_name(0),
+			 	 	 database:     $this->get_context_tracker()->find_database_name(0)
+			 	 );
+			 	 #execute command and return response
+			 	 $response = $this->crud_command->execute();
+			 	 #save any files in the files container.
+			 	 $this->auto_save_files();
 
+                 $primary_key_values = [];
+			 	 if($this->_insert_data_container["prmkeytype"] === 'GUID'){
+			 	 	 $primary_key_values = array_values($this->_insert_data_container["prmkeyvalues"]);
+			 	 }else{
+					 for($i = 0; $i < $response->row_count; $i++){
+					    $primary_key_values[] = $response->last_insert_id + $i;
+					 }
+			 	 }
 
-     	 $duplicate_actions = [, '', 'ABORT_WITHOUT_ERROR', 'ABORT_WITH_ERROR', 'RETURN_EXISTING', 'UPDATE_ON_DUPLICATE'];*/
+			 	 #fetch all the data just saved.
+			 	 if(str_contains($ass_model_class, 'Throughs')){
+			 	 	 $man = $ass_model_class::db2($table_name, $model_instance::class, $this->get_dbcontext_class());
+			 	 }else{
+			 	 	 $man = $ass_model_class::db();
+			 	 }
+		 	 	 $results = $man->where($this->_insert_data_container["prmkeyname"]."__in", $primary_key_values)
+		 	 	 ->eager_load(tomodel: $tomodel);
+			 }
 
+			 #now deal with the duplicates.
+			 if(!$results){
+			 	 if($tomodel){
+			 	 	 $collection_class = $ass_model_class::get_collection_class();
+			 	 	 $results = new $collection_class([]);
+			 	 }else{
+			 	 	 $results = [];
+			 	 }
+			 }
 
-     	 #acquire the table being processed
-	 	 $table_name   = $this->get_context_tracker()->find_table_name(0);
-	 	 #acquire the dao model.
-	 	 $model_instance = $this->get_model($table_name);
-	 	 $ass_model_class = $model_instance->get_associated_model_class();
-
-	 	 /*setup an insert command*/
-	 	 $this->crud_command = new InsertCommand(
-	 	 	 new InsertOperation($this->get_connection()),
-	 	 	 prmkeytype:   $this->_insert_data_container["prmkeytype"],
-	 	 	 prmkeyname:   $this->_insert_data_container["prmkeyname"],
-	 	 	 prmkeyvalues: $this->_insert_data_container["prmkeyvalues"],
-	 	 	 fields:       array_keys($this->_insert_data_container["data"][0]),
-	 	 	 data:         $this->_insert_data_container["data"],
-	 	 	 table:        $this->get_context_tracker()->find_table_name(0),
-	 	 	 database:     $this->get_context_tracker()->find_database_name(0)
-	 	 );
-	 	 /*execute command and return response*/
-	 	 $result = $this->crud_command->execute();
-	 	 if($result){
-	 	 	 if($this->_file_data){
-	 	 	 	 $this->auto_save_files();
+	 	 	 if($this->_operation_status['is_duplicate'] && $this->_operation_status['duplicate_entries']) {
+	 	 	 	 switch($this->_operation_status['duplicate_action']){
+	 	 	 	 	 case 'UPDATE_ON_DUPLICATE';
+	 	 	 	 	     #Deal with updating duplicate data later on.
+	 	 	 	 	 break;
+	 	 	 	 	 case "RETURN_EXISTING":
+	 	 	 	 	     #Inject the duplicate data into the result.
+	 	 	 	 	     if($tomodel){
+	 	 	 	 	     	 foreach($this->_operation_status['duplicate_entries'] as $dk => $dv){
+	 	 	 	 	     	 	$results->add(new $ass_model_class(...(array)$dv));
+	 	 	 	 	         }
+	 	 	 	 	     }else{
+	 	 	 	 	     	 $results = array_merge($results, array_values($this->_operation_status['duplicate_entries']));
+	 	 	 	 	     }
+	 	 	 	 	 break;
+	 	 	 	 	 default:
+	 	 	 	 	     #Do nothing
+	 	 	 	 	 break;
+	 	 	 	 }
 	 	 	 }
-	 	 	 if($tomodel){
-	 	 	 	$hydrated = [];
-	 	 	 	foreach($result as $r){
-	 	 	 		 $hydrated[] = new $ass_model_class(...(array)$r);
-	 	 	 	}
-	 	 	 	return $hydrated;
-	 	 	 }
-	 	 }
 
-	 	 return $result;
+			 return $results;
+     	 }catch(\Exception $ex){
+     	 	throw $ex;
+     	 }
      }
  
      public function add(array $data, bool $allow_duplicates = true, array $unique_fields = []){
+     	
      	 /*get the name of the current table being manipulated*/
      	 $table = $this->get_context_tracker()->find_table_name(0);
      	 /*get the model associated with this table*/
      	 $model = $this->get_model($table);
-     	 [$clean_data, $file_data, $is_duplicate, $action_on_duplicate] = $model->prepare_insert_data($data);
+     	 [$clean_data, $file_data, $is_duplicate, $action_on_duplicate] = $model->prepare_insert_data($data, $table, $model::class, $this->get_dbcontext_class());
+
+     	 $entry_key = spl_object_hash((object)$clean_data);
 
      	 if($is_duplicate){
      	 	 $this->_operation_status['is_duplicate'] = true;
      	 	 if(!array_key_exists('duplicate_entries', $this->_operation_status)){
      	 	 	 $this->_operation_status['duplicate_entries'] = [];
      	 	 }
-     	 	 $this->_operation_status['duplicate_entries'][] = $is_duplicate;
+     	 	 $this->_operation_status['duplicate_entries'][$entry_key] = $is_duplicate;
      	 	 $this->_operation_status['duplicate_action'] = $action_on_duplicate;
+     	 }else{
+     	 	 $this->_operation_status['is_duplicate'] = false;
      	 }
 
      	 $this->_insert_data_container["prmkeyname"] = $model->get_pk_name();
-     	 $this->_insert_data_container["prmkeyvalues"][] = $clean_data[$model->get_pk_name()];
      	 $this->_insert_data_container["prmkeytype"] = $model->get_pk_type();
-     	 $this->_file_data = array_merge($this->_file_data, $file_data);
-     	 $this->_insert_data_container["data"][] = $clean_data;
+     	 if($this->_insert_data_container["prmkeytype"] === 'GUID'){
+     	 	 $this->_insert_data_container["prmkeyvalues"][$entry_key] = $clean_data[$model->get_pk_name()];
+     	 }
+     	 
+     	 $this->_file_data[$entry_key] = $file_data;
+     	 $this->_insert_data_container["data"][$entry_key] = $clean_data;
      	 return $this;
      }
 
@@ -536,7 +668,7 @@ class ModelManager extends IModelManager{
      public function save(bool $tomodel = false){
      	 $saved_data = $this->save_changes(tomodel: $tomodel);
      	 if(!$saved_data)
-     	 	return null;
+     	 	return new \Exception("Could not save object");
 
      	 if(count($this->_insert_data_container["data"]) > 1)
      	 	return $saved_data;
@@ -588,12 +720,14 @@ class ModelManager extends IModelManager{
      	 $model = $this->get_model($table);
      	 [$clean_data, $file_data, $is_duplicate, $action_on_duplicate] = $model->prepare_update_data($data);
 
+     	 $entry_key = spl_object_id($clean_data);
+
      	 if($is_duplicate){
      	 	 $this->_operation_status['is_duplicate'] = true;
      	 	 if(!array_key_exists('duplicate_entries', $this->_operation_status)){
      	 	 	 $this->_operation_status['duplicate_entries'] = [];
      	 	 }
-     	 	 $this->_operation_status['duplicate_entries'][] = $is_duplicate;
+     	 	 $this->_operation_status['duplicate_entries'][$entry_key] = $is_duplicate;
      	 	 $this->_operation_status['duplicate_action'] = $action_on_duplicate;
      	 }
 

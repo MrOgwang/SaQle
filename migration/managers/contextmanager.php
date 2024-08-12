@@ -196,6 +196,22 @@ class ContextManager implements IMigrationManager{
 
          $ptemplate = "";
          $ptemplate .= "<?php\n";
+         $ptemplate .= "/**\n";
+         $ptemplate .= "* This is an auto generated file.\n"; 
+         $ptemplate .= "*\n";
+         $ptemplate .= "* The code here is designed to work as is, and must not be modified unless you know what you are doing.\n";
+         $ptemplate .= "*\n";
+         $ptemplate .= "* If you find ways that the code can be improved to enhance speed, efficiency or memory, be kind enough\n";
+         $ptemplate .= "* to share with the author at wycliffomondiotieno@gmail.com or +254741142038. The author will not mind a cup\n";
+         $ptemplate .= "* of coffee either.\n";
+         $ptemplate .= "*\n";
+         $ptemplate .= "* Commands to generate file:\n";
+         $ptemplate .= "* 1. php manage.php make:migrations\n";
+         $ptemplate .= "* 2. php manage.php make:collections\n";
+         $ptemplate .= "* On your terminal, cd into project root and run the above commands\n";
+         $ptemplate .= "* \n";
+         $ptemplate .= "* A typed collection container for ".$p_model_dao_name."\n";
+         $ptemplate .= "* */\n\n";
          $ptemplate .= "declare(strict_types=1);\n\n";
          $ptemplate .= "namespace ".$p_collection_namespace.";\n\n";
          $ptemplate .= "use ".$p_model_dao_class.";\n";
@@ -225,13 +241,32 @@ class ContextManager implements IMigrationManager{
          $classname = str_replace("Schema", "", $classname)."Schema";
 
          $pmodel_name = strtolower($primary_model_instance->get_class_name());
+         $pmodel_name = str_replace("schema", "", $pmodel_name);
          $fmodel_name = strtolower($foreign_model_instance->get_class_name());
+         $fmodel_name = str_replace("schema", "", $fmodel_name);
          $o_pmodel_name = $primary_model_instance->get_class_name();
          $o_fmodel_name = $foreign_model_instance->get_class_name();
          $pmodel_pk = $primary_model_instance->get_pk_name();
          $fmodel_pk = $foreign_model_instance->get_pk_name();
 
          $template = "<?php\n";
+         $template .= "/**\n";
+         $template .= "* This is an auto generated file.\n"; 
+         $template .= "*\n";
+         $template .= "* The code here is designed to work as is, and must not be modified unless you know what you are doing.\n";
+         $template .= "*\n";
+         $template .= "* If you find ways that the code can be improved to enhance speed, efficiency or memory, be kind enough\n";
+         $template .= "* to share with the author at wycliffomondiotieno@gmail.com or +254741142038. The author will not mind a cup\n";
+         $template .= "* of coffee either.\n";
+         $template .= "*\n";
+         $template .= "* Commands to generate file:\n";
+         $template .= "* 1. php manage.php make:migrations\n";
+         $template .= "* 2. php manage.php make:throughs\n";
+         $template .= "* On your terminal, cd into project root and run the above commands\n";
+         $template .= "* \n";
+         $template .= "* This is a through model for ".$o_pmodel_name." and ".$o_fmodel_name.". A through model is generated behind the scenes\n";
+         $template .= "* when a model defines a many to many field with another model.\n";
+         $template .= "* */\n\n";
          $template .= "namespace ".$througnamespace.";\n\n";
          $template .= "use SaQle\\Dao\\Model\\Interfaces\\IThroughModel;\n";
          $template .= "use SaQle\\Dao\Field\\Types\\{Pk, OneToOne};\n";
@@ -252,11 +287,12 @@ class ContextManager implements IMigrationManager{
          $template .= "\tpublic function __construct(...$"."kwargs){\n";
          $template .= "\t\t$"."this->id = new Pk(type: PRIMARY_KEY_TYPE);\n";
          $template .= "\t\t$"."this->".$pmodel_name." = new OneToOne(fdao: ".$o_pmodel_name."::class, pk: '".$pmodel_pk."', fk: '".$pmodel_pk."', dname: '".$pmodel_pk."');\n";
-         $template .= "\t\t$"."this->".$fmodel_name." = new OneToOne(fdao: ".$o_fmodel_name."::class, pk: '".$fmodel_pk."', fk: '".$fmodel_pk."', dname: '".$fmodel_pk."');\n";
+         $template .= "\t\t$"."this->".$fmodel_name." = new OneToOne(fdao: ".$o_fmodel_name."::class, pk: '".$fmodel_pk."', fk: '".$fmodel_pk."', dname: '".$fmodel_pk."');\n\n";
+         $template .= "\t\t$"."this->set_meta([\n";
+         $template .= "\t\t\t'unique_fields' => ['".$pmodel_name."', '".$fmodel_name."'],\n";
+         $template .= "\t\t\t'unique_together' => true\n";
+         $template .= "\t\t]);\n\n";
          $template .= "\t\tparent::__construct(...$"."kwargs);\n\n";
-         /*$template .= "\t\t$"."this->set_meta([\n";
-         $template .= "\t\t\t'auto_cmdt_fields' => true\n";
-         $template .= "\t\t]);\n\n";*/
          $template .= "\t}\n\n";
          /**
           * Define get related models function
@@ -347,8 +383,6 @@ class ContextManager implements IMigrationManager{
                  }
              }
          }
-         //add through models to db context.
-         //$this->update_db_context_class($ctx_class, $through_models, $project_root); //this was a terrible idea. remove this from here
          return [$model_fields, $through_models];
      }
 
@@ -428,6 +462,21 @@ class ContextManager implements IMigrationManager{
          }
 
          $template = "<?php\n";
+         $template .= "/**\n";
+         $template .= "* This is an auto generated file.\n"; 
+         $template .= "*\n";
+         $template .= "* The code here is designed to work as is, and must not be modified unless you know what you are doing.\n";
+         $template .= "*\n";
+         $template .= "* If you find ways that the code can be improved to enhance speed, efficiency or memory, be kind enough\n";
+         $template .= "* to share with the author at wycliffomondiotieno@gmail.com or +254741142038. The author will not mind a cup\n";
+         $template .= "* of coffee either.\n";
+         $template .= "*\n";
+         $template .= "* Commands to generate file:\n";
+         $template .= "* 1. php manage.php make:migrations\n";
+         $template .= "* On your terminal, cd into project root and run the above commands\n";
+         $template .= "* \n";
+         $template .= "* A database snapshot keeps a record of the database, tables and columns structures as at the time makemigrations is run.\n";
+         $template .= "* */\n\n";
          $template .= "use SaQle\\Migration\\Base\\DbSnapshot;\n\n";
          $template .= "class {$class_name} extends DbSnapshot{\n";
          /**
@@ -526,6 +575,23 @@ class ContextManager implements IMigrationManager{
          }
 
          $template = "<?php\n";
+         $template .= "/**\n";
+         $template .= "* This is an auto generated file.\n"; 
+         $template .= "*\n";
+         $template .= "* The code here is designed to work as is, and must not be modified unless you know what you are doing.\n";
+         $template .= "*\n";
+         $template .= "* If you find ways that the code can be improved to enhance speed, efficiency or memory, be kind enough\n";
+         $template .= "* to share with the author at wycliffomondiotieno@gmail.com or +254741142038. The author will not mind a cup\n";
+         $template .= "* of coffee either.\n";
+         $template .= "*\n";
+         $template .= "* Commands to generate file:\n";
+         $template .= "* 1. php manage.php make:migrations\n";
+         $template .= "* 2. php manage.php make:models\n";
+         $template .= "* On your terminal, cd into project root and run the above commands\n";
+         $template .= "* \n";
+         $template .= "* Models are generated behind the scense from table schemas defined by the user.\n";
+         $template .= "* The model provides interfaces for interacting with the database.\n";
+         $template .= "* */\n\n";
          $template .= "namespace ".$dao_namespace.";\n\n";
          $template .= "use ".$model_class.";\n";
          $template .= $namespace_template;
@@ -718,6 +784,27 @@ class ContextManager implements IMigrationManager{
                  $this->write_associated_dao($table_schema, $project_root);
              }
          }
+     }
+
+     public function make_throughs(string $project_root, $app_name = null, $db_context = null){
+         $context_classes = $this->get_context_classes($db_context);
+         $manytomany_throughs = []; //this array makes sure only one through model is generated for a pair of related manytomany models.
+         $generated_throughs = []; //collects the generated through models for each database context class.
+
+         $trackerfile = $project_root."/migrations/migrationstracker.bin";
+         $tracker = $this->unserialize_from_file($trackerfile);
+         if(!$tracker){
+             $tracker = new MigrationTracker();
+         }
+         
+         foreach($context_classes as $ctx){
+             $models   = $ctx::get_models();
+             [$model_fields, $through_models] = $this->extract_model_fields($models, $project_root, $manytomany_throughs, $ctx, []);
+             $generated_throughs[$ctx] = $through_models;
+         }
+
+         $tracker->set_through_models($generated_throughs);
+         $this->serialize_to_file($trackerfile, $tracker);
      }
 
 }

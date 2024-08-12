@@ -136,7 +136,8 @@ abstract class Relation extends Simple{
 		 }elseif($this instanceof OneToMany){
 		 	$this->relation = new One2Many($pdao, $fdao, $field, $pk, $fk, $isnav, $multiple, $eager);
 		 }elseif($this instanceof ManyToMany){
-		 	$this->relation = new Many2Many($pdao, $fdao, $field, $pk, $fk, $isnav, $multiple, $eager);
+		 	$through = $this->kwargs['through'] ?? null;
+		 	$this->relation = new Many2Many($pdao, $fdao, $field, $pk, $fk, $isnav, $multiple, $eager, $through);
 		 }
 	}
 

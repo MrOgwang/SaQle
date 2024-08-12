@@ -6,9 +6,16 @@ namespace SaQle\Core\Collection\Interfaces;
 use ArrayIterator;
 use IteratorAggregate;
 use Traversable;
+use Countable;
+use ArrayAccess;
 
-abstract class ICollection implements IteratorAggregate{
-    public function __construct(protected array $elements){
+abstract class ICollection implements IteratorAggregate, ArrayAccess, Countable{
+    
+    private int $position;
+    protected array $elements;
+
+    public function __construct(array $elements){
+        $this->elements = $elements;
     }
 
     public static function createEmpty(): static{
@@ -53,9 +60,13 @@ abstract class ICollection implements IteratorAggregate{
         return end($this->elements);
     }
 
-    public function count(): int{
-        return count($this->elements);
+    public function merge(){
+        
     }
+
+    /*public function count(): int{
+        return count($this->elements);
+    }*/
 
     public function isEmpty(): bool{
         return empty($this->elements);
@@ -76,5 +87,54 @@ abstract class ICollection implements IteratorAggregate{
     public function getIterator(): Traversable{
         return new ArrayIterator($this->elements);
     }
+
+     /**
+     * Implementation of method declared in \Countable.
+     * Provides support for count()
+     */
+    public function count(){
+        return count($this->elements);
+    }
+
+    /**
+     * Implementation of method declared in \ArrayAccess
+     * Used to be able to use functions like isset()
+     */
+    public function offsetExists($offset){
+        return isset($this->elements[$offset]);
+    }
+
+    /**
+     * Implementation of method declared in \ArrayAccess
+     * Used for direct access array-like ($collection[$offset]);
+     */
+    public function offsetGet($offset){
+        return $this->elements[$offset];
+    }
+
+    /**
+     * Implementation of method declared in \ArrayAccess
+     * Used for direct setting of values
+     */
+    public function offsetSet($offset, $value){
+        if (!is_int($value)) {
+            throw new \InvalidArgumentException("Must be an int");
+        }
+
+        if (empty($offset)) { //this happens when you do $collection[] = 1;
+            $this->elements[] = $value;
+        } else {
+            $this->elements[$offset] = $value;
+        }
+    }
+
+    /**
+     * Implementation of method declared in \ArrayAccess
+     * Used for unset()
+     */
+    public function offsetUnset($offset){
+        unset($this->elements[$offset]);
+    }
+
 }
 ?>

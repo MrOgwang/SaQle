@@ -750,7 +750,7 @@ abstract class TableSchema implements ITableSchema{
 	 	 return $file_data;
 	 }
 
-	 private function check_if_duplicate($data){
+	 private function check_if_duplicate($data, $table_name = null, $model_class = null, $db_class = null){
 	 	 if(!$this->meta['unique_fields']){
 	 	 	 return false;
 	 	 }
@@ -783,11 +783,15 @@ abstract class TableSchema implements ITableSchema{
          $unique_field_keys = array_keys($unique_fields);
          $first_field = array_shift($unique_field_keys);
          $dao = self::get_associated_model_class();
-         $manager = $dao::db()->where($first_field."__eq", $unique_fields[$first_field]);
+         if(str_contains($dao, "Throughs")){
+         	 $manager = $dao::db2($table_name, $model_class, $db_class)->where($first_field."__eq", $unique_fields[$first_field]);
+         }else{
+         	 $manager = $dao::db()->where($first_field."__eq", $unique_fields[$first_field]);
+         }
 	 	 foreach($unique_field_keys as $uf){
 	 	 	 $manager = $this->meta['unique_together'] ? $manager->where($uf."__eq", $unique_fields[$uf]) : $manager->or_where($uf."__eq", $unique_fields[$uf]);
 	 	 }
-	 	 $exists = $manager->limit(records: 1, page: 1)->all();
+	 	 $exists = $manager->limit(records: 1, page: 1)->first_or_default();
 
 	 	 if(!$exists){
 	 	 	 return false;
@@ -807,7 +811,7 @@ abstract class TableSchema implements ITableSchema{
      	 return $swapped;
      }
 
-	 public function prepare_insert_data($data){
+	 public function prepare_insert_data($data, $table_name = null, $model_class = null, $db_class = null){
 	 	/**
 	 	 * Make sure data only uses db column names.
 	 	 * */
@@ -816,7 +820,7 @@ abstract class TableSchema implements ITableSchema{
 	 	/**
 	 	 * check an attempt to insert duplicate data.
 	 	 * */
-	 	 $is_duplicate = $this->check_if_duplicate($data);
+	 	 $is_duplicate = $this->check_if_duplicate($data, $table_name, $model_class, $db_class);
 
 	 	 /**
 	 	  * Inject creator and modifier fields, created and modified date time fields and deleted fields

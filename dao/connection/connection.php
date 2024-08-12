@@ -55,10 +55,12 @@ class Connection implements IConnection{
 	 * Execute a database operation
 	 */
 	 public function execute(string $sql, ?array $data = null, ?string $operation = null, string $prmkeytype = ""){
-	 	 $this->connect();
-	 	 $last_insert_id = null;
-	 	 $response       = false;
 		 try{
+		 	 $last_insert_id = null;
+	 	     $response = false;
+
+		 	 $this->connect();
+
 			 $this->pdo->beginTransaction();
 			 $statement = $this->pdo->prepare($sql);
 			 $response  = $statement->execute($data);
@@ -73,14 +75,15 @@ class Connection implements IConnection{
 			 	 	 $this->pdo->commit();
 			 	 }
 			 }
+
+			 return $last_insert_id ? ['statement' => $statement, 'last_insert_id' => $last_insert_id, 'response' => $response] : ['statement' => $statement, 'response' => $response];
+
 	     }catch(\Exception $ex){
 	     	 if($this->pdo->inTransaction()){
 		 	 	 $this->pdo->rollback();
 		 	 }
 			 throw $ex;
 		 }
-		 return $last_insert_id ? ['statement' => $statement, 'last_insert_id' => $last_insert_id, 'response' => $response] : 
-		 ['statement' => $statement, 'response' => $response];
 	 }
 }
 ?>

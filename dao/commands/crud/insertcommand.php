@@ -5,8 +5,12 @@ use SaQle\Dao\Commands\ICommand;
 
 class InsertCommand extends ICommand{
 	 public function execute(){
-	 	 $this->_receiver->settings($this->_params);
-	 	 return $this->_receiver->insert();
+	 	 try{
+	 	 	 $this->_receiver->settings($this->_params);
+	 	     return $this->_receiver->insert();
+	 	 }catch(\Exception $ex){
+	 	 	 throw $ex;
+	 	 }
 	 }
 }
 ?>

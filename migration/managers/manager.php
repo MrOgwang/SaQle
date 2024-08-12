@@ -21,4 +21,8 @@ class Manager implements IMigrationManager{
      public function make_models(...$options){
         return $this->context_manager->make_models(...$options);
      }
+
+     public function make_throughs(...$options){
+        return $this->context_manager->make_throughs(...$options);
+     }
 }
