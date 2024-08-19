@@ -117,10 +117,6 @@ abstract class ICollection implements IteratorAggregate, ArrayAccess, Countable{
      * Used for direct setting of values
      */
     public function offsetSet($offset, $value){
-        if (!is_int($value)) {
-            throw new \InvalidArgumentException("Must be an int");
-        }
-
         if (empty($offset)) { //this happens when you do $collection[] = 1;
             $this->elements[] = $value;
         } else {
@@ -135,6 +131,5 @@ abstract class ICollection implements IteratorAggregate, ArrayAccess, Countable{
     public function offsetUnset($offset){
         unset($this->elements[$offset]);
     }
-
 }
 ?>

@@ -32,6 +32,10 @@ class RouteManager extends IRouteManager{
 				 $api_routes = array_merge($api_routes, require_once $api_routes_path);
 			 }
 		 }
+
+		 /**
+		  * Acquire routes from auto wiring.
+		  * */
 		 $this->_web_routes->set($web_routes);
 		 $this->_api_routes->set($api_routes);
 		 $routes = $this->_web_routes->find_matches() ?: $this->_api_routes->find_matches();
@@ -42,6 +46,10 @@ class RouteManager extends IRouteManager{
 
 	 public function get_selected_routes(){
 	 	return $this->_selected_routes;
+	 }
+
+	 public function get_web_routes(){
+	 	return $this->_web_routes;
 	 }
 }
 ?>

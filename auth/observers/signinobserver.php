@@ -17,8 +17,14 @@ class SigninObserver extends IAuthObserver{
 	 public function do_update(AuthService $auth_service){
 		 $feedback = $auth_service->status();
 		 if($feedback['status'] == 0){
+
 		 	 $request           = Request::init();
-		 	 $this->redirect_to = $request->final_route->get_query_param('next');
+		 	 if(!$this->redirect_to){
+		 	 	 $this->redirect_to = $request->final_route->get_query_param('next');
+		 	 	 if(!$this->redirect_to){
+		 	 	 	 $this->redirect_to = $request->data->get('redirect_to', '');
+		 	 	 }
+		 	 }
 			 /**
 			 * User object
 			 */

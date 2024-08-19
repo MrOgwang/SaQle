@@ -44,7 +44,7 @@ class WebController{
      * Create a new controller instance.
      * @throw TemplateNotFoundException
      */
-	 public function __construct(string $template, ?array $params = null){
+	 public function __construct(?string $template = null, ?array $params = null){
 	 	  $this->set_template($template);
 		  $this->params = $params;
 	 }

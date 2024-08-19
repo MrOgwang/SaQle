@@ -30,11 +30,11 @@ abstract class AuthService implements IAuthService, Observable{
 	 public function record_signout(string | int $user_id){
 		 $last_login = $this->context->logins->where('user_id__eq', $user_id)->order(["login_id"], "DESC")->limit(1, 1)->first_or_default();
 		 if($last_login){
-			 $this->context->logins->where('login_id__eq', $last_login->login_id)->set(['logout_datetime' => time(), 'login_span' => 0])->update(partial: true);
+			 $this->context->logins->where('login_id__eq', $last_login->login_id)->set(['logout_datetime' => time(), 'login_span' => 0])->update();
 		 }
 	 }
 	 public function update_online_status(string | int $user_id){
-		 $this->context->users->where('user_id__eq', $user_id)->set(['is_online' => 1])->update(partial: true);
+		 $this->context->users->where('user_id__eq', $user_id)->set(['is_online' => 1])->update();
 	 }
 	 public function sign_out(){
 		 (new Dao\User(login_status: 0))->filter(["user_id", $_SESSION['current_user']->user_id])->update(update_fields: ["login_status"], partial: true);

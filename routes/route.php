@@ -13,12 +13,21 @@ class Route extends IRoute{
      private array  $permissions;
 	 private array  $params;
      private array  $queries = [];
+     private array  $trail   = [];
 	 public function __construct(array $methods, string $url, array $target, array $permissions = []){
 		 $this->methods        = $methods;
 		 $this->url            = $url;
 		 $this->target         = $target;
          $this->permissions    = $permissions;
 	 }
+
+     public function set_trail(array $trail){
+         $this->trail = $trail;
+     }
+
+     public function get_trail() : array{
+         return $this->trail;
+     }
 
      public function get_actual_template_path(string $symbolic_path) : string{
         $path_array = explode(".", $symbolic_path);

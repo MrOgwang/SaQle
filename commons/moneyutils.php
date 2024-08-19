@@ -24,7 +24,7 @@ trait MoneyUtils{
 	     }
 	 }
 	 static function format_shillings($amount, $currency = "KSH"){
-         $formatted = $currency.".&nbsp" . number_format(sprintf('%0.2f', preg_replace("/[^0-9.]/", "", $amount)), 2, ".", "&nbsp");
+         $formatted = $currency.".&nbsp;" . number_format(sprintf('%0.2f', preg_replace("/[^0-9.]/", "", $amount)), 2, ".", "&nbsp;");
          return $amount < 0 ? "({$formatted})" : "{$formatted}";
      }
 }

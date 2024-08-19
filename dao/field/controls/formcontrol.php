@@ -94,6 +94,13 @@ class FormControl implements IControl{
 	 	return array_key_exists("form", $this->properties) && $this->properties['form'] ? "form='".$this->properties['form']."'" : "";
 	 }
 
+	 /**
+      * Set multiple attribute for input controls
+      * */
+	 private function set_multiple(){
+	 	return array_key_exists("multiple", $this->properties) && $this->properties['multiple'] ? "multiple" : "";
+	 }
+
      public function get_control(){
      	 return match($this->type){
 		     'radio'    => $this->get_radio_control(),
@@ -135,16 +142,22 @@ class FormControl implements IControl{
      }
 
      public function get_file_control(){
-     	 $file_name = 'No file uploaded. Click here to upload...';
-     	 $accept = array_key_exists("accept", $this->properties) ? "accept='{$this->properties['accept']}'" : "";
+     	 $file_name = 'No file selected';
+     	 $accept = array_key_exists("accept", $this->properties) ? 
+     	 (is_array($this->properties['accept']) ? "accept='".implode(',', $this->properties['accept'])."'" : "accept='{$this->properties['accept']}'") 
+     	 : "";
      	 return "
 		 <div class='form-control-group'>
 		    <div class='form-control-label'>
 		        <h4>{$this->label}</h4>
 		    </div>
 		    <div class='form-control-field'>
-		        <label for='{$this->name}' className='flex v_center form-control-file-name'>{$file_name}</label>
-		        <input {$this->set_form()} class='{$this->name} file-control-field' {$this->set_disabled()} {$this->set_required()} id='{$this->name}' name='{$this->name}' {$accept} type='{$this->type}'>
+		        <div class='flex v_center form-control-file-name'>
+		            <button class='flex v_center'><i data-lucide='view'></i></button>
+		            <span class='flex v_center'>{$file_name}</span>
+		            <label for='{$this->name}' class='flex v_center'><i data-lucide='cloud-upload'></i>&nbsp;Browse</label>
+		        </div>
+		        <input {$this->set_multiple()} {$this->set_form()} class='{$this->name} file-control-field' {$this->set_disabled()} {$this->set_required()} id='{$this->name}' name='{$this->name}' {$accept} type='{$this->type}'>
 		    </div>
 		</div>
 		 ";
@@ -165,7 +178,7 @@ class FormControl implements IControl{
      }
 
      public function get_select_control(){
-     	 $default = $this->properties["default"] ?? "";
+     	 $default = $this->properties["default"] ?? [];
      	 /**
      	  * Select options: can be,
      	  * 1. A key => value array of options
@@ -174,6 +187,7 @@ class FormControl implements IControl{
      	  * 4. A string representing a class and a method to call to get an array|string of options in the format classname@method
      	  * 5. A string representing preformatted html options.
      	  * */
+     	 $multiple     = array_key_exists("multiple", $this->properties) ? "multiple data-multi-select" : "";
      	 $options      = $this->properties["options"] ?? null;
      	 $options_view = "";
      	 if($options){
@@ -190,9 +204,9 @@ class FormControl implements IControl{
 
      	 	 if(is_array($options)){
      	 	     $data         = $this->properties["data"] ?? [];
-     	 	     $options_view = "<option value=''>--Select--</option>";
+     	 	     $options_view = $multiple ? "" : "<option value=''>--Select--</option>";
 		     	 foreach($options as $k => $v){
-		     	 	$selected  = $default == $v ? "selected='selected'" : "";
+		     	 	$selected  = in_array($k, $default) ? "selected" : "";
 		     	 	$item_data = isset($data[$k]) ? "data-option_data='".json_encode($data[$k])."'" : "";
 		     	 	$options_view .= "<option {$selected} {$item_data} value='{$k}'>{$v}</option>";
 		     	 }
@@ -200,13 +214,15 @@ class FormControl implements IControl{
      	     	 $options_view = $options;
      	     }
      	 }
+     	 
+     	 $controlname = $multiple ? $this->name : $this->name;
 		 return "
 		 <div class='form-control-group'>
 		    <div class='form-control-label'>
 		        <h4>{$this->label}</h4>
 		    </div>
 		    <div class='form-control-field'>
-		        <select {$this->set_form()} {$this->set_placeholder()} {$this->set_disabled()} {$this->set_required()} id='{$this->name}' name='{$this->name}' class='{$this->name}'>
+		        <select {$multiple} {$this->set_form()} {$this->set_placeholder()} {$this->set_disabled()} {$this->set_required()} id='{$this->name}' name='{$controlname}' class='{$this->name}'>
 		            {$options_view}
 		        </select>
 		    </div>

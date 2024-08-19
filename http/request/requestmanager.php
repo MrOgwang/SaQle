@@ -47,9 +47,9 @@ class RequestManager{
          date_default_timezone_set(DEFAULT_TIMEZONE);
          $request_middlewares = [
              SessionMiddleware::class,
+             AuthMiddleware::class,
              RoutingMiddleware::class,
              DataConsolidatorMiddleware::class,
-			 AuthMiddleware::class,
              PermissionsMiddleware::class,
              ControllerTrackerMiddleware::class
          ];

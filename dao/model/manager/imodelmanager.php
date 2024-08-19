@@ -32,8 +32,8 @@
  	 protected array  $_file_data = [];
  	 protected string $current_dbcontext_class;
  	 protected array  $_models = [];
- 	 protected bool   $_is_operation_aborted = false;
  	 protected array  $_operation_status = [];
+ 	 protected ?array $_data_state = null;
 
  	 /**
  	  * Whether to ignore soft delete filter on fectched results

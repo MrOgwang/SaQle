@@ -105,6 +105,9 @@
 	       MakeMigrations::class => function (ContainerInterface $c){
 	     	       return new MakeMigrations($c->get(Manager::class));
 	       },
+	       Migrate::class => function (ContainerInterface $c){
+	     	       return new Migrate($c->get(Manager::class));
+	       },
 	       MakeCollections::class => function (ContainerInterface $c){
 	     	       return new MakeCollections($c->get(Manager::class));
 	       },

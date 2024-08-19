@@ -32,7 +32,7 @@ abstract class SessionHandler implements SessionHandlerInterface{
 		 if(!$data){
 		 	 $this->context->sessions->add(['session_id' => $session_id, 'session_data' => $session_data])->save();
 		 }else{
-		 	 $this->context->sessions->where('session_id__eq', $session_id)->set(['session_data' => $session_data])->update(partial: true);
+		 	 $this->context->sessions->where('session_id__eq', $session_id)->set(['session_data' => $session_data])->update();
 		 }
 		 return true;
      }

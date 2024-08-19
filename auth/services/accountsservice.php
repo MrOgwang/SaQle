@@ -18,6 +18,10 @@ abstract class AccountsService implements IAccountService, Observable{
 		 $this->__coConstruct();
 	 }
 
+	 public function create_account(){
+	 	
+	 }
+
 	 /**
 	  * Check whether a verification code exists and return it else return false
 	  * @param string $code: The code for which to checj existance

@@ -273,7 +273,8 @@ class ContextManager implements IMigrationManager{
          $template .= "use SaQle\\Dao\Field\\Interfaces\\IField;\n";
          $template .= "use SaQle\\Dao\\Model\\Schema\\TableSchema;\n";
          $template .= "use ".$pnamespace."\\".$o_pmodel_name.";\n";
-         $template .= "use ".$fnamespace."\\".$o_fmodel_name.";\n\n";
+         $template .= "use ".$fnamespace."\\".$o_fmodel_name.";\n";
+         $template .= "use SaQle\\Core\\Assert\\Assert;\n\n";
          $template .= "class {$classname} extends TableSchema implements IThroughModel{\n";
          /**
           * Declare the fields
@@ -281,6 +282,10 @@ class ContextManager implements IMigrationManager{
          $template .= "\tpublic IField $"."id;\n";
          $template .= "\tpublic IField $".$pmodel_name.";\n";
          $template .= "\tpublic IField $".$fmodel_name.";\n\n";
+         $template .= "\tprivate static array $"."include_fields = [\n";
+         $template .= "\t\t".$o_pmodel_name."::class => '".$fmodel_name."',\n";
+         $template .= "\t\t".$o_fmodel_name."::class => '".$pmodel_name."'\n";
+         $template .= "\t];\n\n";
          /**
           * Define the constructor
           * */
@@ -303,6 +308,13 @@ class ContextManager implements IMigrationManager{
          $template .= "\t\t\t".$o_fmodel_name."::class,\n";
          $template .= "\t\t];\n";
          $template .= "\t}\n\n";
+         /**
+          * Define get include field function.
+          * */
+         $template .= "\tpublic static function get_include_field($"."schema){\n";
+         $template .= "\t\tAssert::keyExists(self::$"."include_fields, $"."schema);\n";
+         $template .= "\t\treturn self::$"."include_fields[$"."schema];\n";
+         $template .= "\t}\n";
 
          $template .= "}\n";
 
@@ -539,7 +551,8 @@ class ContextManager implements IMigrationManager{
              $fname = $state instanceof IThroughModel ? str_replace("schema", "", $fn) : $fn;
              if($fv instanceof TextType || $fv instanceof NumberType || $fv instanceof Pk){
                  $ptype = $fv->get_kwargs()['ptype'];
-                 $props_template .= "\tpublic {$ptype} $".$fname.";\n";
+                 //$props_template .= "\tpublic {$ptype} $".$fname.";\n";
+                 $props_template .= "\tpublic $".$fname.";\n";
              }elseif($fv instanceof Relation){
                  $fmodel = $fv->get_relation()->get_fdao();
                  $modelstate = $fmodel::state();
@@ -560,10 +573,12 @@ class ContextManager implements IMigrationManager{
                  if(!in_array($daoname, $namaspaces[$daospace])){
                      $namaspaces[$daospace][] = $daoname;
                  }
-                 $props_template .= "\tpublic {$daoname} $".$fname.";\n";
+                 //$props_template .= "\tpublic {$daoname} $".$fname.";\n";
+                 $props_template .= "\tpublic $".$fname.";\n";
 
              }elseif($fv instanceof FileField){
-                 $props_template .= "\tpublic string $".$fname.";\n";
+                 //$props_template .= "\tpublic string $".$fname.";\n";
+                 $props_template .= "\tpublic $".$fname.";\n";
              }
          }
          $props_template .= "\n\n";
@@ -600,12 +615,12 @@ class ContextManager implements IMigrationManager{
          $template .= "class {$dao_name} extends Model{\n\n";
          $template .= $props_template;
          $template .= "\tpublic function __construct(...$"."kwargs){\n";
-         foreach($toinitialize as $n => $v){
+         /*foreach($toinitialize as $n => $v){
              $template .= "\t\t$"."this->".$n." = new ".$v."();\n";
-         }
+         }*/
          $template .= "\t\tparent::__construct(...$"."kwargs);\n";
          $template .= "\t}\n\n";
-         $template .= "\tprotected static function get_schema(){\n";
+         $template .= "\tpublic static function get_schema(){\n";
          $template .= "\t\treturn {$model_name}::state();\n";
          $template .= "\t}\n\n";
          $template .= "}\n";
@@ -801,6 +816,13 @@ class ContextManager implements IMigrationManager{
              $models   = $ctx::get_models();
              [$model_fields, $through_models] = $this->extract_model_fields($models, $project_root, $manytomany_throughs, $ctx, []);
              $generated_throughs[$ctx] = $through_models;
+
+             //create collections and models for throughs.
+             foreach($through_models as $table_name => $table_schema){
+                 $this->write_associated_dao($table_schema, $project_root);
+                 $this->write_typed_collection($table_schema, $project_root);
+             }
+
          }
 
          $tracker->set_through_models($generated_throughs);

@@ -30,6 +30,7 @@ class Many2Many extends BaseRelation implements IRelation{
 	 use FileUtils;
 
 	 private ?string $through = null;
+	 private ?string  $include = null;
 
 	 public function __construct(
 	 	 string   $pdao,

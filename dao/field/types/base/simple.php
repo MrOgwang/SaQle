@@ -151,6 +151,10 @@ abstract class Simple{
     	return $this->kwargs;
     }
 
+    public function is_required(){
+    	return $this->kwargs['required'] ?? false;
+    }
+
 	public function get_model_class(){
 		return $this->model_class;
 	}
@@ -281,6 +285,11 @@ abstract class Simple{
 	 	     * Data array to attach to the control
 	 	     * */
 	 	    'data' => 'data',
+
+	 	    /**
+	 	     * Whether control should allow multiple values
+	 	     * */
+	 	    'multiple' => 'multiple'
 		];
 	}
 

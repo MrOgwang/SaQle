@@ -693,14 +693,21 @@ abstract class TableSchema implements ITableSchema{
 		 return array_merge($validation_feedback['clean'], $file_names_only);
 	 }
 
-     private function rename_uploaded_files(&$clean_data, $file_key, $rename_callback){
+     private function rename_uploaded_files(&$clean_data, $file_key, $rename_callback, $data_state = null){
 	 	$original_clean_data = $clean_data;
 	 	if(is_array($clean_data[$file_key]['name'])){
              foreach($clean_data[$file_key]['name'] as $n_index => $n){
-                 $clean_data[$file_key]['name'][$n_index] = $this->$rename_callback((Object)$original_clean_data, $clean_data[$file_key]['name'][$n_index], $n_index);
+                 $clean_data[$file_key]['name'][$n_index] = $this->$rename_callback(
+                 	$data_state ? (Object)$data_state : (Object)$original_clean_data, 
+                 	$clean_data[$file_key]['name'][$n_index], 
+                 	$n_index
+                 );
              }
          }else{
-             $clean_data[$file_key]['name'] = $this->$rename_callback((Object)$original_clean_data, $clean_data[$file_key]['name']);
+             $clean_data[$file_key]['name'] = $this->$rename_callback(
+             	$data_state ? (Object)$data_state : (Object)$original_clean_data, 
+             	$clean_data[$file_key]['name']
+             );
          }
 	 }
 
@@ -712,7 +719,7 @@ abstract class TableSchema implements ITableSchema{
      	 return $fc;
      }
 
-	 private function prepare_file_data(&$clean_data){
+	 private function prepare_file_data(&$clean_data, $data_state = null){
 	 	 /**
 	 	  * Prepare files data: Only the file names will be saved in db.
 	 	  * 1. Rename the files using the rename callback that was provided on the model if any
@@ -729,13 +736,13 @@ abstract class TableSchema implements ITableSchema{
 	 	 		 //rename files if a rename callback was provided.
 	 	 		 if(isset($file_config['rename_callback']) && method_exists($this, $file_config['rename_callback'])){
 	 	 		 	 $rename_callback = $file_config['rename_callback'];
-	 	 		 	 $this->rename_uploaded_files($clean_data, $db_col, $rename_callback);
+	 	 		 	 $this->rename_uploaded_files($clean_data, $db_col, $rename_callback, $data_state);
 	 	 		 }
 
 	 	 		 //get the file path
      	 		 $folder_path = $file_config['path'] ?? "";
 		         if($folder_path && method_exists($this, $folder_path)){
-	 				 $folder_path = $this->$folder_path((Object)$clean_data);
+	 				 $folder_path = $this->$folder_path( $data_state ? (Object)$data_state : (Object)$clean_data);
 	 			 }else{
 	 			 	 $folder_path = ""; //there should be a default folder path to the media folder
 	 			 }
@@ -776,7 +783,7 @@ abstract class TableSchema implements ITableSchema{
 	 	 	throw new \Exception("One or more field names provided in meta unique_fields key is not valid!");
 	 	 }
 
-	 	 if(!$unique_fields){
+	 	 if( count($unique_fields) < count($this->meta['unique_fields']) ){
 	 	 	 return false;
 	 	 }
 
@@ -797,7 +804,7 @@ abstract class TableSchema implements ITableSchema{
 	 	 	 return false;
 	 	 }
 
-	 	 return $exists;
+	 	 return [$exists, $unique_fields, $this->meta['unique_together']];
 	 }
 
      private function swap_properties_with_columns($data){
@@ -811,7 +818,7 @@ abstract class TableSchema implements ITableSchema{
      	 return $swapped;
      }
 
-	 public function prepare_insert_data($data, $table_name = null, $model_class = null, $db_class = null){
+	 public function prepare_insert_data($data, $table_name = null, $model_class = null, $db_class = null, $skip_validation = false){
 	 	/**
 	 	 * Make sure data only uses db column names.
 	 	 * */
@@ -842,7 +849,7 @@ abstract class TableSchema implements ITableSchema{
 	 	 /**
 	 	  * Get validated data.
 	 	  * */
-	 	 $clean_data = $this->get_clean_data($data, "insert");
+	 	 $clean_data = !$skip_validation ? $this->get_clean_data($data, "insert") : $data;
 
 	 	 /**
 	 	  * Generate GUID if the primary key is of that type.
@@ -859,7 +866,7 @@ abstract class TableSchema implements ITableSchema{
 	 	 return [$clean_data, $file_data, $is_duplicate, $this->meta['action_on_duplicate']];
 	 }
 
-	 public function prepare_update_data($data){
+	 public function prepare_update_data($data, $data_state = null, $skip_validation = false){
 	 	 /**
 	 	 * Make sure data only uses db column names.
 	 	 * */
@@ -884,7 +891,7 @@ abstract class TableSchema implements ITableSchema{
 	 	 /**
 	 	  * Get validated data
 	 	  * */
-	 	 $clean_data = $this->get_clean_data($data, "update");
+	 	 $clean_data = !$skip_validation ? $this->get_clean_data($data, "update") : $data;
 
 	 	 /**
 	 	  * For models supporting soft delete, the deleted field(Whatever name its called in meta),
@@ -895,7 +902,7 @@ abstract class TableSchema implements ITableSchema{
 	 	  /**
 	 	  * Prepare file data.
 	 	  * */
-	 	 $file_data = $this->prepare_file_data($clean_data);
+	 	 $file_data = $this->prepare_file_data($clean_data, $data_state);
 
 	 	 return [$clean_data, $file_data, $is_duplicate, $this->meta['action_on_duplicate']];
 	 }

@@ -3,7 +3,7 @@ declare(strict_types = 1);
 namespace SaQle\Routes;
 
 class RouteCollection extends IRoute{
-      protected $routes = []; // stores routes
+       protected $routes = []; // stores routes
 	 private function add(Routes\IRoute $route){
 		 $this->routes[] = $route;
 	 }
@@ -18,6 +18,9 @@ class RouteCollection extends IRoute{
 			 }
 		 }
 		 return $matches;
+	 }
+	 public function get_routes(){
+	 	return $this->routes;
 	 }
 }
 

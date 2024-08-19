@@ -261,25 +261,41 @@ class ModelManager extends IModelManager{
 
 	 	 $include_instances = array_merge($includes, $auto_includes);
 
-	 	 print_r($include_instances);
-
-	 	 /**
-	 	  * Activate eager loading tracker if it hasn't been activated.
-	 	  * */
-
 	 	 $include_rows = [];
  	 	 foreach($include_instances as $ins){
- 	 	 	 //print_r($ins);
  	 	 	 $fdao         = $ins->get_fdao();
  	 	 	 if(!$tracker::is_loaded($fdao)){
  	 	 	 	 if($ins instanceof Many2Many){
+ 	 	 	 	 	 $ofdao = $fdao;
+ 	 	 	 	 	 $ofdaom = $ofdao::get_associated_model_class();
+ 	 	 	 	 	 $collection_class = $ofdaom::get_collection_class();
+ 	 	 	 	 	 [$table_name, $schema, $ctx] = $ins->get_through_model_schema();
+ 	 	 	 	 	 $fdao = $schema;
+ 	 	 	 	 	 $fdaom        = $fdao::get_associated_model_class();
+		 	 	 	 $pkey         = $ins->get_pk();
+		 		 	 $fkey         = $ins->get_fk();
+		 		 	 $pkey_values  = array_unique(array_column($rows, $pkey));
+		 		 	 $with_field   = $schema::get_include_field($ins->get_pdao());
+		 		 	 $with_field2  = $schema::get_include_field($ins->get_fdao());
+		 		 	 $results      = $fdaom::db2($table_name, $schema, $ctx)->with($with_field)
+		 		 	 ->limit(records: 1000, page: 1)->where("{$pkey}__in", $pkey_values)->eager_load(tomodel: $tomodel);
 
+		 		 	 $formatted_results = [];
+		 		 	 foreach($results as $r){
+		 		 	 	 if(!array_key_exists($r->$with_field2, $formatted_results)){
+		 		 	 	 	 $formatted_results[$r->$with_field2] = new $collection_class([]);
+		 		 	 	 }
+		 		 	 	 $formatted_results[$r->$with_field2]->add($r->$with_field);
+		             }
+		 		 	 
+ 	 	 	 	 	 $include_rows[$ins->get_field()] = ['collection_class' => $collection_class, 'data' => $formatted_results, 'key' => $pkey, 'multiple' => $ins->get_multiple()];
  	 	 	 	 }else{
  	 	 	 	 	 $fdaom        = $fdao::get_associated_model_class();
 		 	 	 	 $pkey         = $ins->get_pk();
 		 		 	 $fkey         = $ins->get_fk();
 		 		 	 $pkey_values  = array_unique(array_column($rows, $pkey));
 		 		 	 $results      = $fdaom::db()->limit(records: 1000, page: 1)->where("{$fkey}__in", $pkey_values)->eager_load(tomodel: $tomodel);
+		 		 	 //print_r($results);
 		 		 	 $formatted_results = [];
 		 		 	 foreach($results as $r){
 		                 $formatted_results[$r->$fkey][] = $r;
@@ -323,26 +339,29 @@ class ModelManager extends IModelManager{
 	     	 $chain->add(new TypeCast(type: $ass_model_class));
 	     }
 
+	     /**
+	      * Process the data through the chain.
+	      * */
 	     if($chain->is_active()){
-	     	 $newrows = [];
+	     	 $processed = [];
 	     	 foreach($rows as $row){
-	     	 	$newrows[] = $chain->apply($row);
+	     	 	 $processed[] = $chain->apply($row);
 	     	 }
-	     	 /**
-	     	  * If to model is on, return a typed model collection instead
-	     	  * of a simple array
-	     	  * */
-	     	 if($tomodel){
-	     	 	$collection_class = $ass_model_class::get_collection_class();
-	     	 	return new $collection_class($newrows);
-	     	 }
-
-	     	 return $newrows;
+	     	 $rows = $processed;
 	     }
 
 	     if(!$tracker_active){
 	     	// $tracker::reset();
 	     }
+
+	     /**
+     	  * If to model is on, return a typed model collection instead
+     	  * of a simple array
+     	  * */
+     	 if($tomodel){
+     	 	$collection_class = $ass_model_class::get_collection_class();
+     	 	return new $collection_class($rows);
+     	 }
 
 	     return $rows;
 	 }
@@ -447,19 +466,21 @@ class ModelManager extends IModelManager{
 	 }
 
      private function auto_save_files(){
-     	 $files = array_values(array_values($this->_file_data));
+     	 $files = array_values($this->_file_data);
      	 foreach($files as $f){
      	 	 if($f){
-		         $crop_dimensions   = $f->config['crop_dimensions'] ?? null;
-		         $resize_dimensions = $f->config['resize_dimensions'] ?? null;
-		         $folder_path       = $f->config['path'] ?? "";
-		         if(is_array($f->file['name'])){
-		             foreach($f->file['name'] as $n_index1 => $n){
-		                 $this->commit_file_todisk($folder_path, $f->file['name'][$n_index1], $f->file['tmp_name'][$n_index1], $crop_dimensions, $resize_dimensions);
-		             }
-		         }else{
-		             $this->commit_file_todisk($folder_path, $f->file['name'], $f->file['tmp_name'], $crop_dimensions, $resize_dimensions);
-		         }
+     	 	 	 foreach($f as $key => $fd){
+     	 	 	 	 $crop_dimensions   = $fd->config['crop_dimensions'] ?? null;
+			         $resize_dimensions = $fd->config['resize_dimensions'] ?? null;
+			         $folder_path       = $fd->config['path'] ?? "";
+			         if(is_array($fd->file['name'])){
+			             foreach($fd->file['name'] as $n_index1 => $n){
+			                 $this->commit_file_todisk($folder_path, $fd->file['name'][$n_index1], $fd->file['tmp_name'][$n_index1], $crop_dimensions, $resize_dimensions);
+			             }
+			         }else{
+			             $this->commit_file_todisk($folder_path, $fd->file['name'], $fd->file['tmp_name'], $crop_dimensions, $resize_dimensions);
+			         }
+     	 	 	 }
 		     }
      	 }
 	 }
@@ -542,6 +563,22 @@ class ModelManager extends IModelManager{
      	 }
      }
 
+     private function build_update_manager($manager, $fields, $together){
+     	 $unique_field_keys = array_keys($fields);
+         $first_field = array_shift($unique_field_keys);
+         $manager->where($first_field."__eq", $fields[$first_field]);
+         if($together){
+         	 foreach($unique_field_keys as $uf){
+         	 	 $manager->where($uf."__eq", $unique_fields[$uf]);
+	 	     }
+         }else{
+         	 foreach($unique_field_keys as $uf){
+         	 	 $manager->or_where($uf."__eq", $unique_fields[$uf]);
+	 	     }
+         }
+         return $manager;
+     }
+
      private function save_changes(bool $tomodel = false){
      	 try{
      	 	 #acquire the table being processed
@@ -602,7 +639,22 @@ class ModelManager extends IModelManager{
 	 	 	 if($this->_operation_status['is_duplicate'] && $this->_operation_status['duplicate_entries']) {
 	 	 	 	 switch($this->_operation_status['duplicate_action']){
 	 	 	 	 	 case 'UPDATE_ON_DUPLICATE';
-	 	 	 	 	     #Deal with updating duplicate data later on.
+	 	 	 	 	     #Update the duplicate data and return the updated object/records.
+	 	 	 	 	     $unique_fields   = $this->_operation_status['unique_fields'];
+	 	 	 	 	     $unique_together = $this->_operation_status['unique_together'];
+	 	 	 	 	     #fetch all the data just saved.
+					 	 if(str_contains($ass_model_class, 'Throughs')){
+					 	 	 $man = $ass_model_class::db2($table_name, $model_instance::class, $this->get_dbcontext_class());
+					 	 }else{
+					 	 	 $man = $ass_model_class::db();
+					 	 }
+	 	 	 	 	     foreach($this->_operation_status['duplicate_entries'] as $dk => $dv){
+	 	 	 	 	     	 $man        = $this->build_update_manager($man, $unique_fields, $unique_together);
+	 	 	 	 	     	 $updateresp = $man->update(tomodel: $tomodel);
+	 	 	 	 	     	 if(count($updateresp) > 0){
+	 	 	 	 	     	 	$results[]  = $updateresp[0];
+	 	 	 	 	     	 }
+	 	 	 	 	     }
 	 	 	 	 	 break;
 	 	 	 	 	 case "RETURN_EXISTING":
 	 	 	 	 	     #Inject the duplicate data into the result.
@@ -626,23 +678,25 @@ class ModelManager extends IModelManager{
      	 }
      }
  
-     public function add(array $data, bool $allow_duplicates = true, array $unique_fields = []){
+     public function add(array $data, bool $skip_validation = false){
      	
      	 /*get the name of the current table being manipulated*/
      	 $table = $this->get_context_tracker()->find_table_name(0);
      	 /*get the model associated with this table*/
      	 $model = $this->get_model($table);
-     	 [$clean_data, $file_data, $is_duplicate, $action_on_duplicate] = $model->prepare_insert_data($data, $table, $model::class, $this->get_dbcontext_class());
+     	 [$clean_data, $file_data, $is_duplicate, $action_on_duplicate] = $model->prepare_insert_data($data, $table, $model::class, $this->get_dbcontext_class(), $skip_validation);
 
      	 $entry_key = spl_object_hash((object)$clean_data);
 
-     	 if($is_duplicate){
+     	 if($is_duplicate !== false){
      	 	 $this->_operation_status['is_duplicate'] = true;
      	 	 if(!array_key_exists('duplicate_entries', $this->_operation_status)){
      	 	 	 $this->_operation_status['duplicate_entries'] = [];
      	 	 }
-     	 	 $this->_operation_status['duplicate_entries'][$entry_key] = $is_duplicate;
+     	 	 $this->_operation_status['duplicate_entries'][$entry_key] = $is_duplicate[0];
      	 	 $this->_operation_status['duplicate_action'] = $action_on_duplicate;
+     	 	 $this->_operation_status['unique_fields'] = $is_duplicate[1];
+     	 	 $this->_operation_status['unique_together'] = $is_duplicate[1];
      	 }else{
      	 	 $this->_operation_status['is_duplicate'] = false;
      	 }
@@ -713,57 +767,71 @@ class ModelManager extends IModelManager{
 	 }
 
      //updates
+
+     /**
+      * Set the data state of the object that is either being saved or updated
+      * at the moment, this only happens when you initialize
+      * the manager from a model.
+      * */
+     public function set_data_state(array $data_state){
+     	 $this->_data_state = $data_state;
+     	 return $this;
+     }
+
+     /**
+      * Set collects key => value data reperesenting field names and the new values to update, 
+      * Sometimes you need to call set multiple times to have the data you would like to update
+      * 
+      * @param array $data.
+      * */
      public function set(array $data){
-     	 /*get the name of the current table being manipulated*/
-     	 $table = $this->get_context_tracker()->find_table_name(0);
-     	 /*get the model associated with this table*/
-     	 $model = $this->get_model($table);
-     	 [$clean_data, $file_data, $is_duplicate, $action_on_duplicate] = $model->prepare_update_data($data);
-
-     	 $entry_key = spl_object_id($clean_data);
-
-     	 if($is_duplicate){
-     	 	 $this->_operation_status['is_duplicate'] = true;
-     	 	 if(!array_key_exists('duplicate_entries', $this->_operation_status)){
-     	 	 	 $this->_operation_status['duplicate_entries'] = [];
-     	 	 }
-     	 	 $this->_operation_status['duplicate_entries'][$entry_key] = $is_duplicate;
-     	 	 $this->_operation_status['duplicate_action'] = $action_on_duplicate;
-     	 }
-
-     	 $this->_update_data_container["data"] = array_merge($this->_update_data_container["data"], $clean_data);
-     	 $this->_file_data = array_merge($this->_file_data, $file_data);
+     	 $this->_update_data_container["data"] = array_merge($this->_update_data_container["data"], $data);
      	 return $this;
      }
 
      public function set_multiple(array $data){
-     	 foreach($data as $dk => $dv){
+     	 foreach($data as $dv){
      		$this->set($dv);
      	 }
      	 return $this;
      }
 
-     public function update(bool $partial = false){
-     	 if($this->_is_operation_aborted || !$this->_update_data_container["data"]){
-     	 	 return null;
+     public function update(bool $tomodel = false, bool $multiple = false){
+     	 $table = $this->get_context_tracker()->find_table_name(0); //name of current table being manipulated
+     	 $model = $this->get_model($table); //the model schema instance for the table.
+     	 $ass_model_class = $model->get_associated_model_class();
+         #Make sure the update container has some data
+     	 Assert::isNonEmptyMap($this->_update_data_container['data'], "$ass_model_class: Update attempt on an empty data container!");
+     	 #Clean up the update data, prepare files
+     	 [$clean_data, $file_data, $is_duplicate, $action_on_duplicate] = $model->prepare_update_data($this->_update_data_container['data'], $this->_data_state);
+     	 #For updates, if there is a duplicate, just abort the update operation.
+     	 if($is_duplicate !== false){
+     	 	 throw new \Exception("Aborting update operation! The update operation will lead to duplicate entries in table: {$table}");
      	 }
+     	 $this->_file_data[] = $file_data;
 
-     	 /*setup an update command*/
+     	 #setup an update command
+     	 $where_clause = 
 	 	 $this->crud_command = new UpdateCommand(
 	 	 	 new UpdateOperation($this->get_connection()),
 	 	 	 where_clause:  $this->fmanager->get_where_clause($this->get_context_tracker()),
 	 	 	 table_name:    $this->get_context_tracker()->find_table_name(0),
 	 	 	 database_name: $this->get_context_tracker()->find_database_name(0),
-	 	 	 fields:        array_keys($this->_update_data_container["data"]),
-	 	 	 values:        array_values($this->_update_data_container["data"])
+	 	 	 fields:        array_keys($clean_data),
+	 	 	 values:        array_values($clean_data)
 	 	 );
 
-	 	 /*execute command and return response*/
-	 	 $result = $this->crud_command->execute();
-	 	 if($result && $this->_file_data){
+	 	 #execute command and return response
+	 	 $response = $this->crud_command->execute();
+	 	 #response will have a row count of 0 if no rows have been affected
+	 	 if($response->row_count > 0){
 	 	 	 $this->auto_save_files();
+	 	 	 #fetch the data just updated
+	 	     $ud = $this->eager_load(tomodel: $tomodel);
+	 	     return $multiple ? $ud : $ud[0];
 	 	 }
-	 	 return $result;
+
+	 	 return false;
      }
 
      /**

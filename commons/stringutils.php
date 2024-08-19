@@ -119,8 +119,7 @@ trait StringUtils{
 		 $newstr = ""; //the string that will be returned.
 		 $str_len = strlen($str_val); //find the length of the input string.
 		 $zeros = $totalLength - $str_len; //the number of zeroes to prepend.
-		 for($x = 0; $x < $zeros; $x++)
-		 {
+		 for($x = 0; $x < $zeros; $x++){
 			 $newstr = $newstr."0";
 		 }
 		 $newstr = $newstr.$str_val;
@@ -211,14 +210,12 @@ trait StringUtils{
 		 }
 		 return $template;
 	 }
-
      public function encrypt($plain_text, $key){
         $secret_key = md5($key);
         $iv = substr(hash('sha256', "aaaabbbbcccccddddeweee"), 0, 16);
         $encrypted_text = openssl_encrypt($plain_text, 'AES-128-CBC', $secret_key, OPENSSL_RAW_DATA, $iv);
         return base64_encode($encrypted_text);
-    }
-
+     }
      public function decrypt($encrypted_text, $key){
         $key = md5($key);
         $iv = substr(hash('sha256', "aaaabbbbcccccddddeweee" ), 0, 16);

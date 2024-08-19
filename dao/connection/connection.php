@@ -79,7 +79,7 @@ class Connection implements IConnection{
 			 return $last_insert_id ? ['statement' => $statement, 'last_insert_id' => $last_insert_id, 'response' => $response] : ['statement' => $statement, 'response' => $response];
 
 	     }catch(\Exception $ex){
-	     	 if($this->pdo->inTransaction()){
+	     	 if($this->pdo && $this->pdo->inTransaction()){
 		 	 	 $this->pdo->rollback();
 		 	 }
 			 throw $ex;

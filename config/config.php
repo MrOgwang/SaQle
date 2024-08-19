@@ -114,6 +114,8 @@ class Config{
 		  * */
 		 define("API_URL_PREFIXES", $settings['api_url_prefixes'] ?? ['/api/v1/', '/api/v2/']);
 
+		 define("PAGE_CONTROLLER_CLASS", $settings['page_controller_class']);
+
 		 /**
 		  * Database settings
 		  * */
