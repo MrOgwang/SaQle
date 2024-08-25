@@ -25,4 +25,8 @@ class Manager implements IMigrationManager{
      public function make_throughs(...$options){
         return $this->context_manager->make_throughs(...$options);
      }
+
+     public function seed_database(...$options){
+        return $this->context_manager->seed_database(...$options);
+     }
 }

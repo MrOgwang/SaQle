@@ -146,6 +146,7 @@ class FormControl implements IControl{
      	 $accept = array_key_exists("accept", $this->properties) ? 
      	 (is_array($this->properties['accept']) ? "accept='".implode(',', $this->properties['accept'])."'" : "accept='{$this->properties['accept']}'") 
      	 : "";
+     	 $input_name = array_key_exists("multiple", $this->properties) && $this->properties['multiple'] ? $this->name."[]" : $this->name;
      	 return "
 		 <div class='form-control-group'>
 		    <div class='form-control-label'>
@@ -157,7 +158,7 @@ class FormControl implements IControl{
 		            <span class='flex v_center'>{$file_name}</span>
 		            <label for='{$this->name}' class='flex v_center'><i data-lucide='cloud-upload'></i>&nbsp;Browse</label>
 		        </div>
-		        <input {$this->set_multiple()} {$this->set_form()} class='{$this->name} file-control-field' {$this->set_disabled()} {$this->set_required()} id='{$this->name}' name='{$this->name}' {$accept} type='{$this->type}'>
+		        <input {$this->set_multiple()} {$this->set_form()} class='{$this->name} file-control-field' {$this->set_disabled()} {$this->set_required()} id='{$this->name}' name='{$input_name}' {$accept} type='{$this->type}'>
 		    </div>
 		</div>
 		 ";

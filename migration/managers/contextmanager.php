@@ -801,6 +801,26 @@ class ContextManager implements IMigrationManager{
          }
      }
 
+     public function seed_database($project_root){
+          if(DB_SEEDER !== ''){
+             $path = $this->get_path_from_namespace(DB_SEEDER, $project_root);
+             $pathparts = explode(DIRECTORY_SEPARATOR, $path);
+             array_pop($pathparts);
+             $path = implode(DIRECTORY_SEPARATOR, $pathparts);
+             $seeder = DB_SEEDER;
+             $seeds = $seeder::get_seeds();
+             foreach($seeds as $seed){
+                $model = $seed['model'];
+                $file  = $path.DIRECTORY_SEPARATOR.$seed['file'];
+
+                echo "Now seeding for model: {$model}\n";
+                $data = require_once $file;
+                $seeded_data = $model::db()->add_multiple($data)->save();
+                echo "Model: {$model} seeded!\n\n";
+             }
+          }
+     }
+
      public function make_throughs(string $project_root, $app_name = null, $db_context = null){
          $context_classes = $this->get_context_classes($db_context);
          $manytomany_throughs = []; //this array makes sure only one through model is generated for a pair of related manytomany models.

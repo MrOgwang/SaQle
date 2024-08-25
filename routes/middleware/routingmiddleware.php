@@ -16,7 +16,38 @@ class RoutingMiddleware extends IMiddleware{
          $webroutes = $routing_manager->get_web_routes()->get_routes();
          $selected_routes = $routing_manager->get_selected_routes();
 
-         $general_route = null;
+         /**
+         * Sort the selected routes based on the number of permission classes,
+         * the idea is to resolve routes with the most number of permissions first
+         * */
+         usort($selected_routes, function($a, $b) {
+             return count($a->get_permissions()) <=> count($b->get_permissions());
+         });
+         $selected_routes = array_reverse($selected_routes);
+
+         /**
+          * Eliminate the routes whose permission classes fail.
+          * */
+         $selected_routes = array_filter($selected_routes, function($r) use ($request){
+             $permissions = $r->get_permissions();
+             if(!$permissions)
+                return true;
+
+             [$result, $redirect_url] = $this->evaluate_permissions($permissions, true, $request);
+             if($result)
+                return true;
+
+             return false;
+         });
+
+         $selected_routes = array_values($selected_routes);
+         if(!$selected_routes){
+              header("Location: ".ROOT_DOMAIN);
+         }
+
+         $request->final_route = $selected_routes[0];
+
+         /*$general_route = null;
          $route_found   = false;
          $redirect_url  = null;
          for($r = 0; $r < count($selected_routes); $r++){
@@ -32,6 +63,7 @@ class RoutingMiddleware extends IMiddleware{
                  }
             }
          }
+
          if(!$route_found && $general_route){
              $request->final_route = $general_route;
          }elseif(!$route_found && !$general_route){
@@ -45,7 +77,7 @@ class RoutingMiddleware extends IMiddleware{
              session_destroy();
              header('Location: '.ROOT_DOMAIN);
              die();
-         }
+         }*/
 
          $rout_trail = [PAGE_CONTROLLER_CLASS];
          if($request->final_route->get_url()){
@@ -58,7 +90,6 @@ class RoutingMiddleware extends IMiddleware{
                      $toprocess[] = $route;
                  }
              }
-             print_r($toprocess);
          }else{
              $rout_trail[] = $request->final_route->get_target()[0];
          }

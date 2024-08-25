@@ -234,6 +234,11 @@ class Config{
           * */
 		 define("MODEL_ACTION_ON_DUPLICATE", $settings['model_action_on_duplicate'] ?? 'RETURN_EXISTING');
 
+		 /**
+		  * During migrations,this class will be used to seed the database.
+		  * */
+		 define("DB_SEEDER", $settings['db_seeder'] ?? '');
+
 		 $this->validate_config();
 	 }
 }

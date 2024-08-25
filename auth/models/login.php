@@ -20,7 +20,7 @@
 namespace SaQle\Auth\Models;
 
 use SaQle\Auth\Models\Schema\LoginSchema;
-use Morewifi\Apps\Account\Models\User;
+use Booibo\Apps\Account\Models\User;
 use SaQle\Dao\Model\Model;
 
 #[\AllowDynamicProperties]

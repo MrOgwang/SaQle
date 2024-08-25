@@ -753,7 +753,6 @@ abstract class TableSchema implements ITableSchema{
 	     	     $clean_data[$db_col] = is_array($clean_data[$db_col]['name']) ? implode("~", $clean_data[$db_col]['name']) : $clean_data[$db_col]['name'];
 	 	 	}
 	 	 }
-	 	
 	 	 return $file_data;
 	 }
 
@@ -767,6 +766,7 @@ abstract class TableSchema implements ITableSchema{
 	 	  * */
 	 	 $all_defined = true;
 	 	 $unique_fields = [];
+
 	 	 for($f = 0; $f < count($this->meta['unique_fields']); $f++){
 	 	 	 if( !isset($this->meta['fields'][$this->meta['unique_fields'][$f]]) ){
 	 	 	 	 $all_defined = false;
@@ -903,6 +903,13 @@ abstract class TableSchema implements ITableSchema{
 	 	  * Prepare file data.
 	 	  * */
 	 	 $file_data = $this->prepare_file_data($clean_data, $data_state);
+
+	 	 /**
+	 	  * If there is primary key field, remove it too
+	 	  * */
+	 	 if(isset($clean_data[$this->meta['pk_name']])){
+	 	 	unset($clean_data[$this->meta['pk_name']]);
+	 	 }
 
 	 	 return [$clean_data, $file_data, $is_duplicate, $this->meta['action_on_duplicate']];
 	 }

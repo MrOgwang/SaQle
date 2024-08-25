@@ -486,8 +486,7 @@ class ModelManager extends IModelManager{
 	 }
 
      private function assert_duplicates(){
-
-     	 if($this->_operation_status['is_duplicate']){
+     	 if(array_key_exists("is_duplicate", $this->_operation_status)){
      	 	 switch($this->_operation_status['duplicate_action']){
 	     	 	 case 'IGNORE_DUPLICATE':
 	     	 	     /**
@@ -530,6 +529,11 @@ class ModelManager extends IModelManager{
 		     	 	 foreach($duplicate_keys as $key){
 		     	 	 	 Assert::keyExists($this->_insert_data_container["data"], $key);
 		     	 	 	 Assert::keyExists($this->_operation_status['duplicate_entries'], $key);
+
+		     	 	 	 /**
+		     	 	 	  * replace the existing value with the incoming value.
+		     	 	 	  * */
+		     	 	 	 $this->_operation_status['duplicate_entries'][$key] = $this->_insert_data_container["data"][$key];
 
 		     	 	 	 unset($this->_insert_data_container["data"][$key]);
 
@@ -636,23 +640,21 @@ class ModelManager extends IModelManager{
 			 	 }
 			 }
 
-	 	 	 if($this->_operation_status['is_duplicate'] && $this->_operation_status['duplicate_entries']) {
+	 	 	 if(array_key_exists("is_duplicate", $this->_operation_status) && $this->_operation_status['duplicate_entries']) {
 	 	 	 	 switch($this->_operation_status['duplicate_action']){
 	 	 	 	 	 case 'UPDATE_ON_DUPLICATE';
-	 	 	 	 	     #Update the duplicate data and return the updated object/records.
-	 	 	 	 	     $unique_fields   = $this->_operation_status['unique_fields'];
 	 	 	 	 	     $unique_together = $this->_operation_status['unique_together'];
-	 	 	 	 	     #fetch all the data just saved.
 					 	 if(str_contains($ass_model_class, 'Throughs')){
 					 	 	 $man = $ass_model_class::db2($table_name, $model_instance::class, $this->get_dbcontext_class());
 					 	 }else{
 					 	 	 $man = $ass_model_class::db();
 					 	 }
 	 	 	 	 	     foreach($this->_operation_status['duplicate_entries'] as $dk => $dv){
-	 	 	 	 	     	 $man        = $this->build_update_manager($man, $unique_fields, $unique_together);
-	 	 	 	 	     	 $updateresp = $man->update(tomodel: $tomodel);
-	 	 	 	 	     	 if(count($updateresp) > 0){
-	 	 	 	 	     	 	$results[]  = $updateresp[0];
+	 	 	 	 	     	 $unique_fields = $this->_operation_status['unique_fields'][$dk];
+	 	 	 	 	     	 $man           = $this->build_update_manager($man, $unique_fields, $unique_together);
+	 	 	 	 	     	 $updateresp    = $man->set($dv)->update(tomodel: $tomodel, multiple: false, force: true);
+	 	 	 	 	     	 if($updateresp){
+	 	 	 	 	     	 	$results[]  = $updateresp;
 	 	 	 	 	     	 }
 	 	 	 	 	     }
 	 	 	 	 	 break;
@@ -689,16 +691,20 @@ class ModelManager extends IModelManager{
      	 $entry_key = spl_object_hash((object)$clean_data);
 
      	 if($is_duplicate !== false){
-     	 	 $this->_operation_status['is_duplicate'] = true;
-     	 	 if(!array_key_exists('duplicate_entries', $this->_operation_status)){
+     	 	 if(array_key_exists("is_duplicate", $this->_operation_status)){
+     	 	 	 $this->_operation_status['duplicate_entries'][$entry_key] = $is_duplicate[0];
+     	 	 	 $this->_operation_status['unique_fields'][$entry_key] = $is_duplicate[1];
+     	 	 }else{
+     	 	 	 $this->_operation_status['is_duplicate'] = true;
+     	 	 	 $this->_operation_status['duplicate_action'] = $action_on_duplicate;
+     	 	 	 $this->_operation_status['unique_together'] = $is_duplicate[2];
+
      	 	 	 $this->_operation_status['duplicate_entries'] = [];
+     	 	 	 $this->_operation_status['duplicate_entries'][$entry_key] = $is_duplicate[0];
+
+     	 	 	 $this->_operation_status['unique_fields'] = [];
+     	 	     $this->_operation_status['unique_fields'][$entry_key] = $is_duplicate[1];
      	 	 }
-     	 	 $this->_operation_status['duplicate_entries'][$entry_key] = $is_duplicate[0];
-     	 	 $this->_operation_status['duplicate_action'] = $action_on_duplicate;
-     	 	 $this->_operation_status['unique_fields'] = $is_duplicate[1];
-     	 	 $this->_operation_status['unique_together'] = $is_duplicate[1];
-     	 }else{
-     	 	 $this->_operation_status['is_duplicate'] = false;
      	 }
 
      	 $this->_insert_data_container["prmkeyname"] = $model->get_pk_name();
@@ -712,9 +718,9 @@ class ModelManager extends IModelManager{
      	 return $this;
      }
 
-     public function add_multiple(array $data, bool $allow_duplicates = true, array $unique_fields = []){
+     public function add_multiple(array $data, bool $skip_validation = false){
      	foreach($data as $dk => $dv){
-     		$this->add($dv, $allow_duplicates, $unique_fields);
+     		$this->add($dv, $skip_validation);
      	}
      	return $this;
      }
@@ -796,7 +802,7 @@ class ModelManager extends IModelManager{
      	 return $this;
      }
 
-     public function update(bool $tomodel = false, bool $multiple = false){
+     public function update(bool $tomodel = false, bool $multiple = false, bool $force = false){
      	 $table = $this->get_context_tracker()->find_table_name(0); //name of current table being manipulated
      	 $model = $this->get_model($table); //the model schema instance for the table.
      	 $ass_model_class = $model->get_associated_model_class();
@@ -805,10 +811,12 @@ class ModelManager extends IModelManager{
      	 #Clean up the update data, prepare files
      	 [$clean_data, $file_data, $is_duplicate, $action_on_duplicate] = $model->prepare_update_data($this->_update_data_container['data'], $this->_data_state);
      	 #For updates, if there is a duplicate, just abort the update operation.
-     	 if($is_duplicate !== false){
+     	 if($is_duplicate !== false && !$force){
      	 	 throw new \Exception("Aborting update operation! The update operation will lead to duplicate entries in table: {$table}");
      	 }
      	 $this->_file_data[] = $file_data;
+
+     	 //echo "Opened update! version 2\n";
 
      	 #setup an update command
      	 $where_clause = 

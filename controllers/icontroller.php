@@ -221,5 +221,12 @@ abstract class IController implements IGet, IPost, IPatch, IDelete{
            header('Location: '.$this->current_url());
            exit;
 	 }
+
+	 public function signout(){
+	 	 session_start();
+         session_destroy();
+         header('Location: '.ROOT_DOMAIN."signin/");
+         die();
+	 }
 }
 ?>
