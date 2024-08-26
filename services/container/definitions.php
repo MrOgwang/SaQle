@@ -25,7 +25,7 @@
       use SaQle\Http\Request\Request;
       use SaQle\Services\Container\ContainerService;
       use SaQle\Migration\Managers\{ContextManager, Manager};
-      use SaQle\Migration\Commands\{MakeMigrations, Migrate, MakeCollections, MakeModels, MakeThroughs, SeedDatabase};
+      use SaQle\Migration\Commands\{MakeMigrations, Migrate, MakeCollections, MakeModels, MakeThroughs, SeedDatabase, MakeSuperuser};
 
 	 return [
              Request::class => function(ContainerInterface $c){
@@ -119,6 +119,9 @@
 	       },
 	       SeedDatabase::class => function (ContainerInterface $c){
 	     	       return new SeedDatabase($c->get(Manager::class));
+	       },
+	       MakeSuperuser::class => function (ContainerInterface $c){
+	     	       return new MakeSuperuser($c->get(Manager::class));
 	       },
 	       ContainerService::class => DI\create(ContainerService::class)->constructor(DI\get(ContainerInterface::class)),
 	 ];

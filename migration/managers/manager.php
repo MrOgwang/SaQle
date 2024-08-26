@@ -29,4 +29,8 @@ class Manager implements IMigrationManager{
      public function seed_database(...$options){
         return $this->context_manager->seed_database(...$options);
      }
+
+     public function make_superuser(...$options){
+        return $this->context_manager->make_superuser(...$options);
+     }
 }

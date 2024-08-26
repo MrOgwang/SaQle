@@ -60,11 +60,11 @@ class PanelHeader{
 			}
 
 			$panelheader = "
-			<div class='flex v_center fuel-app-data-panel-header'>
-				 <div class='flex v_center fuel-app-data-panel-header-left'>
+			<div class='flex v_center data-panel-header'>
+				 <div class='flex v_center data-panel-header-left'>
 					 {$menuitemview}
 				 </div>
-				 <div class='flex v_center row_reverse fuel-app-data-panel-header-right'>
+				 <div class='flex v_center row_reverse data-panel-header-right'>
 					 {$searchview}
 				 </div>
 			 </div>

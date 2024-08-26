@@ -1,7 +1,7 @@
 <?php
 namespace SaQle\Manage;
 
-use SaQle\Migration\Commands\{MakeMigrations, Migrate, MakeCollections, MakeModels, MakeThroughs, SeedDatabase};
+use SaQle\Migration\Commands\{MakeMigrations, Migrate, MakeCollections, MakeModels, MakeThroughs, SeedDatabase, MakeSuperuser};
 use SaQle\Services\Container\Cf;
 use Psr\Container\ContainerInterface;
 
@@ -18,6 +18,7 @@ class Manage{
 	 	 	'make:collections' => $this->extract_makemodels_args($args),
 	 	 	'make:models'      => $this->extract_makemodels_args($args),
 	 	 	'make:throughs'    => $this->extract_makemodels_args($args),
+	 	 	'make:superuser'   => $this->extract_makesuperuser_args($args),
 	 	 	'db:seed'          => [],
 	 	 	default            => throw new \Exception("Unknown command!")
 	 	 };
@@ -53,6 +54,12 @@ class Manage{
 	 	 return $this->extract_args($expected_short, $expected_long, $args);
 	 }
 
+	 private function extract_makesuperuser_args(array $args){
+	 	 $expected_short = ['-e', '-p'];
+	 	 $expected_long  = ['--email', '--password'];
+	 	 return $this->extract_args($expected_short, $expected_long, $args);
+	 }
+
 	 public function __invoke(){
 		 switch ($this->command){
 		     case 'make:migrations':
@@ -85,6 +92,11 @@ class Manage{
 			     $app_name       = $this->arguments['app']     ?? null;
 	             $db_context     = $this->arguments['context'] ?? null;
 			     (Cf::create(MakeThroughs::class))->execute($this->project_root, $app_name, $db_context);
+			 break;
+			 case 'make:superuser':
+			     $email      = $this->arguments['email']    ?? null;
+	             $password   = $this->arguments['password'] ?? null;
+			     (Cf::create(MakeSuperuser::class))->execute($this->project_root, $email, $password);
 			 break;
 			 case 'db:seed':
 			     (Cf::create(SeedDatabase::class))->execute($this->project_root);

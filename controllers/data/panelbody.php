@@ -75,12 +75,12 @@ class PanelBody{
      	 	$alink   = $a->get_link();
      	 	$linkval = gettype($alink) == "object" ? $alink($item) : $alink;
      	 	$menu .= "
-     	 	<a data-item='{$data_item}' data-action='{$a->get_label()}' style='padding: 10px; padding-left: 20px; padding-right: 20px;' class='ordersactionlink flex' href='{$linkval}'>{$a->get_label()}</a>
+     	 	<a data-item='{$data_item}' data-action='{$a->get_label()}' style='padding: 10px; padding-left: 20px; padding-right: 20px;' class='datapanelrowactionlink flex' href='{$linkval}'>{$a->get_label()}</a>
      	 	";
      	 }
           return "
           <div style='position: relative;'>
-                <span class='flex center orderactionsellipsis'><i data-lucide='more-vertical'></i></span>
+                <span class='flex center datapanelrowactionellipsis'><i data-lucide='more-vertical'></i></span>
                 <div style='border-radius: 5px; padding-top: 10px; padding-bottom: 10px; background-color: #fff; box-shadow: 0px 0px 5px #a0a0a0; position: absolute; min-width: 100px; height: auto; left: 40px; top: -10px; z-index: 1000;' class='line_item_actions_dd hide'>
                     {$menu}
                 </div>
@@ -137,7 +137,7 @@ class PanelBody{
 
 		$table = $this->get_table();
 		return "
-		<div class='fuel-app-data-panel-body'>
+		<div class='data-panel-body'>
 		     <!--------------->
 		     {$table}
 		     <!--------------->

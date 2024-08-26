@@ -45,23 +45,23 @@ abstract class DataPanelController extends IController implements PanelSetup, Ob
 
 	 	 $data_panel_class = "";
 	 	 if($this->header && $this->footer){
-	 	 	 $data_panel_class = "fuel-app-data-panel-complete";
+	 	 	 $data_panel_class = "data-panel-complete";
 	 	 }elseif($this->header && !$this->footer){
-	 	 	 $data_panel_class = "fuel-app-data-panel-withheader";
+	 	 	 $data_panel_class = "data-panel-withheader";
 	 	 }elseif(!$this->header && $this->footer){
-	 	 	 $data_panel_class = "fuel-app-data-panel-withfooter";
+	 	 	 $data_panel_class = "data-panel-withfooter";
 	 	 }elseif(!$this->header && !$this->footer){
-	 	 	 $data_panel_class = "fuel-app-data-panel-tableonly";
+	 	 	 $data_panel_class = "data-panel-tableonly";
 	 	 }
 	 	 if($this->body->get_data()){
 	 	 	 $context = ["data_panel" => "
-		 	 <div class='fuel-app-data-panel {$data_panel_class}'>
+		 	 <div class='data-panel {$data_panel_class}'>
 			    {$this->header->construct_panel_header(add_checkboxes: $this->body->get_add_checkboxes())}
 			    {$this->body->construct_panel_body($this->header->get_item_actions())}
 			 </div>"];
 	 	 }else{
 	 	 	$context = ["data_panel" => "
-		 	 <div class='fuel-app-data-panel {$data_panel_class}'>
+		 	 <div class='data-panel {$data_panel_class}'>
 			    {$this->header->construct_panel_header($this->body->get_add_checkboxes(), false)}
 			    {$this->empty_view}
 			 </div>"];

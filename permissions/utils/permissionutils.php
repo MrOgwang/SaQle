@@ -2,6 +2,14 @@
 namespace SaQle\Permissions\Utils;
 
 trait PermissionUtils{
+    private function at_least_one_passed($results){
+        return in_array(true, $results);
+    }
+
+    private function all_passed($results){
+        return array_reduce($results, function($result, $element){return $result && $element;}, true);
+    }
+
     /**
       * Evaulate a list of permissions
       * @param array $permission_classes: The list of permissions to evaluate
@@ -11,8 +19,8 @@ trait PermissionUtils{
       * */
      public function evaluate_permissions(array $permission_classes, bool $absolute, $request){
          $has_permissions = [];
-         $one_passed      = false;
          $redirect_url    = null;
+
          for($p = 0; $p < count($permission_classes); $p++){
              $permission_mask = $permission_classes[$p];
              $permission_mask_arguments = [];
@@ -25,7 +33,7 @@ trait PermissionUtils{
              $passed            = false;
 
              if( count($permissions_array) > 1 ){
-                 $passed = $this->evaluate_permissions($permissions_array, false, $request);
+                 [$passed, $redirect_url]  = $this->evaluate_permissions($permissions_array, false, $request);
              }else{
                  $permission_class    = $permissions_array[0];
                  $permission_instance = new $permission_class($request, ...$permission_mask_arguments);
@@ -33,17 +41,13 @@ trait PermissionUtils{
                  $redirect_url        = $permission_instance->get_redirect_url();
              }
              $has_permissions[]       = $passed;
-             $one_passed              = $passed;
-             if(!$passed && $absolute)
-                break;
          }
 
-         if(!$absolute && $one_passed){
+         if(!$absolute && $this->at_least_one_passed($has_permissions)){
             return [true, $redirect_url];
          }
-
-         $result = array_reduce($has_permissions, function($result, $element){return $result && $element;}, true);
-         return [$result, $redirect_url];
+         
+         return [$this->all_passed($has_permissions), $redirect_url];
      }
 }
 ?>
