@@ -929,7 +929,7 @@ abstract class TableSchema implements ITableSchema{
 	 	$auto_includes = [];
 	 	foreach($this->meta['fields'] as $fn => $fv){
 	 		if($fv instanceof Relation && $fv->is_eager()){
-	 			$auto_includes[] = $fv->get_relation();
+	 			$auto_includes[] = ['relation' => $fv->get_relation(), 'with' => '', 'tuning' => null];
 	 		}
 	 	}
 	 	return $auto_includes;

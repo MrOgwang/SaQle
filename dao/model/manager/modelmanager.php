@@ -17,6 +17,7 @@
  use SaQle\Core\Chain\{Chain, DefaultHandler};
  use SaQle\Dao\Model\Manager\Trackers\EagerTracker;
  use SaQle\Core\Assert\Assert;
+ use Closure;
 
 class ModelManager extends IModelManager{
 	 use DateUtils, UrlUtils, StringUtils;
@@ -220,14 +221,12 @@ class ModelManager extends IModelManager{
 	 	 }
 	 	 $tracker->add_model($model_class);
 
-	 	 //print_r($tracker::get_loaded_models());
-
-	 	 #apply a default limit if one was not provided
+	 	 /*#apply a default limit if one was not provided
 	 	 $limit_clause = $this->get_limit_clause();
 	 	 if(!$limit_clause){
 	 	 	 $this->limit();
 	 	 	 $limit_clause = $this->get_limit_clause();
-	 	 }
+	 	 }*/
 
 	 	 #apply a soft delete filter if the current dao has a soft delete attribute
 	 	 if($model_instance->get_soft_delete() && !$this->_ignore_soft_delete){
@@ -240,7 +239,7 @@ class ModelManager extends IModelManager{
 	 	 	 select_clause: $this->get_selected(),
 	 	 	 where_clause:  $this->fmanager->get_where_clause($this->get_context_tracker()),
 	 	 	 join_clause:   $this->get_join_clause(),
-	 	 	 limit_clause:  $limit_clause,
+	 	 	 limit_clause:  $this->get_limit_clause(),
 	 	 	 order_clause:  $this->get_order_clause(),
 	 	 	 table_name:    $table_name,
 	 	 	 table_aliase:  $this->get_context_tracker()->find_table_aliase(0),
@@ -259,12 +258,14 @@ class ModelManager extends IModelManager{
 	 	 #get implicit includes.
 	 	 $auto_includes = $model_instance->get_auto_include();
 
-	 	 $include_instances = array_merge($includes, $auto_includes);
+	 	 $include_instances = array_merge(array_column($includes, 'relation'), array_column($auto_includes, 'relation'));
+	 	 $include_nested    = array_merge(array_column($includes, 'with'), array_column($auto_includes, 'with'));
+	 	 $include_tuning    = array_merge(array_column($includes, 'tuning'), array_column($auto_includes, 'tuning'));
 
 	 	 $include_rows = [];
- 	 	 foreach($include_instances as $ins){
+ 	 	 foreach($include_instances as $ins_index => $ins){
  	 	 	 $fdao         = $ins->get_fdao();
- 	 	 	 if(!$tracker::is_loaded($fdao)){
+ 	 	 	 //if(!$tracker::is_loaded($fdao)){
  	 	 	 	 if($ins instanceof Many2Many){
  	 	 	 	 	 $ofdao = $fdao;
  	 	 	 	 	 $ofdaom = $ofdao::get_associated_model_class();
@@ -277,6 +278,7 @@ class ModelManager extends IModelManager{
 		 		 	 $pkey_values  = array_unique(array_column($rows, $pkey));
 		 		 	 $with_field   = $schema::get_include_field($ins->get_pdao());
 		 		 	 $with_field2  = $schema::get_include_field($ins->get_fdao());
+		 		 	 //add nested withs here.
 		 		 	 $results      = $fdaom::db2($table_name, $schema, $ctx)->with($with_field)
 		 		 	 ->limit(records: 1000, page: 1)->where("{$pkey}__in", $pkey_values)->eager_load(tomodel: $tomodel);
 
@@ -294,16 +296,24 @@ class ModelManager extends IModelManager{
 		 	 	 	 $pkey         = $ins->get_pk();
 		 		 	 $fkey         = $ins->get_fk();
 		 		 	 $pkey_values  = array_unique(array_column($rows, $pkey));
-		 		 	 $results      = $fdaom::db()->limit(records: 1000, page: 1)->where("{$fkey}__in", $pkey_values)->eager_load(tomodel: $tomodel);
-		 		 	 //print_r($results);
+		 		 	 $n_manager    = $fdaom::db()->where("{$fkey}__in", $pkey_values);
+		 		 	 $with         = $include_nested[$ins_index];
+		 		 	 $tuning       = $include_tuning[$ins_index];
+		 		 	 if($with){
+		 		 	 	 $n_manager = $n_manager->with($with);
+		 		 	 }
+		 		 	 if($tuning){
+		 		 	 	 $n_manager = $tuning($n_manager);
+		 		 	 }
+		 		 	 $results      = $n_manager->eager_load(tomodel: $tomodel);
 		 		 	 $formatted_results = [];
 		 		 	 foreach($results as $r){
 		                 $formatted_results[$r->$fkey][] = $r;
 		             }
 		             $include_rows[$ins->get_field()] = ['data' => $formatted_results, 'key' => $pkey, 'multiple' => $ins->get_multiple()];
  	 	 	 	 }
- 	 	 	 } 
-	 	 } 
+ 	 	 	 //} 
+	 	 }
 
 	 	 $chain = new Chain();
 	 	 $chain->add(new DefaultHandler());
@@ -398,12 +408,35 @@ class ModelManager extends IModelManager{
      	 return [$include_field, $model];
 	 }
 
-	 public function with(array|string $field){
-	 	 $fields = is_array($field) ? $field : [$field];
+	 public function with(array|string $field, $callable = null){
+	 	 $fields    = is_array($field) ? $field : [$field];
+
+	 	 /**
+	 	  * @var $callable is either a null, a callable or an array of callables.
+	 	  * */
+	 	 $callables = [];
+	 	 if(!is_array($callable) && !is_null($callable)){
+	 	 	 Assert::isCallable($callable, 'Parameter callable must be a callable!');
+	 	 	 $callables[$fields[0]] = $callable;
+	 	 }elseif(is_array($callable)){ //ensure its an associative array and all values are callables.
+	 	 	 Assert::isNonEmptyMap($callable);
+	 	 	 Assert::allIsCallable(array_values($callable));
+
+	 	 	 $callables = $callable;
+	 	 }
+
 	 	 $select_manager = $this->get_select_manager();
 	 	 foreach($fields as $wf){
-	 	 	 [$field, $model] = $this->check_with($wf);
-	 	 	 $select_manager->add_include($field);
+	 	 	 #split the field using dot as separator to see if nested.
+	 	 	 $field_parts = explode(".", $wf);
+	 	 	 #only check for the first item.
+	 	 	 $_wf = array_shift($field_parts);
+	 	 	 [$field, $model] = $this->check_with($_wf);
+	 	 	 $select_manager->add_include([
+	 	 	 	'with'     => implode(".", $field_parts), 
+	 	 	 	'relation' => $field, 
+	 	 	 	'tuning'   => $callables[$_wf] ?? null
+	 	 	 ]);
 	 	 }
 	 	 return $this;
 	 }
@@ -644,12 +677,13 @@ class ModelManager extends IModelManager{
 	 	 	 	 switch($this->_operation_status['duplicate_action']){
 	 	 	 	 	 case 'UPDATE_ON_DUPLICATE';
 	 	 	 	 	     $unique_together = $this->_operation_status['unique_together'];
-					 	 if(str_contains($ass_model_class, 'Throughs')){
-					 	 	 $man = $ass_model_class::db2($table_name, $model_instance::class, $this->get_dbcontext_class());
-					 	 }else{
-					 	 	 $man = $ass_model_class::db();
-					 	 }
+					 	 
 	 	 	 	 	     foreach($this->_operation_status['duplicate_entries'] as $dk => $dv){
+	 	 	 	 	     	 if(str_contains($ass_model_class, 'Throughs')){
+					 	 	     $man = $ass_model_class::db2($table_name, $model_instance::class, $this->get_dbcontext_class());
+						 	 }else{
+						 	 	 $man = $ass_model_class::db();
+						 	 }
 	 	 	 	 	     	 $unique_fields = $this->_operation_status['unique_fields'][$dk];
 	 	 	 	 	     	 $man           = $this->build_update_manager($man, $unique_fields, $unique_together);
 	 	 	 	 	     	 $updateresp    = $man->set($dv)->update(tomodel: $tomodel, multiple: false, force: true);
@@ -815,8 +849,6 @@ class ModelManager extends IModelManager{
      	 	 throw new \Exception("Aborting update operation! The update operation will lead to duplicate entries in table: {$table}");
      	 }
      	 $this->_file_data[] = $file_data;
-
-     	 //echo "Opened update! version 2\n";
 
      	 #setup an update command
      	 $where_clause = 

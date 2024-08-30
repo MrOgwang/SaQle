@@ -26,6 +26,5 @@ class UpdateOperation extends IOperation{
 	 	 	 throw $ex;
 	 	 }
 	 }
-
 }
 ?>
