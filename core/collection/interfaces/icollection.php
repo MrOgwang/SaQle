@@ -92,7 +92,7 @@ abstract class ICollection implements IteratorAggregate, ArrayAccess, Countable{
      * Implementation of method declared in \Countable.
      * Provides support for count()
      */
-    public function count(){
+    public function count() : int{
         return count($this->elements);
     }
 
@@ -100,7 +100,7 @@ abstract class ICollection implements IteratorAggregate, ArrayAccess, Countable{
      * Implementation of method declared in \ArrayAccess
      * Used to be able to use functions like isset()
      */
-    public function offsetExists($offset){
+    public function offsetExists(mixed $offset) : bool{
         return isset($this->elements[$offset]);
     }
 
@@ -108,15 +108,15 @@ abstract class ICollection implements IteratorAggregate, ArrayAccess, Countable{
      * Implementation of method declared in \ArrayAccess
      * Used for direct access array-like ($collection[$offset]);
      */
-    public function offsetGet($offset){
-        return $this->elements[$offset];
+    public function offsetGet(mixed $offset) : mixed{
+        return $this->elements[$offset] ?? null;
     }
 
     /**
      * Implementation of method declared in \ArrayAccess
      * Used for direct setting of values
      */
-    public function offsetSet($offset, $value){
+    public function offsetSet(mixed $offset, mixed $value) : void{
         if (empty($offset)) { //this happens when you do $collection[] = 1;
             $this->elements[] = $value;
         } else {
@@ -128,7 +128,7 @@ abstract class ICollection implements IteratorAggregate, ArrayAccess, Countable{
      * Implementation of method declared in \ArrayAccess
      * Used for unset()
      */
-    public function offsetUnset($offset){
+    public function offsetUnset(mixed $offset) : void{
         unset($this->elements[$offset]);
     }
 }

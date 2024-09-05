@@ -132,7 +132,7 @@ class Email implements INotification{
 
          $mail->Mailer = 'smtp';
          //$mail->SMTPDebug  = 1;  
-         $mail->SMTPSecure = 'tls';
+         $mail->SMTPSecure = 'ssl';
 
          $mail->Host = $this->host;
          $mail->SMTPAuth = TRUE;

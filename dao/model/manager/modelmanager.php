@@ -21,7 +21,7 @@
 
 class ModelManager extends IModelManager{
 	 use DateUtils, UrlUtils, StringUtils;
-	 private ICommand $_crud_command;
+	 private ICommand $crud_command;
 	 // utilities
 
 	 private function get_join_clause(){

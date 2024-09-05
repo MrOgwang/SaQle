@@ -402,7 +402,8 @@ abstract class TableSchema implements ITableSchema{
 		 	 /**
 		 	  * Property types may come with a ? if declared nullable, remove it.
 		 	  * */
-			 $property_type = str_replace("?", "", $p->getType()); 
+			 $property_type = $p->getType();
+			 $property_type = $property_type ? str_replace("?", "", $property_type) : $property_type; 
 			 $property_name = $p->getName();
 
              /**

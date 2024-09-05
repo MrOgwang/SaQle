@@ -14,7 +14,13 @@ class SessionMiddleware extends IMiddleware{
                 session_set_save_handler(new $handler_class(), true);
            }
            ini_set('session.cookie_domain', SESSION_DOMAIN);
-           session_start();
+           ini_set('session.gc_maxlifetime', 3600 * 24 * 3); //keep session data for three days.
+           ini_set('session.cookie_lifetime', 3600 * 24 * 3); //keep the session cookie for three days
+           ini_set('session.gc_probability', 1); //run garbage collection more frequently
+           ini_set('session.gc_divisor', 100);
+           if(session_status() == PHP_SESSION_NONE){
+                session_start();
+           }
 
            /**
            * Set error reporting
