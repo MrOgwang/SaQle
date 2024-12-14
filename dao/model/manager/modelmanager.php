@@ -1,9 +1,8 @@
 <?php
  namespace SaQle\Dao\Model\Manager;
 
- use SaQle\Dao\Commands\Crud\{SelectCommand, InsertCommand, DeleteCommand, UpdateCommand, TotalCommand, TableCreateCommand, RunCommand};
- use SaQle\Dao\Operations\Crud\{SelectOperation, InsertOperation, DeleteOperation, UpdateOperation, TotalOperation, TableCreateOperation, RunOperation};
- use SaQle\Dao\Commands\ICommand;
+ use SaQle\Dao\Commands\Crud\{SelectCommand, InsertCommand, DeleteCommand, UpdateCommand, TotalCommand, TableCreateCommand, RunCommand, TableDropCommand};
+ use SaQle\Dao\Operations\Crud\{SelectOperation, InsertOperation, DeleteOperation, UpdateOperation, TotalOperation, TableCreateOperation, RunOperation, TableDropOperation};
  use SaQle\Dao\Model\Exceptions\NullObjectException;
  use function SaQle\Exceptions\{modelnotfoundexception};
  use SaQle\Dao\Model\Model;
@@ -18,158 +17,26 @@
  use SaQle\Dao\Model\Manager\Trackers\EagerTracker;
  use SaQle\Core\Assert\Assert;
  use Closure;
+ use SaQle\Dao\Model\Manager\Modes\FetchMode;
+ use SaQle\Dao\Model\TempId;
+ use SaQle\Dao\Model\Schema\TempIdSchema;
+ use SaQle\Dao\Model\Interfaces\{IThroughModel, ITempModel};
 
 class ModelManager extends IModelManager{
 	 use DateUtils, UrlUtils, StringUtils;
-	 private ICommand $crud_command;
-	 // utilities
 
-	 private function get_join_clause(){
-	 	 /*acquire join manager*/
-	 	 $join_manager = $this->get_join_manager();
-	 	 /*register current context tracker with join manager*/
-	 	 $join_manager->set_context_tracker($this->get_context_tracker());
-	 	 /*get and return the join clause*/
-	 	 return $join_manager->construct_join_clause();
+	 private function eager_load(){
+	 	 return $this->get(tracker_active: true);
 	 }
 
-	 private function get_limit_clause(){
-	 	 /*acquire limit manager*/
-	 	 $limit_manager = $this->get_limit_manager();
-	 	 /*get and return the jlimit clause*/
-	 	 return $limit_manager->construct_limit_clause();
+	 //return all the rows found
+	 public function all(){
+	 	 return $this->get();
 	 }
 
-	 private function get_order_clause(){
-	 	 /*acquire order manager*/
-	 	 $order_manager = $this->get_order_manager();
-	 	 /*get and return the order clause*/
-	 	 return $order_manager->construct_order_clause();
-	 }
-
-	 private function get_selected(){
-	 	 /*acquire select manager*/
-	 	 $select_manager = $this->get_select_manager();
-	 	 $selected = $select_manager->get_selected();
-	 	 if(count($selected) === 0){
-	 	 	$selected[] = "*";
-	 	 }
-	 	 return implode(", ", $selected);
-	 }
-
-     //filtering
-	 public function where(string $field_name, $value){
-	 	 $this->fmanager->simple_aggregate([$field_name, $value, "&"]);
-	 	 return $this;
-	 }
-	 public function or_where(string $field_name, $value){
-	 	 $this->fmanager->simple_aggregate([$field_name, $value, "|"]);
-	 	 return $this;
-	 }
-	 public function gwhere($callback){
-	 	 $this->fmanager->group_aggregate($this, $callback, '&');
-	 	 return $this;
-	 }
-	 public function or_gwhere($callback){
-	 	 $this->fmanager->group_aggregate($this, $callback, '|');
-	 	 return $this;
-	 }
-
-	 //joining
-     private function add_join(string $type, string $table, ?string $from = null, ?string $to = null, ?string $as = null, ?string $database = null){
-     	 $this->register_joining_model($table, $as);
-
-     	 #if the database is not provided, assume the joining table is in the same database as the base table.
-     	 $database = $database ?: $this->get_context_tracker()->find_database_name(0);
-
-     	 #if the from/to field is not provided, assume it is the primary key of the base table
-     	 $model   = $this->get_model($table);
-		 $pk_name = $model->get_pk_name();
-
-     	 $from = $from ?: $pk_name;
-     	 $to   = $to   ?: $pk_name;
-     	 $this->get_join_manager()->add_join(type: $type, table: $table, from: $from, to: $to, as: $as, database: $database);
-     }
-	 public function inner_join(string $table, ?string $from = null, ?string $to = null, ?string $as = null, ?string $database = null){
-	 	 $this->add_join(type: 'INNER JOIN', table: $table, from: $from, to: $to, as: $as, database: $database);
-	     return $this;
-	 }
-	 public function outer_join(string $table, ?string $from = null, ?string $to = null, ?string $as = null, ?string $database = null){
-	 	 $this->add_join(type: 'OUTER JOIN', table: $table, from: $from, to: $to, as: $as, database: $database);
-	     return $this;
-	 }
-	 public function left_outer_join(string $table, ?string $from = null, ?string $to = null, ?string $as = null, ?string $database = null){
-	 	 $this->add_join(type: 'LEFT OUTER JOIN', table: $table, from: $from, to: $to, as: $as, database: $database);
-	     return $this;
-	 }
-	 public function right_outer_join(string $table, ?string $from = null, ?string $to = null, ?string $as = null, ?string $database = null){
-	 	 $this->add_join(type: 'RIGHT OUTER JOIN', table: $table, from: $from, to: $to, as: $as, database: $database);
-	     return $this;
-	 }
-	 public function full_outer_join(string $table, ?string $from = null, ?string $to = null, ?string $as = null, ?string $database = null){
-	 	 $this->add_join(type: 'FULL OUTER JOIN', table: $table, from: $from, to: $to, as: $as, database: $database);
-	     return $this;
-	 }
-
-     //selecting
-
-     /**
-     * Specify model fields to return in a select operation. Fields can be qualified with . operator. Example users.first_name;
-     * @param array
-     * @throw DatabaseNotFoundException
-     * @throw ModelNotFoundException
-     * @throw FieldNotFoundException
-     */
-     public function select(array $fields){
-     	$select_manager = $this->get_select_manager();
-	 	$select_manager->set_selected($fields);
-     	return $this;
-     }
-	 
-	 //grouping
-	 public function group_by(string $field_name, ?string $table_name = null, ?string $database_name = null){
-
-	 }
-
-	 //limiting
-     /**
-     * Limit the number of rows returned by a select query.
-     * @param int $page - the page to fetch
-     * @param int records - the number of records to fetch.
-     */
-	 public function limit(int $page = 1, int $records = 10){
-	 	$this->set_limit(page: $page, records: $records);
-	 	return $this;
-	 }
-
-	 //ordering
-	 /**
-     * Order the results returned by a select query.
-     * @param array $fields - the field names to order based on
-     * @param string $direction - order ASC or DESC
-     */
-	 public function order(array $fields, string $direction = "ASC"){
-	 	$this->set_order(fields: $fields, direction: $direction);
-	 	return $this;
-	 }
-
-	 //fetching
-	 private function eager_load(bool $tomodel = false){
-	 	 return $this->get(tomodel: $tomodel, tracker_active: true);
-	 }
-
-	 /*
-	 * return all the rows found.
-	 */
-	 public function all(bool $tomodel = false){
-	 	 return $this->get($tomodel);
-	 }
-
-	 /*
-	 * return the first row if its available otherwise throw an error
-	 */
-	 public function first(bool $tomodel = false){
-	 	 $response = $this->get($tomodel);
+	 //return the first row if its available otherwise throw an exception
+	 public function first(){
+	 	 $response = $this->get();
 	 	 if(!$response){
 	 	 	$table = $this->get_context_tracker()->find_table_name(0);
 	 	 	throw new NullObjectException(table: $table);
@@ -177,34 +44,199 @@ class ModelManager extends IModelManager{
 	 	 return $response[0];
 	 }
 
-	 /*
-	    return the first row if its available otherwise return null
-	 */
-	 public function first_or_default(bool $tomodel = false){
-	 	 $response = $this->get($tomodel);
+     //return the first row if its available otherwise return null
+	 public function first_or_default(){
+	 	 $response = $this->get();
 	 	 return $response ? $response[0] : null;
 	 }
 
-     /*
-     * reteurn the last row if its available otherwise throw an error
-     */
-	 public function last(bool $tomodel = false){
-	 	 $response = $this->get($tomodel);
+     //reteurn the last row if its available otherwise throw an exception
+	 public function last(){
+	 	 $response = $this->get();
 	 	 if(!$response){
 	 	 	throw NullObjectException(table: $this->get_context_tracker()->find_table_name(0));
 	 	 }
 	 	 return $response[count($response) - 1];
 	 }
 
-	 /*
-	 * return the last row if its available otherwise return null
-	 */
-	 public function last_or_default(bool $tomodel = false){
-	 	 $response = $this->get($tomodel);
+	 //return the last row if its available otherwise return null
+	 public function last_or_default(){
+	 	 $response = $this->get();
 	 	 return $response ? $response[count($response) - 1] : null;
 	 }
 
-	 private function get(bool $tomodel = false, bool $tracker_active = false){
+     private function fetch_related_data($foreign_schema, $foreign_key, $pkey_values, $field_name, $with, $tuning){
+     	 //get name for temporary table.
+     	 $long_foreign_model_name = $foreign_schema::get_associated_model_class();
+     	 $long_foreign_model_name_parts = explode("\\", $long_foreign_model_name);
+     	 $foreign_model_name = array_pop($long_foreign_model_name_parts);
+     	 $temp_table_name = strtolower($foreign_model_name)."_temp_ids";
+     	 //get the db context class
+     	 [$db_class, $foreign_table] = $foreign_schema::get_table_n_dbcontext();
+     	 //create the temporary table
+     	 TempId::db2($temp_table_name, TempIdSchema::class, $db_class)->create_table();
+     	 //store the ids in the temporary table.
+	 	 if($pkey_values){
+	 	 	 $tmp_man = TempId::db2($temp_table_name, TempIdSchema::class, $db_class);
+	 	 	 $tmp_man->config(fnqm: 'N-QUALIFY', ftnm: 'N-ONLY', ftqm: 'N-QUALIFY');
+	 	 	 $values_to_add = [];
+	 	 	 foreach($pkey_values as $id){
+	 	 	 	 $values_to_add[] = ['id_value' => $id];
+	 	 	 }
+	 	 	 $added_ids = $tmp_man->add_multiple($values_to_add)->save();
+	 	 }
+
+	 	 $query_table_name = 'ranked_rows';
+
+	 	 #This will select the temporary ids in related data
+	 	 $ids_in_query  = TempId::db2($temp_table_name, TempIdSchema::class, $db_class)->select(['id_value'])->sql_info('select');
+
+         $order_clause = "";
+         $limit_records = 10000;
+         $raw_filters = [];
+         $selected_fields = null;
+	 	 if($tuning){
+	 	 	 $tuning_manager = $long_foreign_model_name::db();
+	 	 	 $tuning_manager->config(fnqm: 'N-QUALIFY', ftnm: 'N-ONLY', ftqm: 'N-QUALIFY');
+	 	 	 $tuning_manager = $tuning($tuning_manager);
+	 	 	 $order_clause = $tuning_manager->get_order_clause();
+	 	 	 (int)$limit_records = $tuning_manager->get_limit_records();
+	 	 	 if($limit_records === 0){
+	 	 	 	 $limit_records = 10000;
+	 	 	 }
+
+	 	 	 $tuning_manager->l_where("row_num__lte", (int)$limit_records);
+	 	 	 $raw_filters = $tuning_manager->get_filter_manager()->get_raw_filter();
+	 	 	 $selected_fields = $tuning_manager->get_selected_fields();
+	 	 }
+
+	 	 $cte_manager = $long_foreign_model_name::db()
+	 	 ->config(fnqm: 'N-QUALIFY', ftnm: 'N-ONLY', ftqm: 'N-QUALIFY')
+         ->select(null, function($fields) use ($foreign_key, $order_clause){
+			 return "*, ROW_NUMBER() OVER (PARTITION BY {$foreign_key}{$order_clause}) AS row_num";
+ 	     })
+ 	     ->l_where("{$foreign_key}__in", $ids_in_query['sql'])
+ 	     ->sql_info('select');
+
+         $outer_manager = $long_foreign_model_name::db(table_aliase: $query_table_name)
+         ->config(fnqm: 'N-QUALIFY', ftnm: 'A-ONLY')
+         ->select($selected_fields, function($fields) use ($foreign_key, $field_name){
+ 	 	     $json_string = "";
+			 foreach ($fields as $_i => $f){
+		         $keyparts = explode(".", $f);
+		         $key = count($keyparts) === 3 ? $keyparts[2] : ( count($keyparts) === 2 ? $keyparts[1] : $keyparts[0]);
+		         $json_string .= "'{$key}', {$key}";
+		         if($_i < count($fields) - 1){
+		         	$json_string .= ", ";
+		         }
+			 }
+			 $sql_string  = "{$foreign_key}, CONCAT('[', GROUP_CONCAT(JSON_OBJECT(".$json_string.") SEPARATOR ', '), ']') AS {$field_name}";
+			 return $sql_string;
+ 	     })->set_raw_filters($raw_filters)
+ 	     ->group_by([$foreign_key]);
+
+ 	     $testfilters = $outer_manager->get_filter_manager()->get_where_clause($outer_manager->get_context_tracker(), $outer_manager->get_configurations());
+
+	 	 $outer_manager_query = $outer_manager->sql_info("select");
+
+	 	 $finalsql = "WITH {$query_table_name} AS ({$cte_manager['sql']}) {$outer_manager_query['sql']}";
+
+	 	 $finalmanager = $long_foreign_model_name::db()->sqlndata($finalsql, $testfilters->data ? $testfilters->data : null);
+	 	 if($with){
+	 	 	 $withcallbacks = $this->get_select_manager()->get_withcallbacks();
+	 	 	 $finalmanager->with($with, $withcallbacks);
+	 	 }
+	 	 
+	 	 $related_data = $finalmanager->eager_load();
+
+     	 //drop the table
+     	 TempId::db2($temp_table_name, TempIdSchema::class, $db_class)->drop_table();
+
+     	 return $related_data;
+     }
+
+     private function process_includes($schema_instance, $data, $is_eager_loading = false){
+	 	 $explicit_includes  = $this->get_select_manager()->get_includes();
+	 	 $auto_includes      = $schema_instance->get_auto_include();
+	 	 $include_instances  = array_merge(array_column($explicit_includes, 'relation'), array_column($auto_includes, 'relation'));
+
+	 	 if(!$include_instances)
+	 	 	return $data;
+
+         $tmp_data           = $data;
+	 	 $nested_includes    = array_merge(array_column($explicit_includes, 'with'), array_column($auto_includes, 'with'));
+	 	 $includes_tuning    = array_merge(array_column($explicit_includes, 'tuning'), array_column($auto_includes, 'tuning'));
+
+         $tracker            = EagerTracker::activate();
+         $existing_relations = $tracker::get_relations();
+         $exr_count          = count($existing_relations);
+         $exr_last_index     = $exr_count > 0 ? $exr_count - 1 : 0; 
+         $former_rel_field   = isset($existing_relations[$exr_last_index]) ? $existing_relations[$exr_last_index]->get_field() : '';
+         $former_ref_key     = isset($existing_relations[$exr_last_index]) ? $existing_relations[$exr_last_index]->get_fk() : '';
+
+         if($is_eager_loading){
+         	 $data = [];
+         	 foreach($tmp_data as $td){
+                 $json_data = json_decode($td->$former_rel_field);
+         	 	 $data = !is_null($json_data) ? array_merge($data, $json_data) : $data;
+         	 }
+	 	 }
+	 	 
+	 	 foreach($include_instances as $index => $ins){
+	 	 	 $tracker::add_relation($ins);
+	 	 	 $with          = $nested_includes[$index];
+	 	 	 $tuning        = $includes_tuning[$index];
+	 	 	 $include_data  = $this->process_include($ins, $with, $tuning, $data);
+	 	 	 foreach($data as $d){
+	 	 	 	 $rel_field     = $include_data['rel_field'];
+	 	 	 	 $ref_key       = $include_data['ref_key'];
+	 	 	 	 $ref_key_value = $d->$ref_key;
+	 	 	 	 $d->$rel_field = $include_data['rel_data'][$ref_key_value] ?? ($include_data['is_multiple'] ? [] : null);
+	 	 	 }
+	 	 }
+
+	 	 if($is_eager_loading){
+         	 $consolidated_data  = [];
+         	 foreach($data as $r){
+         	 	 $former_ref_key_val = $r->$former_ref_key;
+         	 	 if(!array_key_exists($former_ref_key_val, $consolidated_data)){
+         	 	 	 $consolidated_data[$former_ref_key_val] = (Object)[$former_ref_key => $former_ref_key_val, $former_rel_field => []];
+         	 	 }
+         	 	 $consolidated_data[$former_ref_key_val]->$former_rel_field[] = $r;
+         	 }
+         	 $data = array_values($consolidated_data);
+         	 foreach($data as $d){
+         	 	$d->$former_rel_field = json_encode($d->$former_rel_field);
+         	 }
+	 	 }
+
+	 	 return $data;
+     }
+
+     private function process_include($ins, $with, $tuning, $data){
+     	 $fdao         = $ins->get_fdao();
+ 	 	 $pkey         = $ins->get_pk();
+	 	 $fkey         = $ins->get_fk();
+	 	 $pkey_values  = array_unique(array_column($data, $pkey));
+
+	 	 $raw_data     = $this->fetch_related_data($fdao, $fkey, $pkey_values, $ins->get_field(), $with, $tuning);
+	 	 $rel_data     = [];
+	 	 $field        = $ins->get_field();
+	 	 foreach($raw_data as $rd){
+	 	 	 $pointer_value            = $rd->$fkey;
+	 	 	 $the_rows                 = json_decode(preg_replace('/,(\s*])/', '$1', $rd->$field));
+	 	 	 $rel_data[$pointer_value] = $ins->get_multiple() ? $the_rows : ($the_rows[0] ?? null);
+	 	 }
+	 	 return [
+	 	 	'ref_key'     => $pkey,
+	 	 	'raw_data'    => $raw_data,
+	 	 	'rel_data'    => $rel_data,
+	 	 	'rel_field'   => $field,
+	 	 	'is_multiple' => $ins->get_multiple()
+	 	 ];
+     }
+
+	 private function get(bool $tracker_active = false){
 	 	 #acquire the table being processed
 	 	 $table_name   = $this->get_context_tracker()->find_table_name(0);
 	 	 #acquire the dao model.
@@ -212,108 +244,35 @@ class ModelManager extends IModelManager{
 	 	 $model_class    = $model_instance::class;
 	 	 $ass_model_class = $model_instance->get_associated_model_class();
 
-	 	 /**
-	 	  * activate tracker and add current model to it.
-	 	  * */
+	 	 #activate tracker and add current model to it.
 	 	 $tracker = EagerTracker::activate();
 	 	 if(!$tracker_active){
 	 	 	 $tracker::reset();
 	 	 }
 	 	 $tracker->add_model($model_class);
 
-	 	 /*#apply a default limit if one was not provided
-	 	 $limit_clause = $this->get_limit_clause();
-	 	 if(!$limit_clause){
-	 	 	 $this->limit();
-	 	 	 $limit_clause = $this->get_limit_clause();
-	 	 }*/
-
-	 	 #apply a soft delete filter if the current dao has a soft delete attribute
-	 	 if($model_instance->get_soft_delete() && !$this->_ignore_soft_delete){
-     	 	 $this->where($table_name.'.deleted__eq', 0);
-     	 }
+	 	 #if soft delete is available, apply the fetch mode
+	 	 /*if($model_instance->get_soft_delete()){
+	 	 	 $mode = $this->fetch_mode();
+	 	 	 if($mode === FetchMode::NON_DELETED){
+	 	 	 	 $this->where($table_name.'.deleted__eq', 0);
+	 	 	 }elseif($mode === FetchMode::DELETED){
+	 	 	 	 $this->where($table_name.'.deleted__eq', 1);
+	 	 	 }
+     	 }*/
 
 	 	 #setup a select command
-	 	 $this->crud_command = new SelectCommand(
-	 	 	 new SelectOperation($this->get_connection()),
-	 	 	 select_clause: $this->get_selected(),
-	 	 	 where_clause:  $this->fmanager->get_where_clause($this->get_context_tracker()),
-	 	 	 join_clause:   $this->get_join_clause(),
-	 	 	 limit_clause:  $this->get_limit_clause(),
-	 	 	 order_clause:  $this->get_order_clause(),
-	 	 	 table_name:    $table_name,
-	 	 	 table_aliase:  $this->get_context_tracker()->find_table_aliase(0),
-	 	 	 database_name: $this->get_context_tracker()->find_database_name(0),
-	 	 	 tomodel:         $tomodel,
-	 	 	 daoclass:      $model_class
-	 	 );
+	 	 $sql_info = $this->sql_info(operation: 'select');
+	 	 if($this->is_custom_sql()){
+	 	 	 $sql_info = $this->get_sqlndata();
+	 	 }
+	 	 $this->crud_command = new SelectCommand(new SelectOperation($this->get_connection()), sql: $sql_info['sql'], data: $sql_info['data']);
 
 	 	 #execute command and return response
 	 	 $rows = $this->crud_command->execute();
-
-         #get explicit includes
-	 	 $select_manager = $this->get_select_manager();
-	 	 $includes       = $select_manager->get_includes();
-
-	 	 #get implicit includes.
-	 	 $auto_includes = $model_instance->get_auto_include();
-
-	 	 $include_instances = array_merge(array_column($includes, 'relation'), array_column($auto_includes, 'relation'));
-	 	 $include_nested    = array_merge(array_column($includes, 'with'), array_column($auto_includes, 'with'));
-	 	 $include_tuning    = array_merge(array_column($includes, 'tuning'), array_column($auto_includes, 'tuning'));
-
-	 	 $include_rows = [];
- 	 	 foreach($include_instances as $ins_index => $ins){
- 	 	 	 $fdao         = $ins->get_fdao();
- 	 	 	 //if(!$tracker::is_loaded($fdao)){
- 	 	 	 	 if($ins instanceof Many2Many){
- 	 	 	 	 	 $ofdao = $fdao;
- 	 	 	 	 	 $ofdaom = $ofdao::get_associated_model_class();
- 	 	 	 	 	 $collection_class = $ofdaom::get_collection_class();
- 	 	 	 	 	 [$table_name, $schema, $ctx] = $ins->get_through_model_schema();
- 	 	 	 	 	 $fdao = $schema;
- 	 	 	 	 	 $fdaom        = $fdao::get_associated_model_class();
-		 	 	 	 $pkey         = $ins->get_pk();
-		 		 	 $fkey         = $ins->get_fk();
-		 		 	 $pkey_values  = array_unique(array_column($rows, $pkey));
-		 		 	 $with_field   = $schema::get_include_field($ins->get_pdao());
-		 		 	 $with_field2  = $schema::get_include_field($ins->get_fdao());
-		 		 	 //add nested withs here.
-		 		 	 $results      = $fdaom::db2($table_name, $schema, $ctx)->with($with_field)
-		 		 	 ->limit(records: 1000, page: 1)->where("{$pkey}__in", $pkey_values)->eager_load(tomodel: $tomodel);
-
-		 		 	 $formatted_results = [];
-		 		 	 foreach($results as $r){
-		 		 	 	 if(!array_key_exists($r->$with_field2, $formatted_results)){
-		 		 	 	 	 $formatted_results[$r->$with_field2] = new $collection_class([]);
-		 		 	 	 }
-		 		 	 	 $formatted_results[$r->$with_field2]->add($r->$with_field);
-		             }
-		 		 	 
- 	 	 	 	 	 $include_rows[$ins->get_field()] = ['collection_class' => $collection_class, 'data' => $formatted_results, 'key' => $pkey, 'multiple' => $ins->get_multiple()];
- 	 	 	 	 }else{
- 	 	 	 	 	 $fdaom        = $fdao::get_associated_model_class();
-		 	 	 	 $pkey         = $ins->get_pk();
-		 		 	 $fkey         = $ins->get_fk();
-		 		 	 $pkey_values  = array_unique(array_column($rows, $pkey));
-		 		 	 $n_manager    = $fdaom::db()->where("{$fkey}__in", $pkey_values);
-		 		 	 $with         = $include_nested[$ins_index];
-		 		 	 $tuning       = $include_tuning[$ins_index];
-		 		 	 if($with){
-		 		 	 	 $n_manager = $n_manager->with($with);
-		 		 	 }
-		 		 	 if($tuning){
-		 		 	 	 $n_manager = $tuning($n_manager);
-		 		 	 }
-		 		 	 $results      = $n_manager->eager_load(tomodel: $tomodel);
-		 		 	 $formatted_results = [];
-		 		 	 foreach($results as $r){
-		                 $formatted_results[$r->$fkey][] = $r;
-		             }
-		             $include_rows[$ins->get_field()] = ['data' => $formatted_results, 'key' => $pkey, 'multiple' => $ins->get_multiple()];
- 	 	 	 	 }
- 	 	 	 //} 
-	 	 }
+	 	 
+	 	 #process includes.
+	 	 $crows = $this->process_includes($model_instance, $rows, $tracker_active);
 
 	 	 $chain = new Chain();
 	 	 $chain->add(new DefaultHandler());
@@ -321,9 +280,9 @@ class ModelManager extends IModelManager{
 	 	 /**
 	 	  * Assign eager loaded objects
 	 	  * */
-	 	 if($include_rows){
+	 	 /*if($include_rows){
 	 	 	 $chain->add(new EagerLoadAssign(data: $include_rows));
-	 	 }
+	 	 }*/
 	 	 
 	 	 /**
 	 	  * Format date and timestamps to human readable forms
@@ -345,7 +304,7 @@ class ModelManager extends IModelManager{
 	     /**
 	      * Cast the row data to value object type
 	      * */
-	     if($tomodel){
+	     if($this->get_tomodel()){
 	     	 $chain->add(new TypeCast(type: $ass_model_class));
 	     }
 
@@ -354,10 +313,10 @@ class ModelManager extends IModelManager{
 	      * */
 	     if($chain->is_active()){
 	     	 $processed = [];
-	     	 foreach($rows as $row){
+	     	 foreach($crows as $row){
 	     	 	 $processed[] = $chain->apply($row);
 	     	 }
-	     	 $rows = $processed;
+	     	 $crows = $processed;
 	     }
 
 	     if(!$tracker_active){
@@ -368,19 +327,19 @@ class ModelManager extends IModelManager{
      	  * If to model is on, return a typed model collection instead
      	  * of a simple array
      	  * */
-     	 if($tomodel){
+     	 if($this->get_tomodel()){
      	 	$collection_class = $ass_model_class::get_collection_class();
-     	 	return new $collection_class($rows);
+     	 	return new $collection_class($crows);
      	 }
 
-	     return $rows;
+	     return $crows;
 	 }
 
 	 public function total(){
 	 	 /*setup a select command*/
 	 	 $this->crud_command = new TotalCommand(
 	 	 	 new TotalOperation($this->get_connection()),
-	 	 	 where_clause:  $this->fmanager->get_where_clause($this->get_context_tracker()),
+	 	 	 where_clause:  $this->get_filter_manager()->get_where_clause($this->get_context_tracker(), $this->get_configurations()),
 	 	 	 join_clause:   $this->get_join_clause(),
 	 	 	 limit_clause:  $this->get_limit_clause(),
 	 	 	 order_clause:  $this->get_order_clause(),
@@ -426,18 +385,20 @@ class ModelManager extends IModelManager{
 	 	 }
 
 	 	 $select_manager = $this->get_select_manager();
-	 	 foreach($fields as $wf){
+	 	 foreach($fields as $wf){ //for each with field
 	 	 	 #split the field using dot as separator to see if nested.
 	 	 	 $field_parts = explode(".", $wf);
-	 	 	 #only check for the first item.
-	 	 	 $_wf = array_shift($field_parts);
-	 	 	 [$field, $model] = $this->check_with($_wf);
+	 	 	 #check if the first field is really an include field
+	 	 	 $first_wf = array_shift($field_parts);
+	 	 	 [$field, $model] = $this->check_with($first_wf);
 	 	 	 $select_manager->add_include([
 	 	 	 	'with'     => implode(".", $field_parts), 
 	 	 	 	'relation' => $field, 
-	 	 	 	'tuning'   => $callables[$_wf] ?? null
+	 	 	 	'tuning'   => $callables[$first_wf] ?? null
 	 	 	 ]);
+	 	 	 unset($callables[$first_wf]);
 	 	 }
+	 	 $select_manager->set_withcallbacks($callables);
 	 	 return $this;
 	 }
 
@@ -499,7 +460,7 @@ class ModelManager extends IModelManager{
 	 }
 
      private function auto_save_files(){
-     	 $files = array_values($this->_file_data);
+     	 $files = array_values($this->file_data);
      	 foreach($files as $f){
      	 	 if($f){
      	 	 	 foreach($f as $key => $fd){
@@ -519,8 +480,8 @@ class ModelManager extends IModelManager{
 	 }
 
      private function assert_duplicates(){
-     	 if(array_key_exists("is_duplicate", $this->_operation_status)){
-     	 	 switch($this->_operation_status['duplicate_action']){
+     	 if(array_key_exists("is_duplicate", $this->operation_status)){
+     	 	 switch($this->operation_status['duplicate_action']){
 	     	 	 case 'IGNORE_DUPLICATE':
 	     	 	     /**
 	     	 	      * Do nothing. This tells the modelmanager to add records despite the duplicates.
@@ -530,24 +491,24 @@ class ModelManager extends IModelManager{
 	     	 	     /**
 	     	 	      * Remove duplicate data from the data container, duplicate entries record and file data if applicable..
 	     	 	      * */
-	     	 	     $duplicate_keys = array_keys($this->_operation_status['duplicate_entries']);
+	     	 	     $duplicate_keys = array_keys($this->operation_status['duplicate_entries']);
 		     	 	 foreach($duplicate_keys as $key){
-		     	 	 	 Assert::keyExists($this->_insert_data_container["data"], $key);
-		     	 	 	 Assert::keyExists($this->_operation_status['duplicate_entries'], $key);
+		     	 	 	 Assert::keyExists($this->insert_data_container["data"], $key);
+		     	 	 	 Assert::keyExists($this->operation_status['duplicate_entries'], $key);
 
-		     	 	 	 unset($this->_insert_data_container["data"][$key]);
-		     	 	 	 unset($this->_operation_status['duplicate_entries'][$key]);
+		     	 	 	 unset($this->insert_data_container["data"][$key]);
+		     	 	 	 unset($this->operation_status['duplicate_entries'][$key]);
 
-		     	 	 	 if(isset($this->_file_data[$key])){
-		     	 	 	 	unset($this->_file_data[$key]);
+		     	 	 	 if(isset($this->file_data[$key])){
+		     	 	 	 	unset($this->file_data[$key]);
 		     	 	 	 }
 
-		     	 	 	 if(isset($this->_insert_data_container["prmkeyvalues"][$key])){
-		     	 	 	 	unset($this->_insert_data_container["prmkeyvalues"][$key]);
+		     	 	 	 if(isset($this->insert_data_container["prmkeyvalues"][$key])){
+		     	 	 	 	unset($this->insert_data_container["prmkeyvalues"][$key]);
 		     	 	 	 }
 		     	 	 }
 
-		     	 	 Assert::isNonEmptyMap($this->_insert_data_container["data"], "Save attempt on an empty data container after removing duplicates!");
+		     	 	 Assert::isNonEmptyMap($this->insert_data_container["data"], "Save attempt on an empty data container after removing duplicates!");
 	     	 	 break;
 	     	 	 case 'ABORT_WITHOUT_ERROR':
 	     	 	 case 'ABORT_WITH_ERROR':
@@ -558,20 +519,20 @@ class ModelManager extends IModelManager{
 	     	 	 	  * Remove duplicate data from the data container and leave the duplicate entries as they will be 
 	     	 	 	  * used to update the existing records after saving the rest.
 	     	 	 	  * */
-	     	 	 	 $duplicate_keys = array_keys($this->_operation_status['duplicate_entries']);
+	     	 	 	 $duplicate_keys = array_keys($this->operation_status['duplicate_entries']);
 		     	 	 foreach($duplicate_keys as $key){
-		     	 	 	 Assert::keyExists($this->_insert_data_container["data"], $key);
-		     	 	 	 Assert::keyExists($this->_operation_status['duplicate_entries'], $key);
+		     	 	 	 Assert::keyExists($this->insert_data_container["data"], $key);
+		     	 	 	 Assert::keyExists($this->operation_status['duplicate_entries'], $key);
 
 		     	 	 	 /**
 		     	 	 	  * replace the existing value with the incoming value.
 		     	 	 	  * */
-		     	 	 	 $this->_operation_status['duplicate_entries'][$key] = $this->_insert_data_container["data"][$key];
+		     	 	 	 $this->operation_status['duplicate_entries'][$key] = $this->insert_data_container["data"][$key];
 
-		     	 	 	 unset($this->_insert_data_container["data"][$key]);
+		     	 	 	 unset($this->insert_data_container["data"][$key]);
 
-		     	 	 	 if(isset($this->_insert_data_container["prmkeyvalues"][$key])){
-		     	 	 	 	unset($this->_insert_data_container["prmkeyvalues"][$key]);
+		     	 	 	 if(isset($this->insert_data_container["prmkeyvalues"][$key])){
+		     	 	 	 	unset($this->insert_data_container["prmkeyvalues"][$key]);
 		     	 	 	 }
 		     	 	 }
 	     	 	 break;
@@ -580,19 +541,19 @@ class ModelManager extends IModelManager{
 	     	 	 	  * Remove duplicate data from the data container and the files container and leave the duplicate entries records as they will be 
 	     	 	 	  * returned as is to the caller.
 	     	 	 	  * */
-	     	 	 	 $duplicate_keys = array_keys($this->_operation_status['duplicate_entries']);
+	     	 	 	 $duplicate_keys = array_keys($this->operation_status['duplicate_entries']);
 		     	 	 foreach($duplicate_keys as $key){
-		     	 	 	 Assert::keyExists($this->_insert_data_container["data"], $key);
-		     	 	 	 Assert::keyExists($this->_operation_status['duplicate_entries'], $key);
+		     	 	 	 Assert::keyExists($this->insert_data_container["data"], $key);
+		     	 	 	 Assert::keyExists($this->operation_status['duplicate_entries'], $key);
 
-		     	 	 	 unset($this->_insert_data_container["data"][$key]);
+		     	 	 	 unset($this->insert_data_container["data"][$key]);
 
-		     	 	 	 if(isset($this->_file_data[$key])){
-		     	 	 	 	unset($this->_file_data[$key]);
+		     	 	 	 if(isset($this->file_data[$key])){
+		     	 	 	 	unset($this->file_data[$key]);
 		     	 	 	 }
 
-		     	 	 	 if(isset($this->_insert_data_container["prmkeyvalues"][$key])){
-		     	 	 	 	unset($this->_insert_data_container["prmkeyvalues"][$key]);
+		     	 	 	 if(isset($this->insert_data_container["prmkeyvalues"][$key])){
+		     	 	 	 	unset($this->insert_data_container["prmkeyvalues"][$key]);
 		     	 	 	 }
 		     	 	 }
 	     	 	 break;
@@ -616,28 +577,30 @@ class ModelManager extends IModelManager{
          return $manager;
      }
 
-     private function save_changes(bool $tomodel = false){
+     private function save_changes(){
      	 try{
      	 	 #acquire the table being processed
  	         $table_name   = $this->get_context_tracker()->find_table_name(0);
  	         #acquire the dao model.
  	         $model_instance = $this->get_model($table_name);
+ 	         #implemented interfaces
+ 	         $interfaces = class_implements($model_instance::class);
  	         $ass_model_class = $model_instance->get_associated_model_class();
 
-     	 	 Assert::isNonEmptyMap($this->_insert_data_container["data"], "$ass_model_class: Save attempt on an empty data container!");
+     	 	 Assert::isNonEmptyMap($this->insert_data_container["data"], "$ass_model_class: Save attempt on an empty data container!");
      	     $this->assert_duplicates();
 
      	     #At this point, if there is still data to be saved in the data container, save it.
      	     $results = null;
-     	     if($this->_insert_data_container["data"]){
+     	     if($this->insert_data_container["data"]){
 	 	         #setup insert command.
+     	     	 $sql_info = $this->sql_info(operation: 'insert');
 	 	         $this->crud_command = new InsertCommand(
 			 	 	 new InsertOperation($this->get_connection()),
-			 	 	 prmkeytype:   $this->_insert_data_container["prmkeytype"],
-			 	 	 fields:       array_keys(array_values($this->_insert_data_container["data"])[0]),
-			 	 	 data:         array_values($this->_insert_data_container["data"]),
-			 	 	 table:        $this->get_context_tracker()->find_table_name(0),
-			 	 	 database:     $this->get_context_tracker()->find_database_name(0)
+			 	 	 prmkeytype: $this->insert_data_container["prmkeytype"],
+			 	 	 table:      $this->get_context_tracker()->find_table_name(0),
+			 	 	 sql:        $sql_info['sql'],
+			 	 	 data:       $sql_info['data']
 			 	 );
 			 	 #execute command and return response
 			 	 $response = $this->crud_command->execute();
@@ -645,8 +608,8 @@ class ModelManager extends IModelManager{
 			 	 $this->auto_save_files();
 
                  $primary_key_values = [];
-			 	 if($this->_insert_data_container["prmkeytype"] === 'GUID'){
-			 	 	 $primary_key_values = array_values($this->_insert_data_container["prmkeyvalues"]);
+			 	 if($this->insert_data_container["prmkeytype"] === 'GUID'){
+			 	 	 $primary_key_values = array_values($this->insert_data_container["prmkeyvalues"]);
 			 	 }else{
 					 for($i = 0; $i < $response->row_count; $i++){
 					    $primary_key_values[] = $response->last_insert_id + $i;
@@ -654,18 +617,18 @@ class ModelManager extends IModelManager{
 			 	 }
 
 			 	 #fetch all the data just saved.
-			 	 if(str_contains($ass_model_class, 'Throughs')){
+			 	 if(in_array(ITempModel::class, $interfaces) || in_array(IThroughModel::class, $interfaces)){
 			 	 	 $man = $ass_model_class::db2($table_name, $model_instance::class, $this->get_dbcontext_class());
 			 	 }else{
 			 	 	 $man = $ass_model_class::db();
 			 	 }
-		 	 	 $results = $man->where($this->_insert_data_container["prmkeyname"]."__in", $primary_key_values)
-		 	 	 ->eager_load(tomodel: $tomodel);
+		 	 	 $results = $man->where($this->insert_data_container["prmkeyname"]."__in", $primary_key_values)
+		 	 	 ->tomodel($this->get_tomodel())->get();
 			 }
 
 			 #now deal with the duplicates.
 			 if(!$results){
-			 	 if($tomodel){
+			 	 if($this->get_tomodel()){
 			 	 	 $collection_class = $ass_model_class::get_collection_class();
 			 	 	 $results = new $collection_class([]);
 			 	 }else{
@@ -673,20 +636,20 @@ class ModelManager extends IModelManager{
 			 	 }
 			 }
 
-	 	 	 if(array_key_exists("is_duplicate", $this->_operation_status) && $this->_operation_status['duplicate_entries']) {
-	 	 	 	 switch($this->_operation_status['duplicate_action']){
+	 	 	 if(array_key_exists("is_duplicate", $this->operation_status) && $this->operation_status['duplicate_entries']) {
+	 	 	 	 switch($this->operation_status['duplicate_action']){
 	 	 	 	 	 case 'UPDATE_ON_DUPLICATE';
-	 	 	 	 	     $unique_together = $this->_operation_status['unique_together'];
+	 	 	 	 	     $unique_together = $this->operation_status['unique_together'];
 					 	 
-	 	 	 	 	     foreach($this->_operation_status['duplicate_entries'] as $dk => $dv){
+	 	 	 	 	     foreach($this->operation_status['duplicate_entries'] as $dk => $dv){
 	 	 	 	 	     	 if(str_contains($ass_model_class, 'Throughs')){
 					 	 	     $man = $ass_model_class::db2($table_name, $model_instance::class, $this->get_dbcontext_class());
 						 	 }else{
 						 	 	 $man = $ass_model_class::db();
 						 	 }
-	 	 	 	 	     	 $unique_fields = $this->_operation_status['unique_fields'][$dk];
+	 	 	 	 	     	 $unique_fields = $this->operation_status['unique_fields'][$dk];
 	 	 	 	 	     	 $man           = $this->build_update_manager($man, $unique_fields, $unique_together);
-	 	 	 	 	     	 $updateresp    = $man->set($dv)->update(tomodel: $tomodel, multiple: false, force: true);
+	 	 	 	 	     	 $updateresp    = $man->set($dv)->update(multiple: false, force: true);
 	 	 	 	 	     	 if($updateresp){
 	 	 	 	 	     	 	$results[]  = $updateresp;
 	 	 	 	 	     	 }
@@ -694,12 +657,12 @@ class ModelManager extends IModelManager{
 	 	 	 	 	 break;
 	 	 	 	 	 case "RETURN_EXISTING":
 	 	 	 	 	     #Inject the duplicate data into the result.
-	 	 	 	 	     if($tomodel){
-	 	 	 	 	     	 foreach($this->_operation_status['duplicate_entries'] as $dk => $dv){
+	 	 	 	 	     if($this->get_tomodel()){
+	 	 	 	 	     	 foreach($this->operation_status['duplicate_entries'] as $dk => $dv){
 	 	 	 	 	     	 	$results->add(new $ass_model_class(...(array)$dv));
 	 	 	 	 	         }
 	 	 	 	 	     }else{
-	 	 	 	 	     	 $results = array_merge($results, array_values($this->_operation_status['duplicate_entries']));
+	 	 	 	 	     	 $results = array_merge($results, array_values($this->operation_status['duplicate_entries']));
 	 	 	 	 	     }
 	 	 	 	 	 break;
 	 	 	 	 	 default:
@@ -725,30 +688,30 @@ class ModelManager extends IModelManager{
      	 $entry_key = spl_object_hash((object)$clean_data);
 
      	 if($is_duplicate !== false){
-     	 	 if(array_key_exists("is_duplicate", $this->_operation_status)){
-     	 	 	 $this->_operation_status['duplicate_entries'][$entry_key] = $is_duplicate[0];
-     	 	 	 $this->_operation_status['unique_fields'][$entry_key] = $is_duplicate[1];
+     	 	 if(array_key_exists("is_duplicate", $this->operation_status)){
+     	 	 	 $this->operation_status['duplicate_entries'][$entry_key] = $is_duplicate[0];
+     	 	 	 $this->operation_status['unique_fields'][$entry_key] = $is_duplicate[1];
      	 	 }else{
-     	 	 	 $this->_operation_status['is_duplicate'] = true;
-     	 	 	 $this->_operation_status['duplicate_action'] = $action_on_duplicate;
-     	 	 	 $this->_operation_status['unique_together'] = $is_duplicate[2];
+     	 	 	 $this->operation_status['is_duplicate'] = true;
+     	 	 	 $this->operation_status['duplicate_action'] = $action_on_duplicate;
+     	 	 	 $this->operation_status['unique_together'] = $is_duplicate[2];
 
-     	 	 	 $this->_operation_status['duplicate_entries'] = [];
-     	 	 	 $this->_operation_status['duplicate_entries'][$entry_key] = $is_duplicate[0];
+     	 	 	 $this->operation_status['duplicate_entries'] = [];
+     	 	 	 $this->operation_status['duplicate_entries'][$entry_key] = $is_duplicate[0];
 
-     	 	 	 $this->_operation_status['unique_fields'] = [];
-     	 	     $this->_operation_status['unique_fields'][$entry_key] = $is_duplicate[1];
+     	 	 	 $this->operation_status['unique_fields'] = [];
+     	 	     $this->operation_status['unique_fields'][$entry_key] = $is_duplicate[1];
      	 	 }
      	 }
 
-     	 $this->_insert_data_container["prmkeyname"] = $model->get_pk_name();
-     	 $this->_insert_data_container["prmkeytype"] = $model->get_pk_type();
-     	 if($this->_insert_data_container["prmkeytype"] === 'GUID'){
-     	 	 $this->_insert_data_container["prmkeyvalues"][$entry_key] = $clean_data[$model->get_pk_name()];
+     	 $this->insert_data_container["prmkeyname"] = $model->get_pk_name();
+     	 $this->insert_data_container["prmkeytype"] = $model->get_pk_type();
+     	 if($this->insert_data_container["prmkeytype"] === 'GUID'){
+     	 	 $this->insert_data_container["prmkeyvalues"][$entry_key] = $clean_data[$model->get_pk_name()];
      	 }
      	 
-     	 $this->_file_data[$entry_key] = $file_data;
-     	 $this->_insert_data_container["data"][$entry_key] = $clean_data;
+     	 $this->file_data[$entry_key] = $file_data;
+     	 $this->insert_data_container["data"][$entry_key] = $clean_data;
      	 return $this;
      }
 
@@ -759,12 +722,12 @@ class ModelManager extends IModelManager{
      	return $this;
      }
 
-     public function save(bool $tomodel = false){
-     	 $saved_data = $this->save_changes(tomodel: $tomodel);
+     public function save(){
+     	 $saved_data = $this->save_changes();
      	 if(!$saved_data)
      	 	return new \Exception("Could not save object");
 
-     	 if(count($this->_insert_data_container["data"]) > 1)
+     	 if(count($this->insert_data_container["data"]) > 1)
      	 	return $saved_data;
 
      	 return $saved_data[0];
@@ -775,7 +738,7 @@ class ModelManager extends IModelManager{
      	 /*setup an update command*/
 	 	 $this->crud_command = new UpdateCommand(
 	 	 	 new UpdateOperation($this->get_connection()),
-	 	 	 where_clause:  $this->fmanager->get_where_clause($this->get_context_tracker()),
+	 	 	 where_clause:  $this->get_filter_manager()->get_where_clause($this->get_context_tracker(), $this->get_configurations()),
 	 	 	 table_name:    $this->get_context_tracker()->find_table_name(0),
 	 	 	 database_name: $this->get_context_tracker()->find_database_name(0),
 	 	 	 fields:        ["deleted"],
@@ -789,7 +752,7 @@ class ModelManager extends IModelManager{
      	/*setup a delete command*/
 	 	 $this->crud_command = new DeleteCommand(
 	 	 	 new DeleteOperation($this->get_connection()),
-	 	 	 where_clause:  $this->fmanager->get_where_clause($this->get_context_tracker()),
+	 	 	 where_clause:  $this->get_filter_manager()->get_where_clause($this->get_context_tracker(), $this->get_configurations()),
 	 	 	 table_name:    $this->get_context_tracker()->find_table_name(0),
 	 	 	 database_name: $this->get_context_tracker()->find_database_name(0)
 	 	 );
@@ -801,11 +764,6 @@ class ModelManager extends IModelManager{
      	 return $permanently ? $this->hard_delete() : $this->soft_delete();
      }
 
-     public function ignore_soft_delete(){
-	 	 $this->_ignore_soft_delete = true;
-	 	 return $this;
-	 }
-
      //updates
 
      /**
@@ -814,7 +772,7 @@ class ModelManager extends IModelManager{
       * the manager from a model.
       * */
      public function set_data_state(array $data_state){
-     	 $this->_data_state = $data_state;
+     	 $this->data_state = $data_state;
      	 return $this;
      }
 
@@ -825,7 +783,7 @@ class ModelManager extends IModelManager{
       * @param array $data.
       * */
      public function set(array $data){
-     	 $this->_update_data_container["data"] = array_merge($this->_update_data_container["data"], $data);
+     	 $this->update_data_container["data"] = array_merge($this->update_data_container["data"], $data);
      	 return $this;
      }
 
@@ -836,25 +794,25 @@ class ModelManager extends IModelManager{
      	 return $this;
      }
 
-     public function update(bool $tomodel = false, bool $multiple = false, bool $force = false){
+     public function update(bool $multiple = false, bool $force = false){
      	 $table = $this->get_context_tracker()->find_table_name(0); //name of current table being manipulated
      	 $model = $this->get_model($table); //the model schema instance for the table.
      	 $ass_model_class = $model->get_associated_model_class();
          #Make sure the update container has some data
-     	 Assert::isNonEmptyMap($this->_update_data_container['data'], "$ass_model_class: Update attempt on an empty data container!");
+     	 Assert::isNonEmptyMap($this->update_data_container['data'], "$ass_model_class: Update attempt on an empty data container!");
      	 #Clean up the update data, prepare files
-     	 [$clean_data, $file_data, $is_duplicate, $action_on_duplicate] = $model->prepare_update_data($this->_update_data_container['data'], $this->_data_state);
+     	 [$clean_data, $file_data, $is_duplicate, $action_on_duplicate] = $model->prepare_update_data($this->update_data_container['data'], $this->data_state);
      	 #For updates, if there is a duplicate, just abort the update operation.
      	 if($is_duplicate !== false && !$force){
      	 	 throw new \Exception("Aborting update operation! The update operation will lead to duplicate entries in table: {$table}");
      	 }
-     	 $this->_file_data[] = $file_data;
+     	 $this->file_data[] = $file_data;
 
      	 #setup an update command
      	 $where_clause = 
 	 	 $this->crud_command = new UpdateCommand(
 	 	 	 new UpdateOperation($this->get_connection()),
-	 	 	 where_clause:  $this->fmanager->get_where_clause($this->get_context_tracker()),
+	 	 	 where_clause:  $this->get_filter_manager()->get_where_clause($this->get_context_tracker(), $this->get_configurations()),
 	 	 	 table_name:    $this->get_context_tracker()->find_table_name(0),
 	 	 	 database_name: $this->get_context_tracker()->find_database_name(0),
 	 	 	 fields:        array_keys($clean_data),
@@ -867,7 +825,7 @@ class ModelManager extends IModelManager{
 	 	 if($response->row_count > 0){
 	 	 	 $this->auto_save_files();
 	 	 	 #fetch the data just updated
-	 	     $ud = $this->eager_load(tomodel: $tomodel);
+	 	     $ud = $this->tomodel($this->get_tomodel())->eager_load();
 	 	     return $multiple ? $ud : $ud[0];
 	 	 }
 
@@ -891,5 +849,39 @@ class ModelManager extends IModelManager{
 	 	 return $this->crud_command->execute();
      }
 
+     /**
+      * Create a table in the database
+      * */
+     public function create_table(){
+     	 $table = $this->get_context_tracker()->find_table_name(0); //name of current table being manipulated
+     	 $model = $this->get_model($table); //the model schema instance for the table.
+     	 $defs  = $model->get_field_definitions();
+
+     	 /*setup a create command*/
+	 	 $this->crud_command = new TableCreateCommand(
+	 	 	 new TableCreateOperation($this->get_connection()),
+	 	 	 table:  $table,
+	 	 	 fields: implode(", ", $defs),
+	 	 	 temporary: $model->is_temporary()
+	 	 );
+
+	 	 /*execute command and return response*/
+	 	 return $this->crud_command->execute();
+     }
+
+     public function drop_table(){
+     	 $table = $this->get_context_tracker()->find_table_name(0); //name of current table being manipulated
+     	 $model = $this->get_model($table); //the model schema instance for the table.
+
+		 /*setup a create command*/
+	 	 $this->crud_command = new TableDropCommand(
+	 	 	 new TableDropOperation($this->get_connection()),
+	 	 	 table:  $table,
+	 	 	 temporary: $model->is_temporary()
+	 	 );
+
+	 	 /*execute command and return response*/
+	 	 return $this->crud_command->execute();
+     }
 }
 ?>

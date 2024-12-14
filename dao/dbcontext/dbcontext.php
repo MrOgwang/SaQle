@@ -14,13 +14,11 @@ abstract class DbContext{
 	public function __construct(private ?IModelManager $_model_manager = null){}
 	private function init($name){
 		 $this->_model_manager = Cf::create(ContainerService::class)->createContextModelManager($this::class);
-		 $this->_model_manager->set_model_references($this->get_models());
 		 $this->_model_manager->set_dbcontext_class($this::class);
 		 $this->_model_manager->register_joining_model($name);
 		 return $this->_model_manager;
 	}
 	static public abstract function get_models();
-	public final function get_defined_models(){}
 	public function __get($name){
 		 return $this->get($name);
     }

@@ -10,20 +10,22 @@ use SaQle\Dao\Operations\Crud\{TableCreateOperation};
 class MySQLDbManager extends DbManager{
 	 public function __construct(...$params){
 	 	 $this->connection_params = $params;
-	 	 $paramscopy = array_combine(array_keys($params), array_values($params));
-         $paramscopy['name'] = "";
-	 	 $this->vconnection = (Cf::create(ContainerService::class))->createConnection(...
-             ['context' => (Cf::create(ContainerService::class))->createDbContextOptions(...$paramscopy)
+	 	 $this->connection = (Cf::create(ContainerService::class))->createConnection(...[
+	 	 	 'ctx'        => $this->connection_params['ctx'],
+	 	 	 'without_db' => true
          ]);
-         $this->connection = (Cf::create(ContainerService::class))->createConnection(...
-             ['context' => (Cf::create(ContainerService::class))->createDbContextOptions(...$params)
+	 }
+
+	 public function connect(){
+	 	 $this->connection = (Cf::create(ContainerService::class))->createConnection(...[
+         	 'ctx' => $this->connection_params['ctx']
          ]);
 	 }
 
 	 public function check_database_exists($ctx){
          $sql = "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?";
          $data = [$this->connection_params['name']];
-         $statement = $this->vconnection->execute($sql, $data)['statement'];
+         $statement = $this->connection->execute($sql, $data)['statement'];
          $object = $statement->fetchObject(); 
          return $object ? true : false;
      }
@@ -34,7 +36,7 @@ class MySQLDbManager extends DbManager{
 		 $db_name = $this->connection_params['name'];
 		 $sql = "CREATE DATABASE IF NOT EXISTS $db_name CHARACTER SET $char_set COLLATE $collation";
 		 $data = []; //[$db_name, $char_set, $collation];
-		 return $this->vconnection->execute($sql, $data)['response'];
+		 return $this->connection->execute($sql, $data)['response'];
 	 }
 
 	 /**

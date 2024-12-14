@@ -83,13 +83,13 @@ class WebController{
 	 	}
 	 }
 
-	 public function init(Request $request, array $context){
+	 public function init(Request $request, array $context, string $og_meta_data = "", string $title = ""){
 	 	 $this->request = $request;
 	 	 $this->context = $context;
 	 	 /**
 	 	  * Check that expected params are present.
 	 	  * */
-	 	 $params = $this->request->final_route->get_params();
+	 	 $params = $this->request->route->get_params();
 	 	 $all_params_provided = true;
 	 	 if($this->params){
 	 	 	foreach($this->params as $p){
@@ -104,7 +104,12 @@ class WebController{
 	 	 }
 
 	 	 $this->extract_context_from_request();
-	 	 $this->view = new TemplateView($this->request, new TemplateOptions($this->template_name, $this->template_path, $this->context));
+	 	 $this->view = new TemplateView(
+	 	 	 $this->request, 
+	 	 	 new TemplateOptions($this->template_name, $this->template_path, $this->context), 
+	 	 	 $og_meta_data, 
+	 	   $title
+	 	 );
 	 }
 
 	 public function get_context(){
@@ -131,7 +136,9 @@ class WebController{
 		 $this->view->set_context(array_merge($this->view->get_context(), $this->context));
 		 #render or return view to caller.
 	 	 if($tobrowser){
-			 $this->view->render($tobrowser, $callparent);
+         //header("Cross-Origin-Opener-Policy: same-origin");
+         //header("Cross-Origin-Embedder-Policy: require-corp");
+			   echo $this->view->render($tobrowser, $callparent);
 		 }else{
 			 return $this->view->render($tobrowser, $callparent);
 		 }

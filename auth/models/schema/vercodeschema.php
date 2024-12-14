@@ -1,35 +1,25 @@
 <?php
 namespace SaQle\Auth\Models\Schema;
 
-use SaQle\Dao\Field\Attributes\{PrimaryKey, TextFieldValidation, NumberFieldValidation, FileFieldValidation, ForeignKey, FileConfig};
+use SaQle\Dao\Field\Types\{Pk, TinyTextField, BigIntegerField};
+use SaQle\Dao\Field\Interfaces\IField;
 use SaQle\Dao\Model\Schema\TableSchema;
-use SaQle\Dao\Model\Attributes\{CreatorModifierFields, CreateModifyDateTimeFields, SoftDeleteFields};
-use SaQle\DirManager\DirManager;
-use SaQle\Controllers\Forms\FieldDataSource;
 
-#[CreatorModifierFields()]
-#[CreateModifyDateTimeFields()]
-#[SoftDeleteFields()]
 class VercodeSchema extends TableSchema{
+	 public IField $id;
+	 public IField $code;
+	 public IField $code_type;
+	 public IField $email;
+	 public IField $date_expires;
 
-	 #[PrimaryKey(type: 'GUID')]
-	 #[TextFieldValidation(is_required: true, is_strict: false, allow_null: false, allow_empty: false, length: 100)]
-	 public string $id;
-	 
-	 #[FieldDataSource()]
-	 #[TextFieldValidation(is_required: true, is_strict: false, allow_null: false, allow_empty: false, length: 100)]
-	 public string $code;
-	 
-	 #[FieldDataSource()]
-	 #[TextFieldValidation(is_required: true, is_strict: true, allow_null: false, allow_empty: false, length: 50)]
-	 public string $code_type;
-
-     #[FieldDataSource()]
-     #[TextFieldValidation(is_required: true, is_strict: false, allow_null: false, allow_empty: false, length: 100)]
-	 public string $email;
-
-	 #[FieldDataSource()]
-	 #[NumberFieldValidation(is_required: true, is_absolute: true, allow_null: false, allow_zero: true, length: 20)]
-	 public int $date_expires;
+	 public function __construct(...$kwargs){
+		$this->id           = new Pk(type: PRIMARY_KEY_TYPE);
+		$this->code         = new TinyTextField(required: true, length: 100);
+		$this->code_type    = new TinyTextField(required: true, length: 50);
+		$this->email        = new TinyTextField(required: true, length: 200);
+		$this->date_expires = new BigIntegerField(required: true, absolute: true, zero: false);
+		
+		parent::__construct(...$kwargs);
+	 }
 }
 ?>

@@ -16,7 +16,7 @@
  * */
 namespace SaQle\Dao\Filter\Manager;
 
-use SaQle\Dao\Filter\Manager\Interfaces\IFilterManager;
+use SaQle\Dao\Filter\Interfaces\IFilterManager;
 use SaQle\Dao\Filter\Aggregator\Interfaces\IAggregator;
 use SaQle\Dao\Filter\Translator\Interfaces\ITranslator;
 use SaQle\Dao\Filter\Parser\Interfaces\IParser;
@@ -28,6 +28,10 @@ class FilterManager implements IFilterManager{
 		private ITranslator $translator,
 		private IParser     $parser
 	){}
+
+	public function set_raw_filter(array $filter){
+		 $this->aggregator->set_raw_filter($filter);
+	}
 
 	public function get_raw_filter(){
 		return $this->aggregator->get_raw_filter();
@@ -42,7 +46,7 @@ class FilterManager implements IFilterManager{
 	}
 
 	public function simple_aggregate(array $simple_filter){
-		 $this->aggregator->register_filter($simple_filter[0], $simple_filter[1], $simple_filter[2]);
+		 $this->aggregator->register_filter($simple_filter[0], $simple_filter[1], $simple_filter[2], $simple_filter[3]);
 	}
 
 	public function group_aggregate($model_manager, $callback, $operand){
@@ -55,7 +59,7 @@ class FilterManager implements IFilterManager{
 	 	 $callback($model_manager);
 	 
 	 	 #get the new group raw filter
-	 	 $new_filters = $model_manager->get_raw_filter();
+	 	 $new_filters = $this->aggregator->get_raw_filter();
 	 	 
          $and_available = array_search('&', $current_raw_filter);
          $or_available  = array_search('|', $current_raw_filter);
@@ -73,11 +77,11 @@ class FilterManager implements IFilterManager{
 	 	 $this->aggregator->set_register_count(count($current_raw_filter) > 0 ? 2 : 1);
 	}
 
-	public function get_where_clause(IDbContextTracker $context_tracker){
+	public function get_where_clause(IDbContextTracker $context_tracker, array $config){
 		 #get formatted filter object
 	 	 $filter_object = $this->translator->translate($this->aggregator->get_raw_filter(), $context_tracker)->get_filter();
 	 	 #parse the filter object.
-	 	 $parsed_filter = $this->parser->parse_filters($filter_object);
+	 	 $parsed_filter = $this->parser->parse_filters($filter_object, $config);
 	 	 /*get and return the where clause*/
 	 	 return $this->construct_where_clause($parsed_filter);
 	}
@@ -85,7 +89,7 @@ class FilterManager implements IFilterManager{
 	private function construct_where_clause($parsed_filters){
 	 	 $clause = "";
 		 $data   = null;
-	 	 if($parsed_filters["clause"] && $parsed_filters["values"]){
+	 	 if($parsed_filters["clause"]){
 	 	 	 $clause = " WHERE ".$parsed_filters["clause"];
 			 $data = [];
 			 foreach($parsed_filters["values"] as $d){

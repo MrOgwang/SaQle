@@ -20,7 +20,6 @@
 namespace SaQle\Auth\Models;
 
 use SaQle\Auth\Models\Schema\VercodeSchema;
-use Booibo\Apps\Account\Models\User;
 use SaQle\Dao\Model\Model;
 
 #[\AllowDynamicProperties]

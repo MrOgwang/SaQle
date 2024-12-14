@@ -14,158 +14,176 @@ class Migrate{
 
      }
 
-     public function execute(string $project_root){
-         $migrations_folder = $project_root."/migrations";
-         $migration_tracker_file = $project_root."/migrations/migrationstracker.bin";
-         $tracker = $this->unserialize_from_file($migration_tracker_file);
-         $migration_files = [];
-         if($tracker){
-             $migration_files = $tracker->get_migration_files();
+     private static function process_migration_file($file, $migrations_folder, $project_root){
+         $file_name = pathinfo($file, PATHINFO_FILENAME);
+         $file_name_parts = explode("_", $file_name);
+
+         echo "Scanning file {$file_name} for changes!\n";
+         require_once $migrations_folder."/".$file;
+         $class_instance = new $file_name();
+         echo "Getting affected database contexts!\n";
+         $touched_contexts = $class_instance->touched_contexts();
+         if(!$touched_contexts){
+             echo "No database context was affected by this migration! Exiting scan.\n";
+             return;
          }
 
-         if(!$migration_files){
-             $migration_files = $this->scandir_chrono(path: $migrations_folder, reverse: false, exts: ['php']);
+         echo "Affected contexts found!\n";
+         print_r($touched_contexts);
+         
+         $up_operations = $class_instance->up();
+         $ctx_results = array_map(fn($ctx) => self::process_context($ctx, $file_name, $file_name_parts[2], $up_operations, $project_root), $touched_contexts);
+
+         return;
+     }
+
+     private static function create_table($op, $project_root, $dbmanager){
+         $table_name = $op['params']['name'];
+         echo "Attempting to create table: {$table_name}!\n";
+         $model_class = $op['params']['model'];
+         $mnparts = explode("\\", $model_class);
+         $root = array_shift($mnparts);
+         $root = strtolower($root);
+
+         $model_file_path = strtolower(implode(DIRECTORY_SEPARATOR, $mnparts)).".php";
+         if($root == "saqle"){
+             $project_root_parts = explode(DIRECTORY_SEPARATOR, $project_root);
+             array_pop($project_root_parts);
+             $saqle_root = strtolower(implode(DIRECTORY_SEPARATOR, $project_root_parts))."/saqle";
+             $model_file_path = $saqle_root."/".$model_file_path;
+         }else{
+             $model_file_path = $project_root."/".$model_file_path;
          }
 
-         $mfc               = count($migration_files);
-         echo "Starting migrations!\n";
-         for($m = 0; $m < $mfc; $m++){
-             $file = array_values($migration_files)[$m];
-             $name = pathinfo($file, PATHINFO_FILENAME);
-             $nameparts = explode("_", $name);
+         if(!file_exists($model_file_path)){
+             echo "The schema: {$model_class} for table: {$table_name} has not been defined. Jumping over!\n";
+             return;
+         }
 
-             echo "Scanning file {$name} for changes!\n";
-             require_once $migrations_folder."/".$file;
-             $class_instance = new $name();
-             echo "Getting affected database contexts!\n";
+         echo "The schema: {$model_class} for table: {$table_name} exists!\n";
+         $tblcreated = $dbmanager->create_table($table_name, $model_class);
 
-             $touched_contexts = $class_instance->touched_contexts();
-             if($touched_contexts){
-                 echo "Affected contexts found!\n";
-                 print_r($touched_contexts);
-                 $tcc = count($touched_contexts);
-                 for($c = 0; $c < $tcc; $c++){
-                     $ctx = $touched_contexts[$c];
-                     echo "Confirming context: {$ctx} is defined!\n";
-                     $defined_context = DB_CONTEXT_CLASSES[$ctx] ?? null;
-                     if(!$defined_context){
-                        echo "Context: {$ctx} not defined! Exiting scan.\n";
-                        continue;
-                     }
+         if(!$tblcreated){
+             echo "Table {$table_name} creation failed!\n";
+             return;
+         }
 
-                     $databasename = DB_CONTEXT_CLASSES[$ctx]['name'];
-                     echo "Context: {$ctx} found! Pinging database: {$databasename} for existance!\n";
+         echo "Table {$table_name} created!\n";
+         return;
+     }
 
-                     $dbmanager = (new DbManagerFactory(...$defined_context))->manager();
-                     $iscreated = false;
-                     if($dbmanager->check_database_exists($ctx)){
-                         $iscreated = true;
-                         echo "Database {$databasename} found!\n";
+     private static function drop_table($op, $dbmanager){
+         $table_name = $op['params']['name'];
+         echo "Attempting to drop table: {$table_name}!\n";
+         $tbldropped = $dbmanager->drop_table($table_name);
 
-                         /**
-                          * Check that current migrations were migrated.
-                          * */
-                         $exists = Migration::db()
-                         ->order(fields: ['migration_timestamp'], direction: 'DESC')
-                         ->limit(page: 1, records: 1)
-                         ->where('migration_name__eq', $nameparts[2])
-                         ->first_or_default();
-                         if($exists){
-                            echo "Migration {$name} has been committed!\n";
-                            continue 2;
-                         }
-                     }else{
-                         echo "Database {$databasename} not found. Attempting to create database {$databasename}\n";
-                         $iscreated = $dbmanager->create_database();
-                     }
+         if(!$tbldropped){
+             echo "Table {$table_name} deletion failed!\n";
+             return;
+         }
 
-                     if(!$iscreated){
-                        echo "Database {$databasename} was not found and could not be created! Exiting!\n";
-                        continue;
-                     }
-                     $dbmanager->create_table('migrations', MigrationSchema::class);
+         echo "Table {$table_name} deleted!\n";
+         return;
+     }
 
-                     /**
-                      * Get and execute the up operations.
-                      * */
-                     $up_operations = $class_instance->up()[$ctx];
-                     foreach($up_operations as $op){
-                        switch($op['action']){
-                            case "create_table":
-                                 $table_name = $op['params']['name'];
-                                 echo "Attempting to create table: {$table_name}!\n";
-                                 $model_class = $op['params']['model'];
-                                 $mnparts = explode("\\", $model_class);
-                                 $root = array_shift($mnparts);
-                                 $root = strtolower($root);
+     private static function add_columns($op, $dbmanager){
+         $table_name = $op['params']['name'];
+         echo "Attempting to add new columns table: {$table_name}!\n";
+         $colsadded = $dbmanager->add_columns($table_name, $op['params']['columns']);
 
-                                 $model_file_path = strtolower(implode(DIRECTORY_SEPARATOR, $mnparts)).".php";
-                                 if($root == "saqle"){
-                                     $project_root_parts = explode(DIRECTORY_SEPARATOR, $project_root);
-                                     array_pop($project_root_parts);
-                                     $saqle_root = strtolower(implode(DIRECTORY_SEPARATOR, $project_root_parts))."/saqle";
-                                     $model_file_path = $saqle_root."/".$model_file_path;
-                                 }else{
-                                     $model_file_path = $project_root."/".$model_file_path;
-                                 }
+         if(!$colsadded){
+             echo "Columns addition to table {$table_name} failed!\n";
+             return;
+         }
 
-                                 if(!file_exists($model_file_path)){
-                                     echo "The model: {$model_class} for table: {$table_name} has not been defined. Jumping over!\n";
-                                 }else{
-                                     echo "The model: {$model_class} for table: {$table_name} exists!\n";
-                                     $tblcreated = $dbmanager->create_table($table_name, $model_class);
-                                     if($tblcreated){
-                                        echo "Table {$table_name} created!\n";
-                                     }else{
-                                        echo "Table {$table_name} creation failed!\n";
-                                     }
-                                 }  
-                            break;
-                            case "drop_table":
-                                 $table_name = $op['params']['name'];
-                                 echo "Attempting to drop table: {$table_name}!\n";
-                                 $tbldropped = $dbmanager->drop_table($table_name);
-                                 if($tbldropped){
-                                    echo "Table {$table_name} deleted!\n";
-                                 }else{
-                                    echo "Table {$table_name} deletion failed!\n";
-                                 }
-                            break;
-                            case "add_columns":
-                                 $table_name = $op['params']['name'];
-                                 echo "Attempting to add new columns table: {$table_name}!\n";
-                                 $colsadded = $dbmanager->add_columns($table_name, $op['params']['columns']);
-                                 if($colsadded){
-                                    echo "New columns added to table {$table_name}!\n";
-                                 }else{
-                                    echo "Columns addition to table {$table_name} failed!\n";
-                                 }
-                            break;
-                            case "drop_columns":
-                                 $table_name = $op['params']['name'];
-                                 echo "Attempting to delete columns from table: {$table_name}!\n";
-                                 $colsdropped = $dbmanager->drop_columns($table_name, $op['params']['columns']);
-                                 if($colsdropped){
-                                    echo "Columns dropped from table {$table_name}!\n";
-                                 }else{
-                                    echo "Column deletion from table {$table_name} failed!\n";
-                                 }
-                            break;
-                        }
-                     }
-                 }
+         echo "New columns added to table {$table_name}!\n";
+         return;
+     }
 
-                 //record this migration in the migrations table.
-                 $record = Migration::db()->add([
-                    'migration_name' => $nameparts[2],
-                    'migration_timestamp' => $nameparts[1],
-                    'is_migrated' => 1
-                 ])->save();
+     private static function drop_columns($op, $dbmanager){
+         $table_name = $op['params']['name'];
+         echo "Attempting to delete columns from table: {$table_name}!\n";
+         $colsdropped = $dbmanager->drop_columns($table_name, $op['params']['columns']);
 
-             }else{
-                echo "No database context was affected by this migration! Exiting scan.\n";
-                continue;
+         if(!$colsdropped){
+             echo "Column deletion from table {$table_name} failed!\n";
+             return;
+         }
+
+         echo "Columns dropped from table {$table_name}!\n";
+         return;
+     }
+
+     private static function process_up_operation($op, $project_root, $dbmanager){
+         return match($op['action']){
+             'create_table' => self::create_table($op, $project_root, $dbmanager),
+             'drop_table'   => self::drop_table($op, $dbmanager),
+             'add_columns'  => self::add_columns($op, $dbmanager),
+             'drop_columns' => self::drop_columns($op, $dbmanager)
+         };
+     }
+
+     private static function process_context($ctx, $file_name, $migration_name, $up_operations, $project_root){
+         echo "Confirming context: {$ctx} is defined!\n";
+
+         $defined_context = DB_CONTEXT_CLASSES[$ctx] ?? null;
+         if(!$defined_context){
+             echo "Context: {$ctx} not defined! Exiting!.\n";
+             return;
+         }
+        
+         $defined_context['ctx'] = $ctx;
+         $databasename = DB_CONTEXT_CLASSES[$ctx]['name'];
+         echo "Context: {$ctx} found! Pinging database: {$databasename} for existance!\n";
+
+         $dbmanager = (new DbManagerFactory(...$defined_context))->manager();
+         $isdbnew = false;
+         if(!$dbmanager->check_database_exists($ctx)){
+             echo "Database {$databasename} not found. Attempting to create database {$databasename}\n";
+             if(!$dbmanager->create_database()){
+                 echo "Database {$databasename} could not be created! Exiting!\n";
+                 return; 
              }
+             $isdbnew = true;
          }
+
+         $dbmanager->connect();
+         echo "We have connected!\n";
+
+         if($isdbnew){
+             echo "Creating migrations table!\n";
+             $dbmanager->create_table('migrations', MigrationSchema::class);
+         }
+
+         #Check that current migrations were migrated.
+         $exists = Migration::db()
+         ->order(fields: ['migration_timestamp'], direction: 'DESC')
+         ->limit(page: 1, records: 1)
+         ->where('migration_name__eq', $migration_name)
+         ->first_or_default();
+         if($exists){
+             echo "Migration file {$file_name} has been committed!\n";
+             return;
+         }
+
+         #Get and execute the up operations.
+         $ctx_up_operations = $up_operations[$ctx];
+
+         $op_results = array_map(fn($op) => self::process_up_operation($op, $project_root, $dbmanager), $ctx_up_operations);
+
+         return;
+     }
+     
+     public function execute(string $project_root){
+         $migrations_folder      = $project_root."/migrations";
+         $migration_tracker_file = $project_root."/migrations/migrationstracker.bin";
+         $tracker                = $this->unserialize_from_file($migration_tracker_file);
+         $migration_files        = $tracker ? $tracker->get_migration_files() : [];
+         $migration_files        = !$migration_files ? $this->scandir_chrono(path: $migrations_folder, reverse: false, exts: ['php']) : $migration_files;
+         
+         echo "Starting migrations!\n";
+         $real_migration_files = array_values($migration_files);
+
+         return array_map(fn($file) => self::process_migration_file($file, $migrations_folder, $project_root), $real_migration_files);
      }
 }

@@ -21,10 +21,13 @@ class PathsToUrls extends BaseHandler{
      	 $model  = $this->params['model'];
      	 foreach($config as $file_key => $file_config){
  	 		 //get the file path
-     	      $folder_path = $config[$file_key]['path'] ?? "";
-	           if($folder_path && method_exists($model, $folder_path)){
- 				 $folder_path = $model->$folder_path($row);
- 			 }
+ 	 		 $folder_path = "";
+ 	 		 if(isset($config[$file_key]['path'])){
+ 	 		 	 $path = explode("(", $config[$file_key]['path'])[0];
+ 	 		 	 if(method_exists($model, $path)){
+ 	 		 	 	 $folder_path = $model->$path($row);
+ 	 		 	 }
+ 	 		 }
 
  			 if(isset($row->$file_key) && $row->$file_key){
  			 	$files = explode("~", $row->$file_key);
@@ -48,10 +51,13 @@ class PathsToUrls extends BaseHandler{
  			 	}
  			 	$row->$file_key = count($urls) > 1 ? $urls : $urls[0];
  			 }else{
- 			 	 $default = $config[$file_key]['default'] ?? "";
- 			 	 if($default && method_exists($model, $default)){
- 			 	 	 $row->$file_key = $model->$default($row);
- 			     }
+ 			 	 $default_path = "";
+	 	 		 if(isset($config[$file_key]['default'])){
+	 	 		 	 $path = explode("(", $config[$file_key]['default'])[0];
+	 	 		 	 if(method_exists($model, $path)){
+	 	 		 	 	 $row->$file_key = $model->$path($row);
+	 	 		 	 }
+	 	 		 }
  			 }
      	 }
 

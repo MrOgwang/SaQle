@@ -20,7 +20,7 @@ class SigninObserver extends IAuthObserver{
 
 		 	 $request           = Request::init();
 		 	 if(!$this->redirect_to){
-		 	 	 $this->redirect_to = $request->final_route->get_query_param('next');
+		 	 	 $this->redirect_to = $request->route->get_query_param('next');
 		 	 	 if(!$this->redirect_to){
 		 	 	 	 $this->redirect_to = $request->data->get('redirect_to', '');
 		 	 	 }

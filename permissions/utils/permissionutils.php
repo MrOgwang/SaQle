@@ -1,12 +1,14 @@
 <?php
 namespace SaQle\Permissions\Utils;
 
+use SaQle\Services\Container\Cf;
+
 trait PermissionUtils{
-    private function at_least_one_passed($results){
+    private static function at_least_one_passed($results){
         return in_array(true, $results);
     }
 
-    private function all_passed($results){
+    private static function all_passed($results){
         return array_reduce($results, function($result, $element){return $result && $element;}, true);
     }
 
@@ -17,10 +19,9 @@ trait PermissionUtils{
       *                                   If set to false, method returns true if any permission is passed
       *                                   Method returns false if all the permissions have failed
       * */
-     public function evaluate_permissions(array $permission_classes, bool $absolute, $request){
+     public static function evaluate_permissions(array $permission_classes, bool $absolute){
          $has_permissions = [];
          $redirect_url    = null;
-
          for($p = 0; $p < count($permission_classes); $p++){
              $permission_mask = $permission_classes[$p];
              $permission_mask_arguments = [];
@@ -33,21 +34,28 @@ trait PermissionUtils{
              $passed            = false;
 
              if( count($permissions_array) > 1 ){
-                 [$passed, $redirect_url]  = $this->evaluate_permissions($permissions_array, false, $request);
+                 [$group_passed, $group_redirect_url]  = self::evaluate_permissions($permissions_array, false);
+                 $passed = $group_passed;
+                 if(!$group_passed && $group_redirect_url){
+                     $redirect_url = $group_redirect_url;
+                 }
              }else{
                  $permission_class    = $permissions_array[0];
-                 $permission_instance = new $permission_class($request, ...$permission_mask_arguments);
+                 $permission_instance = new $permission_class(...$permission_mask_arguments);
                  $passed              = $permission_instance->has_permission();
-                 $redirect_url        = $permission_instance->get_redirect_url();
+                 $this_redirect_url   = $permission_instance->get_redirect_url();
+                 if(!$passed && $this_redirect_url){
+                     $redirect_url    = $this_redirect_url;
+                 }
              }
              $has_permissions[]       = $passed;
          }
 
-         if(!$absolute && $this->at_least_one_passed($has_permissions)){
+         if(!$absolute && self::at_least_one_passed($has_permissions)){
             return [true, $redirect_url];
          }
          
-         return [$this->all_passed($has_permissions), $redirect_url];
+         return [self::all_passed($has_permissions), $redirect_url];
      }
 }
 ?>

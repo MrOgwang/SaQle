@@ -102,17 +102,29 @@ abstract class Model implements IModel{
 	 	 return $this->$name;
 	 }
 
-	 public static function db2($table_name, $model_class, $db_class){
+	 public static function db2($table_name, $model_class, $db_class, $table_aliase = null, $table_ref = null){
 	 	 $manager = Cf::create(ContainerService::class)->createContextModelManager($db_class);
-         $manager->initialize($table_name, $db_class, $model_class);
+         $manager->initialize(
+         	table_name:      $table_name, 
+         	dbcontext_class: $db_class, 
+         	model_class:     $model_class,
+         	table_aliase:    $table_aliase,
+         	table_ref:       $table_ref
+         );
          return $manager;
 	 }
 
-	 public static function db(){
+	 public static function db($table_aliase = null, $table_ref = null){
 	 	 $called_class = get_called_class();
 	 	 [$db_class, $table_name] = $called_class::get_schema()->get_table_n_dbcontext();
+	 	 
 	 	 $manager = Cf::create(ContainerService::class)->createContextModelManager($db_class);
-         $manager->initialize($table_name, $db_class);
+         $manager->initialize(
+             table_name:      $table_name, 
+         	 dbcontext_class: $db_class, 
+         	 table_aliase:    $table_aliase,
+         	 table_ref:       $table_ref
+         );
          return $manager;
 	 }
 
@@ -186,7 +198,7 @@ abstract class Model implements IModel{
 	 	 	 
 	 	 	 #acquire the object
 	 	 	 $object = self::db()->with(array_merge(array_keys($savable_nk), array_keys($savable_fk)))
-	 	 	 ->where($pk_name, $savable_simple[$pk_name][0])->first_or_default(tomodel: true);
+	 	 	 ->where($pk_name, $savable_simple[$pk_name][0])->tomodel(true)->first_or_default();
 
 	 	 	 if($object){
 
@@ -196,7 +208,7 @@ abstract class Model implements IModel{
 	 	 	 	 if($simple_changes){
 	 	 	 	 	 #attempt an update
 		 	 	 	 self::db()->set_data_state($current_data_state)->where($pk_name, $savable_simple[$pk_name][0])
-		 	 	 	 ->set($simple_changes)->update(tomodel: true);
+		 	 	 	 ->set($simple_changes)->tomodel(true)->update();
 	 	 	 	 }
                  
 	 	 	 	 #remove any many to many bondings that are no longer existing.
@@ -212,7 +224,7 @@ abstract class Model implements IModel{
          
          #save object in db if its null upto this point
 	 	 if(!$object)
-	 	 	 $object = self::db()->set_data_state($current_data_state)->add(array_merge($object_data, $saved_fk_ids))->save(tomodel: true);
+	 	 	 $object = self::db()->set_data_state($current_data_state)->add(array_merge($object_data, $saved_fk_ids))->tomodel(true)->save();
 
 	 	 #abort save operation if object its still null at this point.
 	 	 if(!$object)
@@ -259,7 +271,7 @@ abstract class Model implements IModel{
 	 	 	$getmana->with($with_fields);
 	 	 }
 
-	 	 return $getmana->first_or_default(tomodel: true);
+	 	 return $getmana->tomodel(true)->first_or_default();
 	 }
 
 	 public function get_savable_values(){

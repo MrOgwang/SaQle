@@ -11,8 +11,10 @@ class DbContextTracker implements IDbContextTracker{
 	 public function __construct(
 	 	 private array $_tables    = [],//a list of all the table names that will be rerenced in this query.
 	     private array $_aliases   = [],//a list of all the table name aliases that will be refenced in this query.
+	     private array $_tablerefs = [],//in saql statatements, this will be prefered over the table name
 	     private array $_databases = [],//a list of all the databases that will be refenced in this query.
-	     private array $_fieldrefs = []//an array of all tables and respective fields as referenced in this query.
+	     private array $_fieldrefs = [],//an array of all tables and respective fields as referenced in this query.
+	     private array $_ffsettings = []//file field settings
 	 ){
 		 
 	 }
@@ -22,11 +24,17 @@ class DbContextTracker implements IDbContextTracker{
 	 public function add_aliase(string $table_aliase){
 	 	$this->_aliases[] = $table_aliase;
 	 }
+	 public function add_tableref(?string $table_ref = null){
+	 	$this->_tablerefs[] = $table_ref;
+	 }
 	 public function add_database(string $database_name){
 	 	$this->_databases[] = $database_name;
 	 }
 	 public function add_fields(array $field_list){
 	 	$this->_fieldrefs[] = $field_list;
+	 }
+	 public function add_ffsettings(array $ffsettings){
+	 	$this->_ffsettings[] = $ffsettings;
 	 }
 
 
@@ -36,11 +44,17 @@ class DbContextTracker implements IDbContextTracker{
 	 public function get_aliases(){
 	 	return $this->_aliases;
 	 }
+	 public function get_tableref(){
+	 	return $this->_tablerefs;
+	 }
 	 public function get_databases(){
 	 	return $this->_databases;
 	 }
 	 public function get_fieldrefs(){
 	 	return $this->_fieldrefs;
+	 }
+	 public function get_ffsettings(){
+	 	return $this->_ffsettings;
 	 }
 	 /*
 	     - given a table name and a field name, find the index of that table in the tracker
@@ -89,6 +103,22 @@ class DbContextTracker implements IDbContextTracker{
 	 	     ]);
 	 	 }
 	 	 return $this->_aliases[$table_index];
+	 }
+	 /*
+	    Find the table refrence given its index
+	    @param int $table_index
+	    @return string $table_refernce:
+	    @throw TableNotFoundException
+	 */
+	 public function find_table_refernce(int $table_index) : ?string{
+	 	 if($table_index < 0 || $table_index >= count($this->_tablerefs)){
+	 	 	 throw new TableNotFoundException((Object)[
+	 	 	     'table_name'  => "",
+	 	 	     'table_index' => $table_index,
+	 	 	     'tables'      => $this->_tablerefs
+	 	     ]);
+	 	 }
+	 	 return $this->_tablerefs[$table_index];
 	 }
 	 /*
 	    Find the name of a database given its index

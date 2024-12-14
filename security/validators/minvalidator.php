@@ -42,6 +42,7 @@ class MinValidator extends ValidatorDecorator{
 	 }
 
 	 public function text_min_valid($input, $config){
+	 	 $input = is_null($input) ? "" : $input;
 	 	 return [
 		     'is_valid' => array_key_exists('min_inclusive', $config) && (bool)$config['min_inclusive'] === false ? strlen($input) > $config['min'] : strlen($input) >= $config['min'], 
 			 'error' => $this->get_readable_field_name($config['field_name']). ' length cannot be less than the required minimum of '.$config['min'].' characters'

@@ -23,10 +23,12 @@ class Filter extends IFilter{
 	 protected string $_table;
 	 protected string $_database;
 	 protected bool   $_is_group;
-	 public function __construct($filter, $table, $database){
+	 protected bool   $_is_literal;
+	 public function __construct($filter, $table, $database, $literal){
 		 $this->_filter = $filter;
 		 $this->_table = $table;
 		 $this->_database = $database;
+		 $this->_is_literal = $literal;
 		 parent::__construct(false);
 	 }
 
@@ -38,6 +40,9 @@ class Filter extends IFilter{
 	 }
 	 public function database(){
 	 	return $this->_database;
+	 }
+	 public function literal(){
+	 	return $this->_is_literal;
 	 }
 }
 ?>

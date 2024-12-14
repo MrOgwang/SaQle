@@ -122,7 +122,7 @@ abstract class Simple{
 		  * */
 		 $this->kwargs['cname'] = $this->kwargs['cname'] ?? $this->property_name;
 		 /**
-		  * If the required attribute is not set, set required to false.
+		  * If the required attribute is not set, set required to true.
 		  * */
 		 $this->kwargs['required'] = isset($this->kwargs['required']) ? $this->kwargs['required'] : false;
 		 /**

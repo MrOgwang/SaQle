@@ -25,46 +25,6 @@ class ContextManager implements IMigrationManager{
          $name = array_pop($nameparts);
          return $name;
      }
-
-     private function update_db_context_class($ctx_class, $through_models, $project_root){
-         $parts = explode("\\", $ctx_class);
-         $ctx_name = array_pop($parts);
-         $namespace = implode("\\", $parts);
-
-         $file_path = $this->get_path_from_namespace($namespace, $project_root)."/".strtolower($ctx_name).".php";
-
-         // Read the file content
-         $file_content = file_get_contents($file_path);
-
-         $new_models = [
-            'messagetypes'      => 'VidMessageType',
-            'messageoccasions'  => 'VidMessageOccasion'
-         ];
-
-         // Convert the through models to a string format suitable for inserting into the array
-         $new_models_string = '';
-         $count = 0;
-         foreach($through_models as $key => $value){
-             $model_parts = explode("\\", $value);
-             $model_name = end($model_parts);
-             $new_models_string .= $count === 0 ? "\t'$key' => $model_name::class," : "\n\t\t\t'$key' => $model_name::class,";
-             $count++;
-         }
-
-         // Find the position to insert the new models, which is just before the closing bracket of the array
-         $insert_position = strrpos($file_content, '];');
-
-         // Prepare the new content to insert
-         $insert_content = "$new_models_string\n\t\t";
-
-         // Insert the new content at the specified position
-         $new_file_content = substr_replace($file_content, $insert_content, $insert_position, 0);
-
-         // Write the updated content back to the file
-         file_put_contents($file_path, $new_file_content);
-
-         echo "Models: ".implode(',', array_values($through_models))." added to context: {$ctx_class} successfully.\n";
-     }
      
      private function is_model_defined($model_class, $project_root){
          $mnparts = explode("\\", $model_class);
@@ -549,10 +509,11 @@ class ContextManager implements IMigrationManager{
          $toinitialize = [];
          foreach($fields as $fn => $fv){
              $fname = $state instanceof IThroughModel ? str_replace("schema", "", $fn) : $fn;
-             if($fv instanceof TextType || $fv instanceof NumberType || $fv instanceof Pk){
+             $props_template .= "\tpublic $".$fname.";\n";
+
+             /*if($fv instanceof TextType || $fv instanceof NumberType || $fv instanceof Pk){
                  $ptype = $fv->get_kwargs()['ptype'];
-                 //$props_template .= "\tpublic {$ptype} $".$fname.";\n";
-                 $props_template .= "\tpublic $".$fname.";\n";
+                 $props_template .= "\tpublic {$ptype} $".$fname.";\n";
              }elseif($fv instanceof Relation){
                  $fmodel = $fv->get_relation()->get_fdao();
                  $modelstate = $fmodel::state();
@@ -573,13 +534,10 @@ class ContextManager implements IMigrationManager{
                  if(!in_array($daoname, $namaspaces[$daospace])){
                      $namaspaces[$daospace][] = $daoname;
                  }
-                 //$props_template .= "\tpublic {$daoname} $".$fname.";\n";
-                 $props_template .= "\tpublic $".$fname.";\n";
-
+                 $props_template .= "\tpublic {$daoname} $".$fname.";\n";
              }elseif($fv instanceof FileField){
-                 //$props_template .= "\tpublic string $".$fname.";\n";
-                 $props_template .= "\tpublic $".$fname.";\n";
-             }
+                 $props_template .= "\tpublic string $".$fname.";\n";
+             }*/
          }
          $props_template .= "\n\n";
 
@@ -679,9 +637,7 @@ class ContextManager implements IMigrationManager{
              $filename = $a->getFileName();
              $dirname  = pathinfo($filename)['dirname'];
 
-             $connection = (Cf::create(ContainerService::class))->createConnection(...
-                 ['context' => (Cf::create(ContainerService::class))->createDbContextOptions(...DB_CONTEXT_CLASSES[$ctx])
-             ]);
+             $connection = (Cf::create(ContainerService::class))->createConnection(...['ctx' => $ctx]);
 
              $this->write_database_snapshot($migration_name, $timestamp, $models, $through_models, $dirname, $ctxname, $project_root);
 
@@ -867,5 +823,116 @@ class ContextManager implements IMigrationManager{
         if($user){
             echo "Super user created!\n";
         }
+     }
+
+     public function start_apps(string $project_root, $name){
+        echo "Starting apps! {$name}\n";
+     }
+
+     private function create_folder($root, $folders){
+         foreach($folders as $key => $value){
+             $path = $root."/".$key;
+             if(is_array($value)){ //this is a folder
+                 if(@mkdir($path)){
+                     $this->create_folder($path, $value);
+                 }
+             }else{ //this is a file
+                 @file_put_contents($path, $value);
+             }
+         }
+     }
+
+     public function start_project($name, $index, $session, $web, $api, $dbcontext, $signin, $signout, $usermodel, $userschema, 
+        $usercollection, $welcomeemailsetup, $accapiroutes, $accwebroutes, $accountservice, $authservice, $signinhtml, $homehtml,
+        $homecontroller, $config, $dbseed, $dirmanager, $showfile, $isbackoffice, $welcomeemail, $htaccess, $manager){
+         $current_dir = __DIR__;
+         $dirname = dirname(dirname(dirname($current_dir)));
+         $projectfolders[strtolower($name)] = [
+            'apps' => [
+                'account' => [
+                    'controllers'   => [
+                        'signin.php'  => $signin,
+                        'signout.php' => $signout
+                    ],
+                    'data'          => [
+                        'snapshots' => [],
+                        'accountsdbcontext.php' => $dbcontext
+                    ],
+                    'models'        => [
+                        'collections' => [
+                            'usercollection.php' => $usercollection
+                        ],
+                        'schema'      => [
+                            'userschema.php' => $userschema
+                        ],
+                        'user.php'    => $usermodel
+                    ],
+                    'notifications' => [
+                        'welcomeemailsetup.php' => $welcomeemailsetup
+                    ],
+                    'observers'     => [],
+                    'routes'        => [
+                        'api.php' => $accapiroutes,
+                        'web.php' => $accwebroutes
+                    ],
+                    'services'      => [
+                        strtolower($name)."accountservice.php" => $accountservice,
+                        strtolower($name)."authservice.php"    => $authservice
+                    ],
+                    'templates'     => [
+                        'signin.html' => $signinhtml,
+                    ]
+                ]
+            ], 
+            'config' => [
+                'seeds' => [
+                    strtolower($name)."dbseed.php" => $dbseed
+                ],
+                'config.php' => $config
+            ], 
+            'controllers' => [
+                'home.php'  => $homecontroller
+            ], 
+            'dirmanager'  => [
+                strtolower($name)."dirmanager.php" => $dirmanager,
+                'showfile.php'                        => $showfile
+            ], 
+            'migrations'  => [], 
+            'media'       => [], 
+            'models'      => [
+                'collections' => [],
+                'schema'      => []
+            ], 
+            'observers'   => [],
+            'permissions' => [
+                'isbackoffice' => $isbackoffice
+            ],
+            'routes'      => [
+                'web' => $web,
+                'api' => $api
+            ],
+            'services' => [],
+            'session' => [
+                strtolower($name)."sessionhandler.php" => $session
+             ],
+            'static' => [
+                'css'    => [],
+                'js'     => [],
+                'images' => [
+                    'layout' => [],
+                    'icons'  => []
+                ],
+                'font'   => []
+            ],
+            'templates' => [
+                 'home.html'  => $homehtml,
+                 'welcomeemail.html' => $welcomeemail
+            ],
+            '.htaccess' => $htaccess,
+            'manage.php' => $manager,
+            'index.php' => $index
+         ];
+         $this->create_folder($dirname, $projectfolders);
+         echo "Starting project! {$name}\n";
      }
 }

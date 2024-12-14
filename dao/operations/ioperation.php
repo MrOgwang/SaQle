@@ -13,9 +13,10 @@ abstract class IOperation{
 		 $statement = $response['statement'];
 		 $pdo_statement_object = ["error_code" => $statement->errorCode(), "row_count" => $statement->rowCount()];
 
+         $prmkeytype = $this->settings['prmkeytype'] ?? PRIMARY_KEY_TYPE;
 		 if($operation_type === "select"){
 		 	 $pdo_statement_object['rows'] = $statement->fetchAll(\PDO::FETCH_OBJ);
-		 }elseif($operation_type === "insert" && $this->settings['prmkeytype'] === "AUTO"){
+		 }elseif($operation_type === "insert" && $prmkeytype === "AUTO"){
 		 	 $pdo_statement_object['last_insert_id'] = $response['last_insert_id'];
 		 }
 

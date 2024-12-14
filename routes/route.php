@@ -5,29 +5,18 @@ namespace SaQle\Routes;
 use Closure;
 use SaQle\Permissions\IsAuthorized;
 
-class Route extends IRoute{
+class Route{
 	 private array  $methods;
      private string $method;
 	 private string $url;
-	 private array  $target;
-     private array  $permissions;
+	 private string|Closure $target;
 	 private array  $params;
-     private array  $queries = [];
-     private array  $trail   = [];
-	 public function __construct(array $methods, string $url, array $target, array $permissions = []){
+     private array  $queries  = [];
+	 public function __construct(array $methods, string $url, string|Closure $target){
 		 $this->methods        = $methods;
 		 $this->url            = $url;
 		 $this->target         = $target;
-         $this->permissions    = $permissions;
 	 }
-
-     public function set_trail(array $trail){
-         $this->trail = $trail;
-     }
-
-     public function get_trail() : array{
-         return $this->trail;
-     }
 
      public function get_actual_template_path(string $symbolic_path) : string{
         $path_array = explode(".", $symbolic_path);
@@ -58,6 +47,17 @@ class Route extends IRoute{
         return $is_api_request;
      }
 
+     public function is_sse_request() : bool{
+        $is_sse_request = false;
+        for($u = 0; $u < count(SSE_URL_PREFIXES); $u++){
+            if(str_contains($this->url, SSE_URL_PREFIXES[$u])){
+                $is_sse_request = true;
+                break;
+            }
+        }
+        return $is_sse_request;
+     }
+
 	public function matches() : bool{
         $this->method = $_SERVER['REQUEST_METHOD'];
         $url          = $_SERVER['REQUEST_URI'];
@@ -82,9 +82,6 @@ class Route extends IRoute{
     public function get_target(){
        return $this->target;
     }
-    public function get_permissions() : array{
-       return $this->permissions;
-    }
     public function get_method(){
       return $this->method;
     }
@@ -100,9 +97,11 @@ class Route extends IRoute{
     public function get_query_param($param_name, $default = ''){
         return $this->queries && array_key_exists($param_name, $this->queries) ? $this->queries[$param_name] : $default;
     }
-
     public function set_method($method){
         $this->method = $method;
+    }
+    public function set_target($target){
+        $this->target = $target;
     }
 }
 ?>

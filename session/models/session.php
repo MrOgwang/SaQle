@@ -20,7 +20,6 @@
 namespace SaQle\Session\Models;
 
 use SaQle\Session\Models\Schema\SessionSchema;
-use Booibo\Apps\Account\Models\User;
 use SaQle\Dao\Model\Model;
 
 #[\AllowDynamicProperties]

@@ -1,6 +1,8 @@
 <?php
 namespace SaQle\Dao\Order;
 
+use SaQle\Dao\Order\Interfaces\IOrder;
+
 class Order implements IOrder{
 	 private array  $_fields;
 	 private string $_direction;

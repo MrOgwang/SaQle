@@ -6,6 +6,8 @@ class EagerTracker{
 
     private static array $loaded_models = [];
 
+    private static array $relations = [];
+
 	protected function __construct(){}
 
 	protected function __clone(){}
@@ -27,6 +29,10 @@ class EagerTracker{
     	}
     }
 
+    public static function add_relation($rel){
+         self::$relations[] = $rel;
+    }
+
     public static function is_loaded(string $model){
         return in_array($model, self::$loaded_models);
     }
@@ -37,6 +43,10 @@ class EagerTracker{
 
     public static function get_loaded_models(){
         return self::$loaded_models;
+    }
+
+    public static function get_relations(){
+        return self::$relations;
     }
 
 }

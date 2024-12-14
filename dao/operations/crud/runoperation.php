@@ -18,7 +18,7 @@ class RunOperation extends IOperation{
 		 }
 
 		 if($multiple){
-		 	return $response->rows;
+		 	return $response->rows ?? true;
 		 }elseif(!$multiple && $response->rows){
 		 	return $response->rows[0];
 		 }else{

@@ -54,7 +54,7 @@ class HttpMessage{
 	 * 
 	 * @var mixed
 	 * */
-	private        $response;
+	private        $response = [];
 
     /**
      * Create a new http message instance
@@ -63,7 +63,7 @@ class HttpMessage{
      * @param mixed      $response
      * @param string     $message
      * */
-	public function __construct(StatusCode $code, $response = null, string $message = ""){
+	public function __construct(StatusCode $code, $response = [], string $message = ""){
 		$this->code     = $code->value;
 		$this->response = $response;
 		$this->set_status_message();
@@ -117,13 +117,22 @@ class HttpMessage{
 
 	private function set_status_message(){
 		 $http_status_code = [
+		 	102 => 'Processing',
 	        200 => 'Success',
+	        201 => 'Created successfully',
+	        204 => 'No content',
+	        206 => 'Partial content',
+	        301 => 'Moved permanently',
+	        302 => 'Found',
 	        400 => 'Bad Request',
 	        401 => 'Unauthorized',
+	        402 => 'Payment required',
 	        403 => 'Forbidden',
 	        404 => 'Not Found',
 	        405 => 'Method Not Allowed',
 	        406 => 'Not Acceptable – You requested a format that isn’t json',
+	        408 => 'Request timeout',
+	        409 => 'Conflict',
 	        429 => 'Too Many Requests – You’re requesting too many kittens! Slow down!',
 	        500 => 'Internal Server Error – We had a problem with our server. Try again later.',
 	        503 => 'Service Unavailable – We’re temporarily offline for maintenance. Please try again later.'

@@ -66,7 +66,5 @@ class ControllerTracker{
     public static function get_active_views(){
         return self::$activated_views;
     }
-
-
 }
 ?>

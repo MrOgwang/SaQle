@@ -31,7 +31,7 @@ abstract class EditController extends IController implements Observable{
 		 /**
 	 	  * Make sure an id is available.
 	 	  * */
-	 	 $params = $this->request->final_route->get_params();
+	 	 $params = $this->request->route->get_params();
 	 	 if(!isset($params['id'])){
 	 	 	 throw new \Exception("Object to edit id not provided!");
 	 	 }
@@ -53,7 +53,7 @@ abstract class EditController extends IController implements Observable{
 	 	 if(count($model_form_instance->edit_with_existing) > 0){
 	 	 	 $manager->with(array_keys($model_form_instance->edit_with_existing));
 	 	 }
-	 	 $this->object        = $manager->where($pkname, $this->request->final_route->get_params()['id'])->first_or_default(tomodel: true);
+	 	 $this->object        = $manager->where($pkname, $this->request->route->get_params()['id'])->tomodel(true)->first_or_default();
 	 	 if(!$this->object){
 	 	 	 throw new \Exception("Object to edit doesn't exists!");
 	 	 }
@@ -172,9 +172,9 @@ abstract class EditController extends IController implements Observable{
 	 	 $pkname     = $state->get_pk_name();
 
 	 	 if(!$multiple){
-	 	 	 return $fdaomodel::db()->where($pkname, is_array($pkvalue) ? $pkvalue[0] : $pkvalue)->first_or_default(tomodel: true);
+	 	 	 return $fdaomodel::db()->where($pkname, is_array($pkvalue) ? $pkvalue[0] : $pkvalue)->tomodel(true)->first_or_default();
 	 	 }
-	 	 return $fdaomodel::db()->where($pkname."__in", !is_array($pkvalue) ? [$pkvalue] : $pkvalue)->all(tomodel: true);
+	 	 return $fdaomodel::db()->where($pkname."__in", !is_array($pkvalue) ? [$pkvalue] : $pkvalue)->tomodel(true)->all();
      }
 
      private function get_fk_records($f){

@@ -3,14 +3,15 @@ namespace SaQle\Dao\Connection\Services;
 
 use Psr\Container\ContainerInterface;
 use SaQle\Dao\Connection\Connection;
+use SaQle\Services\Container\{Cf, ContainerService};
 
 class ConnectionFactory{
      public function __invoke(ContainerInterface $container, ...$kwargs){
-        // You can access the container to get other dependencies
-        // $dependency = $container->get(Dependency::class);
-
-        // Create the object and pass the extra parameters
-        return new Connection(context: $kwargs['context']);
+        $params = DB_CONTEXT_CLASSES[$kwargs['ctx']];
+        if(isset($kwargs['without_db'])){
+            $params['name'] = "";
+        }
+        return Connection::make(Cf::create(ContainerService::class)->createDbContextOptions(...$params));
      }
 }
 

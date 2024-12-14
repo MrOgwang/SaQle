@@ -21,15 +21,8 @@ class ModelManagerFactory{
 
         // Create the object and pass the extra parameters
         return new ModelManager(
-                $container->get(Request::class),
-                $container->get(FilterManager::class),
-                $container->get(DbContextTracker::class),
-                $container->get(JoinManager::class),
-                $container->get(LimitManager::class),
-                $container->get(OrderManager::class),
-                $container->get(SelectManager::class),
-                $container->get(DataFormatter::class ),
-                $kwargs['connection']
+             $container->get(Request::class),
+             $container->get(DbContextTracker::class)
         );
      }
 }

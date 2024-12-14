@@ -88,12 +88,13 @@ class Aggregator implements IAggregator{
       * @param mixed  value : the value of the field
       * @param nullable string operator : a string logical operator represented by | or & characters
       * */
-	 public function register_filter(string $field_name, mixed $value, ?string $operator = null){
+	 public function register_filter(string $field_name, mixed $value, int $literal = 0, ?string $operator = null){
          $operator = $operator ?? "&";
 	 	 #Ignore the operator if this is the first filter registered.
 	 	 if($this->register_count === 0){
 	 	 	 $this->raw_filter[] = $field_name;
 	 	     $this->raw_filter[] = $value;
+	 	     $this->raw_filter[] = $literal;
 	 	 }else{
 	 	 	 #subsequent simple filters will make the current raw filter a grouped filter.
 	 	 	 if($this->register_count == 1){
@@ -101,7 +102,7 @@ class Aggregator implements IAggregator{
 	 		     $this->raw_filter = [$current_filter];
 	 	 	 }
 	 	 	 $this->raw_filter[] = $operator;
-	 	 	 $incoming_simple  = [$field_name, $value];
+	 	 	 $incoming_simple  = [$field_name, $value, $literal];
 		 	 $this->raw_filter[] = $incoming_simple;
 	 	 }
 	 	 

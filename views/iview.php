@@ -41,6 +41,16 @@ abstract class IView{
 	 * @var array
 	 */
 	 private array $js;
+
+	 /**
+	  * og_meta_data as will have been set from the controller
+	  * */
+	 private string $og_meta_data = "";
+
+	 /**
+	  * the page title as will have been set from the controller
+	  * */
+	 private string $title = "";
 	 
 	 /**
 	 * Create a new view instance.
@@ -48,11 +58,13 @@ abstract class IView{
 	 * @param TemplateOptions $options
 	 * @param Request $request
 	 */
-	 public function __construct(Request $request, TemplateOptions $options){
-		 $this->request = $request;
-		 $this->options = $options;
-		 $this->css     = [];
-		 $this->js      = [];
+	 public function __construct(Request $request, TemplateOptions $options, string $og_meta_data = "", string $title = ""){
+		 $this->request      = $request;
+		 $this->options      = $options;
+		 $this->css          = [];
+		 $this->js           = [];
+		 $this->og_meta_data = $og_meta_data ? $og_meta_data : $this->og_meta_data;
+		 $this->title        = $title ? $title : $this->title;
 		 //inject universal context data;
 		 $this->inject_universal_context_data();
 		 //load the template file
@@ -223,7 +235,7 @@ abstract class IView{
 			 	 if($path && $name && $key){
 			 	 	 $path                 = $this->get_complete_path($path);
 					 $template_options     = new TemplateOptions(template: $name, path: $path, from_controller: false);
-			 	 	 $vinstance            = new TemplateView(request: $this->request, options: $template_options);
+			 	 	 $vinstance            = new TemplateView(request: $this->request, options: $template_options, og_meta_data: $this->og_meta_data, title: $this->title);
 		             $parent_view          = $vinstance->render(tobrowser: false);
 		             $parent_context       = $vinstance->get_template_options()->get_context();
 		             $parent_context[$key] = $view;
@@ -238,10 +250,9 @@ abstract class IView{
 	 	 	 //Inject css and js files into the context
 			 $this->options->add_to_context('css_files', implode("", array_reverse($this->css)));
 			 $this->options->add_to_context('js_files', implode("", array_reverse($this->js)));
-			 $this->options->add_to_context('og_meta_data', '');
-			 $this->options->add_to_context('site_title', '');
-	 	     echo $this->get_view($view);
-	 	 	 return;
+			 $this->options->add_to_context('og_meta_data', $this->og_meta_data);
+			 $this->options->add_to_context('site_title', $this->title); 
+	 	 	 return $this->get_view($view);
 	 	 }
 	 	 return $view;
 	 }

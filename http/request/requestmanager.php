@@ -12,6 +12,7 @@ use SaQle\Controllers\Attributes\{DbCtxClasses};
 use SaQle\Controllers\Middleware\ControllerTrackerMiddleware;
 use SaQle\Services\Container\ContainerService;
 use SaQle\Services\Container\Cf;
+use SaQle\Http\Request\Processors\{ApiRequestProcessor, SseRequestProcessor, WebRequestProcessor};
 
 class RequestManager{
 	 public function __construct(private Request $request){
@@ -43,6 +44,43 @@ class RequestManager{
          return $contexts;
      }
 
+     public function process2(){
+         date_default_timezone_set(DEFAULT_TIMEZONE);
+         $request_middlewares = [
+             SessionMiddleware::class,
+             AuthMiddleware::class,
+             RoutingMiddleware::class,
+             DataConsolidatorMiddleware::class,
+             PermissionsMiddleware::class,
+             ControllerTrackerMiddleware::class
+         ];
+         $middleware          = $request_middlewares[0];
+         $middleware_instance = new $middleware();
+         $this->assign_middlewares($middleware_instance, $request_middlewares, 1);
+         $middleware_instance->handle($this->request);
+
+         $target           = $this->request->route->get_target();
+         $target_parts     = explode("@", $target);
+         $target_classname = $target_parts[0];
+         if(str_contains($target_classname, 'Controllers')){
+            $target_instance = new $target_classname(request: $this->request, context: $this->get_controller_db_contexts($target_classname));
+            if($this->request->route->is_api_request()){
+                 $target_instance->api_instance()->respond();
+            }elseif($this->request->route->is_sse_request()){
+                 $target_instance->sse_instance()->send();
+            }else{
+                 $target_instance->web_instance()->view();
+            }
+         }else{
+             $template_path    = $target[1] ?? null;
+             $template_name    = $this->request->route->get_actual_template_name($template_path);
+             $template_path    = $this->request->route->get_actual_template_path($template_path);
+             $template_context = $target[2] ?? [];
+             $view = new TemplateView($this->request, new TemplateOptions($template_name, $template_path, $template_context, false));
+             $view->render();
+         }
+     }
+
      public function process(){
          date_default_timezone_set(DEFAULT_TIMEZONE);
          $request_middlewares = [
@@ -58,23 +96,14 @@ class RequestManager{
          $this->assign_middlewares($middleware_instance, $request_middlewares, 1);
          $middleware_instance->handle($this->request);
 
-         $target           = $this->request->final_route->get_target();
-         $target_parts     = explode("@", $target[0]);
-         $target_classname = $target_parts[0];
-         if(str_contains($target_classname, 'Controllers')){
-            $target_instance = new $target_classname(request: $this->request, context: $this->get_controller_db_contexts($target_classname));
-            if($this->request->final_route->is_api_request()){
-                 $target_instance->api_instance()->respond();
-            }else{
-                 $target_instance->web_instance()->view();
-            }
+         if($this->request->route->is_api_request()){
+             $processor = new ApiRequestProcessor();
+             $processor->process();
+         }elseif($this->request->route->is_sse_request()){
+             
          }else{
-             $template_path    = $target[1] ?? null;
-             $template_name    = $this->request->final_route->get_actual_template_name($template_path);
-             $template_path    = $this->request->final_route->get_actual_template_path($template_path);
-             $template_context = $target[2] ?? [];
-             $view = new TemplateView($this->request, new TemplateOptions($template_name, $template_path, $template_context, false));
-             $view->render();
+             $processor = new WebRequestProcessor();
+             $processor->process();
          }
      }
 }

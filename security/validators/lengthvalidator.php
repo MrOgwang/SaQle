@@ -35,6 +35,7 @@ class LengthValidator extends ValidatorDecorator{
 	 }
 
 	 public function text_length_valid($input, $config){
+	 	 $input = is_null($input) ? "" : $input;
 	 	 $strict_length = array_key_exists("strict_length", $config) && (bool)$config['strict_length'] === true;
 		 return [
 		     'is_valid' => $strict_length ? strlen($input) === $config['length'] : strlen($input) <= $config['length'], 

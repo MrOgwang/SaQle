@@ -1,7 +1,7 @@
 <?php
 namespace SaQle\Manage;
 
-use SaQle\Migration\Commands\{MakeMigrations, Migrate, MakeCollections, MakeModels, MakeThroughs, SeedDatabase, MakeSuperuser};
+use SaQle\Migration\Commands\{MakeMigrations, Migrate, MakeCollections, MakeModels, MakeThroughs, SeedDatabase, MakeSuperuser, StartProject, StartApps};
 use SaQle\Services\Container\Cf;
 use Psr\Container\ContainerInterface;
 
@@ -20,6 +20,8 @@ class Manage{
 	 	 	'make:throughs'    => $this->extract_makemodels_args($args),
 	 	 	'make:superuser'   => $this->extract_makesuperuser_args($args),
 	 	 	'db:seed'          => [],
+	 	 	'start:project'    => $this->extract_startproject_args($args),
+	 	 	'start:apps'       => $this->extract_startapps_args($args),
 	 	 	default            => throw new \Exception("Unknown command!")
 	 	 };
 	 	 $this->project_root = $args[ count($args) - 1];
@@ -57,6 +59,18 @@ class Manage{
 	 private function extract_makesuperuser_args(array $args){
 	 	 $expected_short = ['-e', '-p'];
 	 	 $expected_long  = ['--email', '--password'];
+	 	 return $this->extract_args($expected_short, $expected_long, $args);
+	 }
+
+	 private function extract_startproject_args(array $args){
+	 	 $expected_short = ['-n'];
+	 	 $expected_long  = ['--name'];
+	 	 return $this->extract_args($expected_short, $expected_long, $args);
+	 }
+
+	 private function extract_startapps_args(array $args){
+	 	 $expected_short = ['-n'];
+	 	 $expected_long  = ['--name'];
 	 	 return $this->extract_args($expected_short, $expected_long, $args);
 	 }
 
@@ -100,6 +114,14 @@ class Manage{
 			 break;
 			 case 'db:seed':
 			     (Cf::create(SeedDatabase::class))->execute($this->project_root);
+			 break;
+			 case 'start:project':
+			     $name = $this->arguments['name'] ?? null;
+			     (Cf::create(StartProject::class))->execute($name);
+			 break;
+			 case 'start:apps':
+			     $name = $this->arguments['name'] ?? null;
+			     (Cf::create(StartApps::class))->execute($this->project_root, $name);
 			 break;
 			 default:
 			     throw new \Exception("Unknown command!");

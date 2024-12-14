@@ -43,7 +43,7 @@ class ContainerService{
     public function createContextModelManager($context_class){
          $container_service = $this->container->get(ContainerService::class);
          $dbcontextoptions  = $container_service->createDbContextOptions(...DB_CONTEXT_CLASSES[$context_class]);
-         $connection        = $container_service->createConnection(...['context' => $dbcontextoptions]);
+         $connection        = $container_service->createConnection(...['ctx' => $context_class]);
          $modelmanager      = $container_service->createModelManager(...['connection' => $connection]);
          return $modelmanager;
     }
@@ -54,7 +54,7 @@ class ContainerService{
     public function createDbContext($context_class){
          $container_service = $this->container->get(ContainerService::class);
          $dbcontextoptions  = $container_service->createDbContextOptions(...DB_CONTEXT_CLASSES[$context_class]);
-         $connection        = $container_service->createConnection(...['context' => $dbcontextoptions]);
+         $connection        = $container_service->createConnection(...['ctx' => $context_class]);
          $modelmanager      = $container_service->createModelManager(...['connection' => $connection]);
          return new $context_class($modelmanager);
     }

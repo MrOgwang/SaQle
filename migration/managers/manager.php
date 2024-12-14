@@ -33,4 +33,12 @@ class Manager implements IMigrationManager{
      public function make_superuser(...$options){
         return $this->context_manager->make_superuser(...$options);
      }
+
+     public function start_project(...$options){
+        return $this->context_manager->start_project(...$options);
+     }
+
+     public function start_apps(...$options){
+        return $this->context_manager->start_apps(...$options);
+     }
 }

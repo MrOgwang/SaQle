@@ -5,31 +5,16 @@ use SaQle\Http\Methods\Get\IGet;
 use SaQle\Http\Methods\Post\IPost;
 use SaQle\Http\Methods\Patch\IPatch;
 use SaQle\Http\Methods\Delete\IDelete;
-use SaQle\Http\Request\Request;
 use SaQle\Http\Response\{HttpMessage, StatusCode};
-use SaQle\Controllers\Attributes\{ApiController, WebController};
-use SaQle\Permissions\Utils\PermissionUtils;
-use SaQle\Permissions\Attributes\Permissions;
+use SaQle\Services\Container\Cf;
 
 abstract class IController implements IGet, IPost, IPatch, IDelete{
-	 use PermissionUtils;
-	 /**
-	  * Request object
-	  * @var Request
-	  * */
-	 protected Request $request;
+	 protected $request;
 
 	 /**
-	  * Context array to pass to template
-	  * @var array
+	  * The name of the template file
 	  * */
-	 protected array   $context;
-
-	 /**
-	  * Keyword arguments passed to constructor
-	  * @var array
-	  * */
-	 protected $kwargs;
+	 protected string $template;
 
 	 /**
 	  * A list of permission classes to enforce on controller
@@ -37,20 +22,8 @@ abstract class IController implements IGet, IPost, IPatch, IDelete{
 	  * */
 	 protected array $permissions = [];
 
-	 /**
-	  * Create a new controller instance
-	  * @param Request $request : the request object
-	  * @param array   $context : key => val array of the data to reolace in template
-	  * @param array   $kwargs  : any other keyword arguments that maybe passed to constuctor
-	  * */
-	 public function __construct(Request $request, array $context = [], ...$kwargs){
-	 	 $this->request     = $request;
-	 	 $this->context     = $context;
-	 	 $this->kwargs      = $kwargs;
-	 }
-
-	 public function get_request(){
-	 	return $this->request;
+	 public function __construct(){
+	 	 $this->request = Cf::create('request');
 	 }
 
      /**
@@ -90,143 +63,23 @@ abstract class IController implements IGet, IPost, IPatch, IDelete{
 	 }
 
 	 /**
-	  * Return the path for a desired template for this controller. If provided, this will override the default template set
-	  * on WebController attribute.
+	  * Return the name of the template for controller
 	  * */
-	 public function get_desired_template(){
+	 public function get_template(){
 	 	return null;
 	 }
 
-	 /**
-	  * Return the path for a desired parent template for this controller. If provided, this will override the default parent template set
-	  * on ParentTemplate attribute.
-	  * */
-	 public function get_desired_parent_template(){
-	 	return null;
-	 }
-
-	 public function web_instance(){
-	 	 $reflector  = new \ReflectionClass($this::class);
-		 $attributes = $reflector->getAttributes(WebController::class);
-		 if(!$attributes){
-		 	throw new \Exception('This is not a web controller. Add a web controller attribute in the definition to make this a web controller.');
-		 }
-
-         //evaluate controller permissions if there are any
-         if($this->permissions){
-         	 [$result, $redirect_url] = $this->evaluate_permissions($this->permissions, true, $this->request);
-	         if(!$result){
-	             header("Location: ".$redirect_url);
-	         }
-         }
-
-         //get controller method to be called
-         $target_classname = $this->request->final_route->get_target()[0];
-         $target_parts     = explode("@", $target_classname);
-         $method           = $target_parts[1] ?? strtolower($this->request->final_route->get_method());
-         if(!method_exists($this::class, $method)){
-         	 throw new \Exception('The target action was not found on the target controller!');
-         }
-
-         //evaluate permissions declared on the method by Permissions attribute if any.
-         $reflection_method = $reflector->getMethod($method);
-         $permissions_attrs = $reflection_method->getAttributes(Permissions::class);
-         if($permissions_attrs){
-         	 $_instance = $permissions_attrs[0]->newInstance();
-         	 [$result, $redirect_url] = $this->evaluate_permissions($_instance->get_permissions(), true, $this->request);
-	         if(!$result){
-	             header("Location: ".$redirect_url);
-	         }
-         }
-
-	 	 $http_message  = $this->$method();
-	 	 $response_data = $http_message->get_response() ?? [];
-	     $web_instance  = $attributes[0]->newInstance();
-
-	     //override default template if the controller has defined a desired template,
-	     $dtemplate     = $this->get_desired_template();
-		 if($dtemplate){
-		 	$web_instance->set_template($dtemplate);
-		 }
-		 $web_instance->init($this->request, $response_data);
-		 return $web_instance;
-	 }
-
-	 public function api_instance(){
-	 	 $http_message = null;
-	 	 $reflector    = new \ReflectionClass($this::class);
-		 $attributes   = $reflector->getAttributes(ApiController::class);
-		 $_instance    = new ApiController();
-		 if(!$attributes){
-		 	 $http_message =  new HttpMessage(
-			 	 code:    StatusCode::INTERNAL_SERVER_ERROR, 
-			 	 message: 'This is not an api controller. Add a api controller attribute in the definition to make this an api controller.'
-			 );
-			 $_instance->init($this->request, $http_message);
-			 return $_instance;
-		 }
-
-		 //evaluate controller permissions if there are any
-         if($this->permissions){
-         	 [$result, $redirect_url] = $this->evaluate_permissions($this->permissions, true, $this->request);
-	         if(!$result){
-	             $http_message =  new HttpMessage(
-			 	 	code:    StatusCode::FORBIDDEN, 
-			 	 	message: 'Access denied for the resource or operation requested!'
-			 	 );
-			 	 $_instance->init($this->request, $http_message);
-			     return $_instance;
-	         }
-         }
-
-         //get controller method to be called
-         $target_classname = $this->request->final_route->get_target()[0];
-         $target_parts     = explode("@", $target_classname);
-         $method           = $target_parts[1] ?? strtolower($this->request->final_route->get_method());
-         if(!method_exists($this::class, $method)){
-         	 $http_message =  new HttpMessage(
-		 	 	code:    StatusCode::INTERNAL_SERVER_ERROR, 
-		 	 	message: 'The target action was not found on the target controller!'
-		 	 );
-		 	 $_instance->init($this->request, $http_message);
-			 return $_instance;
-         }
-
-         //evaluate permissions declared on the method by Permissions attribute if any.
-         $reflection_method = $reflector->getMethod($method);
-         $permissions_attrs = $reflection_method->getAttributes(Permissions::class);
-         if($permissions_attrs){
-         	 [$result, $redirect_url] = $this->evaluate_permissions(($permissions_attrs[0]->newInstance())->get_permissions(), true, $this->request);
-	         if(!$result){
-	             $http_message =  new HttpMessage(
-			 	 	code:    StatusCode::FORBIDDEN, 
-			 	 	message: 'Access denied for the resource or operation requested'
-			 	 );
-			 	 $_instance->init($this->request, $http_message);
-			     return $_instance;
-	         }
-         }
-
-         $api_instance  = $attributes[0]->newInstance();
-         $api_instance->init($this->request, $this->$method());
-		 return $api_instance;
-	 }
-
-	 public function current_url(){
-	 	 $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? 'https://' : 'http://';
-	 	 return $protocol.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
-	 }
-
-	 public function reload(){
-           header('Location: '.$this->current_url());
+	 public function reload($url = null){
+	 	   if($url){
+	 	   	  header('Location: '.$url);
+	 	   }else{
+	 	   	  header('Location: '.$this->current_url());
+	 	   }
            exit;
 	 }
 
-	 public function signout(){
-	 	 session_start();
-         session_destroy();
-         header('Location: '.ROOT_DOMAIN."signin/");
-         die();
+	 public function get_permissions() : array{
+	 	 return $this->permissions;
 	 }
 }
 ?>

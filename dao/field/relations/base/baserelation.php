@@ -19,6 +19,7 @@ declare(strict_types = 1);
 namespace SaQle\Dao\Field\Relations\Base;
 
 use SaQle\Dao\Field\Relations\Interfaces\IRelation;
+use Closure;
 
 class BaseRelation implements IRelation{
 	 /**
@@ -33,14 +34,14 @@ class BaseRelation implements IRelation{
 	  * @param bool     multiple:      Whether to return single object or multiple objects on fetch 
 	  */
 	 public function __construct(
-	 	 private string   $pdao,
-	 	 private string   $fdao,
-	 	 private ?string  $field    = null, 
-	 	 private ?string  $pk       = null,
-	 	 private ?string  $fk       = null,
-	 	 private bool     $isnav    = false,
-	 	 private bool     $multiple = false,
-	 	 private bool     $eager    = false
+	 	 private string                $pdao,
+	 	 private string                $fdao,
+	 	 private ?string               $field = null, 
+	 	 private ?string               $pk = null,
+	 	 private ?string               $fk = null,
+	 	 private bool                  $isnav    = false,
+	 	 private bool                  $multiple = false,
+	 	 private bool                  $eager    = false
 	 ){}
 
 	 /**

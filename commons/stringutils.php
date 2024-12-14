@@ -204,9 +204,9 @@ trait StringUtils{
              return is_numeric($current) ? ($previous[$current] ?? null) : ($previous->$current ?? null); 
          }, $object);
      }
-     public function set_template_context($template, $context_values = []){
+     public function set_template_context($template, $context_values = [], $key_variables = false){
 		 foreach($context_values as $key => $value){
-			 if(!is_null($value))$template = str_replace('{{ '.$key.' }}', $value, $template);
+			 if(!is_null($value) && is_string($value))$template = !$key_variables ? str_replace('{{ '.$key.' }}', $value, $template) : str_replace('{{ $'.$key.' }}', $value, $template);
 		 }
 		 return $template;
 	 }

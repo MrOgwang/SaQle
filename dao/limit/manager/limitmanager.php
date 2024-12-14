@@ -1,7 +1,7 @@
 <?php
 namespace SaQle\Dao\Limit\Manager;
 
-use SaQle\Dao\Limit\ILimit;
+use SaQle\Dao\Limit\Interfaces\{ILimit, ILimitManager};
 use SaQle\Dao\Limit\Limit;
 
 class LimitManager implements ILimitManager{

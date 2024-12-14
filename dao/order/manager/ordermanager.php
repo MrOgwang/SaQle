@@ -1,8 +1,8 @@
 <?php
 namespace SaQle\Dao\Order\Manager;
 
-use SaQle\Dao\Order\IOrder;
 use SaQle\Dao\Order\Order;
+use SaQle\Dao\Order\Interfaces\{IOrder, IOrderManager};
 
 class OrderManager implements IOrderManager{
 	 protected ?IOrder $_order = null;

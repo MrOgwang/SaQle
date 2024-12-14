@@ -1,6 +1,9 @@
 <?php
 namespace SaQle\Dao\Limit;
-class Limit extends ILimit{
+
+use SaQle\Dao\Limit\Interfaces\ILimit;
+
+class Limit implements ILimit{
 	 private int $_page;
 	 private int $_records;
 	 private int $_offset;

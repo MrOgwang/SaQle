@@ -12,7 +12,7 @@ class Data{
 	 	$this->data[$key] = $value;
 	 }
 	 public function get(string $key, $default = null){
-		 
+
 		 $default = array_key_exists($key, $this->data) ? $this->data[$key] : $default;
 		 if(is_null($default)){
 			 throw new KeyNotFoundException($key);

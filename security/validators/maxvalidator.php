@@ -42,6 +42,7 @@ class MaxValidator extends ValidatorDecorator{
 	 }
 
 	 public function text_max_valid($input, $config){
+	 	 $input = is_null($input) ? "" : $input;
 	 	 return [
 		     'is_valid' => array_key_exists('max_inclusive', $config) && (bool)$config['max_inclusive'] === false ? strlen($input) < $config['max'] : strlen($input) <= $config['max'], 
 			 'error' => $this->get_readable_field_name($config['field_name']). ' length must be equal to or less than '.$config['max'].' characters'

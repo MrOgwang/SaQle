@@ -18,12 +18,10 @@
 namespace SaQle\Config;
 
 use SaQle\Auth\Models\Schema\{BaseRoleSchema, BasePermissionSchema, BaseTenantSchema, BaseUserSchema};
+use SaQle\Commons\StringUtils;
 
 class Config{
-
-	 private function validate_config(){
-	 	
-	 }
+	 use StringUtils;
 
 	 public function __construct(...$settings){
 	 	/**
@@ -47,12 +45,12 @@ class Config{
 	 	 /**
 	 	  * Project document root
 	 	  * */
-	 	 define("DOCUMENT_ROOT", $settings['document_root'] ?? $_SERVER['DOCUMENT_ROOT']);
+	 	 define("DOCUMENT_ROOT", $settings['document_root'] ?? ($_SERVER['DOCUMENT_ROOT'] ?? ''));
 
          /**
           * App root domain
           * */
-	 	 define("ROOT_DOMAIN", $settings['root_domain'] ?? $_SERVER['REQUEST_SCHEME'].'://'.$_SERVER['HTTP_HOST'].'/');
+	 	 define("ROOT_DOMAIN", $settings['root_domain'] ?? ($_SERVER['REQUEST_SCHEME'] ?? '').'://'.($_SERVER['HTTP_HOST'] ?? '').'/');
 
 	 	 /**
 	 	  * App base url
@@ -97,7 +95,7 @@ class Config{
 		 /**
 		 * The authentication backend class
 		 * */
-		 define("AUTH_BACKEND_CLASS",  $settings['auth_backend_class']);
+		 define("AUTH_BACKEND_CLASS",  $settings['auth_backend_class'] ?? '');
 
          /**
           * The name of the root media folder. This is where all uploads will be saved to.
@@ -114,7 +112,12 @@ class Config{
 		  * */
 		 define("API_URL_PREFIXES", $settings['api_url_prefixes'] ?? ['/api/v1/', '/api/v2/']);
 
-		 define("PAGE_CONTROLLER_CLASS", $settings['page_controller_class']);
+		 /**
+		  * SSE url prefixes
+		  * */
+		 define("SSE_URL_PREFIXES", $settings['sse_url_prefixes'] ?? ['/sse/v1/', '/sse/v2/']);
+
+		 define("PAGE_CONTROLLER_CLASS", $settings['page_controller_class'] ?? '');
 
 		 /**
 		  * Database settings
@@ -136,7 +139,7 @@ class Config{
 		 /**
 		  * Session settings
 		  * */
-		 define("SESSION_DOMAIN",  $settings['session_domain'] ?? $_SERVER['HTTP_HOST']);
+		 define("SESSION_DOMAIN",  $settings['session_domain'] ?? ($_SERVER['HTTP_HOST'] ?? ''));
 		 define("SESSION_HANDLER", $settings['session_handler'] ?? '');
 
 		 /**
@@ -235,11 +238,26 @@ class Config{
 		 define("MODEL_ACTION_ON_DUPLICATE", $settings['model_action_on_duplicate'] ?? 'RETURN_EXISTING');
 
 		 /**
-		  * During migrations,this class will be used to seed the database.
+		  * During migrations, this class will be used to seed the database.
 		  * */
 		 define("DB_SEEDER", $settings['db_seeder'] ?? '');
 
-		 $this->validate_config();
+		 define("RSC_BASE_URL", "");
+
+		 foreach($settings as $key => $val){
+		 	 $configname = strtoupper($key);
+		 	 if(!defined($configname)){
+
+		         if(!is_array($val) && preg_match('/{{(.*?)}}/', $val, $matches)){
+		             $match = trim($matches[1]);
+		             $constant_value = constant(strtoupper($match));
+		             $context = [];
+		             $context[$match] = $constant_value;
+		             $val = $this->set_template_context($val, $context);
+		         } 
+                 define($configname, $val);
+             }
+		 }
 	 }
 }
 ?>

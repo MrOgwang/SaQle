@@ -83,7 +83,7 @@ class Translator implements ITranslator{
 		 return $this;
 	 }
 
-	 private function find_lookup_arithmetic_operator($lookup_type, $field_value = null, $strict_null = false){
+	 private function find_lookup_arithmetic_operator($lookup_type, $field_value = null, $strict_null = false, $literal = 0){
 		 $lookups = [
 		     "exact"       => $strict_null && is_null($field_value) ? "IS null"     : "=", 
 			 "ne"          => $strict_null && is_null($field_value) ? "IS NOT null" : "!=", 
@@ -103,10 +103,12 @@ class Translator implements ITranslator{
 			 "isnull"      => "IS null",
 			 "eq"          => "="
 		 ];
-		 return ["operator" => $lookups[$lookup_type], "field_value"=>$this->transform_field_value(lookup: $lookup_type, value: $field_value, strict: $strict_null)];
+		 return ["operator" => $lookups[$lookup_type], "field_value"=>$this->transform_field_value(
+		 	 lookup: $lookup_type, value: $field_value, strict: $strict_null, literal: $literal
+		 )];
 	 }
 
-	 private function transform_field_value($lookup, $value = null, $strict = false){
+	 private function transform_field_value($lookup, $value = null, $strict = false, $literal = 0){
 		 if(!is_null($value)){
 			 switch($lookup){
 			 	 case "eq":
@@ -124,13 +126,17 @@ class Translator implements ITranslator{
 				     $value = "%".$value."%";
 				 break;
 				 case "in":
-				     if(is_string($value)) $value = str_split($value);
-					 if(!is_array($value)) $value = [$value];
-					 if(count($value) === 0){
-						 $value[] = 0;
-						 $value[] = 0;
-					 }
-					 $value = "(" .implode(", ", $value).")";
+				     if(!$literal){
+				     	 if(is_string($value)) $value = str_split($value);
+						 if(!is_array($value)) $value = [$value];
+						 if(count($value) === 0){
+							 $value[] = 0;
+							 $value[] = 0;
+						 }
+						 $value = "(".implode(", ", $value).")";
+				     }else{
+				     	 $value = "(".$value.")";
+				     }
 				 break;
 				 case "startswith":
 				 case "istartswith":
@@ -193,7 +199,7 @@ class Translator implements ITranslator{
 			 }
 		 }
 		 $max_count = max([is_array($filter[0]) ? count($filter[0]) : 1, is_array($filter[1]) ? count($filter[1]) : 1]);
-		 $component_indexes = array(0, 1, 2);
+		 $component_indexes = array(0, 1, 2, 3);
 		 foreach($component_indexes as $index){
 			 $filter[$index] = is_array($filter[$index]) ? $filter[$index] : [$filter[$index]];
 			 if(count($filter[$index]) < $max_count){
@@ -208,15 +214,29 @@ class Translator implements ITranslator{
 	 }
 
 	 public function fill_in_blanks(array $filter, $strict_null = false){
-		 $new_filter = [null, null, null, null, null, null];
-		 $filter[0]  = is_array($filter[0]) ? $filter[0] : [$filter[0]];
-		 $filter[2]  = $filter[2] ?? "&";
+	 	 /**
+	 	  * a complete filter array has the following elements
+	 	  * 0 - the name of the column
+	 	  * 1 - the comparison operator =, <=, >=, !=
+	 	  * 2 - the value of column
+	 	  * 3 - the logical operator &, |
+	 	  * 4 - the name of the table
+	 	  * 5 - the name of the database
+	 	  * 6 - whether filter is literal
+	 	  * */
+		 $new_filter = [null/*column*/, null/*c op*/, null/*val*/, null/*l op*/, null/*table*/, null/*database*/, null/*literal*/];
+		 $filter[0]  = is_array($filter[0]) ? $filter[0] : [$filter[0]]; 
+		 if(count($filter) === 2){ //filter has no literal flag
+		 	 $filter[2] = 0; //literal is off by default
+		 }
+		 $filter[3]  = $filter[3] ?? "&"; //add in a default logical operator if there is non
 		 //expand new_filter.
 		 $filter = $this->expand_filter(filter: $filter);
 		 foreach($filter as $index => $el){
 			 if($index === 0) $new_filter[0] = $el;
 			 if($index === 1) $new_filter[2] = $el;
-			 if($index === 2) $new_filter[3] = $el;
+			 if($index === 3) $new_filter[3] = $el;
+			 if($index === 2) $new_filter[6] = $el;
 		 }
 		 $operators = [];
 		 $tables    = [];
@@ -232,7 +252,12 @@ class Translator implements ITranslator{
 			 	$field_properties[0] = explode(":", $field)[1];
 			 }
 			 $new_filter[0][$index] = explode("__", $field_properties[0])[0];
-			 $lap                   = $this->find_lookup_arithmetic_operator(lookup_type: $field_properties[1], field_value: $filter[1][$index], strict_null: $strict_null);
+			 $lap                   = $this->find_lookup_arithmetic_operator(
+			 	 lookup_type: $field_properties[1], 
+			 	 field_value: $filter[1][$index],
+			 	 strict_null: $strict_null,
+			 	 literal:     is_array($filter[2]) ? $filter[2][$index] : $filter[2]
+			 );
 
 			 $new_filter[2][$index] = $lap["field_value"];
 			 $operators[]           = $lap["operator"];
@@ -262,7 +287,8 @@ class Translator implements ITranslator{
 				 $filter_object = new Filter(
 				 	 filter:   $basic_filter,
 				 	 table:    $filter[4][$x],
-				 	 database: $filter[5][$x]
+				 	 database: $filter[5][$x],
+				 	 literal:  is_array($filter[6]) ? $filter[6][$x] : $filter[6]
 				 );
 				 //array_push($new_group->filters(), $filter_object);
 				 //$new_group->add_filter($filter_object);

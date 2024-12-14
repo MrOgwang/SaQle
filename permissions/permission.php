@@ -1,8 +1,8 @@
 <?php
 namespace SaQle\Permissions;
 
-use SaQle\Http\Request\Request;
 use SaQle\Commons\UrlUtils;
+use SaQle\Services\Container\Cf;
 
 abstract class Permission{
 	 use UrlUtils;
@@ -10,7 +10,9 @@ abstract class Permission{
 	 protected $redirect_url = ACCESS_DENIED_REDIRECT_URL ? ACCESS_DENIED_REDIRECT_URL : '';
 	 protected $request_url  = "";
 	 protected $setup_info   = null;
-	 public function __construct(protected Request $request, ...$setup_info){
+	 protected $request      = null;
+	 public function __construct(...$setup_info){
+	 	 $this->request      = Cf::create('request');
 		 $this->request_url  = self::get_full_url();
 		 $this->setup_info   = $setup_info;
 	 }
