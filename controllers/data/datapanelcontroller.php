@@ -20,9 +20,9 @@ abstract class DataPanelController extends IController implements PanelSetup, Ob
 	 use ConcreteObservable{
 		 ConcreteObservable::__construct as private __coConstruct;
 	 }
-	 public function __construct(Request $request, array $context = [], ...$kwargs){
+	 public function __construct(){
 		 $this->__coConstruct();
-		 parent::__construct($request, $context, $kwargs);
+		 parent::__construct();
 	 }
 	 abstract public function panel_setup();
 	 public function inject_extract_context(){

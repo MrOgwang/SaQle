@@ -85,9 +85,9 @@ class WebRequestProcessor extends RequestProcessor{
 	 	 $page->set_context([
 	 	 	 'content' => $all_html, 
 	 	 	 'title' => $all_title, 
-	 	 	 'css' => implode("\n", $all_css), 
-	 	 	 'js' => implode("\n", $all_js), 
-	 	 	 'meta' => implode("\n", $all_meta)
+	 	 	 'css' => implode("\n", array_unique($all_css)), 
+	 	 	 'js' => implode("\n", array_unique($all_js)), 
+	 	 	 'meta' => implode("\n", array_unique($all_meta))
 	 	 ]);
 	 	 echo $page->view();
 	 }

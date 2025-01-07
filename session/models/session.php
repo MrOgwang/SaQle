@@ -28,8 +28,6 @@ class Session extends Model{
 	public $id;
 	public $session_id;
 	public $session_data;
-	public $author;
-	public $modifier;
 	public $date_added;
 	public $last_modified;
 

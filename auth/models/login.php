@@ -28,7 +28,6 @@ class Login extends Model{
 	public $login_id;
 	public $login_count;
 	public $login_datetime;
-	public $logout_datetime;
 	public $login_span;
 	public $login_location;
 	public $login_device;

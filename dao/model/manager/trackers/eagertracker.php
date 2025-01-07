@@ -16,6 +16,10 @@ class EagerTracker{
         throw new \Exception("Cannot unserialize a singleton.");
     }
 
+    public static function get() : EagerTracker{
+        return self::$instance;
+    }
+
     public static function activate(): EagerTracker{
         if (self::$instance === null){
             self::$instance = new self();

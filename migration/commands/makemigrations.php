@@ -4,6 +4,7 @@ namespace SaQle\Migration\Commands;
 use SaQle\Migration\Managers\Interfaces\IMigrationManager;
 use SaQle\Migration\Tracker\MigrationTracker;
 use SaQle\Commons\FileUtils;
+use SaQle\Migration\Models\Migration;
 
 class MakeMigrations{
      use FileUtils;
@@ -54,8 +55,27 @@ class MakeMigrations{
      }
 
      public function execute($migration_name, $project_root, $app_name = null, $db_context = null){
-         echo "Making {$migration_name} migrations now!\n";
          $timestamp  = date('YmdHis');
+         $class_name = 'Migration_' . $timestamp . '_' . $migration_name;
+         $migrations_folder = $project_root."/migrations";
+         $migration_filename = $migrations_folder."/".$class_name.".php";
+         $migration_tracker_filename = $migrations_folder."/migrationstracker.bin";
+
+         $tracker = $this->unserialize_from_file($migration_tracker_filename);
+         if(!$tracker){
+             $tracker = new MigrationTracker();
+         }
+
+         //check that the latest migration file has been migrated
+         $current_migration_files = $tracker->get_migration_files();
+         if($current_migration_files && $current_migration_files[ count($current_migration_files) - 1 ]->is_migrated === false){
+             $fn = $current_migration_files[ count($current_migration_files) - 1 ]->file;
+             echo "You have a pending migration file [$fn] that should be migrated first!\n";
+             echo "Run command: php manage.php migrate\n";
+             return;
+         }
+
+         echo "Making {$migration_name} migrations now!\n";
          $snapshot = $this->manager->get_context_snapshot(...[
             'project_root'   => $project_root, 
             'app_name'       => $app_name, 
@@ -65,32 +85,25 @@ class MakeMigrations{
          ]);
          [$up_models, $down_models, $touched_contexts] = $this->get_model_operations($snapshot);
          
-         $class_name = 'Migration_' . $timestamp . '_' . $migration_name;
-         $migrations_folder = $project_root."/migrations";
-         $file_name  = $migrations_folder."/".$class_name.".php";
-
          $template = "<?php\n";
          $template .= "use SaQle\\Migration\\Base\\BaseMigration;\n\n";
          $template .= "class {$class_name} extends BaseMigration{\n";
-         /**
-          * Construct the touched_contexts method
-          * */
+         
+         //Construct the touched_contexts method
          $template .= "\tpublic function touched_contexts(){\n";
          $template .= "\t\treturn [\n";
          $template .= $touched_contexts;
          $template .= "\t\t];\n";
          $template .= "\t}\n\n";
-         /**
-          * Construct the up method.
-          * */
+         
+         //Construct the up method.
          $template .= "\tpublic function up(){\n";
          $template .= "\t\treturn [\n";
          $template .= $up_models;
          $template .= "\t\t];\n";
          $template .= "\t}\n\n";
-         /**
-          * Construct the down method
-          * */
+         
+         //Construct the down method
          $template .= "\tpublic function down(){\n";
          $template .= "\t\treturn [\n";
          $template .= $down_models;
@@ -103,16 +116,11 @@ class MakeMigrations{
             mkdir($migrations_folder);
          }
 
-         if(file_put_contents($file_name, $template) !== false){
-             echo "Migration created: {$file_name}\n";
-             $file_name2 = $migrations_folder."/migrationstracker.bin";
-             $tracker = $this->unserialize_from_file($file_name2);
-             if(!$tracker){
-                 $tracker = new MigrationTracker();
-             }
+         if(file_put_contents($migration_filename, $template) !== false){
+             echo "Migration created: {$migration_filename}\n";
 
-             $tracker->add_migration($class_name.".php");
-             $this->serialize_to_file($file_name2, $tracker);
+             $tracker->add_migration((Object)['file' => $class_name.".php", 'is_migrated' => false]);
+             $this->serialize_to_file($migration_tracker_filename, $tracker);
          }
      }
 }

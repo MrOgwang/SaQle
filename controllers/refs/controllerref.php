@@ -18,6 +18,10 @@ class ControllerRef{
          self::$controllers = array_merge(self::$controllers, $controllers);
      }
 
+     public static function add(string $name, string $class) : void{
+         self::$controllers[$name] = $class;
+     }
+
      public static function get_controllers() : array{
          return self::$controllers;
      }

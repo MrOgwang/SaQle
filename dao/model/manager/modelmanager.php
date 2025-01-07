@@ -12,7 +12,7 @@
  use SaQle\Services\Container\ContainerService;
  use SaQle\Services\Container\Cf;
  use SaQle\Dao\Field\Relations\{One2One, Many2Many};
- use SaQle\Dao\Model\Manager\Handlers\{PathsToUrls, EagerLoadAssign, TypeCast, FormatCmdt};
+ use SaQle\Dao\Model\Manager\Handlers\{PathsToUrls, EagerLoadAssign, TypeCast, FormatCmdt, FormattedChecker};
  use SaQle\Core\Chain\{Chain, DefaultHandler};
  use SaQle\Dao\Model\Manager\Trackers\EagerTracker;
  use SaQle\Core\Assert\Assert;
@@ -144,30 +144,20 @@ class ModelManager extends IModelManager{
 	 	 $finalmanager = $long_foreign_model_name::db()->sqlndata($finalsql, $testfilters->data ? $testfilters->data : null);
 	 	 if($with){
 	 	 	 $withcallbacks = $this->get_select_manager()->get_withcallbacks();
-	 	 	 $finalmanager->with($with, $withcallbacks);
+	 	 	 $finalmanager->with($with, !empty($withcallbacks) ? $withcallbacks : null);
 	 	 }
 	 	 
 	 	 $related_data = $finalmanager->eager_load();
 
-     	 //drop the table
+     	 //drop the temporary table
      	 TempId::db2($temp_table_name, TempIdSchema::class, $db_class)->drop_table();
 
      	 return $related_data;
      }
 
-     private function process_includes($schema_instance, $data, $is_eager_loading = false){
-	 	 $explicit_includes  = $this->get_select_manager()->get_includes();
-	 	 $auto_includes      = $schema_instance->get_auto_include();
-	 	 $include_instances  = array_merge(array_column($explicit_includes, 'relation'), array_column($auto_includes, 'relation'));
-
-	 	 if(!$include_instances)
-	 	 	return $data;
-
-         $tmp_data           = $data;
-	 	 $nested_includes    = array_merge(array_column($explicit_includes, 'with'), array_column($auto_includes, 'with'));
-	 	 $includes_tuning    = array_merge(array_column($explicit_includes, 'tuning'), array_column($auto_includes, 'tuning'));
-
-         $tracker            = EagerTracker::activate();
+     private function unpack_related_data($data, $is_eager_loading){
+     	 $tmp_data           = $data;
+     	 $tracker            = EagerTracker::activate();
          $existing_relations = $tracker::get_relations();
          $exr_count          = count($existing_relations);
          $exr_last_index     = $exr_count > 0 ? $exr_count - 1 : 0; 
@@ -181,6 +171,31 @@ class ModelManager extends IModelManager{
          	 	 $data = !is_null($json_data) ? array_merge($data, $json_data) : $data;
          	 }
 	 	 }
+
+	 	 return [$former_rel_field, $former_ref_key, $data];
+     }
+
+     private function process_includes($schema_instance, $ass_model_class, $data, $is_eager_loading, $data_formatted){
+	 	 $explicit_includes  = $this->get_select_manager()->get_includes();
+	 	 $auto_includes      = $schema_instance->get_auto_include();
+	 	 $include_instances  = array_merge(array_column($explicit_includes, 'relation'), array_column($auto_includes, 'relation'));
+
+	 	 if(!$include_instances){
+	 	 	 return $data;
+	 	 }
+
+	 	 $nested_includes    = array_merge(array_column($explicit_includes, 'with'), array_column($auto_includes, 'with'));
+	 	 $includes_tuning    = array_merge(array_column($explicit_includes, 'tuning'), array_column($auto_includes, 'tuning'));
+
+         $tracker            = EagerTracker::get();
+         [
+         	 $former_rel_field, 
+             $former_ref_key, 
+             $data
+         ]                   = $this->unpack_related_data($data, $is_eager_loading);
+         if(!$data_formatted){
+         	 $data           = $this->format_get_data($schema_instance, $ass_model_class, $data);
+         }
 	 	 
 	 	 foreach($include_instances as $index => $ins){
 	 	 	 $tracker::add_relation($ins);
@@ -218,13 +233,18 @@ class ModelManager extends IModelManager{
  	 	 $pkey         = $ins->get_pk();
 	 	 $fkey         = $ins->get_fk();
 	 	 $pkey_values  = array_unique(array_column($data, $pkey));
+	 	 $pkey_values  = array_filter($pkey_values, function($v){
+	 	 	 return trim($v) !== "" && !is_null($v);
+	 	 });
 
 	 	 $raw_data     = $this->fetch_related_data($fdao, $fkey, $pkey_values, $ins->get_field(), $with, $tuning);
 	 	 $rel_data     = [];
 	 	 $field        = $ins->get_field();
+	 	 $fdaoinstance = new $fdao();
 	 	 foreach($raw_data as $rd){
 	 	 	 $pointer_value            = $rd->$fkey;
 	 	 	 $the_rows                 = json_decode(preg_replace('/,(\s*])/', '$1', $rd->$field));
+	 	 	 $the_rows                 = $this->format_get_data($fdaoinstance, $fdaoinstance->get_associated_model_class(), $the_rows);
 	 	 	 $rel_data[$pointer_value] = $ins->get_multiple() ? $the_rows : ($the_rows[0] ?? null);
 	 	 }
 	 	 return [
@@ -234,6 +254,74 @@ class ModelManager extends IModelManager{
 	 	 	'rel_field'   => $field,
 	 	 	'is_multiple' => $ins->get_multiple()
 	 	 ];
+     }
+
+     private function has_get_data_been_formatted($data){
+     	 if(count($data) === 0)
+     	 	return true;
+
+		 $allHaveProperty = true;
+		 foreach($data as $d){
+		     if(!property_exists($d, '_sql_data_formatted')){
+		         $allHaveProperty = false;
+		         break; 
+		     }
+		 }
+
+		 return $allHaveProperty;
+     }
+
+     private function format_get_data($model_instance, $ass_model_class, $data){
+     	 /*echo "Data before formatting!\n";
+     	 echo $model_instance::class."\n";
+     	 print_r($data);*/
+
+     	 if(!$this->has_get_data_been_formatted($data)){
+     	 	 $chain = new Chain();
+		 	 $chain->add(new DefaultHandler());
+		 	 
+		 	 //Format date and timestamps to human readable forms
+		     if($model_instance->get_auto_cmdt() && $model_instance->get_format_cmdt() && $model_instance->get_cmdt_type() === 'PHPTIMESTAMP'){
+		     	 $createdat_name = $model_instance->get_created_at_field_name();
+		     	 $modifiedat_name = $model_instance->get_modified_at_field_name();
+		     	 $chain->add(new FormatCmdt(cat_name: $createdat_name, mat_name: $modifiedat_name));
+		     }
+
+		     //Format file paths to urls
+		     $file_configurations = $model_instance->get_file_configurations();
+		     if(count($file_configurations) > 0){
+		     	 $chain->add(new PathsToUrls(model: $model_instance, config: $file_configurations));
+		     }
+
+		     //Cast the row data to value object type
+		     if($this->get_tomodel()){
+		     	 $chain->add(new TypeCast(type: $ass_model_class));
+		     }
+
+		     //Mark the data as having been formatted
+		     $chain->add(new FormattedChecker());
+
+		     //Process the data through the chain.
+		     if($chain->is_active()){
+		     	 $processed = [];
+		     	 foreach($data as $row){
+		     	 	 $processed[] = $chain->apply($row);
+		     	 }
+		     	 $data = $processed;
+		     }
+
+	     	 //If to model is on, return a typed model collection instead of a simple array
+	     	 if($this->get_tomodel()){
+	     	 	 $collection_class = $ass_model_class::get_collection_class();
+	     	 	 return new $collection_class($data);
+	     	 }
+     	 }
+	     	 
+         
+         /*echo "Data after formatting!\n";
+         print_r($data);
+         echo "\n-----------------------------------------\n";*/
+         return $data;
      }
 
 	 private function get(bool $tracker_active = false){
@@ -270,69 +358,15 @@ class ModelManager extends IModelManager{
 
 	 	 #execute command and return response
 	 	 $rows = $this->crud_command->execute();
-	 	 
-	 	 #process includes.
-	 	 $crows = $this->process_includes($model_instance, $rows, $tracker_active);
 
-	 	 $chain = new Chain();
-	 	 $chain->add(new DefaultHandler());
+         $data_formatted = false;
+	 	 if(!$tracker_active && $model_class !== "SaQle\Dao\Model\Schema\TempIdSchema"){
+	 	 	 $rows = $this->format_get_data($model_instance, $ass_model_class, $rows);
+	 	 	 $data_formatted = true;
+	 	 }
 
-	 	 /**
-	 	  * Assign eager loaded objects
-	 	  * */
-	 	 /*if($include_rows){
-	 	 	 $chain->add(new EagerLoadAssign(data: $include_rows));
-	 	 }*/
-	 	 
-	 	 /**
-	 	  * Format date and timestamps to human readable forms
-	 	  * */
-	     if($model_instance->get_auto_cmdt() && $model_instance->get_format_cmdt() && $model_instance->get_cmdt_type() === 'PHPTIMESTAMP'){
-	     	 $createdat_name = $model_instance->get_created_at_field_name();
-	     	 $modifiedat_name = $model_instance->get_modified_at_field_name();
-	     	 $chain->add(new FormatCmdt(cat_name: $createdat_name, mat_name: $modifiedat_name));
-	     }
-
-         /**
-          * Format file paths to urls
-          * */
-	     $file_configurations = $model_instance->get_file_configurations();
-	     if(count($file_configurations) > 0){
-	     	 $chain->add(new PathsToUrls(model: $model_instance, config: $file_configurations));
-	     }
-
-	     /**
-	      * Cast the row data to value object type
-	      * */
-	     if($this->get_tomodel()){
-	     	 $chain->add(new TypeCast(type: $ass_model_class));
-	     }
-
-	     /**
-	      * Process the data through the chain.
-	      * */
-	     if($chain->is_active()){
-	     	 $processed = [];
-	     	 foreach($crows as $row){
-	     	 	 $processed[] = $chain->apply($row);
-	     	 }
-	     	 $crows = $processed;
-	     }
-
-	     if(!$tracker_active){
-	     	// $tracker::reset();
-	     }
-
-	     /**
-     	  * If to model is on, return a typed model collection instead
-     	  * of a simple array
-     	  * */
-     	 if($this->get_tomodel()){
-     	 	$collection_class = $ass_model_class::get_collection_class();
-     	 	return new $collection_class($crows);
-     	 }
-
-	     return $crows;
+	 	 #process includes and return
+	 	 return $this->process_includes($model_instance, $ass_model_class, $rows, $tracker_active, $data_formatted);
 	 }
 
 	 public function total(){
@@ -385,19 +419,30 @@ class ModelManager extends IModelManager{
 	 	 }
 
 	 	 $select_manager = $this->get_select_manager();
-	 	 foreach($fields as $wf){ //for each with field
-	 	 	 #split the field using dot as separator to see if nested.
-	 	 	 $field_parts = explode(".", $wf);
-	 	 	 #check if the first field is really an include field
-	 	 	 $first_wf = array_shift($field_parts);
-	 	 	 [$field, $model] = $this->check_with($first_wf);
-	 	 	 $select_manager->add_include([
-	 	 	 	'with'     => implode(".", $field_parts), 
-	 	 	 	'relation' => $field, 
-	 	 	 	'tuning'   => $callables[$first_wf] ?? null
-	 	 	 ]);
-	 	 	 unset($callables[$first_wf]);
+	 	 foreach($fields as $wf_key => $wf){ //for each with field key => value pair
+	 	 	 if(is_int($wf_key)){ //if key is integer, it means value is the field name.
+	 	 	 	 #split the field using dot as separator to see if nested.
+		 	 	 $field_parts = explode(".", $wf);
+		 	 	 #check if the first field is really an include field
+		 	 	 $first_wf = array_shift($field_parts);
+		 	 	 [$field, $model] = $this->check_with($first_wf);
+		 	 	 $select_manager->add_include([
+		 	 	 	'with'     => implode(".", $field_parts), 
+		 	 	 	'relation' => $field, 
+		 	 	 	'tuning'   => $callables[$first_wf] ?? null
+		 	 	 ]);
+		 	 	 unset($callables[$first_wf]);
+	 	 	 }else{ //if key is string, it means key is the field name
+	 	 	 	 [$field, $model] = $this->check_with($wf_key);
+	 	 	 	 $select_manager->add_include([
+		 	 	 	'with'     => $wf, 
+		 	 	 	'relation' => $field, 
+		 	 	 	'tuning'   => $callables[$wf_key] ?? null
+		 	 	 ]);
+		 	 	 unset($callables[$wf_key]);
+	 	 	 }
 	 	 }
+
 	 	 $select_manager->set_withcallbacks($callables);
 	 	 return $this;
 	 }

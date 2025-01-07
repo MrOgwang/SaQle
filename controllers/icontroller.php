@@ -7,6 +7,7 @@ use SaQle\Http\Methods\Patch\IPatch;
 use SaQle\Http\Methods\Delete\IDelete;
 use SaQle\Http\Response\{HttpMessage, StatusCode};
 use SaQle\Services\Container\Cf;
+use SaQle\Controllers\Refs\ControllerRef;
 
 abstract class IController implements IGet, IPost, IPatch, IDelete{
 	 protected $request;
@@ -69,6 +70,11 @@ abstract class IController implements IGet, IPost, IPatch, IDelete{
 	 	return null;
 	 }
 
+	 public function current_url(){
+	 	 $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? 'https://' : 'http://';
+	 	 return $protocol.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
+	 }
+
 	 public function reload($url = null){
 	 	   if($url){
 	 	   	  header('Location: '.$url);
@@ -80,6 +86,11 @@ abstract class IController implements IGet, IPost, IPatch, IDelete{
 
 	 public function get_permissions() : array{
 	 	 return $this->permissions;
+	 }
+
+	 public function expose_controller(string $name, string $class){
+	 	 $refs = ControllerRef::init();
+	 	 $refs->add($name, $class);
 	 }
 }
 ?>

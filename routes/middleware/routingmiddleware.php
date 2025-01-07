@@ -84,12 +84,12 @@ class RoutingMiddleware extends IMiddleware{
          //resolve target for matching route
          $target = $match->get_target();
          if(is_callable($target)){
-             $match->set_target($target());
+             $match->set_target($target($match->get_params()));
          }
 
          $request->route = $match;
 
-         $request->trail = $this->find_trail($this->original_web_routes, $match->get_url(), []);
+         $request->trail = $this->find_trail($this->original_web_routes, $match->get_url(), $match->get_params(), []);
 
          //print_r($request->trail);
          //print_r($request->user);
@@ -97,16 +97,16 @@ class RoutingMiddleware extends IMiddleware{
      	 parent::handle($request);
      }
 
-     private function extract_route_trail($route){
+     private function extract_route_trail($route, $params){
          $target = $route->get_target();
          if(is_callable($target)){
-             $target = $target();
+             $target = $target($params);
          }
          return (Object)['url' => $route->get_url(), 'target' => $target];
      }
 
-     private function find_trail(array $array, string $url, array $trail = []){
-         $r = $this->find_element($array, $url);
+     private function find_trail(array $array, string $url, array $params, array $trail = []){
+         $r = $this->find_element($array, $url, $params);
          if($r[1])
              return $this->array_unique_trail(array_merge($trail, $r));
 
@@ -117,7 +117,7 @@ class RoutingMiddleware extends IMiddleware{
              if(is_array($a)){
                  $is_contained = $this->contained_in_nested($a, $url);
                  if($is_contained){
-                     $t = $this->find_trail($a, $url, $trail);
+                     $t = $this->find_trail($a, $url, $params, $trail);
                      break;
                  }
              }
@@ -135,17 +135,17 @@ class RoutingMiddleware extends IMiddleware{
          return !empty($found);
      }
 
-     private function find_element(array $array, string $url){
+     private function find_element(array $array, string $url, array $params){
          $result = [null, null];
          foreach($array as $a){
              if(!is_array($a) && $a->get_url() === $url){
-                $result[0] = $this->extract_route_trail($array[0]);
-                $result[1] = $this->extract_route_trail($a);
+                $result[0] = $this->extract_route_trail($array[0], $params);
+                $result[1] = $this->extract_route_trail($a, $params);
              }
          }
 
          if(!$result[0] && !$result[1])
-            $result[0] = $this->extract_route_trail($array[0]);
+            $result[0] = $this->extract_route_trail($array[0], $params);
 
          return $result;
      }

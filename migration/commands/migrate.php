@@ -155,21 +155,17 @@ class Migrate{
              $dbmanager->create_table('migrations', MigrationSchema::class);
          }
 
-         #Check that current migrations were migrated.
-         $exists = Migration::db()
-         ->order(fields: ['migration_timestamp'], direction: 'DESC')
-         ->limit(page: 1, records: 1)
-         ->where('migration_name__eq', $migration_name)
-         ->first_or_default();
-         if($exists){
-             echo "Migration file {$file_name} has been committed!\n";
-             return;
-         }
+         //record this migration in db
+         $fn_parts = explode("_", $file_name);
+         $recorded = Migration::db()->add(['migration_name' => $migration_name, 'migration_timestamp' => $fn_parts[1], 'is_migrated' => 0])->save();
 
          #Get and execute the up operations.
          $ctx_up_operations = $up_operations[$ctx];
 
          $op_results = array_map(fn($op) => self::process_up_operation($op, $project_root, $dbmanager), $ctx_up_operations);
+
+         #mark current migration file as having been migrated
+         Migration::db()->set(['is_migrated' => 1])->where('migration_id', $recorded->migration_id)->update();
 
          return;
      }
@@ -178,12 +174,22 @@ class Migrate{
          $migrations_folder      = $project_root."/migrations";
          $migration_tracker_file = $project_root."/migrations/migrationstracker.bin";
          $tracker                = $this->unserialize_from_file($migration_tracker_file);
-         $migration_files        = $tracker ? $tracker->get_migration_files() : [];
-         $migration_files        = !$migration_files ? $this->scandir_chrono(path: $migrations_folder, reverse: false, exts: ['php']) : $migration_files;
-         
-         echo "Starting migrations!\n";
-         $real_migration_files = array_values($migration_files);
+         $files                  = $tracker ? $tracker->get_migration_files() : [];
+         if($files){
+             $migration_files = array_filter($files, function($f){
+                 return !$f->is_migrated;
+             });
+             $migration_file_names = array_column($migration_files, 'file');
+         }else{
+             $files = $this->scandir_chrono(path: $migrations_folder, reverse: false, exts: ['php']);
+             $migration_file_names = array_values($files);
+         }
 
-         return array_map(fn($file) => self::process_migration_file($file, $migrations_folder, $project_root), $real_migration_files);
+         echo "Starting migrations!\n";
+         array_map(fn($file) => self::process_migration_file($file, $migrations_folder, $project_root), $migration_file_names);
+
+         $tracker->set_migrated($migration_file_names);
+         $this->serialize_to_file($migration_tracker_file, $tracker);
+         return;
      }
 }
