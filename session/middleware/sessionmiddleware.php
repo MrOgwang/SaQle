@@ -27,6 +27,9 @@ class SessionMiddleware extends IMiddleware{
            */
            ini_set('display_errors', DISPLAY_ERRORS);
            ini_set('display_startup_errors', DISPLAY_STARTUP_ERRORS);
+
+           //assign the session user to the request
+           $request->user = $_SESSION['user'];
      	 parent::handle($request);
      }
 }

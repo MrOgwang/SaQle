@@ -27,15 +27,15 @@ class Request implements MiddlewareRequestInterface{
       * */
 	 private static $instance;
 
-
 	 public ?Data   $data    = null;
      public         $user    = null;
      public ?Route  $route   = null;
      public ?array  $trail   = null;
 	 private function __construct(){
-        $this->data    = new Data();
-        $this->session = new Data();
+         $this->data = new Data();
      }
+     private function __clone(){}
+     public function __wakeup(){}
      public static function init(){
          if(self::$instance === null){
              self::$instance = new self();

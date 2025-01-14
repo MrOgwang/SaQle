@@ -3,8 +3,7 @@ namespace SaQle\Permissions;
 
 class IsActivated extends Permission{
 	 public function has_permission() : bool{
-		 $user = $this->request->session->get('user', '');
-		 return $user && $user->account_status === 1;
+		 return $this->request->user && $this->request->user->account_status === 1;
 	 }
 }
 
