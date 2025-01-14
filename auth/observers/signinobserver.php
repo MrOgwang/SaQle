@@ -20,6 +20,8 @@ class SigninObserver extends IAuthObserver{
 		 if($feedback['status'] == 0){
 
 		 	 $request = Request::init();
+		 	 //set request user
+		 	 $request->user = $feedback['feedback']['user'];
 
 	         //record user login
 			 $auth_service->record_signin($feedback['feedback']['user']->user_id);
@@ -31,10 +33,11 @@ class SigninObserver extends IAuthObserver{
 			 if(!$request->is_api_request()){
 
                  //set redirect location
-			 	 $this->redirect_to = $this->request->data->get('redirect_to', $this->request->route->get_query_param('next', ''));
+			 	 $this->redirect_to = $request->data->get('redirect_to', $request->route->get_query_param('next', ''));
 
-			 	 //set session data
+			 	 //regenerate session id and set session data
 			 	 $tenant = array_key_exists("tenant", $feedback['feedback']) ? $feedback['feedback']['tenant'] : null;
+			 	 session_regenerate_id();
 			 	 $_SESSION['is_user_authenticated'] = true;
 			     $_SESSION['user']                  = $feedback['feedback']['user'];
 			     $_SESSION['user_has_tenant']       = $tenant ? true : false;
