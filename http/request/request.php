@@ -29,7 +29,6 @@ class Request implements MiddlewareRequestInterface{
 
 
 	 public ?Data   $data    = null;
-     public ?Data   $session = null;
      public         $user    = null;
      public ?Route  $route   = null;
      public ?array  $trail   = null;

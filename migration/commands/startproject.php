@@ -51,7 +51,7 @@ class StartProject{
            $content .= "\n";
            $content .= "\nclass IsBackoffice extends Permission{";
            $content .= "\n\tpublic function has_permission() : bool{";
-           $content .= "\n\t\t$"."user = $"."this->request->session->get('user', '');";
+           $content .= "\n\t\t$"."user = $"."this->request->user;";
            $content .= "\n\t\treturn $"."user && $"."user->label === 'BACKOFFICE';";
            $content .= "\n\t}";
            $content .= "\n}";

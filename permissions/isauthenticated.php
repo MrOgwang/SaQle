@@ -10,7 +10,7 @@ class IsAuthenticated extends Permission{
  	 }
 
 	 public function has_permission(): bool{
-	 	 return $this->request->session->get('is_user_authenticated', false);
+	 	 return $this->request->user ? true : false;
 	 }
 }
 

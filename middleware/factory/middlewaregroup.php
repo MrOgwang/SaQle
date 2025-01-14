@@ -23,10 +23,12 @@ class MiddlewareGroup extends BaseMiddlewareGroup implements IMiddlewareGroup{
 
 	 public function handle(Request $request) : void{
 	 	 $request_middlewares = $this->get_middlewares();
-	 	 $middleware          = $request_middlewares[0];
-         $middleware_instance = new $middleware();
-         $this->assign_middlewares($middleware_instance, $request_middlewares, 1);
-         $middleware_instance->handle($request);
+	 	 if($request_middlewares){
+	 	 	 $middleware          = $request_middlewares[0];
+             $middleware_instance = new $middleware();
+             $this->assign_middlewares($middleware_instance, $request_middlewares, 1);
+             $middleware_instance->handle($request);
+	 	 }
 	 }
 }
 ?>

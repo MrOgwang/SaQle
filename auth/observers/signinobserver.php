@@ -28,7 +28,7 @@ class SigninObserver extends IAuthObserver{
 			 $auth_service->update_online_status($feedback['feedback']['user']->user_id, true);
 
              //if this is not an api request
-			 if(!$request->route->is_api_request()){
+			 if(!$request->is_api_request()){
 
                  //set redirect location
 			 	 $this->redirect_to = $this->request->data->get('redirect_to', $this->request->route->get_query_param('next', ''));
