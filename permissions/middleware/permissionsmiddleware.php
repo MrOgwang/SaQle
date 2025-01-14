@@ -14,7 +14,7 @@ class PermissionsMiddleware extends IMiddleware{
            foreach($request->trail as $t){
                 $controller = $t->target;
                 $permissions = (new $controller())->get_permissions();
-                $allgood = PermissionUtils::evaluate_permissions($permissions, true);
+                $allgood = (new class{use PermissionUtils;})::evaluate_permissions($permissions, true);
                 if(!$allgood[0]){
                      $redirect_url = $allgood[1] ? $allgood[1] : ROOT_DOMAIN;
                      header('Location: '.$redirect_url);

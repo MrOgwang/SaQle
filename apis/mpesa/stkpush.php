@@ -65,13 +65,16 @@ class StkPush{
 	  * */
 	 private string $callback_url;
 
-
-	 public function __construct(...$settings){
-	 	$this->timezone = $settings['timezone'];
-	 	$this->consumer_key = $settings['consumer_key'];
-	 	$this->consumer_secret = $settings['consumer_secret'];
+     /**
+     * New StkPush instance
+     * @param array $settings: key => value array of configuration parameters
+     **/
+	 public function __construct(...$settings) : void{
+	 	$this->timezone            = $settings['timezone'];
+	 	$this->consumer_key        = $settings['consumer_key'];
+	 	$this->consumer_secret     = $settings['consumer_secret'];
 	 	$this->business_short_code = $settings['business_short_code'];
-	 	$this->pass_key  = $settings['pass_key'];
+	 	$this->pass_key            = $settings['pass_key'];
 
 	 	$env = $settings['environment'] ?? 'sandbox';
 	 	$this->access_token_url = $env === 'sandbox' ? 'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials' : '';

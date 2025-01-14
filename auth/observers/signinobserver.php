@@ -14,56 +14,41 @@ use SaQle\Commons as Commons;
 use SaQle\Http\Request\Request;
 
 class SigninObserver extends IAuthObserver{
+	
 	 public function do_update(AuthService $auth_service){
 		 $feedback = $auth_service->status();
 		 if($feedback['status'] == 0){
 
-		 	 $request           = Request::init();
-		 	 if(!$this->redirect_to){
-		 	 	 $this->redirect_to = $request->route->get_query_param('next');
-		 	 	 if(!$this->redirect_to){
-		 	 	 	 $this->redirect_to = $request->data->get('redirect_to', '');
-		 	 	 }
-		 	 }
-			 /**
-			 * User object
-			 */
-			 $user = $feedback['feedback']['user'];
+		 	 $request = Request::init();
+
+	         //record user login
+			 $auth_service->record_signin($feedback['feedback']['user']->user_id);
 			 
-			 /**
-			 * Tenant object
-			 */
-			 $tenant = array_key_exists("tenant", $feedback['feedback']) ? $feedback['feedback']['tenant'] : null;
-			 
-			 /**
-			 * Record user log in
-			 */
-			 $auth_service->record_signin($user->user_id);
-			 
-			 /**
-			 * Set user online status to true
-			 */
-			 $auth_service->update_online_status($user->user_id, true);
-			 
-			 
-			 /**
-			 * Set session data
-			 */
-			 $_SESSION['is_user_authenticated'] = true;
-			 $_SESSION['user']                  = $user;
-			 $_SESSION['user_has_tenant']       = $tenant ? true : false;
-			 if($_SESSION['user_has_tenant']){
-			 	 $_SESSION['tenant']            = $tenant;
-			 }
-			 $_SESSION['LAST_ACTIVITY']         = $_SERVER['REQUEST_TIME'];
-			 
-			 /**
-			 * Redirect user to the home page or page that was requested before signin
-			 */
-			 if($this->redirect_to !== ''){
-			     header("location: ".$this->redirect_to);
-			 }else{
-				 header("location: ".ROOT_DOMAIN);
+			 //Set user online status to true
+			 $auth_service->update_online_status($feedback['feedback']['user']->user_id, true);
+
+             //if this is not an api request
+			 if(!$request->route->is_api_request()){
+
+                 //set redirect location
+			 	 $this->redirect_to = $this->request->data->get('redirect_to', $this->request->route->get_query_param('next', ''));
+
+			 	 //set session data
+			 	 $tenant = array_key_exists("tenant", $feedback['feedback']) ? $feedback['feedback']['tenant'] : null;
+			 	 $_SESSION['is_user_authenticated'] = true;
+			     $_SESSION['user']                  = $feedback['feedback']['user'];
+			     $_SESSION['user_has_tenant']       = $tenant ? true : false;
+			     if($_SESSION['user_has_tenant']){
+			 	     $_SESSION['tenant']            = $tenant;
+			     }
+			     $_SESSION['LAST_ACTIVITY']         = $_SERVER['REQUEST_TIME'];
+
+			     //redirect user to relevant location
+			     if($this->redirect_to !== ''){
+				     header("location: ".$this->redirect_to);
+				 }else{
+					 header("location: ".ROOT_DOMAIN);
+				 }
 			 }
 		 }
      }

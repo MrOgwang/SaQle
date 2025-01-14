@@ -19,20 +19,23 @@
 namespace SaQle\Routes\Middleware;
 
 use SaQle\Middleware\MiddlewareRequestInterface;
-use SaQle\Middleware\IMiddleware;
+use SaQle\Routes\Middleware\Base\BaseRoutingMiddleware;
 
-class RoutingMiddleware extends IMiddleware{
-     
+class ApiRoutingMiddleware extends BaseRoutingMiddleware{
+
      public function handle(MiddlewareRequestInterface &$request){
 
-         if($request->is_api_request()){
-             (new ApiRoutingMiddleware())->handle($request);
-         }else{
-             (new WebRoutingMiddleware())->handle($request);
+         //Acquire project level routes.
+         $routes = $this->get_routes_from_file(DOCUMENT_ROOT.'/routes/api.php', true);
+        
+         //Acquire routes for all installed apps.
+         foreach(INSTALLED_APPS as $app){
+             $routes = array_merge($routes, $this->get_routes_from_file(DOCUMENT_ROOT.'/apps/'.$app.'/routes/api.php', true));
          }
 
-     	 parent::handle($request);
-     }
+         $this->assert_all_routes($routes);
 
+         $this->find_and_assign_route($routes, $request);
+     }
 }
 ?>

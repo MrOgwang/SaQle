@@ -5,7 +5,7 @@ use SaQle\Middleware\IMiddleware;
 use SaQle\Middleware\MiddlewareRequestInterface;
 
 class SessionMiddleware extends IMiddleware{
-      public function handle(MiddlewareRequestInterface &$request){
+     public function handle(MiddlewareRequestInterface &$request){
            /**
            * Set the session handler and start session.
            */
@@ -28,6 +28,6 @@ class SessionMiddleware extends IMiddleware{
            ini_set('display_errors', DISPLAY_ERRORS);
            ini_set('display_startup_errors', DISPLAY_STARTUP_ERRORS);
      	 parent::handle($request);
-      }
+     }
 }
 ?>

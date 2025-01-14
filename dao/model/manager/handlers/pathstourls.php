@@ -35,10 +35,10 @@ class PathsToUrls extends BaseHandler{
  			 	if(HIDDEN_MEDIA_FOLDER){
  			 		if(count($files) > 1){
 	 			 		foreach($files as $file_name){
-	 			 			$urls[] = $this->get_file_url($file_name, $model, $row, $config, $file_key, $folder_path);
+	 			 			$urls[] = ROOT_DOMAIN.$this->get_file_url($file_name, $model, $row, $config, $file_key, $folder_path);
 	 			 		}
 	 			 	}else{
-	 			 		$urls[] = $this->get_file_url($files[0], $model, $row, $config, $file_key, $folder_path);
+	 			 		$urls[] = ROOT_DOMAIN.$this->get_file_url($files[0], $model, $row, $config, $file_key, $folder_path);
 	 			 	}
  			 	}else{
  			 		if(count($files) > 1){

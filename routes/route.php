@@ -35,30 +35,8 @@ class Route{
 
         return count($path_array) === 1 ? $path_array[0] : $path_array[1];
      }
-
-     public function is_api_request() : bool{
-        $is_api_request = false;
-        for($u = 0; $u < count(API_URL_PREFIXES); $u++){
-            if(str_contains($this->url, API_URL_PREFIXES[$u])){
-                $is_api_request = true;
-                break;
-            }
-        }
-        return $is_api_request;
-     }
-
-     public function is_sse_request() : bool{
-        $is_sse_request = false;
-        for($u = 0; $u < count(SSE_URL_PREFIXES); $u++){
-            if(str_contains($this->url, SSE_URL_PREFIXES[$u])){
-                $is_sse_request = true;
-                break;
-            }
-        }
-        return $is_sse_request;
-     }
-
-	public function matches() : bool{
+     
+	 public function matches() : bool{
         $this->method = $_SERVER['REQUEST_METHOD'];
         $url          = $_SERVER['REQUEST_URI'];
         if(in_array($this->method, $this->methods)){

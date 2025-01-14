@@ -160,12 +160,12 @@ class SelectManager implements ISelectManager{
 	 	     foreach($ffsettings as $t_index => $settings){
 	 	     	 $table_name = $tables[$t_index];
 	 	     	 $db_name    = $databases[$t_index];
-	 		 	 foreach($settings as $file_field => $config){
+	 		 	 foreach($settings as $file_field => $file_field_config){
 	 		 	 	 //the file field must be existing in the select fields list in any format: fully qualified or not
 	 		 	 	 if( in_array($file_field, $this->_selected) || 
 	 		 	 	 	 in_array($table_name.".".$file_field, $this->_selected) || in_array($db_name.".".$table_name.".".$file_field, $this->_selected)
 	 		 	 	 ){
-	 		 	 	 	 $file_meta_fields = array_unique(array_merge($config['path'], $config['rename'], $config['dpath']));
+	 		 	 	 	 $file_meta_fields = array_unique(array_merge($file_field_config['path'], $file_field_config['rename'], $file_field_config['dpath']));
 	 		 	 	 	 foreach($file_meta_fields as $fmf){
 	 		 	 	 	 	 //the file meta field must not already be existing in the field list in any format: fully qualified or not
 	 		 	 	 	 	 if(!in_array($fmf, $this->_selected) &&

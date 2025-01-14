@@ -272,10 +272,6 @@ class ModelManager extends IModelManager{
      }
 
      private function format_get_data($model_instance, $ass_model_class, $data){
-     	 /*echo "Data before formatting!\n";
-     	 echo $model_instance::class."\n";
-     	 print_r($data);*/
-
      	 if(!$this->has_get_data_been_formatted($data)){
      	 	 $chain = new Chain();
 		 	 $chain->add(new DefaultHandler());
