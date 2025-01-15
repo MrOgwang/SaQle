@@ -17,10 +17,6 @@
 
 namespace SaQle\Communication\Notifications\Email;
 
-require_once __DIR__."/../../vendor/phpmailer/Exception.php";
-require_once __DIR__."/../../vendor/phpmailer/PHPMailer.php";
-require_once __DIR__."/../../vendor/phpmailer/SMTP.php";
-
 use SaQle\Communication\Notifications\INotification;
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;

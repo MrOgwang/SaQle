@@ -1,14 +1,15 @@
 <?php
-namespace SaQle\Dao\Model\Exceptions;
+namespace SaQle\Routes\Exceptions;
 
-class NullObjectException extends \Exception{
+class RouteNotFoundException extends \Exception{
      protected $details;
      public function __construct(...$details){
          $this->details = $details;
+         print_r($this->details);
          parent::__construct();
      }
      public function __toString(){
-		  return "No object was found from table ".$this->details['table']." that matches your selection creteria";
+		  return "The resource [".$this->details['url']."] either does not exist or has been permanently moved!";
      }
 	 public function get_message(){
 		 return $this->__toString();

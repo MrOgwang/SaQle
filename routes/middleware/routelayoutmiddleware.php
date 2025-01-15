@@ -109,6 +109,15 @@ class RouteLayoutMiddleware extends BaseRoutingMiddleware{
 
          $request->trail = $this->find_trail($routes, $request->route->get_url(), $request->route->get_params(), []);
 
+         $targets = array_column($request->trail, 'target');
+         foreach($targets as $controller){
+             $permissions = (new $controller())->get_permissions();
+             if($permissions){
+                 $request->enforce_permissions = true;
+                 break;
+             }
+         }
+
      	 parent::handle($request);
      }
 }

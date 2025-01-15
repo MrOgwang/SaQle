@@ -4,11 +4,12 @@ namespace SaQle\Auth\Observers;
 use SaQle\Auth\Services\AccountsService;
 use SaQle\Auth\Notifications\VerificationCodeEmailSetup;
 use SaQle\Communication\Notifications\{Notifier, NotifierTypes};
+use SaQle\FeedBack\FeedBack;
 
 class VerificationCodeEmailObserver extends IAccountObserver{
 	 public function do_update(AccountsService $acc_service){
 		 $feedback = $acc_service->status();
-		 if($feedback['status'] === 0){
+		 if($feedback['status'] === FeedBack::SUCCESS){
 		 	 $code = $feedback['feedback'];
 			 $email_configurations = [
 			     'rec_email'          => $code->email,

@@ -1,6 +1,8 @@
 <?php
 namespace SaQle\Http\Request\Processors;
 
+use SaQle\Http\Response\HttpMessage;
+
 class ApiRequestProcessor extends RequestProcessor{
 
 	 private function send_json_headers(){
@@ -25,10 +27,12 @@ class ApiRequestProcessor extends RequestProcessor{
 		 header('Content-Type: text/event-stream');
          header('Cache-Control: no-cache');
 	 }
-	 public function process(){
+	 public function process(?HttpMessage $http_message = null){
 		 $this->send_json_headers();
-		 [$target_classname, $target_method] = $this->get_target_method($this->request->route->get_target());
-	 	 $http_message     = $this->get_target_response($target_classname, $target_method);
+		 if(is_null($http_message)){
+		 	 [$target_classname, $target_method] = $this->get_target_method($this->request->route->get_target());
+	 	     $http_message     = $this->get_target_response($target_classname, $target_method);
+		 }
          $response_data    = $http_message->get_response();
          $http_status_code = (int)$http_message->get_code();
          http_response_code($http_status_code);

@@ -7,6 +7,7 @@ use SaQle\FeedBack\FeedBack;
 use SaQle\Commons\StringUtils;
 use SaQle\Services\Container\ContainerService;
 use SaQle\Services\Container\Cf;
+use SaQle\Auth\Services\Interface\IAccountService;
 
 abstract class AccountsService implements IAccountService, Observable{
 	 use StringUtils, ConcreteObservable{

@@ -18,6 +18,7 @@ use SaQle\Auth as Authentication;
 use SaQle\Accounts as Accounts;
 use SaQle\Dao as Dao;
 use SaQle\Commons as Commons;
+use SaQle\FeedBack\FeedBack;
 
 
 abstract class IAuthObserver implements Observer{
@@ -43,7 +44,7 @@ abstract class IAuthObserver implements Observer{
 class SigninObserver extends AuthObserver{
 	 public function do_update(Authentication\Auth $auth){
 		 $feedback = $auth->status();
-		 if($feedback['status'] == 0){
+		 if($feedback['status'] == FeedBack::SUCCESS){
 			 $_SESSION['is_user_authenticated'] = true;
 			 $user = $this->sid === "normal" ? $feedback['feedback'] : $feedback['feedback']['tenant_user'];
 			 (new Dao\User(login_status: 1))->filter(["user_id", $user->user_id])->update(update_fields: ["login_status"], partial: true);
@@ -73,7 +74,7 @@ class SigninObserver extends AuthObserver{
 class SignoutObserver extends AuthObserver{
 	 function do_update(Authentication\Auth $auth){
 		 $feedback = $auth->status();
-		 if($feedback['status'] == 0){
+		 if($feedback['status'] == FeedBack::SUCCESS){
 			 $signout_feedback = $feedback['feedback'];
 			 $auth->record(user_id: $signout_feedback->user_id, action: "signout");
 			 header("location: ".ROOT_DOMAIN."signin/");

@@ -16,52 +16,35 @@ class Route{
 		 $this->methods        = $methods;
 		 $this->url            = $url;
 		 $this->target         = $target;
+         $this->method         = $_SERVER['REQUEST_METHOD'];
 	 }
-
-     public function get_actual_template_path(string $symbolic_path) : string{
-        $path_array = explode(".", $symbolic_path);
-        if(!$path_array){
-            //throw a template path not provided exception.
-        }
-
-        return count($path_array) === 1 ? DOCUMENT_ROOT."/templates/".$path_array[0].".php" : DOCUMENT_ROOT."/apps/".$path_array[0]."/templates/".$path_array[1].".php";
-     }
-
-     public function get_actual_template_name(string $symbolic_path) : string{
-        $path_array = explode(".", $symbolic_path);
-        if(!$path_array){
-            //throw a template path not provided exception.
-        }
-
-        return count($path_array) === 1 ? $path_array[0] : $path_array[1];
-     }
      
-	 public function matches() : bool{
-        $this->method = $_SERVER['REQUEST_METHOD'];
-        $url          = $_SERVER['REQUEST_URI'];
-        if(in_array($this->method, $this->methods)){
-        	 // Use named subpatterns in the regular expression pattern to capture each parameter value separately
-             $this->url = rtrim($this->url, '/');
-             $url_parts = parse_url($url);
-             $path      = str_ends_with($url_parts['path'], '/') ? rtrim($url_parts['path'], '/') : $url_parts['path'];
-             $pattern = preg_replace('/\/:([^\/]+)/', '/(?P<$1>[^/]+)', $this->url);
-             if(preg_match('#^'.$pattern.'$#', $path, $matches)){
-                // Pass the captured parameter values as named arguments to the target function
-                $this->params  = array_filter($matches, 'is_string', ARRAY_FILTER_USE_KEY); // Only keep named subpattern matches
-                if(array_key_exists('query', $url_parts)){
-                     parse_str($url_parts['query'], $queries);
-                     $this->queries = $queries;
-                }
-                return true;
+	 public function matches() : array{
+        
+         $this->url = rtrim($this->url, '/');
+         $url_parts = parse_url($_SERVER['REQUEST_URI']);
+         $path      = str_ends_with($url_parts['path'], '/') ? rtrim($url_parts['path'], '/') : $url_parts['path'];
+         $pattern = preg_replace('/\/:([^\/]+)/', '/(?P<$1>[^/]+)', $this->url);
+         if(preg_match('#^'.$pattern.'$#', $path, $matches)){
+             //Pass the captured parameter values as named arguments to the target function
+             $this->params  = array_filter($matches, 'is_string', ARRAY_FILTER_USE_KEY); // Only keep named subpattern matches
+             if(array_key_exists('query', $url_parts)){
+                 parse_str($url_parts['query'], $queries);
+                 $this->queries = $queries;
              }
+             return in_array($this->method, $this->methods) ? [true, true] : [true, false];
          }
-         return false;
+
+         return [false, false];
     }
     public function get_target(){
        return $this->target;
     }
     public function get_method(){
       return $this->method;
+    }
+    public function get_methods(){
+      return $this->methods;
     }
     public function get_url(){
       return $this->url;

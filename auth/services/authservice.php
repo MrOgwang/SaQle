@@ -6,6 +6,7 @@ use SaQle\Observable\{Observable, ConcreteObservable};
 use SaQle\FeedBack\FeedBack;
 use SaQle\Services\Container\ContainerService;
 use SaQle\Services\Container\Cf;
+use SaQle\Auth\Services\Interface\IAuthService;
 
 abstract class AuthService implements IAuthService, Observable{
 	 use ConcreteObservable{

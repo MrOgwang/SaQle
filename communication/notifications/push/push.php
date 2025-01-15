@@ -1,9 +1,6 @@
 <?php
 namespace SaQle\Communication\Notifications\Push;
 
-require_once __DIR__."/../../vendor/exposerver/vendor/autoload.php";
-require_once __DIR__."/../../vendor/exponentserver/vendor/autoload.php";
-
 use SaQle\Communication\Notifications\INotification;
 use ExpoSDK\Expo;
 use ExpoSDK\ExpoMessage;

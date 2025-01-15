@@ -21,6 +21,7 @@ use SaQle\Core\Assert\Assert;
 use SaQle\Middleware\IMiddleware;
 use SaQle\Middleware\MiddlewareRequestInterface;
 use SaQle\Routes\Route;
+use SaQle\Routes\Exceptions\{RouteNotFoundException, MethodNotAllowedException};
 
 abstract class BaseRoutingMiddleware extends IMiddleware implements IRoutingMiddleware{
      public function get_routes_from_file(string $path) : array{
@@ -37,15 +38,21 @@ abstract class BaseRoutingMiddleware extends IMiddleware implements IRoutingMidd
      protected function find_and_assign_route(array $routes, MiddlewareRequestInterface &$request) : void{
          //get a matching route
          $match = null;
+         $matches = [false, false];
          foreach($routes as $r){
-             if($r->matches()){
+             $matches = $r->matches();
+             if($matches[0] === true){
                  $match = $r;
                  break;
              }
          }
 
-         if(!$match){
-            throw new \Exception("The route requested was not found!");
+         if(!$match){ //a match wasn't found
+             throw new RouteNotFoundException(url: $_SERVER['REQUEST_URI']);
+         }
+
+         if(!$matches[1]){ //a match was found with the wrong method
+             throw new MethodNotAllowedException(url: $_SERVER['REQUEST_URI'], method: $_SERVER['REQUEST_METHOD'], methods: $match->get_methods());
          }
 
          //resolve target for matching route

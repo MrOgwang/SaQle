@@ -1,5 +1,5 @@
 <?php
-namespace SaQle\Auth\Services;
+namespace SaQle\Auth\Services\Interface;
 
 use SaQle\Services\IService;
 

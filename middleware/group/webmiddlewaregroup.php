@@ -11,7 +11,7 @@ class WebMiddlewareGroup implements IMiddlewareGroup{
 	 public function get_middlewares() : array{
 	 	 return [
 	 	 	 SessionMiddleware::class,
-             RoutingMiddleware::class,
+	 	 	 RoutingMiddleware::class,
              RouteLayoutMiddleware::class,
              DataConsolidatorMiddleware::class,
              PermissionsMiddleware::class

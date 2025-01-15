@@ -20,6 +20,7 @@ namespace SaQle\Routes\Middleware;
 
 use SaQle\Middleware\MiddlewareRequestInterface;
 use SaQle\Routes\Middleware\Base\BaseRoutingMiddleware;
+use SaQle\Routes\Exceptions\{RouteNotFoundException, MethodNotAllowedException};
 
 class WebRoutingMiddleware extends BaseRoutingMiddleware{
 
@@ -36,20 +37,28 @@ class WebRoutingMiddleware extends BaseRoutingMiddleware{
      }
 
      public function handle(MiddlewareRequestInterface &$request){
+         try{
 
-         //Acquire project level routes.
-         $routes = $this->get_routes_from_file(DOCUMENT_ROOT.'/routes/web.php', true);
-        
-         //Acquire routes for all installed apps.
-         foreach(INSTALLED_APPS as $app){
-             $routes = array_merge($routes, $this->get_routes_from_file(DOCUMENT_ROOT.'/apps/'.$app.'/routes/web.php', true));
+             //Acquire project level routes.
+             $routes = $this->get_routes_from_file(DOCUMENT_ROOT.'/routes/web.php', true);
+            
+             //Acquire routes for all installed apps.
+             foreach(INSTALLED_APPS as $app){
+                 $routes = array_merge($routes, $this->get_routes_from_file(DOCUMENT_ROOT.'/apps/'.$app.'/routes/web.php', true));
+             }
+
+             $routes = $this->flatten($routes);
+
+             $this->assert_all_routes($routes);
+
+             $this->find_and_assign_route($routes, $request);
+         }catch(RouteNotFoundException $e){
+             throw $e;
+         }catch(MethodNotAllowedException $e){
+             throw $e;
+         }catch(\Exception $e){
+             throw $e;
          }
-
-         $routes = $this->flatten($routes);
-
-         $this->assert_all_routes($routes);
-
-         $this->find_and_assign_route($routes, $request);
      }
 }
 ?>

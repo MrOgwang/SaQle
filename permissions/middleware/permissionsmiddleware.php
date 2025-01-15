@@ -11,8 +11,8 @@ use SaQle\Permissions\Utils\PermissionUtils;
 class PermissionsMiddleware extends IMiddleware{
      use PermissionUtils;
      public function handle(MiddlewareRequestInterface &$request){
-           foreach($request->trail as $t){
-                $controller = $t->target;
+           $targets = $request->is_api_request() ? [$request->route->get_target()] : array_column($request->trail, 'target');
+           foreach($targets as $controller){
                 $permissions = (new $controller())->get_permissions();
                 $allgood = (new class{use PermissionUtils;})::evaluate_permissions($permissions, true);
                 if(!$allgood[0]){

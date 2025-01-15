@@ -27,10 +27,11 @@ class Request implements MiddlewareRequestInterface{
       * */
 	 private static $instance;
 
-	 public ?Data   $data    = null;
-     public         $user    = null;
-     public ?Route  $route   = null;
-     public ?array  $trail   = null;
+	 public ?Data   $data                = null;
+     public         $user                = null;
+     public ?Route  $route               = null;
+     public ?array  $trail               = null;
+     public bool    $enforce_permissions = false;
 	 private function __construct(){
          $this->data = new Data();
      }

@@ -12,12 +12,13 @@ use SaQle\Accounts as Accounts;
 use SaQle\Dao as Dao;
 use SaQle\Commons as Commons;
 use SaQle\Http\Request\Request;
+use SaQle\FeedBack\FeedBack;
 
 class SigninObserver extends IAuthObserver{
 	
 	 public function do_update(AuthService $auth_service){
 		 $feedback = $auth_service->status();
-		 if($feedback['status'] == 0){
+		 if($feedback['status'] == FeedBack::SUCCESS){
 
 		 	 $request = Request::init();
 		 	 //set request user
