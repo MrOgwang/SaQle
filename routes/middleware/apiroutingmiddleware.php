@@ -41,7 +41,7 @@ class ApiRoutingMiddleware extends BaseRoutingMiddleware{
 
              $this->find_and_assign_route($routes, $request);
 
-             $controller = $request->route->get_target();
+             $controller = explode("@", $request->route->get_target())[0];
 
              $permissions = (new $controller())->get_permissions();
 

@@ -111,6 +111,7 @@ class RouteLayoutMiddleware extends BaseRoutingMiddleware{
 
          $targets = array_column($request->trail, 'target');
          foreach($targets as $controller){
+             $controller = explode("@", $controller)[0];
              $permissions = (new $controller())->get_permissions();
              if($permissions){
                  $request->enforce_permissions = true;

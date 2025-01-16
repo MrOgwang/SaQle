@@ -13,6 +13,7 @@ class PermissionsMiddleware extends IMiddleware{
      public function handle(MiddlewareRequestInterface &$request){
            $targets = $request->is_api_request() ? [$request->route->get_target()] : array_column($request->trail, 'target');
            foreach($targets as $controller){
+                $controller = explode("@", $controller)[0];
                 $permissions = (new $controller())->get_permissions();
                 $allgood = (new class{use PermissionUtils;})::evaluate_permissions($permissions, true);
                 if(!$allgood[0]){

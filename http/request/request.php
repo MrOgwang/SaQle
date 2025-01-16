@@ -51,14 +51,33 @@ class Request implements MiddlewareRequestInterface{
       * @return bool
       * */
      public function is_api_request() : bool{
-        $is_api_request = false;
-        for($u = 0; $u < count(API_URL_PREFIXES); $u++){
-            if(str_contains($_SERVER['REQUEST_URI'], API_URL_PREFIXES[$u])){
-                $is_api_request = true;
-                break;
-            }
-        }
-        return $is_api_request;
+         $is_api_request = false;
+         for($u = 0; $u < count(API_URL_PREFIXES); $u++){
+             if(str_contains($_SERVER['REQUEST_URI'], API_URL_PREFIXES[$u])){
+                 $is_api_request = true;
+                 break;
+             }
+         }
+
+         return $is_api_request;
+     }
+
+     /**
+      * Is this an ajax request. Ajax requests are api requests
+      * sent from the same origin as the backend
+      * 
+      * @return bool
+      * */
+     public function is_ajax_request() : bool{
+         $origin = $_SERVER['HTTP_ORIGIN'] ?? null;
+         $referer = $_SERVER['HTTP_REFERER'] ?? null;
+         $host = $_SERVER['HTTP_HOST'];
+
+         if( (($origin && parse_url($origin, PHP_URL_HOST) === $host) || ($referer && parse_url($referer, PHP_URL_HOST) === $host)) && $this->is_api_request()){
+             return true;
+         }
+
+         return false;
      }
 
      /**

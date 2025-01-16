@@ -2,7 +2,7 @@
 namespace SaQle\Middleware\Factory;
 
 use SaQle\Middleware\Interface\IMiddlewareGroup;
-use SaQle\Middleware\Group\{WebMiddlewareGroup, ApiMiddlewareGroup};
+use SaQle\Middleware\Group\{WebMiddlewareGroup, ApiMiddlewareGroup, AjaxMiddlewareGroup};
 use SaQle\Http\Request\Request;
 use SaQle\Middleware\Base\BaseMiddlewareGroup;
 
@@ -11,13 +11,14 @@ class MiddlewareGroup extends BaseMiddlewareGroup implements IMiddlewareGroup{
 
 	 public function __construct(){
 	 	 $request = Request::init();
-	 	 $this->request_type = $request->is_api_request() ? 'api' : 'web';
+	 	 $this->request_type = !$request->is_api_request() ? 'web' : ($request->is_ajax_request() ? 'ajax' : 'api');
 	 }
 
 	 public function get_middlewares() : array{
 	 	 return match($this->request_type){
-	 	 	 'web' => (new WebMiddlewareGroup())->get_middlewares(),
-	 	 	 'api' => (new ApiMiddlewareGroup())->get_middlewares(),
+	 	 	 'web'  => (new WebMiddlewareGroup())->get_middlewares(),
+	 	 	 'api'  => (new ApiMiddlewareGroup())->get_middlewares(),
+	 	 	 'ajax' => (new AjaxMiddlewareGroup())->get_middlewares(),
 	 	 };
 	 }
 
