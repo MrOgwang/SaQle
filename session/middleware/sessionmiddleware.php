@@ -25,6 +25,8 @@ namespace SaQle\Session\Middleware;
 
 use SaQle\Middleware\IMiddleware;
 use SaQle\Middleware\MiddlewareRequestInterface;
+use SaQle\Auth\Observers\SigninObserver;
+use SaQle\FeedBack\FeedBack;
 
 class SessionMiddleware extends IMiddleware{
       public function handle(MiddlewareRequestInterface &$request){
@@ -53,8 +55,16 @@ class SessionMiddleware extends IMiddleware{
            //assign the session user to the request
            if(isset($_SESSION['user'])){
                $request->user = $_SESSION['user'];
-           }else{
+           }elseif(isset($_SERVER['HTTP_REQUIRES_AUTH'])){
+                $request->enforce_permissions = true;
 
+                $auth_backend_class = AUTH_BACKEND_CLASS;
+                $service = new $auth_backend_class('jwt');
+                new SigninObserver($service);
+                $feedback = $service->authenticate();
+                if($feedback['status'] === FeedBack::SUCCESS && $feedback['feedback']){
+                     $request->user = $feedback['feedback']['user'];
+                }
            }
      	 parent::handle($request);
      }

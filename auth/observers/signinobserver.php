@@ -3,14 +3,6 @@ namespace SaQle\Auth\Observers;
 
 use SaQle\Observable\{Observer, Observable};
 use SaQle\Auth\Services\AuthService;
-
-
-use SaQle\Notifications as Notifications;
-use SaQle\Notifications as MyNotifications;
-use SaQle\Auth as Authentication;
-use SaQle\Accounts as Accounts;
-use SaQle\Dao as Dao;
-use SaQle\Commons as Commons;
 use SaQle\Http\Request\Request;
 use SaQle\FeedBack\FeedBack;
 
@@ -18,7 +10,7 @@ class SigninObserver extends IAuthObserver{
 	
 	 public function do_update(AuthService $auth_service){
 		 $feedback = $auth_service->status();
-		 if($feedback['status'] == FeedBack::SUCCESS){
+		 if($feedback['status'] == FeedBack::SUCCESS && $feedback['feedback']){
 
 		 	 $request = Request::init();
 		 	 //set request user
