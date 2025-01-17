@@ -27,6 +27,7 @@ use SaQle\Middleware\IMiddleware;
 use SaQle\Middleware\MiddlewareRequestInterface;
 use SaQle\Auth\Observers\SigninObserver;
 use SaQle\FeedBack\FeedBack;
+use SaQle\Log\FileLogger;
 
 class SessionMiddleware extends IMiddleware{
       public function handle(MiddlewareRequestInterface &$request){
@@ -51,6 +52,9 @@ class SessionMiddleware extends IMiddleware{
            */
            ini_set('display_errors', DISPLAY_ERRORS);
            ini_set('display_startup_errors', DISPLAY_STARTUP_ERRORS);
+
+           $logger = new FileLogger(DOCUMENT_ROOT."/logs/log.txt", "w+");
+           $logger->log_to_file(json_encode($_SERVER));
 
            //assign the session user to the request
            if(isset($_SESSION['user'])){

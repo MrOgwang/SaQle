@@ -6,6 +6,7 @@ use SaQle\Observable\{Observable, ConcreteObservable};
 use SaQle\FeedBack\FeedBack;
 use SaQle\Auth\Services\Interface\IAuthService;
 use SaQle\Auth\Models\Login;
+use SaQle\Auth\Services\Jwt;
 
 abstract class AuthService implements IAuthService, Observable{
 	 use ConcreteObservable{
@@ -43,6 +44,35 @@ abstract class AuthService implements IAuthService, Observable{
          $this->feedback->set(FeedBack::SUCCESS, $this->request->user);
 		 $this->notify();
 		 return $this->feedback->get_feedback();
+	 }
+
+	 /**
+	  * Generate a new jwt auth token
+	  * 
+	  * @param int    $issued_at:  the time issued in secends
+	  * @param string $issuer:     the domain issuing the token
+	  * @param int    $not_before: the time in seconds before which token is not valid
+	  * @param int    $expiry:        the time in minutes after which token is not valid
+	  * @param array  $extra_info:    a key=>value array of extra information to pass as payload
+	  * 
+	  * @return string
+	  * */
+	 public function generate_jwt_token(
+	 	 int    $issued_at  = time(), 
+	 	 string $issuer     = ROOT_DOMAIN, 
+	 	 int    $not_before = time(), 
+	 	 int    $expiry     = 5, 
+	 	 array  $exra_info  = []
+	 ) : string{
+	 	 $payload = [
+             'iat'       => $issued_at,
+             'iss'       => $issuer,
+             'nbf'       => $not_before,
+             'exp'       => $issued_at + ($expiry * 60),
+         ];
+         $payload = array_merge($payload, $extra_info);
+         $token = (new Jwt(JWT_KEY))->encode($payload);
+         return $token;
 	 }
 }
 ?>
