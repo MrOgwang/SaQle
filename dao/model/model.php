@@ -293,7 +293,7 @@ abstract class Model implements IModel{
               * */
 			 $rp = new \ReflectionProperty($this::class, $property_name);
 			 if( $rp->isInitialized($this) && in_array($property_name, $defined_field_names) ){
-			 	 $property_type = str_replace("?", "", $property->getType()); 
+			 	 //$property_type = str_replace("?", "", $property->getType()); 
 		     	 $property_value = $property->getValue($this);
 		     	 if(in_array($property_name, $simple_fields)){
 		     	 	 $savable_simple[$property_name] = [$property_value, false];

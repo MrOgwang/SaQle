@@ -82,7 +82,7 @@ class RouteLayoutMiddleware extends BaseRoutingMiddleware{
      private function contained_in_nested(array $array, string $url){
          $array = $this->flatten($array);
          $found = array_filter($array, function($item) use ($url){
-             return $item->get_url() === $url;
+             return rtrim($item->get_url(), "/") === $url;
          });
 
          return !empty($found);
