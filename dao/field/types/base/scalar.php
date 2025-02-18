@@ -2,60 +2,42 @@
 namespace SaQle\Dao\Field\Types\Base;
 
 abstract class Scalar extends Simple{
-	public function __construct(...$kwargs){
-		parent::__construct(...$kwargs);
-	}
+	 //an array of choices from which the value must exists
+	 public ?array $choices = null {
+	 	 set(?array $value){
+	 	 	 if(is_array($value) && array_is_list($value)){
+	 	 	 	 $new_value = [];
+	 	 	 	 foreach($value as $v){
+	 	 	 	 	 $new_value[$v] = ucwords($v);
+	 	 	 	 }
+	 	 	 	 $this->choices = $new_value;
+	 	 	 }else{
+	 	 	 	 $this->choices = $value;
+	 	 	 }
+	 	 }
 
-	protected function get_validation_properties(){
-		return array_merge(parent::get_validation_properties(), [
-			/**
-			 * An array of choices from which the value must exists.
-			 * */
-			'choices' => 'choices',
-		]);
-	}
+	 	 get => $this->choices;
+	 }
 
-	protected function get_control_properties(){
-		return array_merge(parent::get_control_properties(), [
-			/**
-			 * Given a set of choices, whether to allow multiple values or just one
-			 * */
-			'multiple' => 'multiple',
+	 //the default value to use if the value is not provided
+	 public mixed $default = null {
+	 	 set(mixed $value){
+	 	 	 $this->default = $value;
+	 	 }
 
-			/**
-              * Whether control is readonly or not
-              * */
-	 	    'readonly' => 'readonly',
+	 	 get => $this->default;
+	 }
+ 
+	 public function __construct(...$kwargs){
+		 parent::__construct(...$kwargs);
+	 }
 
-            /**
-             * Step value for number input types
-             * */
-	 	    'step' => 'step',
+	 protected function get_validation_kwargs() : array{
+		 return array_merge(parent::get_validation_kwargs(), ['choices']);
+	 }
 
-            /**
-             * Controller placeholder
-             * */
-	 	    'placeholder' => 'placeholder',
-
-	 	    /**
-             * Array of options for select box, radio buttons or checkboxes
-             * */
-	 	    'choices' => 'options',
-
-             /**
-             * The default value to display on the control
-             * */
-	 	    'default' => 'default',
-		]);
-	}
-
-	protected function get_db_properties(){
-		return array_merge(parent::get_db_properties(), [
-			/**
-             * The default value to use if a value is not provided.
-             * */
-	 	    'default' => 'default',
-		]);
-	}
+	 protected function get_db_kwargs() : array{
+		 return array_merge(parent::get_db_kwargs(), ['default']);
+	 }
 }
 ?>

@@ -30,7 +30,7 @@ class AbsoluteValidator extends ValidatorDecorator{
 	 }
 	 public function is_absolute_valid($input, $config){
 		 return [
-		     'is_valid' => (bool)$config['is_absolute'] === true && (int)$input < 0 ? false : true, 
+		     'is_valid' => (bool)$config['absolute'] === true && (int)$input < 0 ? false : true, 
 			 'error' => $this->get_readable_field_name($config['field_name']). ' cannot be less than zero.'
 		 ];
 	 }

@@ -8,12 +8,12 @@ class FieldValidator{
 		/**
 		 * If is_required key has not been explicitly set, or it has been assigned false
 		 * */
-		if(!array_key_exists("is_required", $config) || !$config['is_required']){
-			 $config['allow_null']  = true;
-			 $config['allow_empty'] = true;
+		if(!array_key_exists("required", $config) || !$config['required']){
+			 $config['null']  = true;
+			 $config['empty'] = true;
 		}else{
-			$config['allow_null']  = false;
-			$config['allow_empty'] = false;
+			$config['null']  = false;
+			$config['empty'] = false;
 		}
 
 		/**
@@ -26,7 +26,7 @@ class FieldValidator{
 		/**
 		 * the allow_null and allow_empty validation must be done first before all the rest, in that order.
 		 * */
-		$desired_order = ['allow_null', 'allow_empty'];
+		$desired_order = ['null', 'empty'];
 		$config        = array_replace(array_flip($desired_order), $config);
 
 		$builder = new ValidatorBuilder();
@@ -37,25 +37,25 @@ class FieldValidator{
 		/**
 		 * Add the general_type and field_name keys to the config
 		 * */
-		$config['general_type'] = self::get_general_type($config['type']);
+		$config['general_type'] = self::get_general_type($config['primitive_type']);
 		$config['field_name']   = $field;
 		return $builder->build()->validate(input: $value, config: $config, code: 0);
 	}
 
 	private static function compose_builder(string $name, ValidatorBuilder $builder) : ValidatorBuilder{
 		return match($name){
-			'accept', 'type' => $builder->type(),
-			'allow_null'     => $builder->null(),
-			'choices'        => $builder->choices(),
-			'allow_empty'    => $builder->empty(),
-			'length'         => $builder->length(),
-			'max'            => $builder->max(),
-			'min'            => $builder->min(),
-			'pattern'        => $builder->pattern(),
-			'is_strict'      => $builder->strict(),
-			'allow_zero'     => $builder->zero(),
-			'is_absolute'    => $builder->absolute(),
-			default          => $builder
+			'accept', 'primitive_type' => $builder->type(),
+			'null'                     => $builder->null(),
+			'choices'                  => $builder->choices(),
+			'empty'                    => $builder->empty(),
+			'length'                   => $builder->length(),
+			'maximum'                  => $builder->max(),
+			'minimum'                  => $builder->min(),
+			'pattern'                  => $builder->pattern(),
+			'strict'                   => $builder->strict(),
+			'zero'                     => $builder->zero(),
+			'absolute'                 => $builder->absolute(),
+			default                    => $builder
 		};
 	}
 

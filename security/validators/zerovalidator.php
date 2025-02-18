@@ -30,7 +30,7 @@ class ZeroValidator extends ValidatorDecorator{
 	 }
 	 public function is_zero_valid($input, $config){
 		 return [
-		     'is_valid' => (bool)$config['allow_zero'] === false && (int)$input === 0 ? false : true, 
+		     'is_valid' => (bool)$config['zero'] === false && (int)$input === 0 ? false : true, 
 			 'error' => $this->get_readable_field_name($config['field_name']). ' cannot be a zero.'
 		 ];
 	 }

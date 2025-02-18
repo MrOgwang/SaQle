@@ -17,7 +17,7 @@
 
 namespace SaQle\Config;
 
-use SaQle\Auth\Models\Schema\{BaseRoleSchema, BasePermissionSchema, BaseTenantSchema, BaseUserSchema};
+use SaQle\Auth\Models\{BaseRole, BasePermission, BaseTenant, BaseUser};
 use SaQle\Commons\StringUtils;
 
 class Config{
@@ -28,8 +28,8 @@ class Config{
 	 	 * Enable role based accesscontrol with the following flags.
 	 	 * */
 	 	define("ENABLE_RBAC", $settings['enable_rbac'] ?? false);
-	 	define("ROLE_MODEL_CLASS", $settings['role_model_class'] ?? BaseRoleSchema::class);
-	 	define("PERMISSION_MODEL_CLASS", $settings['role_model_class'] ?? BasePermissionSchema::class);
+	 	define("ROLE_MODEL_CLASS", $settings['role_model_class'] ?? BaseRole::class);
+	 	define("PERMISSION_MODEL_CLASS", $settings['role_model_class'] ?? BasePermission::class);
 	 	
 	 	/**
 	 	 * Array of all the db context classes.
@@ -81,14 +81,14 @@ class Config{
 		 * The model class name for authentications 
 		 * This class must be of type User.
 		 * */
-		 define("AUTH_MODEL_CLASS", $settings['auth_model_class'] ?? BaseUserSchema::class);
+		 define("AUTH_MODEL_CLASS", $settings['auth_model_class'] ?? BaseUser::class);
 
 		 /**
 		  * The following flags will enable or disable multitenancy
-		  * 1. TENANT_MODEL_CLASS  : the clas name of the tanant schema
+		  * 1. TENANT_MODEL_CLASS  : the clas name of the tanant 
 		  * 2. ENABLE_MULTITENANCY : Expliclty set this to enable multi tenancy
 		  * */
-		 define("TENANT_MODEL_CLASS", $settings['tenant_model_class'] ?? BaseTenantSchema::class);
+		 define("TENANT_MODEL_CLASS", $settings['tenant_model_class'] ?? BaseTenant::class);
 		 define("ENABLE_MULTITENANCY", $settings['enable_multitenancy'] ?? false);
 		 
 
@@ -218,7 +218,7 @@ class Config{
 
 		 define("MODEL_SOFT_DELETE", $settings['model_soft_delete'] ?? false);
 		 define("MODEL_DELETED_AT_FIELD", $settings['model_deleted_at_field'] ?? 'deleted_at');
-		 define("MODEL_DELETED_By_FIELD", $settings['model_deleted_by_field'] ?? 'deleted_by');
+		 define("MODEL_DELETED_BY_FIELD", $settings['model_deleted_by_field'] ?? 'deleted_by');
 		 define("MODEL_DELETED_FIELD", $settings['model_deleted_field'] ?? 'deleted');
 
 		 /**

@@ -1,32 +1,14 @@
 <?php
 namespace SaQle\Dao\Field\Types;
 
-use SaQle\Dao\Field\Types\Base\Scalar;
 use SaQle\Dao\Field\Interfaces\IField;
-use SaQle\Dao\Field\FormControlTypes;
 
 class MediumTextField extends TextType implements IField{
-	public function __construct(...$kwargs){
-		/**
-		 * Fill in the data types.
-		 * */
-		$kwargs['dtype'] = "MEDIUMTEXT";
-		$kwargs['vtype'] = "text";
-		$kwargs['ctype'] = FormControlTypes::TEXTAREA->value;
-		$kwargs['ptype'] = "string";
-
-		/**
-		 * Fill in the validation props
-		 * */
-		$kwargs['length'] = isset($kwargs['length']) ? $kwargs['length'] : 16777215;
-		$kwargs['max']    = isset($kwargs['max']) ? $kwargs['max'] : 16777215;
-
-		/**
-		 * Fill in control props.
-		 * */
-		$kwargs['multiline'] = true;
-
-		parent::__construct(...$kwargs);
-	}
+	 public function __construct(...$kwargs){
+		 $kwargs['column_type'] = "MEDIUMTEXT";
+		 $kwargs['length']      = isset($kwargs['length']) ? $kwargs['length'] : 16777215;
+		 $kwargs['maximum']     = isset($kwargs['maximum']) ? $kwargs['maximum'] : 16777215;
+		 parent::__construct(...$kwargs);
+	 }
 }
 ?>

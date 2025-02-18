@@ -36,24 +36,24 @@ class MinValidator extends ValidatorDecorator{
 
 	 public function number_min_valid($input, $config){
 	 	 return [
-		     'is_valid' => array_key_exists('min_inclusive', $config) && (bool)$config['min_inclusive'] === false ? $input > $config['min'] : $input >= $config['min'], 
-			 'error' => $this->get_readable_field_name($config['field_name']). ' cannot be less than the required minimum of '.$config['min']
+		     'is_valid' => array_key_exists('min_inclusive', $config) && (bool)$config['min_inclusive'] === false ? $input > $config['minimum'] : $input >= $config['minimum'], 
+			 'error' => $this->get_readable_field_name($config['field_name']). ' cannot be less than the required minimum of '.$config['minimum']
 		 ];
 	 }
 
 	 public function text_min_valid($input, $config){
 	 	 $input = is_null($input) ? "" : $input;
 	 	 return [
-		     'is_valid' => array_key_exists('min_inclusive', $config) && (bool)$config['min_inclusive'] === false ? strlen($input) > $config['min'] : strlen($input) >= $config['min'], 
-			 'error' => $this->get_readable_field_name($config['field_name']). ' length cannot be less than the required minimum of '.$config['min'].' characters'
+		     'is_valid' => array_key_exists('min_inclusive', $config) && (bool)$config['min_inclusive'] === false ? strlen($input) > $config['minimum'] : strlen($input) >= $config['minimum'], 
+			 'error' => $this->get_readable_field_name($config['field_name']). ' length cannot be less than the required minimum of '.$config['minimum'].' characters'
 		 ];
 	 }
 
 	 public function file_min_valid($input, $config){
-	 	 $min_bytes = $config['min'] * 1024 * 1024;
+	 	 $min_bytes = $config['minimum'] * 1024 * 1024;
 	 	 return [
 		     'is_valid' => array_key_exists('min_inclusive', $config) && (bool)$config['min_inclusive'] === false ? $input > $min_bytes : $input >= $min_bytes, 
-			 'error' => $this->get_readable_field_name($config['field_name']).': file size cannot be less than the required minimum of '.$config['min']."mbs"
+			 'error' => $this->get_readable_field_name($config['field_name']).': file size cannot be less than the required minimum of '.$config['minimum']."mbs"
 		 ];
 	 }
 }

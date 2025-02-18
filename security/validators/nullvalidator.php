@@ -39,7 +39,7 @@ class NullValidator extends ValidatorDecorator{
 
 	 public function null_valid($input, $config){
 	 	 return [
-		     'is_valid' => (bool)$config['allow_null'] === false && is_null($input) ? false : true, 
+		     'is_valid' => (bool)$config['null'] === false && is_null($input) ? false : true, 
 			 'error' => $this->get_readable_field_name($config['field_name']). ' cannot be null'
 		 ];
 	 }

@@ -2,374 +2,243 @@
 
 namespace SaQle\Dao\Field\Types\Base;
 
-use SaQle\Dao\Field\Interfaces\IValidator;
-use SaQle\Dao\Field\Types\{Pk, TextType, NumberType, FileField, OneToOne, OneToMany, ManyToMany, TimestampField};
+use SaQle\Dao\Field\Types\{Pk, TextType, NumberType, FileField, TimestampField};
 use SaQle\Dao\Field\Types\Base\Relation;
-use SaQle\Dao\Field\Attributes\{TextFieldValidation, NumberFieldValidation, FileFieldValidation};
-use SaQle\Controllers\Forms\FieldDataSource;
-use SaQle\Dao\Field\Controls\FormControl;
 
 abstract class Simple{
-	/**
-	 * The name of the property this field is assigned to on the model.
+	 //The name of the field as defined in the model
+	 public string $field_name = '' {
+	 	 set(string $value){
+	 	 	 $this->field_name = $value;
+	 	 	 if(!$this->column_name){
+	 	 	 	 $this->column_name = $value;
+	 	 	 }
+	 	 }
+
+	 	 get => $this->field_name;
+	 }
+
+	 //The name of the table column to associate with this field
+	 public protected(set) string $column_name = '' {
+	 	 set(string $value){
+	 	 	 $this->column_name = $value;
+	 	 }
+
+	 	 get => $this->column_name;
+	 }
+
+	 //Whether this field is required or not. If true, allow_null will be false
+	 public bool $required = false {
+	 	 set(bool $value){
+	 	 	 $this->required = $value;
+	 	 }
+
+	 	 get => $this->required;
+	 }
+
+	 //The primitive data type for the content stored in this field
+	 public string $primitive_type {
+	 	 set(string $value){
+	 	 	 $this->primitive_type = $value;
+	 	 }
+
+	 	 get => $this->primitive_type;
+	 }
+
+	 //The table column type for the content stored in this field
+	 public string $column_type {
+	 	 set(string $value){
+	 	 	 $this->column_type = $value;
+	 	 }
+
+	 	 get => $this->column_type;
+	 }
+
+	 //The validation type for the content stored in this field
+	 public string $validation_type {
+	 	 set(string $value){
+	 	 	 $this->validation_type = $value;
+	 	 }
+
+	 	 get => $this->validation_type;
+	 }
+
+	 //The actual, unmodified content of this field
+	 public mixed $content = '' {
+	 	 set(mixed $value){
+	 	 	 /**
+	 	 	  * Validate the content first before assigning
+	 	 	  * */
+	 	 	 $this->content = $value;
+
+	 	 	 /**
+	 	 	  * For files,
+	 	 	  * 1. Save the file to a temporary location
+	 	 	  * 2. Rename the file using the rename method
+	 	 	  * 3. Resize the file if resize 
+	 	 	  * */
+	 	 }
+
+	 	 get => $this->content;
+	 }
+
+	 //Whether to allow null content, works for text, numbers and files.
+	 public bool $null = true {
+	 	 set(bool $value){
+	 	 	 $this->null = $value;
+	 	 }
+
+	 	 get => $this->null;
+	 }
+
+	 /**
+	 * The maximum value allowed for the content
+	 * For text, this counts the number of characters.
+	 * For numbers, this is the value 
+	 * For files, this is the size
 	 * */
-	protected string $property_name = '';
+	 public mixed $maximum = null {
+	 	 set(mixed $value){
+	 	 	 $this->maximum = $value;
+	 	 }
 
-	/**
-	 * The model class name where field is defined. 
+	 	 get => $this->maximum;
+	 }
+
+	 /**
+	 * The minimum value allowed for the content
+	 * For text, this counts the number of characters.
+	 * For numbers, this is the value 
+	 * For files, this is the size
 	 * */
-	protected string $model_class;
+	 public mixed $minimum = null {
+	 	 set(mixed $value){
+	 	 	 $this->minimum = $value;
+	 	 }
 
-	/**
-	 * The pk name of the model class where field is defined.
+	 	 get => $this->minimum;
+	 }
+
+     //Whether the maximum value is inclusive.
+	 public ?bool $max_inclusive = null {
+	 	 set(?bool $value){
+	 	 	 $this->max_inclusive = $value;
+	 	 }
+
+	 	 get => $this->max_inclusive;
+	 }
+
+	 //Whether the minimum value is inclusive.
+	 public ?bool $min_inclusive = null {
+	 	 set(?bool $value){
+	 	 	 $this->min_inclusive = $value;
+	 	 }
+
+	 	 get => $this->min_inclusive;
+	 }
+
+	 /**
+	 * The number of characters for text,
+	 * The number of digits for numbers,
+	 * The number of characters in a file name
 	 * */
-	protected string $model_class_pk;
+	 public ?int $length = null{
+	 	 set(?int $value){
+	 	 	 $this->length = $value;
+	 	 }
 
-	/**
-	 * All the validation, custom, source and form attributes/
+	 	 get => $this->length;
+	 }
+
+	 /**
+	 * The pattern to match this value against.
+	 * For files, this pattern will be matched on file name
 	 * */
-	protected array $attributes = [];
+	 public ?string $pattern = null {
+	 	 set(?string $value){
+	 	 	 $this->pattern = $value;
+	 	 }
 
-	/**
-	 * Keep the array of key word arguments passed in field contsructor
-	 * */
-	protected array $kwargs;
+	 	 get => $this->pattern;
+	 }
 
-	/**
-	 * The form control associated with this field. This is used in generic forms.
-	 * */
-	protected IControl   $control;
-	
-	public function __construct(...$kwargs){
-		/**
-		 * 1. There are four types that may come in through the kwargs:
-		 * - dtype: is the database type for field: e.g INT, VARCHAR
-		 * - vtype: is the validation type for field. e.g text or number
-		 * - ptype: is the primitive type for the value that will be stored in field. e.g int, float, string, double etc
-		 * - ctype: is the type of input control to be used on forms for the field.
-		 * 
-		 * 2. There are two types of names that may come in through the kwargs
-		 * - cname: this is the name used on the form control for name and id attributes of input tag
-		 * - dname: this is the name to be used as the column name in the database.
-		 * */
-		$this->kwargs = $kwargs;
-	}
+	 //whether to consider al files or just one
+	 public protected(set) ?bool $compact = null {
+	 	 set(?bool $value){
+	 	 	 $this->compact = $value;
+	 	 }
 
-	//setters
-	public function set_property_name(string $name){
-		$this->property_name = $name;
-	}
+	 	 get => $this->compact;
+	 }
+  
+     //initialize a new field
+	 public function __construct(...$kwargs){
+	 	 //echo $this::class."\n";
+	 	 //print_r($kwargs);
+	 	 foreach($kwargs as $k => $v){
+	 	 	 $this->$k = $v;
+	 	 }
+	 }
 
-	public function set_model_class(string $class){
-		$this->model_class = $class;
-	}
+     //get a string represtation of this field
+	 public function __toString(){
+	 	 return $this->content ? (string)$this->content : "";
+	 }
 
-	public function set_model_class_pk(string $pk){
-		$this->model_class_pk = $pk;
-	}
+	 //get validation key word arguemnts
+	 protected function get_validation_kwargs() : array{
+	 	 return [
+	 	 	 'primitive_type',
+	 	 	 'null',
+	 	 	 'required',
+	 	 	 'maximum',
+	 	 	 'minimum',
+	 	 	 'max_inclusive',
+	 	 	 'min_inclusive',
+	 	 	 'length',
+	 	 	 'pattern',
+	 	 	 'validation_type'
+	 	 ];
+	 }
 
-	protected function set_control_attributes(...$kwargs){
-		 $control_properties = $this->get_control_properties();
-		 $newprops = $this->translate_properties($control_properties, $kwargs);
-		 $this->attributes[FormControl::class] = $newprops;
-	}
+	 //get database key word arguments
+	 protected function get_db_kwargs() : array{
+	 	 return [
+	 	 	 'column_type',
+	 	 	 'column_name',
+	 	 	 'content'
+	 	 ];
+	 }
 
-	public function add_kwargs($name, $val){
-		$this->kwargs[$name] = $val;
-	}
-
-	protected function set_validator_attributes(...$kwargs){
-		 $validation_properties = $this->get_validation_properties();
-		 $newprops = $this->translate_properties($validation_properties, $kwargs);
-		 if(isset($newprops['choices']) && isset($kwargs['usekeys'])){
-		 	 $newprops['choices'] = array_keys($newprops['choices']);
-		 }
-		 if($this instanceof TextType || (isset($kwargs['vtype']) && $kwargs['vtype'] == 'text')){
-		 	if(!array_key_exists('type', $newprops)){
-		 		$newprops['type'] = 'string';
-		 	}
-			$this->attributes[TextFieldValidation::class] = $newprops;
-		 }elseif($this instanceof NumberType || (isset($kwargs['vtype']) && $kwargs['vtype'] == 'number')){
-		 	if(!array_key_exists('type', $newprops)){
-		 		$newprops['type'] = 'int';
-		 	}
-		 	$this->attributes[NumberFieldValidation::class] = $newprops;
-		 }elseif($this instanceof FileField){
-		 	if(!array_key_exists('type', $newprops)){
-		 		$newprops['type'] = 'file';
-		 	}
-		 	$this->attributes[FileFieldValidation::class] = $newprops;
-		 }
-	}
-
-	protected function set_source_attributes(...$kwargs){
-		$is_source = $this instanceof Relation && isset($this->kwargs['isnav']) && $this->kwargs['isnav'] === true ? false : true;
-		if($is_source){
-			 $this->attributes[FieldDataSource::class] = [];
-		}
-	}
-
-	public function initialize(){
-		 #initialize database properties.
-		 /**
-		  * If the dname is not provided, make the current property_name the dname.
-		  * */
-		 $this->kwargs['dname'] = $this->kwargs['dname'] ?? $this->property_name;
-
-		 #Initialize control properties.
-		 /**
-		  * If the cname is not provided, make it the current property name
-		  * */
-		 $this->kwargs['cname'] = $this->kwargs['cname'] ?? $this->property_name;
-		 /**
-		  * If the required attribute is not set, set required to true.
-		  * */
-		 $this->kwargs['required'] = isset($this->kwargs['required']) ? $this->kwargs['required'] : false;
-		 /**
-		  * If the label is not set, turn the current property name into a label.
-		  * */
-		 $this->kwargs['label'] = isset($this->kwargs['label']) ? $this->kwargs['label'] : 
-		 ucwords(str_replace("_", " ", $this->property_name));
-
-		 #Initialize validation properties.
-		 /**
-		  * If imax is not provided, set it to true.
-		  * */
-		 $this->kwargs['imax'] = isset($this->kwargs['imax']) ? $this->kwargs['imax'] : true;
-		 /**
-		  * If imin is not provided, set it to true.
-		  * */
-		 $this->kwargs['imin'] = isset($this->kwargs['imin']) ? $this->kwargs['imin'] : true;
-
-		 $this->set_validator_attributes(...$this->kwargs);
-		 $this->set_control_attributes(...$this->kwargs);
-		 $this->set_source_attributes(...$this->kwargs);
-	}
-
-    //getters
-    public function get_kwargs(){
-    	return $this->kwargs;
-    }
-
-    public function is_required(){
-    	return $this->kwargs['required'] ?? false;
-    }
-
-	public function get_model_class(){
-		return $this->model_class;
-	}
-
-	public function get_model_class_pk(){
-		return $this->model_class_pk;
-	}
-
-	public function get_primitive_type(){
-		return $this->kwargs['ptype'];
-	}
-
-	public function get_db_column_name(){
-		return $this->kwargs['dname'];
-	}
-
-	public function get_control_attributes(){
-		return $this->attributes[FormControl::class] ?? [];
-	}
-
-	public function get_source_attributes(){
-		return $this->attributes[FieldDataSource::class] ?? [];
-	}
-
-	public function get_attributes(){
-		return $this->attributes;
-	}
-
-	protected function get_validation_properties(){
-		return [
-			/**
-			 * The data type.
-			 * */
-			'ptype' => 'type', 
-
-			/**
-			 * Whether to allow null values: works for text, numbers and files.
-			 * */
-			'null' => 'allow_null', 
-
-			/**
-			 * Whether value must be provided. works for text, numbers.
-			 * If required is true, null will be false
-			 * */
-			'required' => 'is_required', 
-
-			/**
-			 * The maximum value allowed. 
-			 * For text, this counts the number of characters.
-			 * For numbers, this is the value 
-			 * For files, this is the size
-			 * */
-			'max' => 'max',
-
-			/**
-			 * The minimum value allowed.
-			 * Works as max above
-			 * */
-			'min' => 'min',
-
-			/**
-			 * Whether the maximum value is inclusive.
-			 * */
-			'imax' => 'max_inclusive',
-
-			/**
-			 * Whether the minimum value is inclusive
-			 * */
-			'imin' => 'min_inclusive',
-
-			/**
-			 * The number of characters for text,
-			 * The number of digits for numbers,
-			 * The number of characters in a file name
-			 * */
-			'length' => 'length',
-
-			/**
-			 * The pattern to match this value against.
-			 * For files, this pattern will be matched on file name
-			 * */
-			'pattern' => 'pattern',
-
-			/**
-			 * The validator for a field will usually be picked from its type,
-			 * but you can override this behavior by specifying a validator type.
-			 * This will take the form of text, number. Note that you cannot ovveride the validator
-			 * type for a file.
-			 * */
-			'vtype' => 'vtype'
-		];
-	}
-
-	protected function get_control_properties(){
-		return [
-			/**
-			 * The type of formcontrol
-			 * */
-			'ctype' => 'type',
-
-			/**
-			 * The name of form control. 
-			 * This will be used for the name and id attributes of the form input element constructed
-			 * */
-	 	    'cname' => 'name',
-
-	 	    /**
-	 	     * The label of the form control
-	 	     * */
-	 	    'label' => 'label',
-
-	 	    /**
-	 	     * Whether form control is required
-	 	     * */
-	 	    'required' => 'required',
-            
-            /**
-             * Whether to disable control or not
-             * */
-	 	    'disabled' => 'disabled',
-
-            /**
-             * Id of form to associate with controller
-             * */
-	 	    'form' => 'form',
-
-	 	    /**
-	 	     * Data array to attach to the control
-	 	     * */
-	 	    'data' => 'data',
-
-	 	    /**
-	 	     * Whether control should allow multiple values
-	 	     * */
-	 	    'multiple' => 'multiple'
-		];
-	}
-
-	protected function get_db_properties(){
-		return [
-			/**
-			 * The name to assign to the database column.
-			 * */
-	 	    'dname' => 'dname',
-
-	 	    /**
-			 * The database column type.
-			 * Exampl: VARCHAR, BIGINT, DATETIME etc
-			 * */
-			'dtype' => 'dtype',
-
-	 	    /**
-	 	     * The value assigned to field.
-	 	     * */
-	 	    'value' => 'value',
-		];
-	}
-
-	//utils
-	protected function translate_properties($propmap, $incoming){
-		$newprops = [];
-		if(array_key_exists("reverse", $incoming)){
-			foreach($propmap as $key => $name){
-				if(array_key_exists($name, $incoming)){
-					$newprops[$name] = $incoming[$name];
-				}
-			}
-		}else{
-			foreach($propmap as $key => $name){
-				if(array_key_exists($key, $incoming)){
-					$newprops[$name] = $incoming[$key];
-				}
-			}
-		}
-		return $newprops;
-	}
-
-	public function get_validation_configurations(){
-		 if($this instanceof TextType){
-		 	 return $this->attributes[TextFieldValidation::class] ?? [];
-		 }
-
-		 if($this instanceof NumberType){
-		 	 return $this->attributes[NumberFieldValidation::class] ?? [];
-		 }
-
-		 if($this instanceof FileField){
-		 	 return $this->attributes[FileFieldValidation::class] ?? [];
+     //get validation configurations
+	 public function get_validation_configurations() : array{
+		 if($this instanceof TextType || $this instanceof NumberType || $this instanceof FileField){
+		 	 $validation_kwargs = $this->get_validation_kwargs();
+		 	 $get_validation_configurations = [];
+		 	 foreach($validation_kwargs as $k){
+		 	 	 if(!is_null($this->$k)){
+		 	 	 	 $get_validation_configurations[$k] = $this->$k;
+		 	 	 }
+		 	 }
+		 	 return $get_validation_configurations;
 		 }
          
-         /**
-          * Primary keys and Relation keys will be by passed for now.
-          * */
+         //Primary keys and Relation keys will be by passed for now.
 		 return [];
-	}
+	 }
 
-	public function __toString(){
-		 if(isset($this->kwargs['value']))
-		 	return (string)$this->kwargs['value'];
-
-		 return "";
-	}
-
-	public function get_field_definition(){
-		 $is_field = $this instanceof Relation && isset($this->kwargs['isnav']) && $this->kwargs['isnav'] === true ? false : true;
-		 if(!$is_field){
+     //get field database definition
+	 public function get_field_definition(){
+		 $is_field = $this instanceof Relation && $this->navigation ? false : true;
+		 if(!$is_field)
 			 return null;
-		 }
 
-		 $def   = [$this->kwargs['dname']];
-		 $def[] = $this->kwargs['dtype'] === "VARCHAR" ? $this->kwargs['dtype']."(".$this->kwargs['length'].")" : $this->kwargs['dtype'];
+		 $def   = [$this->column_name];
+		 $def[] = $this->column_type === "VARCHAR" ? $this->column_type."(".$this->length.")" : $this->column_type;
 		 if($this instanceof PK){
-		 	$def[] = $this->kwargs['dtype'] === "VARCHAR" ? "PRIMARY KEY" : "AUTO_INCREMENT PRIMARY KEY";
+		 	 $def[] = $this->column_type === "VARCHAR" ? "PRIMARY KEY" : "AUTO_INCREMENT PRIMARY KEY";
 		 }
-		 $def[] = $this->kwargs['required'] ? "NOT NULL" : "NULL";
+		 $def[] = $this->required ? "NOT NULL" : "NULL";
 		 if($this instanceof TimestampField){
 		     $def[] = $this->kwargs['db_auto_init'] ? "DEFAULT CURRENT_TIMESTAMP" : "";
 		     $def[] = $this->kwargs['db_auto_update'] ? "ON UPDATE CURRENT_TIMESTAMP" : "";
@@ -377,20 +246,16 @@ abstract class Simple{
 		 	 $def[] = isset($this->kwargs['value']) ? 'DEFAULT '.$this->kwargs['value'] : '';
 		 }
  	 	 return implode(" ", $def);
-	}
+	 }
 
-    /**
-     * Set the raw value for this field
-     * */
-	public function value(mixed $value){
-		 $this->kwargs['value'] = $value;
-	}
-
-	/**
-	 * Get the raw value for this field
-	 * */
-	public function get_value(){
-		return $this->kwargs['value'] ?? "";
-	}
+	 public function get_kwargs() : array{
+	 	 /*$kwargs_keys = array_merge($this->get_validation_kwargs(), $this->get_db_kwargs());
+	 	 $kwargs      = [];
+	 	 foreach($kwargs_keys as $key){
+	 	 	 $kwargs[$key] = $this->$key;
+	 	 }
+	 	 return $kwargs;*/
+	 	 return [];
+	 }
 }
 ?>

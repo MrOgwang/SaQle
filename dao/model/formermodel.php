@@ -22,7 +22,7 @@ abstract class Model implements IModel{
 	 	 $reflect = new \ReflectionClass($this);
 	 	
 	 	 $schema = $this->get_schema();
-	 	 $db_columns = $schema->get_db_column_names();
+	 	 $db_columns = $schema->meta->column_names;
 	 	 $db_columns_flip = array_flip($db_columns);
 
 	 	 foreach($kwargs as $k => $v){
@@ -52,9 +52,9 @@ abstract class Model implements IModel{
 
      private function classify_fields(){
      	 $schema = $this->get_schema();
-	 	 $defined_field_names = $schema->get_defined_field_names();
-	 	 $nk_field_names = $schema->get_navigation_field_names();
-	 	 $fk_field_names = $schema->get_fk_field_names();
+	 	 $defined_field_names = $schema->meta->defined_field_names;
+	 	 $nk_field_names = $schema->meta->nav_field_names;
+	 	 $fk_field_names = $schema->meta->fk_field_names;
 
 	 	 $simple_fields = array_diff($defined_field_names, array_merge($nk_field_names, $fk_field_names));
 	 	 $nk_fields = array_diff($defined_field_names, array_merge($simple_fields, $fk_field_names));
@@ -78,7 +78,7 @@ abstract class Model implements IModel{
 	     	 	 
 	     	 	 if($property_value instanceof IModel){
 	     	 	 	 $relation = $schema->is_include($property_name);
-	     	 	     $fk_name = $relation->get_fk();
+	     	 	     $fk_name = $relation->fk;
 	     	 	     $pk_values = $property_value->get_field_value($fk_name);
 	     	 	     $data_state[$property_name] = $pk_values;
 	     	 	     if(in_array($property_name, $nk_fields) && $relation instanceof Many2Many){
@@ -186,7 +186,7 @@ abstract class Model implements IModel{
 	 	 	 $with_fields[] = $fk_key;
 	 	 	 $s = $fk_value[0]->save();
 	 	 	 if($s){
-	 	 	 	 $fk_name = $fk_value[1]->get_fk();
+	 	 	 	 $fk_name = $fk_value[1]->fk;
 	 	 	 	 $saved_fk_ids[$fk_key] = $s->get_field_value($fk_name);
 	 	 	 }
 	 	 }
@@ -215,7 +215,7 @@ abstract class Model implements IModel{
 	 	 	 	 foreach($nk_changed as $nkf => $nkv){
 	 	 	 	 	 if($nkv['removed']){
 	 	 	 	 	 	 $tms = $nkv['schema'];
-		 	 	         $tm = $tms::state()->get_associated_model_class();
+		 	 	         $tm = $tms;
                  	     $tm::db2($nkv['table'], $tms, $nkv['context'])->where($nkv['key']."__in", $nkv['removed'])->delete(permanently: true);
 	 	 	 	 	 }
                  }
@@ -235,15 +235,15 @@ abstract class Model implements IModel{
 	 	 foreach($savable_nk as $nk_key => $nk_value){
 	 	 	 if($nk_value[0]){
 	 	 	 	 $with_fields[] = $nk_key;
-		 	 	 $nk_pk_name = $nk_value[1]->get_pk();
-		 	 	 $nk_fk_name = $nk_value[1]->get_fk();
+		 	 	 $nk_pk_name = $nk_value[1]->pk;
+		 	 	 $nk_fk_name = $nk_value[1]->fk;
 		 	 	 $nk_pk_value = $object->get_field_value($nk_pk_name);
 
 		 	 	 if($nk_value[0] instanceof ModelCollection){
 		 	 	 	 $s = $nk_value[0]->save();
 	 	 	 	 	 $saved_nk_ids[$nk_key] = [$nk_pk_value, $s->get_field_value($nk_fk_name), $nk_value[1]->get_through_model_schema(), $nk_pk_name, $nk_fk_name];
 	 	 	 	 }else{
-	 	 	 	 	 $nk_fk_name = $nk_value[1]->get_fk();
+	 	 	 	 	 $nk_fk_name = $nk_value[1]->fk;
 	 	 	 	 	 $nk_value[0]->$nk_fk_name = $nk_pk_value;
 	 	 	 	 	 $s = $nk_value[0]->save();
 	 	 	 	 }
@@ -254,7 +254,7 @@ abstract class Model implements IModel{
 	 	 foreach($saved_nk_ids as $_nk => $_ids){
 	 	 	 if(count($_ids[1]) > 0){
 		 	 	 $through_model_schema = $_ids[2];
-		 	 	 $through_model = $through_model_schema[1]::state()->get_associated_model_class();
+		 	 	 $through_model = $through_model_schema[1];
 		 	 	 $data = [];
 		 	 	 $pk_col_name = $_ids[3];
 		 	 	 $fk_col_name = $_ids[4];
@@ -305,7 +305,7 @@ abstract class Model implements IModel{
 			 }
 	     }
 
-	     return [$savable_simple, $savable_nk, $savable_fk, $schema->get_pk_name()];
+	     return [$savable_simple, $savable_nk, $savable_fk, $schema->meta->pk_name];
 	 }
 
 	 static public function get_collection_class(){

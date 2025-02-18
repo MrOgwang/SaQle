@@ -1,28 +1,14 @@
 <?php
 namespace SaQle\Dao\Field\Types;
 
-use SaQle\Dao\Field\Types\Base\Scalar;
 use SaQle\Dao\Field\Interfaces\IField;
-use SaQle\Dao\Field\FormControlTypes;
 
 class DoubleField extends NumberType implements IField{
-	public function __construct(...$kwargs){
-		/**
-		 * Fill in the data types.
-		 * */
-		$kwargs['dtype'] = "DOUBLE";
-		$kwargs['vtype'] = "number";
-		$kwargs['ctype'] = isset($kwargs['ctype']) ? $kwargs['ctype'] : FormControlTypes::NUMBER->value;
-		$kwargs['ptype'] = "float";
-
-		/**
-		 * Fill in the validation props
-		 * */
-		$kwargs['length']   = null; #The number of digits to display
-		$kwargs['absolute'] = $kwargs['absolute'] ?? false;
-		$kwargs['zero']     = $kwargs['zero'] ?? true;
-
-		parent::__construct(...$kwargs);
-	}
+	 public function __construct(...$kwargs){
+		 $kwargs['column_type']    = "DOUBLE";
+		 $kwargs['primitive_type'] = "float";
+		 $kwargs['length']         = null; #The number of digits to display
+		 parent::__construct(...$kwargs);
+	 }
 }
 ?>

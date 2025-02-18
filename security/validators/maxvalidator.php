@@ -36,24 +36,24 @@ class MaxValidator extends ValidatorDecorator{
 
 	 public function number_max_valid($input, $config){
 	 	 return [
-		     'is_valid' => array_key_exists('max_inclusive', $config) && (bool)$config['max_inclusive'] === false ? $input < $config['max'] : $input <= $config['max'], 
-			 'error' => $this->get_readable_field_name($config['field_name']). ' must be equal to or less than '.$config['max']
+		     'is_valid' => array_key_exists('max_inclusive', $config) && (bool)$config['max_inclusive'] === false ? $input < $config['maximum'] : $input <= $config['maximum'], 
+			 'error' => $this->get_readable_field_name($config['field_name']). ' must be equal to or less than '.$config['maximum']
 		 ];
 	 }
 
 	 public function text_max_valid($input, $config){
 	 	 $input = is_null($input) ? "" : $input;
 	 	 return [
-		     'is_valid' => array_key_exists('max_inclusive', $config) && (bool)$config['max_inclusive'] === false ? strlen($input) < $config['max'] : strlen($input) <= $config['max'], 
-			 'error' => $this->get_readable_field_name($config['field_name']). ' length must be equal to or less than '.$config['max'].' characters'
+		     'is_valid' => array_key_exists('max_inclusive', $config) && (bool)$config['max_inclusive'] === false ? strlen($input) < $config['maximum'] : strlen($input) <= $config['maximum'], 
+			 'error' => $this->get_readable_field_name($config['field_name']). ' length must be equal to or less than '.$config['maximum'].' characters'
 		 ];
 	 }
 
 	 public function file_max_valid($input, $config){
-	 	 $max_bytes = $config['max'] * 1024 * 1024;
+	 	 $max_bytes = $config['maximum'] * 1024 * 1024;
 	 	 return [
 		     'is_valid' => array_key_exists('max_inclusive', $config) && (bool)$config['max_inclusive'] === false ? $input < $max_bytes : $input <= $max_bytes, 
-			 'error' => $this->get_readable_field_name($config['field_name']).': file size cannot exceed the required maximum of '.$config['max']."mbs"
+			 'error' => $this->get_readable_field_name($config['field_name']).': file size cannot exceed the required maximum of '.$config['maximum']."mbs"
 		 ];
 	 }
 }

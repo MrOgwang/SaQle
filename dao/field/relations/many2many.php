@@ -22,36 +22,38 @@ declare(strict_types = 1);
 namespace SaQle\Dao\Field\Relations;
 
 use SaQle\Dao\Field\Relations\Base\BaseRelation;
-use SaQle\Dao\Field\Relations\Interfaces\IRelation;
 use SaQle\Migration\Tracker\MigrationTracker;
-use SaQle\Commons\FileUtils;
 
-class Many2Many extends BaseRelation implements IRelation{
-	 use FileUtils;
+class Many2Many extends BaseRelation{
+	 //the class name of the through model
+	 public protected(set) ?string $through = null {
+	 	 set(string $value){
+	 	 	 $this->through = $value;
+	 	 }
 
-	 private ?string $through = null;
-	 private ?string  $include = null;
+	 	 get => $this->through;
+	 }
 
 	 public function __construct(
-	 	 string   $pdao,
-	 	 string   $fdao,
-	 	 ?string  $field = null, 
-	 	 ?string  $pk       = null,
-	 	 ?string  $fk       = null,
-	 	 bool     $isnav    = false,
-	 	 bool     $multiple = false,
-	 	 bool     $eager    = false,
-	 	 ?string  $through  = null
+	 	 string   $pmodel,
+	 	 string   $fmodel,
+	 	 ?string  $field      = null, 
+	 	 ?string  $pk         = null,
+	 	 ?string  $fk         = null,
+	 	 bool     $navigation = false,
+	 	 bool     $multiple   = false,
+	 	 bool     $eager      = false,
+	 	 ?string  $through    = null
 	 ){
 	 	$this->through = $through;
-	 	parent::__construct($pdao, $fdao, $field, $pk, $fk, $isnav, true, $eager);
+	 	parent::__construct($pmodel, $fmodel, $field, $pk, $fk, $navigation, true, $eager);
 	 } 
 
 	 public function get_through_model_schema(){
-	 	if($this->through)
-	 		return $this->through;
+	 	 if($this->through)
+	 		 return $this->through;
 
-	 	/**
+	 	 /**
 	 	 * Now go through the complicated process of finding a through model.
 	 	 * */
 	 	 $trackerfile = DOCUMENT_ROOT."/migrations/migrationstracker.bin";
@@ -61,36 +63,29 @@ class Many2Many extends BaseRelation implements IRelation{
          }
          $last_throughs = $tracker->get_through_models();
 
-         $pdao = $this->get_pdao();
-	 	 $fdao = $this->get_fdao();
-	 	 $pdao_state = $pdao::state();
-	 	 $fdao_state = $fdao::state();
-
-         $first_pointer = strtolower($pdao_state->get_class_name().$fdao_state->get_class_name());
-         $other_pointer = strtolower($fdao_state->get_class_name().$pdao_state->get_class_name());
-         $first_pointer = str_replace("schema", "", $first_pointer)."schema";
-         $other_pointer = str_replace("schema", "", $other_pointer)."schema"; 
+         $first_pointer = strtolower($this->pmodel.$this->fmodel);
+         $other_pointer = strtolower($this->fmodel.$this->pmodel);
 
          foreach($last_throughs as $ctx => $throughs){
-         	 foreach($throughs as $pointer => $schema){
+         	 foreach($throughs as $pointer => $model){
          	 	if($pointer === $first_pointer || $pointer === $other_pointer){
          	 		if($pointer === $first_pointer){
          	 			$table_name = $first_pointer;
          	 		}else{
          	 			$table_name = $other_pointer;
          	 		}
-         	 		return [$table_name, $schema, $ctx];
+         	 		return [$table_name, $model, $ctx];
          	 	}
          	 }
          }
 
-         throw new \Exception("No through model was defined for this many to many relationship between: {$pdao} and {$fdao}");
+         throw new \Exception("No through model was defined for this many to many relationship between: {$pdao} and {$fmodel}");
 	 }
 
 	 public function get_through_model(){
-	 	 [$table_name, $schema, $ctx] = $this->get_through_model_schema();
-	 	 $state = $schema::state();
-	 	 return [$table_name, $state->get_associated_model_class(), $ctx];
+	 	 [$table_name, $model, $ctx] = $this->get_through_model_schema();
+
+	 	 return [$table_name, $model, $ctx];
 	 }
 }
 ?>

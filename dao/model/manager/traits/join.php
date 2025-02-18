@@ -62,7 +62,7 @@ trait Join{
      	 $database = $database ?: $this->get_context_tracker()->find_database_name(0);
          $ptable   = $this->get_context_tracker()->find_table_name(0);
      	 $model    = $this->get_model($ptable);
-		 $pkname   = $model->get_pk_name();
+		 $pkname   = $model->meta->pk_name;
      	 $from     = $from ?: $pkname;
      	 $to       = $to   ?: $pkname;
      	 $this->get_join_manager()->add_join(type: $type, table: $table, from: $from, to: $to, as: $as, ref: $ref, database: $database);
@@ -153,7 +153,7 @@ trait Join{
       * @param string $model: the class name of model
       * */
      private function get_table_n_database(string $model){
-     	 [$db_class, $table_name] = $model::get_schema()->get_table_n_dbcontext();
+     	 [$db_class, $table_name] = $model::get_table_n_dbcontext();
 	 	 $database_name = DB_CONTEXT_CLASSES[$this->dbclass]['name'];
 	 	 return [$table_name, $database_name];
      }

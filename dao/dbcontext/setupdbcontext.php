@@ -2,9 +2,9 @@
 declare(strict_types = 1);
 namespace SaQle\Dao\DbContext;
 
-use SaQle\Auth\Models\Schema\{LoginSchema, ContactSchema, VercodeSchema, UserRoleSchema, RolePermissionSchema, UserPermissionSchema, PermissionSchema};
-use SaQle\Session\Models\Schema\SessionSchema;
-use SaQle\Migration\Models\Schema\MigrationSchema;
+use SaQle\Auth\Models\{Login, Contact, Vercode, UserRole, RolePermission, UserPermission, Permission};
+use SaQle\Session\Models\Session;
+use SaQle\Migration\Models\Migration;
 
 class SetupDbContext extends DbContext{
 	 static public function get_models(){
@@ -19,11 +19,11 @@ class SetupDbContext extends DbContext{
 
 	 	 $regular_models = [
 	 	 	 'users'               => AUTH_MODEL_CLASS,
-		     'sessions'            => SessionSchema::class,
-			 'logins'              => LoginSchema::class,
-			 'contacts'            => ContactSchema::class,
-			 'verificationcodes'   => VercodeSchema::class,
-			 'migrations'          => MigrationSchema::class
+		     'sessions'            => Session::class,
+			 'logins'              => Login::class,
+			 'contacts'            => Contact::class,
+			 'verificationcodes'   => Vercode::class,
+			 'migrations'          => Migration::class
 	 	 ];
 
 	 	 if(ENABLE_RBAC){

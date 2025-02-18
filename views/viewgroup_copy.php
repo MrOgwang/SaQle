@@ -315,13 +315,13 @@ class ViewGroup{
 			 if(!$fn_key_instance->get_include())
 			 	continue;
 
-	         $fdao             = $fn_key_instance->get_fdao();
+	         $fmodel             = $fn_key_instance->fmodel;
 	         $fn_sproperty     = $fn_key_instance->get_field();
 	         $row_label        = ucwords(str_replace("_", " ", $fn_sproperty));
 		 	 [$title, $labels, $exclude, $edit, $controls, $defaults] = $this->extract_view_group_settings($p, $row_label);
 
 		 	 if(!$fn_key_instance->get_multiple()){
-		 	 	$rows = array_merge($rows, $this->extract_view_rows_from_dao($fdao, $context, $sdata ? $sdata->$fn_sproperty : $sdata, $sdata, $gindex));
+		 	 	$rows = array_merge($rows, $this->extract_view_rows_from_dao($fmodel, $context, $sdata ? $sdata->$fn_sproperty : $sdata, $sdata, $gindex));
 		 	 	$this->set_label($labels, $rows);
 		 	 	$this->exclude_rows($exclude, $rows);
 		 	 	$this->is_editable($edit, $rows);
@@ -335,14 +335,14 @@ class ViewGroup{
 		 	 if(!$sdata)
 		 	 	continue;
 
-		 	 $fdao_instance   = new $fdao();
-		 	 $name_property   = $fdao_instance->get_name_property();
+		 	 $fmodel_instance   = new $fmodel();
+		 	 $name_property   = $fmodel_instance->get_name_property();
 	 	     $children        = $sdata->$fn_sproperty;
 	 	 	 $group_control   = new ViewGroupCollection();
 	 	 	 foreach($children as $cindex => $child){
 	 	         $group_control->add_group($this->create_child_group(
 	 	         	 title:     self::get_property_value($name_property, $child) ?? '', 
-		 	 	 	 dao:       $fdao, 
+		 	 	 	 dao:       $fmodel, 
 		 	 	 	 context:   $context, 
 		 	 	 	 sdata:     $child,
 		 	 	 	 gindex:    $cindex,
@@ -352,7 +352,7 @@ class ViewGroup{
 		 	 //new view group
 		 	 $new_view_group   = $this->create_child_group(
 		 	 	 title:    $title, 
-		 	 	 dao:      $fdao, 
+		 	 	 dao:      $fmodel, 
 		 	 	 context:  $context,
 		 	 	 sdata:    null, 
 		 	 	 gindex:   count($children),

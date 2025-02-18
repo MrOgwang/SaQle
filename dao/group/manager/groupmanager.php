@@ -1,7 +1,6 @@
 <?php
 namespace SaQle\Dao\Group\Manager;
 
-use SaQle\Dao\Field\Attributes\{ForeignKey, NavigationKey};
 use SaQle\Dao\DbContext\Trackers\DbContextTracker;
 use SaQle\Dao\Group\Interfaces\IGroupManager;
 

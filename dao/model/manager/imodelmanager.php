@@ -245,7 +245,6 @@
      	$refs = array_merge($this->dbclass::get_models(), $this->tmodels);
      	$model_class = $refs[$name];
      	$state = $model_class::state();
-		$state->set_request($this->request);
 		return $state;
      }
 
@@ -303,8 +302,8 @@
 		 	 table_name:    $table,
 		 	 table_aliase:  !is_null($as) ? $as : "",
 		 	 database_name: $this->get_context_options()->get_name(),
-		 	 field_list:    $this->get_model($table)->get_actual_db_column_names(),
-		 	 ff_settings:   $this->get_model($table)->get_file_field_settings(),
+		 	 field_list:    $this->get_model($table)->meta->actual_column_names,
+		 	 ff_settings:   $this->get_model($table)->meta->file_required_fields,
 		 	 table_ref:     $tblref
 		 );
 	 }

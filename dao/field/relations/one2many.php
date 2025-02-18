@@ -22,20 +22,19 @@ declare(strict_types = 1);
 namespace SaQle\Dao\Field\Relations;
 
 use SaQle\Dao\Field\Relations\Base\BaseRelation;
-use SaQle\Dao\Field\Relations\Interfaces\IRelation;
 
-class One2Many extends BaseRelation implements IRelation{
+class One2Many extends BaseRelation{
 	 public function __construct(
-	 	 string   $pdao,
-	 	 string   $fdao,
-	 	 ?string  $field = null, 
-	 	 ?string  $pk       = null,
-	 	 ?string  $fk       = null,
-	 	 bool     $isnav    = false,
-	 	 bool     $multiple = false,
-	 	 bool     $eager    = false
+	 	 string   $pmodel,
+	 	 string   $fmodel,
+	 	 ?string  $field      = null, 
+	 	 ?string  $pk         = null,
+	 	 ?string  $fk         = null,
+	 	 bool     $navigation = false,
+	 	 bool     $multiple   = false,
+	 	 bool     $eager      = false
 	 ){
-	 	parent::__construct($pdao, $fdao, $field, $pk, $fk, $isnav, true, $eager);
+	 	parent::__construct($pmodel, $fmodel, $field, $pk, $fk, $navigation, true, $eager);
 	 } 
 }
 ?>

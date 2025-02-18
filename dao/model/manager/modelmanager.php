@@ -7,7 +7,6 @@
  use function SaQle\Exceptions\{modelnotfoundexception};
  use SaQle\Dao\Model\Model;
  use SaQle\Image\Image;
- use SaQle\Dao\Field\Attributes\NavigationKey;
  use SaQle\Commons\{DateUtils, UrlUtils, StringUtils};
  use SaQle\Services\Container\ContainerService;
  use SaQle\Services\Container\Cf;
@@ -19,7 +18,6 @@
  use Closure;
  use SaQle\Dao\Model\Manager\Modes\FetchMode;
  use SaQle\Dao\Model\TempId;
- use SaQle\Dao\Model\Schema\TempIdSchema;
  use SaQle\Dao\Model\Interfaces\{IThroughModel, ITempModel};
 
 class ModelManager extends IModelManager{
@@ -67,17 +65,17 @@ class ModelManager extends IModelManager{
 
      private function fetch_related_data($foreign_schema, $foreign_key, $pkey_values, $field_name, $with, $tuning){
      	 //get name for temporary table.
-     	 $long_foreign_model_name = $foreign_schema::get_associated_model_class();
+     	 $long_foreign_model_name = $foreign_schema;
      	 $long_foreign_model_name_parts = explode("\\", $long_foreign_model_name);
      	 $foreign_model_name = array_pop($long_foreign_model_name_parts);
      	 $temp_table_name = strtolower($foreign_model_name)."_temp_ids";
      	 //get the db context class
      	 [$db_class, $foreign_table] = $foreign_schema::get_table_n_dbcontext();
      	 //create the temporary table
-     	 TempId::db2($temp_table_name, TempIdSchema::class, $db_class)->create_table();
+     	 TempId::db2($temp_table_name, TempId::class, $db_class)->create_table();
      	 //store the ids in the temporary table.
 	 	 if($pkey_values){
-	 	 	 $tmp_man = TempId::db2($temp_table_name, TempIdSchema::class, $db_class);
+	 	 	 $tmp_man = TempId::db2($temp_table_name, TempId::class, $db_class);
 	 	 	 $tmp_man->config(fnqm: 'N-QUALIFY', ftnm: 'N-ONLY', ftqm: 'N-QUALIFY');
 	 	 	 $values_to_add = [];
 	 	 	 foreach($pkey_values as $id){
@@ -89,7 +87,7 @@ class ModelManager extends IModelManager{
 	 	 $query_table_name = 'ranked_rows';
 
 	 	 #This will select the temporary ids in related data
-	 	 $ids_in_query  = TempId::db2($temp_table_name, TempIdSchema::class, $db_class)->select(['id_value'])->sql_info('select');
+	 	 $ids_in_query  = TempId::db2($temp_table_name, TempId::class, $db_class)->select(['id_value'])->sql_info('select');
 
          $order_clause = "";
          $limit_records = 10000;
@@ -150,7 +148,7 @@ class ModelManager extends IModelManager{
 	 	 $related_data = $finalmanager->eager_load();
 
      	 //drop the temporary table
-     	 TempId::db2($temp_table_name, TempIdSchema::class, $db_class)->drop_table();
+     	 TempId::db2($temp_table_name, TempId::class, $db_class)->drop_table();
 
      	 return $related_data;
      }
@@ -161,8 +159,8 @@ class ModelManager extends IModelManager{
          $existing_relations = $tracker::get_relations();
          $exr_count          = count($existing_relations);
          $exr_last_index     = $exr_count > 0 ? $exr_count - 1 : 0; 
-         $former_rel_field   = isset($existing_relations[$exr_last_index]) ? $existing_relations[$exr_last_index]->get_field() : '';
-         $former_ref_key     = isset($existing_relations[$exr_last_index]) ? $existing_relations[$exr_last_index]->get_fk() : '';
+         $former_rel_field   = isset($existing_relations[$exr_last_index]) ? $existing_relations[$exr_last_index]->field : '';
+         $former_ref_key     = isset($existing_relations[$exr_last_index]) ? $existing_relations[$exr_last_index]->fk : '';
 
          if($is_eager_loading){
          	 $data = [];
@@ -229,30 +227,30 @@ class ModelManager extends IModelManager{
      }
 
      private function process_include($ins, $with, $tuning, $data){
-     	 $fdao         = $ins->get_fdao();
- 	 	 $pkey         = $ins->get_pk();
-	 	 $fkey         = $ins->get_fk();
+     	 $fmodel       = $ins->fmodel;
+ 	 	 $pkey         = $ins->pk;
+	 	 $fkey         = $ins->fk;
 	 	 $pkey_values  = array_unique(array_column($data, $pkey));
 	 	 $pkey_values  = array_filter($pkey_values, function($v){
 	 	 	 return trim($v) !== "" && !is_null($v);
 	 	 });
 
-	 	 $raw_data     = $this->fetch_related_data($fdao, $fkey, $pkey_values, $ins->get_field(), $with, $tuning);
+	 	 $raw_data     = $this->fetch_related_data($fmodel, $fkey, $pkey_values, $ins->field, $with, $tuning);
 	 	 $rel_data     = [];
-	 	 $field        = $ins->get_field();
-	 	 $fdaoinstance = new $fdao();
+	 	 $field        = $ins->field;
+	 	 $fmodelinstance = new $fmodel();
 	 	 foreach($raw_data as $rd){
 	 	 	 $pointer_value            = $rd->$fkey;
 	 	 	 $the_rows                 = json_decode(preg_replace('/,(\s*])/', '$1', $rd->$field));
-	 	 	 $the_rows                 = $this->format_get_data($fdaoinstance, $fdaoinstance->get_associated_model_class(), $the_rows);
-	 	 	 $rel_data[$pointer_value] = $ins->get_multiple() ? $the_rows : ($the_rows[0] ?? null);
+	 	 	 $the_rows                 = $this->format_get_data($fmodelinstance, $fmodel, $the_rows);
+	 	 	 $rel_data[$pointer_value] = $ins->multiple ? $the_rows : ($the_rows[0] ?? null);
 	 	 }
 	 	 return [
 	 	 	'ref_key'     => $pkey,
 	 	 	'raw_data'    => $raw_data,
 	 	 	'rel_data'    => $rel_data,
 	 	 	'rel_field'   => $field,
-	 	 	'is_multiple' => $ins->get_multiple()
+	 	 	'is_multiple' => $ins->multiple
 	 	 ];
      }
 
@@ -277,9 +275,9 @@ class ModelManager extends IModelManager{
 		 	 $chain->add(new DefaultHandler());
 		 	 
 		 	 //Format date and timestamps to human readable forms
-		     if($model_instance->get_auto_cmdt() && $model_instance->get_format_cmdt() && $model_instance->get_cmdt_type() === 'PHPTIMESTAMP'){
-		     	 $createdat_name = $model_instance->get_created_at_field_name();
-		     	 $modifiedat_name = $model_instance->get_modified_at_field_name();
+		     if($model_instance->meta->auto_cmdt && $model_instance->meta->format_cmdt && $model_instance->meta->cmdt_type === 'PHPTIMESTAMP'){
+		     	 $createdat_name = $model_instance->meta->created_at_field;
+		     	 $modifiedat_name = $model_instance->meta->modified_at_field;
 		     	 $chain->add(new FormatCmdt(cat_name: $createdat_name, mat_name: $modifiedat_name));
 		     }
 
@@ -326,7 +324,7 @@ class ModelManager extends IModelManager{
 	 	 #acquire the dao model.
 	 	 $model_instance = $this->get_model($table_name);
 	 	 $model_class    = $model_instance::class;
-	 	 $ass_model_class = $model_instance->get_associated_model_class();
+	 	 $ass_model_class = $model_class;
 
 	 	 #activate tracker and add current model to it.
 	 	 $tracker = EagerTracker::activate();
@@ -336,7 +334,7 @@ class ModelManager extends IModelManager{
 	 	 $tracker->add_model($model_class);
 
 	 	 #if soft delete is available, apply the fetch mode
-	 	 /*if($model_instance->get_soft_delete()){
+	 	 /*if($model_instance->meta->soft_delete){
 	 	 	 $mode = $this->fetch_mode();
 	 	 	 if($mode === FetchMode::NON_DELETED){
 	 	 	 	 $this->where($table_name.'.deleted__eq', 0);
@@ -356,7 +354,7 @@ class ModelManager extends IModelManager{
 	 	 $rows = $this->crud_command->execute();
 
          $data_formatted = false;
-	 	 if(!$tracker_active && $model_class !== "SaQle\Dao\Model\Schema\TempIdSchema"){
+	 	 if(!$tracker_active && $model_class !== "SaQle\Dao\Model\TempId"){
 	 	 	 $rows = $this->format_get_data($model_instance, $ass_model_class, $rows);
 	 	 	 $data_formatted = true;
 	 	 }
@@ -451,7 +449,7 @@ class ModelManager extends IModelManager{
 	 	 [$a_field, $model] = $this->check_with("author");
 	 	 [$m_field] = $this->check_with("modifier");
 
-	 	 if($model->get_auto_cm()){
+	 	 if($model->meta->auto_cm){
 	 	 	 $select_manager = $this->get_select_manager();
 	 	     $select_manager->add_include($a_field);
 	 	     $select_manager->add_include($m_field);
@@ -464,7 +462,7 @@ class ModelManager extends IModelManager{
       * */
 	 public function with_tenant(){
 	 	 [$field, $model] = $this->check_with("tenant");
-	 	 if($model->is_multitenant()){
+	 	 if($model->meta->enable_multitenancy){
 	 	 	 $select_manager = $this->get_select_manager();
 	 	     $select_manager->add_include($field);
 	 	 }
@@ -626,7 +624,7 @@ class ModelManager extends IModelManager{
  	         $model_instance = $this->get_model($table_name);
  	         #implemented interfaces
  	         $interfaces = class_implements($model_instance::class);
- 	         $ass_model_class = $model_instance->get_associated_model_class();
+ 	         $ass_model_class = $model_instance::class;
 
      	 	 Assert::isNonEmptyMap($this->insert_data_container["data"], "$ass_model_class: Save attempt on an empty data container!");
      	     $this->assert_duplicates();
@@ -724,7 +722,7 @@ class ModelManager extends IModelManager{
      	 $table = $this->get_context_tracker()->find_table_name(0);
      	 /*get the model associated with this table*/
      	 $model = $this->get_model($table);
-     	 [$clean_data, $file_data, $is_duplicate, $action_on_duplicate] = $model->prepare_insert_data($data, $table, $model::class, $this->get_dbcontext_class(), $skip_validation);
+     	 [$clean_data, $file_data, $is_duplicate, $action_on_duplicate] = $model->prepare_insert_data($data, $this->request, $table, $model::class, $this->get_dbcontext_class(), $skip_validation);
 
      	 $entry_key = spl_object_hash((object)$clean_data);
 
@@ -745,10 +743,10 @@ class ModelManager extends IModelManager{
      	 	 }
      	 }
 
-     	 $this->insert_data_container["prmkeyname"] = $model->get_pk_name();
-     	 $this->insert_data_container["prmkeytype"] = $model->get_pk_type();
+     	 $this->insert_data_container["prmkeyname"] = $model->meta->pk_name;
+     	 $this->insert_data_container["prmkeytype"] = $model->meta->pk_type;
      	 if($this->insert_data_container["prmkeytype"] === 'GUID'){
-     	 	 $this->insert_data_container["prmkeyvalues"][$entry_key] = $clean_data[$model->get_pk_name()];
+     	 	 $this->insert_data_container["prmkeyvalues"][$entry_key] = $clean_data[$model->meta->pk_name];
      	 }
      	 
      	 $this->file_data[$entry_key] = $file_data;
@@ -838,11 +836,11 @@ class ModelManager extends IModelManager{
      public function update(bool $multiple = false, bool $force = false){
      	 $table = $this->get_context_tracker()->find_table_name(0); //name of current table being manipulated
      	 $model = $this->get_model($table); //the model schema instance for the table.
-     	 $ass_model_class = $model->get_associated_model_class();
+     	 $ass_model_class = $model::class;
          #Make sure the update container has some data
      	 Assert::isNonEmptyMap($this->update_data_container['data'], "$ass_model_class: Update attempt on an empty data container!");
      	 #Clean up the update data, prepare files
-     	 [$clean_data, $file_data, $is_duplicate, $action_on_duplicate] = $model->prepare_update_data($this->update_data_container['data'], $this->data_state);
+     	 [$clean_data, $file_data, $is_duplicate, $action_on_duplicate] = $model->prepare_update_data($this->update_data_container['data'], $this->request, $this->data_state);
      	 #For updates, if there is a duplicate, just abort the update operation.
      	 if($is_duplicate !== false && !$force){
      	 	 throw new \Exception("Aborting update operation! The update operation will lead to duplicate entries in table: {$table}");
@@ -903,7 +901,7 @@ class ModelManager extends IModelManager{
 	 	 	 new TableCreateOperation($this->get_connection()),
 	 	 	 table:  $table,
 	 	 	 fields: implode(", ", $defs),
-	 	 	 temporary: $model->is_temporary()
+	 	 	 temporary: $model->meta->temporary
 	 	 );
 
 	 	 /*execute command and return response*/
@@ -918,7 +916,7 @@ class ModelManager extends IModelManager{
 	 	 $this->crud_command = new TableDropCommand(
 	 	 	 new TableDropOperation($this->get_connection()),
 	 	 	 table:  $table,
-	 	 	 temporary: $model->is_temporary()
+	 	 	 temporary: $model->meta->temporary
 	 	 );
 
 	 	 /*execute command and return response*/

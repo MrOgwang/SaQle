@@ -6,8 +6,8 @@ use SaQle\Dao\Field\Types\Base\Relation;
 use SaQle\Dao\Field\Interfaces\IField;
 
 class OneToOne extends Relation implements IField{
-	public function __construct(...$kwargs){
-		parent::__construct(...$kwargs);
-	}
+	 public function __construct(...$kwargs){
+		 parent::__construct(...$kwargs);
+	 }
 }
 ?>

@@ -1,93 +1,105 @@
 <?php
 namespace SaQle\Dao\Field\Types\Base;
 
-use SaQle\Dao\Field\Interfaces\ICustom;
-use SaQle\Dao\Field\Attributes\FileConfig;
-use SaQle\Dao\Field\FormControlTypes;
+use SaQle\Core\Assert\Assert;
 
 abstract class Binary extends Simple{
-	protected ICustom $custom;
-	public function __construct(...$kwargs){
-		/**
-		 * Fill in the data types.
-		 * */
-		$kwargs['dtype'] = "VARCHAR";
-		$kwargs['ctype'] = isset($kwargs['ctype']) ? $kwargs['ctype'] : FormControlTypes::FILE->value;
-		$kwargs['ptype'] = "file";
-		
-		/**
-		 * Fill in the validation props
-		 * */
-		$kwargs['length'] = 255;
-		$kwargs['max'] = 255;
-		parent::__construct(...$kwargs);
-	}
+	 /**
+	  * During file upload for images and videos, give an array of integer sizes
+	  * for cropping
+	  * */
+	 public protected(set) array $crop_dimensions = [] {
+	 	 set(array $value){
+	 	 	 Assert::allPositiveInteger($value, 'All crop dimensions must be integers greater than 0');
+	 	 	 $this->crop_dimensions = $value;
+	 	 }
 
-	protected function get_validation_properties(){
-		return array_merge(parent::get_validation_properties(), [
-			/**
-			 * An array of file extensions considered valid
-			 * */
-			'accept' => 'accept'
-		]);
-	}
+	 	 get => $this->crop_dimensions;
+	 }
 
-	protected function get_custom_properties(){
-		return [
-			/**
-			 * Callback that returns path to save file
-			 * */
-			'path' => 'path', 
+     /**
+	  * During file upload for images and videos, give an array of integer sizes
+	  * for resizing
+	  * */
+	 public protected(set) array $resize_dimensions = [] {
+	 	 set(array $value){
+	 	 	 Assert::allPositiveInteger($value, 'All resize dimensions must be integers greater than 0');
+	 	 	 $this->resize_dimensions = $value;
+	 	 }
 
-			/**
-			 * Callback that renames uploaded files
-			 * */
-			'rename' => 'rename_callback',
+	 	 get => $this->resize_dimensions;
+	 }
 
-			/**
-			 * Callback that returns a path for a default file incase this value is missing.
-			 * */
-			'dpath' => 'default',
+	 /**
+	  * These fields must be included in the select staement because they are needed 
+	  * for path, rename, url and default_url callbacks
+	  * */
+	 public protected(set) array $required_fields = [] {
+	 	 set(array $value){
+	 	 	 Assert::allString($value, 'All required fields must be strings');
+	 	 	 $this->required_fields = array_unique($value);
+	 	 }
 
-			/**
-			 * An array of integer values to be used to crop file(images and videos)
-			 * */
-			'crop' => 'crop_dimensions',
+	 	 get => $this->required_fields;
+	 }
 
-			/**
-			 * An array of integer values to be used to resize files(images and videos)
-			 * */
-			'resize' => 'resize_dimensions',
+	 /**
+	  * An array of file types to accept
+	  * */
+	 public protected(set) ?array $accept = null {
+	 	 set(?array $value){
+	 	 	 Assert::allString($value, 'All required fields must be strings');
+	 	 	 $this->accept = array_unique($value);
+	 	 }
 
-			/**
-			 * A callback that returns the file to show.
-			 * */
-			'show' => 'show_file'
-		];
-	}
+	 	 get => $this->accept;
+	 }
 
-	protected function get_control_properties(){
-		return array_merge(parent::get_control_properties(), [
-			/**
-			 * An array of file extensions considered valid
-			 * */
-			'accept' => 'accept'
-		]);
-	}
+     /**
+      * Get the directory where uploaded file(s) are saved inside the root media folder
+      * 
+      * @param mixed $model - this is the current object to be saved or updated
+      * */
+	 public function path(mixed $model) : string{
+	 	 return "";
+	 }
 
-	protected function set_custom(...$kwargs){
-		 $custom_properties = $this->get_custom_properties();
-		 $newprops = $this->translate_properties($custom_properties, $kwargs);
-		 $this->attributes[FileConfig::class] = $newprops;
-	}
+     /**
+      * Call this function to rename the files before they are saved
+      * 
+      * @param mixed  $model      - this is the current object to be saved or updated
+      * @param string $file_name  - this is the uploaded file name
+      * @param int    $file_index - if multiple files are uploaded, this is the zero based index of the file
+      * */
+	 public function rename(mixed $model, string $file_name, int $file_index = 0) : string{
+	 	 return $file_name;
+	 }
 
-	public function get_field_attributes(){
-		return $this->attributes[FileConfig::class] ?? [];
-	}
+     /**
+      * Get the displayable urls for the files
+      * */
+	 public function url(mixed $model) : string | array {
+	 	 return "";
+	 }
 
-	public function initialize(){
-		 parent::initialize();
-		 $this->set_custom(...$this->kwargs);
-	}
+     /**
+      * Where there were no files uploaded, but there is a default file that can be shown, return it with default url
+      * */
+	 public function default_url(mixed $model) : string | array{
+	 	 return "";
+	 }
+
+     //Create a new binary field object
+	 public function __construct(...$kwargs){
+		 $kwargs['column_type']    = "VARCHAR";
+		 $kwargs['primitive_type'] = "file";
+		 $kwargs['length']         = 255;
+		 $kwargs['maximum']        = 255;
+		 parent::__construct(...$kwargs);
+	 }
+
+	 protected function get_validation_kwargs() : array{
+		 return array_merge(parent::get_validation_kwargs(), ['accept']);
+	 }
 }
 ?>

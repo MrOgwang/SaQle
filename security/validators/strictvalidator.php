@@ -35,14 +35,14 @@ class StrictValidator extends ValidatorDecorator{
 
 	 public function text_strict_valid($input, $config){
 		 return [
-		     'is_valid' => (bool)$config['is_strict'] === true && strpbrk($input, '1234567890') ? false : true, 
+		     'is_valid' => (bool)$config['strict'] === true && strpbrk($input, '1234567890') ? false : true, 
 			 'error' => $this->get_readable_field_name($config['field_name']). ' cannot contain numbers.'
 		 ]; 
 	 }
 
 	 public function number_strict_valid($input, $config){
 		 return [
-		     'is_valid' => (bool)$config['is_strict'] === true && !is_numeric($input) ? false : true, 
+		     'is_valid' => (bool)$config['strict'] === true && !is_numeric($input) ? false : true, 
 			 'error' => $this->get_readable_field_name($config['field_name']). ' cannot contain letters and other characters.'
 		 ]; 
 	 }

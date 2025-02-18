@@ -45,7 +45,7 @@ class Translator implements ITranslator{
 		 return $this->filter($raw_filters);
 	 }
 
-	 private function filter(array $filters, string $operand = null, string$pgid = null, bool $fill_blanks = true){
+	 private function filter(array $filters, ?string $operand = null, ?string $pgid = null, bool $fill_blanks = true){
 		 if(count($filters) === 0){
 			 return $this;
 		 }
@@ -172,7 +172,7 @@ class Translator implements ITranslator{
 	 /*
 	     Insert a filter object into parent group
 	 */
-	 public function insert_into_parent(string $pgid, IFilter $filter_entity, IFilter $pg = null, string $operand = null){
+	 public function insert_into_parent(string $pgid, IFilter $filter_entity, ?IFilter $pg = null, ?string $operand = null){
 		 $pg = $pg ?? $this->filter;
 		 if($pg->group_id() === $pgid){
 		 	 $pg->add_filter($filter_entity);

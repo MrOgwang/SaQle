@@ -14,7 +14,7 @@ class SpecialValidator extends ValidatorDecorator{
 		 return $fb;
 	 }
 	 public function is_valid(&$input, $config){
-		 switch($config["type"]){
+		 switch($config["primitive_type"]){
 			 case "email":
 				return $this->validate_email($input, $config);
 			 break;

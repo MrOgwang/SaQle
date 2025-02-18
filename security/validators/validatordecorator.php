@@ -2,7 +2,7 @@
 namespace SaQle\Security\Validators;
 abstract class ValidatorDecorator extends IValidator{
 	 protected $validator;
-	 public function __construct(IValidator $validator = null){
+	 public function __construct(?IValidator $validator = null){
 		 $this->validator = $validator;
 	 }
 	 protected function execute_next_validator($input, $config, $code, $message){

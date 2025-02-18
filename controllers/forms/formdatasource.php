@@ -68,11 +68,11 @@ class FormDataSource{
 				 if(!$fn_key_instance->get_include())
 				 	continue;
 
-				 $fdao         = $fn_key_instance->get_fdao();
+				 $fmodel         = $fn_key_instance->get_fmodel();
 			 	 $fn_sproperty = $fn_key_instance->get_field();
 
-			 	 $model        = new Model(new $fdao());
-			 	 $primary_key  = (new $fdao())->get_pk_name();
+			 	 $model        = new Model(new $fmodel());
+			 	 $primary_key  = (new $fmodel())->get_pk_name();
 			 	 $model        = null;
 			 	 
 			 	 $fds_settings = $fds_attributes[0]->newInstance();
@@ -81,10 +81,10 @@ class FormDataSource{
 		 	 	 $pre_defined  = $fds_settings->get_pre_defined();
 		 	 	 $child_count  = 0;
 
-		 	 	 if(!$fn_key_instance->get_multiple()){
+		 	 	 if(!$fn_key_instance->multiple){
 		 	 	 	 $child        = $sdata ? $sdata->$fn_sproperty : null;
 		 	 	 	 $child_source = new FormDataSource(
-			 	 	 	 dao:       $fdao,
+			 	 	 	 dao:       $fmodel,
 			 	 	 	 context:   $context,
 			 	 	 	 sdata:     $child
 			 	 	 );
@@ -99,7 +99,7 @@ class FormDataSource{
 		 	 	 $children         = $sdata ? $sdata->$fn_sproperty : [];
 			 	 foreach($children as $cindex => $child){
 			 	 	 $child_source = new FormDataSource(
-			 	 	 	 dao:       $fdao,
+			 	 	 	 dao:       $fmodel,
 			 	 	 	 context:   $context,
 			 	 	 	 sdata:     $child
 			 	 	 );
@@ -112,7 +112,7 @@ class FormDataSource{
 			 	 $child_count = count($children);
 
 			 	 $new_child_source = new FormDataSource(
-		 	 	 	 dao:       $fdao,
+		 	 	 	 dao:       $fmodel,
 		 	 	 	 context:   $context,
 		 	 	 	 sdata:     null
 		 	 	 );

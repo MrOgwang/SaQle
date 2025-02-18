@@ -20,10 +20,12 @@ class ContextManager implements IMigrationManager{
          return implode("\\", $nameparts);
      }
 
-     private function get_class_name(string $long_class_name){
+     private function get_class_name(string $long_class_name, bool $include_namespace = false){
+         if($include_namespace)
+             return $long_class_name;
+
          $nameparts = explode("\\", $long_class_name);
-         $name = array_pop($nameparts);
-         return $name;
+         return end($nameparts);
      }
      
      private function is_model_defined($model_class, $project_root){
@@ -148,7 +150,7 @@ class ContextManager implements IMigrationManager{
 
      private function write_typed_collection($model_class, $project_root){
          $primary_model_instance = $model_class::state();
-         $p_model_dao_class      = $primary_model_instance->get_associated_model_class();
+         $p_model_dao_class      = $model_class;
          $p_model_dao_namespace  = $this->get_class_namespace($p_model_dao_class);
          $p_model_dao_name       = $this->get_class_name($p_model_dao_class);
          $p_collection_namespace = $p_model_dao_namespace."\\Collections";
@@ -194,20 +196,20 @@ class ContextManager implements IMigrationManager{
      }
 
      private function write_through_model($primary_model_instance, $foreign_model_instance, $project_root){
-         $pnamespace = $primary_model_instance->get_class_namespace();
+         $pnamespace = $this->get_class_namespace($primary_model_instance::class);
          $througnamespace = $pnamespace."\\Throughs";
-         $fnamespace = $foreign_model_instance->get_class_namespace();
-         $classname = $primary_model_instance->get_class_name().$foreign_model_instance->get_class_name();
+         $fnamespace = $this->get_class_namespace($foreign_model_instance::class);
+         $classname = $this->get_class_name($primary_model_instance::class).$this->get_class_name($foreign_model_instance::class);
          $classname = str_replace("Schema", "", $classname)."Schema";
 
-         $pmodel_name = strtolower($primary_model_instance->get_class_name());
+         $pmodel_name = strtolower($this->get_class_name($primary_model_instance::class));
          $pmodel_name = str_replace("schema", "", $pmodel_name);
-         $fmodel_name = strtolower($foreign_model_instance->get_class_name());
+         $fmodel_name = strtolower($this->get_class_name($foreign_model_instance::class));
          $fmodel_name = str_replace("schema", "", $fmodel_name);
-         $o_pmodel_name = $primary_model_instance->get_class_name();
-         $o_fmodel_name = $foreign_model_instance->get_class_name();
-         $pmodel_pk = $primary_model_instance->get_pk_name();
-         $fmodel_pk = $foreign_model_instance->get_pk_name();
+         $o_pmodel_name = $this->get_class_name($primary_model_instance::class);
+         $o_fmodel_name = $this->get_class_name($foreign_model_instance::class);
+         $pmodel_pk = $primary_model_instance->meta->pk_name;
+         $fmodel_pk = $foreign_model_instance->meta->pk_name;
 
          $template = "<?php\n";
          $template .= "/**\n";
@@ -235,7 +237,7 @@ class ContextManager implements IMigrationManager{
          $template .= "use ".$pnamespace."\\".$o_pmodel_name.";\n";
          $template .= "use ".$fnamespace."\\".$o_fmodel_name.";\n";
          $template .= "use SaQle\\Core\\Assert\\Assert;\n\n";
-         $template .= "class {$classname} extends TableSchema implements IThroughModel{\n";
+         $template .= "class {$classname} extends Model implements IThroughModel{\n";
          /**
           * Declare the fields
           * */
@@ -250,9 +252,9 @@ class ContextManager implements IMigrationManager{
           * Define the constructor
           * */
          $template .= "\tpublic function __construct(...$"."kwargs){\n";
-         $template .= "\t\t$"."this->id = new Pk(type: PRIMARY_KEY_TYPE);\n";
-         $template .= "\t\t$"."this->".$pmodel_name." = new OneToOne(fdao: ".$o_pmodel_name."::class, pk: '".$pmodel_pk."', fk: '".$pmodel_pk."', dname: '".$pmodel_pk."');\n";
-         $template .= "\t\t$"."this->".$fmodel_name." = new OneToOne(fdao: ".$o_fmodel_name."::class, pk: '".$fmodel_pk."', fk: '".$fmodel_pk."', dname: '".$fmodel_pk."');\n\n";
+         $template .= "\t\t$"."this->id = new Pk();\n";
+         $template .= "\t\t$"."this->".$pmodel_name." = new OneToOne(fmodel: ".$o_pmodel_name."::class, pk: '".$pmodel_pk."', fk: '".$pmodel_pk."', column_name: '".$pmodel_pk."');\n";
+         $template .= "\t\t$"."this->".$fmodel_name." = new OneToOne(fmodel: ".$o_fmodel_name."::class, pk: '".$fmodel_pk."', fk: '".$fmodel_pk."', column_name: '".$fmodel_pk."');\n\n";
          $template .= "\t\t$"."this->set_meta([\n";
          $template .= "\t\t\t'unique_fields' => ['".$pmodel_name."', '".$fmodel_name."'],\n";
          $template .= "\t\t\t'unique_together' => true\n";
@@ -297,11 +299,11 @@ class ContextManager implements IMigrationManager{
 
              $model_fields[$n] = []; //all the fields defined on the model.
              $mi = $m::state();
-             $mfields = $mi->get_all_fields();
+             $mfields = $mi->meta->fields;
              foreach($mfields as $mfn => $mfv){
                  $mfvdef = $mfv->get_field_definition();
                  if($mfvdef){
-                     $db_col_name = $mfv->get_db_column_name();
+                     $db_col_name = $mfv->column_name;
                      $model_fields[$n][$db_col_name] = ['field' => $mfv::class, 'params' => $mfv->get_kwargs(), 'def' => $mfvdef];
                  }
 
@@ -310,7 +312,7 @@ class ContextManager implements IMigrationManager{
                  if($generate_throughs && $mfv instanceof ManyToMany){
                      echo "Generating throughs for {$mfn}!\n";
                      //get the foreign model.
-                     $fmodel = $mfv->get_relation()->get_fdao();
+                     $fmodel = $mfv->get_relation()->fmodel;
                       //1. Foreign key model must have a ManyToMany field pointing to current table also defined on it.
                       //2. Foreign key model must also be defined for the through table to be generated
                       //3. The name of the through table will be generated by combining the two class names names.
@@ -325,8 +327,8 @@ class ContextManager implements IMigrationManager{
                          continue;
 
                      echo "The foreign model {$fmodel} has a relationship with primary model: {$m}\n";
-                     $first_pointer = strtolower($mi->get_class_name().$fmodel_instance->get_class_name());
-                     $other_pointer = strtolower($fmodel_instance->get_class_name().$mi->get_class_name());
+                     $first_pointer = strtolower($this->get_class_name($mi::class).$this->get_class_name($fmodel));
+                     $other_pointer = strtolower($this->get_class_name($fmodel).$this->get_class_name($mi::class));
                      $first_pointer = str_replace("schema", "", $first_pointer)."schema";
                      $other_pointer = str_replace("schema", "", $other_pointer)."schema";
 
@@ -367,10 +369,10 @@ class ContextManager implements IMigrationManager{
                  $models_template .= "\t\t\t'".$n."' => '".$m."',\n";
 
                  $mi = $m::state();
-                 $mfields = $mi->get_all_fields();
+                 $mfields = $mi->meta->fields;
                  $fields_template.= "\t\t\t'".$n."' => [\n";
                  foreach($mfields as $mfn => $mfv){
-                     $db_col_name = $mfv->get_db_column_name();
+                     $db_col_name = $mfv->column_name;
                      $fields_template .= "\t\t\t\t'".$db_col_name."' => [\n";
                      $fields_template .= "\t\t\t\t\t'field' => '".$mfv::class."',\n";
                      $fields_template .= "\t\t\t\t\t'def' => '".$mfv->get_field_definition()."',\n";
@@ -402,10 +404,10 @@ class ContextManager implements IMigrationManager{
                  $through_models_template .= "\t\t\t'".$n."' => '".$m."',\n";
 
                  $mi = $m::state();
-                 $mfields = $mi->get_all_fields();
+                 $mfields = $mi->meta->fields;
                  $through_fields_template .= "\t\t\t'".$n."' => [\n";
                  foreach($mfields as $mfn => $mfv){
-                     $db_col_name = $mfv->get_db_column_name();
+                     $db_col_name = $mfv->column_name;
                      $through_fields_template .= "\t\t\t\t'".$db_col_name."' => [\n";
                      $through_fields_template .= "\t\t\t\t\t'field' => '".$mfv::class."',\n";
                      $through_fields_template .= "\t\t\t\t\t'def' => '".$mfv->get_field_definition()."',\n";
@@ -493,13 +495,13 @@ class ContextManager implements IMigrationManager{
 
      private function write_associated_dao($model_class, $project_root){
          $state = $model_class::state();
-         $dao_class = $state->get_associated_model_class();
+         $dao_class = $model_class;
          $dao_namespace = $this->get_class_namespace($dao_class);
-         $model_namespace = $state->get_class_namespace();
-         $model_name = $state->get_class_name();
+         $model_namespace = $this->get_class_namespace($model_class);
+         $model_name = $this->get_class_name($model_class);
          $nameparts = explode("\\", $dao_class);
          $dao_name = end($nameparts);
-         $fields = $state->get_all_fields();
+         $fields = $state->meta->fields;
 
          $props_template = "";
          $namaspaces = [];
@@ -512,9 +514,9 @@ class ContextManager implements IMigrationManager{
                  $ptype = $fv->get_kwargs()['ptype'];
                  $props_template .= "\tpublic {$ptype} $".$fname.";\n";
              }elseif($fv instanceof Relation){
-                 $fmodel = $fv->get_relation()->get_fdao();
+                 $fmodel = $fv->get_relation()->fmodel;
                  $modelstate = $fmodel::state();
-                 $daoclass = $modelstate->get_associated_model_class();
+                 $daoclass = $fmodel;
                  $daoparts = explode("\\", $daoclass);
                  $daoname = end($daoparts);
                  $daospace = $this->get_class_namespace($daoclass);
@@ -788,7 +790,7 @@ class ContextManager implements IMigrationManager{
 
      public function make_superuser(string $project_root, $email, $password){
          $model_class_schema = AUTH_MODEL_CLASS;
-         $model_class        = $model_class_schema::get_associated_model_class();
+         $model_class        = $model_class_schema;
          $user               = (new $model_class(...[
             'username'       => $email,
             'password'       => md5($password),

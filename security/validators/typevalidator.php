@@ -47,7 +47,7 @@ class TypeValidator extends ValidatorDecorator{
 
 	 public function number_type_valid($input, $config){
 		 return [
-		     'is_valid' => $this->set_number_type($input, $config['type']), 
+		     'is_valid' => $this->set_number_type($input, $config['primitive_type']), 
 			 'error' => $this->get_readable_field_name($config['field_name']). ' is not a number.'
 		 ]; 
 	 }

@@ -46,7 +46,7 @@ abstract class EditController extends IController implements Observable{
 	 	 $model_form          = $this->model_form;
 	 	 $model_form_instance = new $model_form();
 	 	 $model_schema        = $model_form_instance->model::get_schema();
-	 	 $pkname              = $model_schema->get_pk_name();
+	 	 $pkname              = $model_schema->meta->pk_name;
 	 	 $with_fields         = [];
 	 	 $manager             = $model_form_instance->model::db();
 
@@ -64,10 +64,10 @@ abstract class EditController extends IController implements Observable{
 	 	 $model_name_parts    = explode("\\", $model_form_instance->model);
 	 	 $model_name          = end($model_name_parts);
 	 	 $model_schema        = $model_form_instance->model::get_schema();
-	 	 $fields              = $model_schema->get_all_fields();
+	 	 $fields              = $model_schema->meta->fields;
 	 	 $extra_tabs          = [];
 
-	 	 $defined_field_names = $model_schema->get_defined_field_names();
+	 	 $defined_field_names = $model_schema->meta->defined_field_names;
 	 	 foreach($fields as $fn => $f){
 	 	 	/**
 	 	 	 * For a control to be generated, the field must have been explicitly defined
@@ -165,27 +165,25 @@ abstract class EditController extends IController implements Observable{
 	 }
 
      private function fetch_fk_record(array | string $pkvalue, $f, $multiple = false){
-     	 $relation   = $f->get_relation();
-	 	 $fdaoschema = $relation->get_fdao();
-	 	 $state      = $fdaoschema::state();
-	 	 $fdaomodel  = $fdaoschema::get_associated_model_class();
-	 	 $pkname     = $state->get_pk_name();
+     	 $relation    = $f->get_relation();
+	 	 $fmodelclass = $relation->get_fmodel();
+	 	 $state       = $fmodelclass::state();
+	 	 $pkname     = $state->meta->pk_name;
 
 	 	 if(!$multiple){
-	 	 	 return $fdaomodel::db()->where($pkname, is_array($pkvalue) ? $pkvalue[0] : $pkvalue)->tomodel(true)->first_or_default();
+	 	 	 return $fmodelclass::db()->where($pkname, is_array($pkvalue) ? $pkvalue[0] : $pkvalue)->tomodel(true)->first_or_default();
 	 	 }
-	 	 return $fdaomodel::db()->where($pkname."__in", !is_array($pkvalue) ? [$pkvalue] : $pkvalue)->tomodel(true)->all();
+	 	 return $fmodelclass::db()->where($pkname."__in", !is_array($pkvalue) ? [$pkvalue] : $pkvalue)->tomodel(true)->all();
      }
 
      private function get_fk_records($f){
-     	 $relation   = $f->get_relation();
-	 	 $fdaoschema = $relation->get_fdao();
-	 	 $state      = $fdaoschema::state();
-	 	 $fdaomodel  = $fdaoschema::get_associated_model_class();
-	 	 $pkname     = $state->get_pk_name();
-	 	 $nameprop   = $state->get_name_property();
+     	 $relation    = $f->get_relation();
+	 	 $fmodelclass = $relation->get_fmodel();
+	 	 $state       = $fmodelclass::state();
+	 	 $pkname      = $state->meta->pk_name;
+	 	 $nameprop    = $state->meta->name_property;
 
-	 	 return [$pkname, $nameprop, $fdaomodel::db()->all()];
+	 	 return [$pkname, $nameprop, $fmodelclass::db()->all()];
      }
 
 	 private function create_fk_select($f, $optional, $multiple = false, $currentvalue = null){
@@ -220,10 +218,10 @@ abstract class EditController extends IController implements Observable{
 	 	 $model_name_parts    = explode("\\", $model_form_instance->model);
 	 	 $model_name          = end($model_name_parts);
 	 	 $model_schema        = $model_form_instance->model::get_schema();
-	 	 $fields              = $model_schema->get_all_fields();
+	 	 $fields              = $model_schema->meta->fields;
 	 	 $extra_tabs          = [];
 
-	 	 $defined_field_names = $model_schema->get_defined_field_names();
+	 	 $defined_field_names = $model_schema->meta->defined_field_names;
 
 	 	 $controls = "";
 	 	 foreach($fields as $fn => $f){

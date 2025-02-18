@@ -2,7 +2,7 @@
 <?php
 require_once UTILITIES. "/utility_functions.php";
 require_once UTILITIES. "/Dao/dao.php";
-class VoFactory extends TableSchemaObject
+class VoFactory extends ModelObject
 {
 	 public function __construct($db_name, $db_user = "root", $db_password = "")
 	 {
