@@ -61,7 +61,7 @@ class PathsToUrls extends BaseHandler{
  			 }
      	 }
 
-         return parent::handle($row);
+           return parent::handle($row);
      }
 }
 

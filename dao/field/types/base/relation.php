@@ -6,7 +6,7 @@ use SaQle\Dao\Field\Types\{OneToOne, OneToMany, ManyToMany};
 use SaQle\Dao\Field\Relations\Interfaces\IRelation;
 use SaQle\Dao\Field\Relations\Traits\Relationship;
 
-abstract class Relation extends Simple implements IRelation{
+abstract class Relation extends RealField implements IRelation{
 	 use Relationship;
 	 
 	 public function __construct(...$kwargs){

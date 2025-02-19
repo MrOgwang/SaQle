@@ -14,27 +14,72 @@ use SaQle\Commons\StringUtils;
 use SaQle\Dao\Field\Types\Base\Relation;
 use SaQle\Dao\Model\Manager\ModelManager;
 use SaQle\Dao\Model\Interfaces\{IModel, IThroughModel, ITableSchema, ITempModel};
+use SaQle\Dao\Model\Collection\ModelCollection;
 
-abstract class Model implements ITableSchema{
+abstract class Model implements ITableSchema, IModel{
 	 use StringUtils;
 
-	 //static cache to store shared metadata per class
+     /**
+      * A key => value array of raw model data: keys are field names.
+      * Values may be simple, other model objects or arrays of model objects
+      * */
+	 protected private(set) array $data = []{
+	 	 set(array $value){
+	 	 	 $formatted_values = [];
+	 	     $db_columns = $this->meta->column_names;
+	 	     $db_columns_flip = array_flip($db_columns);
+		 	 foreach($value as $k => $v){
+		 	 	 $field_name = null;
+		 	 	 $col_name   = null;
+		 	 	 if(array_key_exists($k, $db_columns)){
+		 	 	 	 $field_name = $k;
+		 	 	 	 $col_name = $db_columns[$k];
+		 	 	 }
+
+		 	 	 if(!$field_name && !$col_name){
+		 	 	 	 if(array_key_exists($k, $db_columns_flip)){
+		 	 	 	     $col_name = $k;
+		 	 	 	     $field_name = $db_columns_flip[$k];
+		 	 	     }
+		 	 	 }
+
+		 	 	 if(!$field_name && !$col_name){
+		 	 	 	 $formatted_values[$k] = $v;
+		 	 	 	 continue;
+		 	 	 }
+
+		 	 	 $formatted_values[$field_name] = $v;
+		 	 }
+
+		 	 $this->data = $formatted_values;
+	 	 }
+
+	 	 get => $this->data;
+	 }
+
+     /**
+      * A memory record of data between the time it is set and the time
+      * updates are made on the data
+      * */
+	 private $data_state = [];
+
+	 /**
+	  * Static cache to store shared metadata per class
+	  * */
      private static array $shared_meta = [];
 
-	 //all the extra information about a table scehema will be set on this
-	 public private(set) TableInfo $meta {
-	 	 set(TableInfo $value){
- 	 	 	 $this->meta = $value;
- 	 	 }
-
- 	 	 get => $this->meta;
+	 /**
+	  * Virtual property that gets all the information about a table scehema
+	  * */
+	 public mixed $meta {
+ 	 	 get => $this->get_shared_meta(static::class);
 	 }
 
 	 protected static array $instances = [];
 	 
 	 public function __construct(...$kwargs){
-	 	 //initialize or reuse shared metadata for the concrete class
-         $this->meta = $this->get_shared_meta(static::class);
+	 	 $this->data = $kwargs;
+	 	 $this->data_state = $this->get_data_state();
 	 	 [$db_class, $table_name] = self::get_table_n_dbcontext();
 	 	 $this->meta->db_table    = $table_name;
 	 	 $this->meta->db_class    = $db_class;
@@ -211,31 +256,23 @@ abstract class Model implements ITableSchema{
 		 return array_merge($validation_feedback['clean'], $file_names_only);
 	 }
 
-     private function rename_uploaded_files(&$clean_data, $file_key, $rename_callback, $data_state = null){
+     private function rename_uploaded_files($field, &$clean_data, $file_key, $data_state = null){
 	 	$original_clean_data = $clean_data;
 	 	if(is_array($clean_data[$file_key]['name'])){
              foreach($clean_data[$file_key]['name'] as $n_index => $n){
-                 $clean_data[$file_key]['name'][$n_index] = $this->$rename_callback(
+                 $clean_data[$file_key]['name'][$n_index] = $field->rename(
                  	$data_state ? (Object)$data_state : (Object)$original_clean_data, 
                  	$clean_data[$file_key]['name'][$n_index], 
                  	$n_index
                  );
              }
          }else{
-             $clean_data[$file_key]['name'] = $this->$rename_callback(
+             $clean_data[$file_key]['name'] = $field->rename(
              	$data_state ? (Object)$data_state : (Object)$original_clean_data, 
              	$clean_data[$file_key]['name']
              );
          }
 	 }
-
-     public function get_file_configurations(){
-     	 $fc = [];
-     	 foreach($this->meta->file_field_names as $ffn){
-     	 	$fc[$ffn] = $this->meta->fields[$ffn]->get_field_attributes();
-     	 }
-     	 return $fc;
-     }
 
 	 private function prepare_file_data(&$clean_data, $data_state = null){
 	 	 /**
@@ -249,25 +286,17 @@ abstract class Model implements ITableSchema{
 	 	 	$db_col = $this->meta->column_names[$ffn];
 	 	 	#if the file exists.
 	 	 	if(isset($clean_data[$db_col]) && is_array($clean_data[$db_col])){
-	 	 		 $file_config = $this->meta->fields[$ffn]->get_field_attributes();
+	 	 		 //print_r($this->meta->fields[$ffn]);
+	 	 		 $file_config = [
+	 	 		 	 'crop_dimensions'   => $this->meta->fields[$ffn]->crop_dimensions, 
+	 	 		     'resize_dimensions' => $this->meta->fields[$ffn]->resize_dimensions
+	 	 		 ];
 
-	 	 		 //rename files if a rename callback was provided.
-	 	 		 if(isset($file_config['rename_callback'])){
-	 	 		 	 $rename_callback = explode("(", $file_config['rename_callback'])[0];
-	 	 		 	 if(method_exists($this, $rename_callback)){
-	 	 		 	 	 $this->rename_uploaded_files($clean_data, $db_col, $rename_callback, $data_state);
-	 	 		 	 }
-	 	 		 }
+	 	 		 //rename files
+	 	 		 $this->rename_uploaded_files($this->meta->fields[$ffn], $clean_data, $db_col, $data_state);
 
 	 	 		 //get the file path
-	 	 		 $path = "";
-	 	 		 if(isset($file_config['path'])){
-	 	 		 	 $folder_path = explode("(", $file_config['path'])[0];
-	 	 		 	 if(method_exists($this, $folder_path)){
-	 	 		 	 	 $path = $this->$folder_path($data_state ? (Object)$data_state : (Object)$clean_data);
-	 	 		 	 }
-	 	 		 }
-	 			 $file_config['path'] = $path;
+	 	 		 $file_config['path'] = $this->meta->fields[$ffn]->path($data_state ? (Object)$data_state : (Object)$clean_data);
 	 			 $file_data[$db_col] = (Object)['file' => $clean_data[$db_col], 'config' => $file_config];
 
 	 			 //reset the file value in clean data to file names only.
@@ -310,14 +339,14 @@ abstract class Model implements ITableSchema{
 
          $unique_field_keys = array_keys($unique_fields);
          $first_field = array_shift($unique_field_keys);
-         $dao = self::class;
+         $dao = $this::class;
          if(str_contains($dao, "Throughs")){
          	 $manager = $dao::db2($table_name, $model_class, $db_class)->where($first_field."__eq", $unique_fields[$first_field]);
          }else{
          	 $manager = $dao::db()->where($first_field."__eq", $unique_fields[$first_field]);
          }
 	 	 foreach($unique_field_keys as $uf){
-	 	 	 $manager = $this->meta['unique_together'] ? $manager->where($uf."__eq", $unique_fields[$uf]) : $manager->or_where($uf."__eq", $unique_fields[$uf]);
+	 	 	 $manager = $this->meta->unique_together ? $manager->where($uf."__eq", $unique_fields[$uf]) : $manager->or_where($uf."__eq", $unique_fields[$uf]);
 	 	 }
 	 	 $exists = $manager->limit(records: 1, page: 1)->first_or_default();
 
@@ -325,7 +354,7 @@ abstract class Model implements ITableSchema{
 	 	 	 return false;
 	 	 }
 
-	 	 return [$exists, $unique_fields, $this->meta['unique_together']];
+	 	 return [$exists, $unique_fields, $this->meta->unique_together];
 	 }
 
      private function swap_properties_with_columns($data){
@@ -446,17 +475,46 @@ abstract class Model implements ITableSchema{
      	 return $defs;
 	 }
 
-	 public function get_auto_include(){
-	 	$auto_includes = [];
-	 	foreach($this->meta->fields as $fn => $fv){
-	 		if($fv instanceof Relation && $fv->eager){
-	 			$auto_includes[] = ['relation' => $fv->get_relation(), 'with' => '', 'tuning' => null];
-	 		}
-	 	}
-	 	return $auto_includes;
-	 }
+     private function assert_field_defined(string $field_name, bool $throw_error = false) : string | null{
+     	 //ensure field is defined in model meta
+	 	 if(!array_key_exists($field_name, $this->meta->fields) && !array_key_exists($field_name, $this->meta->column_names)){
+	 	 	 $flipped_column_names = array_flip($this->meta->column_names);
+	 	 	 $field_name = $flipped_column_names[$field_name] ?? null;
+	 	 	 if(!$field_name){
+	 	 	 	 if($throw_error){
+	 	 	 	 	 throw new \Exception("The field ".$name." is not defined on the model ".$this::class);
+	 	 	 	 }
+	 	 	 	 return null;
+	 	 	 }
+	 	 }
 
-	 public function is_include(string $field){
+	 	 return $field_name;
+     }
+
+	 public function __get($name){
+	 	 $name = $this->assert_field_defined($name);
+	 	 if(!$name)
+	 	 	return null;
+
+	 	 return $this->meta->fields[$name]->render($this->data);
+     }
+
+     public function get_field(string $field_name) : IField{
+     	 $field_name     = $this->assert_field_defined($field_name, true);
+     	 $field          = $this->meta->fields[$field_name];
+     	 $field->content = $this->data;
+     	 return $field;
+     }
+
+     public function __set($name, $value){
+         $this->data = array_merge($this->data, [$name => $value]);
+     }
+
+     /**
+      * Check whether a field is a relation field defined on a model
+      * and return the relation or false otherwise
+      * */
+     public function is_relation_field(string $field){
 	 	 $includes = array_merge($this->meta->fk_field_names, $this->meta->nav_field_names);
 
 	 	 if(!in_array($field, $includes)){
@@ -473,31 +531,225 @@ abstract class Model implements ITableSchema{
 	 	 return $instance->get_relation();
 	 }
 
-	 /**
-	  * Check that a model has a relationship with another model defined on one of the fields
-	  * and return the relation.
-	  * */
-	 public function has_relationship_with(string $model_class){
-	 	 $relation = false;
-         $relation_fields = array_merge($this->meta->nav_field_names, $this->meta->fk_field_names);
-         for($f = 0; $f < count($relation_fields); $f++){
-         	 $field = $this->meta->fields[$relation_fields[$f]];
-         	 if($field->get_relation()->fmodel == $model_class){
-         	 	$relation = $field;
-         	 }
-         }
-         return $relation;
+     /**
+      * Classify defined model fields into different groups
+      * */
+     private function classify_fields(){
+	 	 $defined_field_names = $this->meta->defined_field_names;
+	 	 $nk_field_names      = $this->meta->nav_field_names;
+	 	 $fk_field_names      = $this->meta->fk_field_names;
+	 	 $simple_fields       = array_diff($defined_field_names, array_merge($nk_field_names, $fk_field_names));
+	 	 $nk_fields           = array_diff($defined_field_names, array_merge($simple_fields, $fk_field_names));
+	 	 $fk_fields           = array_diff($defined_field_names, array_merge($simple_fields, $nk_field_names));
+	 	 return [$defined_field_names, $simple_fields, $fk_fields, $nk_fields];
+     }
+
+     /**
+      * Initialize the data state athe time of model instantiation
+      * */
+     private function get_data_state(){
+	 	 $data_state = [];
+	 	 [$defined_field_names, $simple_fields, $fk_fields, $nk_fields] = $this->classify_fields();
+
+	     foreach($defined_field_names as $field){
+	     	 if(in_array($field, $simple_fields)){
+	     	 	 $data_state[$field] = $this->data[$field] ?? null;
+	     	 }elseif(in_array($field, $fk_fields) || in_array($field, $nk_fields)){
+	     	 	 $val = $this->data[$field] ?? null;
+	     	 	 if($val instanceof IModel){
+	     	 	 	 $relation = $this->is_relation_field($property_name);
+	     	 	     $fk_name = $relation->fk;
+	     	 	     $pk_values = $val->$fk_name;
+	     	 	     $data_state[$field] = $pk_values;
+	     	 	     if(in_array($field, $nk_fields) && $relation instanceof Many2Many){
+	     	 	     	 [$table_name, $model, $ctx] = $relation->get_through_model();
+	     	 	     	 $data_state[$field] = ['key' => $fk_name, 'values' => $pk_values, 'table' => $table_name, 'model' => $model, 'context' => $ctx];
+	     	 	     }
+	     	 	 }else{
+	     	 	 	 $data_state[$field] = $val;
+	     	 	 }
+	     	 }
+	     }
+	     return $data_state;
 	 }
 
-	 public function has_manytomany_relationship_with(string $model_class){
-	 	 $relation = false;
-         for($f = 0; $f < count($this->meta->nav_field_names); $f++){
-         	 $field = $this->meta->fields[$this->meta->nav_field_names[$f]];
-         	 if($field->get_relation()->fmodel == $model_class && $field instanceof ManyToMany){
-         	 	$relation = $field;
-         	 }
-         }
-         return $relation;
+     /**
+      * Detect whether object data has been updated and return the updated state
+      * */
+	 public function get_state_change($new_data_state = null, $update_optional = null){
+	 	 $simple_changed = [];
+	 	 $fk_changed = [];
+	 	 $nk_changed = [];
+	 	 [$defined_field_names, $simple_fields, $fk_fields, $nk_fields] = $this->classify_fields();
+	 	 $new_data_state = $new_data_state ?? $this->get_data_state();
+
+	 	 foreach($new_data_state as $key => $val){
+	 	 	 if($val != $this->data_state[$key] && ( !is_null($val) && $val != '')){ //This null and empty string condition must be rechecked!
+	 	 	 	 if(in_array($key, $simple_fields)){
+		 	 	 	 $simple_changed[$key] = $val;
+		 	 	 }elseif(in_array($key, $fk_fields)){
+		 	 	 	 $fk_changed[$key] = $val;
+		 	 	 }elseif(in_array($key, $nk_fields)){
+		 	 	 	 /**
+		 	 	 	  * I am assuming this is many to many navigation key, this part must be reworked
+		 	 	 	  * to accomodate many to one and one to one cases as well
+		 	 	 	  * */
+		 	 	 	 $current_values = $val['values'];
+		 	 	 	 $former_values = $this->data_state[$key]['values'];
+
+		 	 	 	 $added_values = array_diff($current_values, $former_values);
+		 	 	 	 $removed_values = array_diff($former_values, $current_values);
+
+		 	 	 	 $val['added'] = $added_values;
+		 	 	 	 $val['removed'] = $removed_values;
+
+		 	 	 	 $nk_changed[$key] = $val;
+		 	 	 }
+	 	 	 }
+	 	 }
+	 	 return [$simple_changed, $fk_changed, $nk_changed];
 	 }
+
+     /**
+      * When attempting to save an updated object, this returns those properties
+      * that are savable.
+      * */
+	 public function get_savable_values(){
+	 	 $savable_simple = [];
+	 	 $savable_fk = [];
+	 	 $savable_nk = [];
+
+	 	 [$defined_field_names, $simple_fields, $fk_fields, $nk_fields] = $this->classify_fields();
+
+	     foreach($defined_field_names as $field){
+	     	 /**
+              * Only take fields with values
+              * - validation mechanism will determine whether all the properties required for a successful save are there or not, so don't worry about it here.
+              * Also take only those properties that wer explicitly defined on the schema associated with this model.
+              * */
+			 $val = $this->$field;
+		     if(in_array($field, $simple_fields)){
+	     	 	 $savable_simple[$field] = [$val, false];
+	     	 }elseif(in_array($field, $nk_fields)){
+                 $savable_nk[$field] = [$val, $this->is_relation_field($field)];
+	     	 }elseif(in_array($field, $fk_fields)){
+                 $savable_fk[$field] = [$val, $this->is_relation_field($field)];
+	     	 }
+	     }
+
+	     return [$savable_simple, $savable_nk, $savable_fk, $this->meta->pk_name];
+	 }
+
+	 /**
+	  * This save assumes the data was set via the model instructor.
+	  * Notes on save:
+	  * 1. By default only simple values are saved or updated when save is called.
+	  * 2. Relation values(OneToOne, OneToMany, ManyToMany) will only be saved when explicitly requested via 'with' interface
+	  * 3. While new relation objects can be created, they cannot be updated from here. Update relation objects via their own models.
+	  * 4. Values for properties that were not explicitly defined i.e values generated by auto_cm_fields, auto_cmdt_fields, soft_delete and enable_multitenancy flags will be filled in automatically. If there are values assigned for these properties here, they will be ignored.
+	  * */
+	 public function save(?array $update_optional = null){
+	 	 $current_data_state = $this->get_data_state();
+	     
+	 	 [$savable_simple, $savable_nk, $savable_fk, $pk_name] = $this->get_savable_values();
+	 	 $with_fields = [];
+
+	 	 #If there are foreign relations, save them first. FK relations are one to one, so the save is expected to return a single object.
+	 	 $saved_fk_ids = [];
+	 	 foreach($savable_fk as $fk_key => $fk_value){
+	 	 	 $with_fields[] = $fk_key;
+	 	 	 $s = $fk_value[0]->save();
+	 	 	 if($s){
+	 	 	 	 $fk_name = $fk_value[1]->fk;
+	 	 	 	 $saved_fk_ids[$fk_key] = $s->$fk_name;
+	 	 	 }
+	 	 }
+
+	 	 #Save the current object next.
+	 	 $object = null;
+	 	 $object_data = array_combine(array_keys($savable_simple), array_column(array_values($savable_simple), 0));
+	 	 if(isset($savable_simple[$pk_name][0])){ //this object has a value for primary key field.
+	 	 	 
+	 	 	 #acquire the object
+	 	 	 $object = self::db()->with(array_merge(array_keys($savable_nk), array_keys($savable_fk)))
+	 	 	 ->where($pk_name, $savable_simple[$pk_name][0])->tomodel(true)->first_or_default();
+
+	 	 	 if($object){
+
+	 	 	 	 #get the changes made
+	 	 	 	 [$simple_changed, $fk_changed, $nk_changed] = $this->get_state_change($current_data_state, $update_optional);
+	 	 	 	 $simple_changes = array_merge($simple_changed, $fk_changed);
+	 	 	 	 if($simple_changes){
+	 	 	 	 	 #attempt an update
+		 	 	 	 self::db()->set_data_state($current_data_state)->where($pk_name, $savable_simple[$pk_name][0])
+		 	 	 	 ->set($simple_changes)->tomodel(true)->update();
+	 	 	 	 }
+                 
+	 	 	 	 #remove any many to many bondings that are no longer existing.
+	 	 	 	 foreach($nk_changed as $nkf => $nkv){
+	 	 	 	 	 if($nkv['removed']){
+	 	 	 	 	 	 $tm = $nkv['model']; //table model
+                 	     $tm::db2($nkv['table'], $tm, $nkv['context'])->where($nkv['key']."__in", $nkv['removed'])->delete(permanently: true);
+	 	 	 	 	 }
+                 }
+	 	 	 }
+	 	 }
+         
+         #save object in db if its null upto this point
+	 	 if(!$object)
+	 	 	 $object = self::db()->set_data_state($current_data_state)->add(array_merge($object_data, $saved_fk_ids))->tomodel(true)->save();
+
+	 	 #abort save operation if object its still null at this point.
+	 	 if(!$object)
+	 	  	 throw new \Exception("Save operation aborted! This object could not be saved.");
+	 	 
+	 	 #save navigation key data
+	 	 $saved_nk_ids = [];
+	 	 foreach($savable_nk as $nk_key => $nk_value){
+	 	 	 if($nk_value[0]){
+	 	 	 	 $with_fields[] = $nk_key;
+		 	 	 $nk_pk_name = $nk_value[1]->pk;
+		 	 	 $nk_fk_name = $nk_value[1]->fk;
+		 	 	 $nk_pk_value = $object->$nk_pk_name;
+
+		 	 	 if(is_array($nk_value[0]) && count($nk_value[0]) > 0){
+		 	 	 	 $colection = new ModelCollection(type: $nk_value[0][0]::class, elements: $nk_value[0]);
+		 	 	 	 $s = $colection->save();
+	 	 	 	 	 $saved_nk_ids[$nk_key] = [$nk_pk_value, $s->$nk_fk_name, $nk_value[1]->get_through_model(), $nk_pk_name, $nk_fk_name];
+	 	 	 	 }else{
+	 	 	 	 	 $nk_fk_name = $nk_value[1]->fk;
+	 	 	 	 	 $nk_value[0]->$nk_fk_name = $nk_pk_value;
+	 	 	 	 	 $s = $nk_value[0]->save();
+	 	 	 	 }
+	 	 	 }
+	 	 }
+
+	 	 #tie the navigation key data to object via through model
+	 	 foreach($saved_nk_ids as $_nk => $_ids){
+	 	 	 if(count($_ids[1]) > 0){
+		 	 	 $through_model_schema = $_ids[2];
+		 	 	 $through_model = $through_model_schema[1];
+		 	 	 $data = [];
+		 	 	 $pk_col_name = $_ids[3];
+		 	 	 $fk_col_name = $_ids[4];
+		 	 	 $pk_col_val = $_ids[0];
+		 	 	 foreach($_ids[1] as $fk_col_val){
+		 	 	 	 $data[] = [$pk_col_name => $pk_col_val, $fk_col_name => $fk_col_val];
+		 	 	 }
+		 	 	 $connected = $through_model::db2($through_model_schema[0], $through_model_schema[1], $through_model_schema[2])
+		 	 	 ->add_multiple($data)->save();
+		 	 }
+	 	 }
+
+	 	 $getmana = self::db()->set_data_state($current_data_state)->where($pk_name, $object->$pk_name);
+	 	 if($with_fields){
+	 	 	$getmana->with($with_fields);
+	 	 }
+
+	 	 return $getmana->tomodel(true)->first_or_default();
+	 }
+
+
+
 }
 ?>

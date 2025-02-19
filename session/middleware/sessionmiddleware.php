@@ -61,7 +61,7 @@ class SessionMiddleware extends IMiddleware{
                $request->user = $_SESSION['user'];
            }elseif(isset($_SERVER['HTTP_REQUIRES_AUTH'])){
                 $request->enforce_permissions = true;
-
+                
                 $auth_backend_class = AUTH_BACKEND_CLASS;
                 $service = new $auth_backend_class('jwt');
                 new SigninObserver($service);

@@ -1,20 +1,20 @@
 <?php
 declare(strict_types=1);
 
-namespace SaQle\Dao\Model\Interfaces;
+namespace SaQle\Dao\Model\Collection;
 
 use SaQle\Core\Collection\Base\TypedCollection;
 use SaQle\Dao\Model\Interfaces\IModel;
 
-abstract class ModelCollection extends TypedCollection implements IModel{
-    public function __construct(array $elements = []){
+class ModelCollection extends TypedCollection implements IModel{
+    private string $type;
+    public function __construct(string $type, array $elements = []){
+         $this->type = $type;
          parent::__construct($elements);
     }
 
-    abstract protected function type(): string;
-
-    public function add(mixed $element): void{
-        parent::add($element);
+    protected function type(): string{
+        return $this->type;
     }
 
     public function save(){
@@ -23,13 +23,13 @@ abstract class ModelCollection extends TypedCollection implements IModel{
              $saved_elements[] = $el->save();
          }
          $class_name = $this::class;
-         return new $class_name($saved_elements);
+         return new $class_name(type: $this->type(), elements: $saved_elements);
     }
 
-    public function get_field_value($name){
+    public function __get($name){
          $field_values = [];
          foreach($this->elements as $el){
-             $field_values[] = $el->get_field_value($name);
+             $field_values[] = $el->$name;
          }
          return $field_values;
     }

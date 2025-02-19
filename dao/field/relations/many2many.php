@@ -49,7 +49,7 @@ class Many2Many extends BaseRelation{
 	 	parent::__construct($pmodel, $fmodel, $field, $pk, $fk, $navigation, true, $eager);
 	 } 
 
-	 public function get_through_model_schema(){
+	 public function get_through_model(){
 	 	 if($this->through)
 	 		 return $this->through;
 
@@ -80,12 +80,6 @@ class Many2Many extends BaseRelation{
          }
 
          throw new \Exception("No through model was defined for this many to many relationship between: {$pdao} and {$fmodel}");
-	 }
-
-	 public function get_through_model(){
-	 	 [$table_name, $model, $ctx] = $this->get_through_model_schema();
-
-	 	 return [$table_name, $model, $ctx];
 	 }
 }
 ?>

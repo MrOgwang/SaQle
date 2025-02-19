@@ -3,7 +3,7 @@ namespace SaQle\Dao\Model\Schema;
 
 use SaQle\Core\Assert\Assert;
 use SaQle\Dao\Field\Types\Base\{Simple, Relation};
-use SaQle\Dao\Field\Types\{Pk, BooleanField, FileField, OneToOne, PhpTimestampField, DateField, DateTimeField, TimeField, TimestampField};
+use SaQle\Dao\Field\Types\{Pk, BooleanField, FileField, OneToOne, PhpTimestampField, DateField, DateTimeField, TimeField, TimestampField, VirtualField};
 
 class TableInfo{
      private bool $remove_fields = false;
@@ -306,6 +306,7 @@ class TableInfo{
              $nav_field_names = [];
              $fk_field_names = [];
              $file_required_fields = [];
+             $virtual_field_names = [];
 
  	 	 	 foreach($value as $n => $v){
  	 	 	 	 //make sure each element is a Field instance
@@ -316,6 +317,7 @@ class TableInfo{
  	 	 	 	 $column_names[$n] = $v->column_name;
 
                  $navigation = false;
+                 $virtual = false;
  	 	 	 	 if($v instanceof FileField){
  	 	 	 	 	 $file_field_names[] = $n;
  	 	 	 	 	 $file_required_fields[$n] = $v->required_fields;
@@ -329,9 +331,12 @@ class TableInfo{
 			 	 	 }
 			 	 }elseif($v instanceof Pk){
 		 	 	     $this->pk_name = $n;
-		 	     }
+		 	     }elseif($v instanceof VirtualField){
+                     $virtual_field_names[] = $n;
+                     $virtual = true;
+                 }
 
- 	 	 	 	 if(!$navigation){
+ 	 	 	 	 if(!$navigation && !$virtual){
  	 	 	 	 	 $actual_column_names[$n] = $v->column_name;
  	 	 	 	 }
  	 	 	 }
@@ -343,8 +348,8 @@ class TableInfo{
              $this->file_required_fields = !$this->remove_fields ? array_merge($this->file_required_fields, $file_required_fields) : $file_required_fields;
              $this->nav_field_names = !$this->remove_fields ? array_merge($this->nav_field_names, $nav_field_names) : $nav_field_names;
  	 	 	 $this->fk_field_names = !$this->remove_fields ? array_merge($this->fk_field_names, $fk_field_names) : $fk_field_names;
-
-             $this->defined_field_names = array_diff(array_keys($this->fields), $this->non_defined_field_names);
+             $this->virtual_field_names = $virtual_field_names;
+             $this->defined_field_names = array_diff(array_keys($this->fields), $this->non_defined_field_names, $virtual_field_names);
  	 	 }
 
  	 	 get => $this->fields;
@@ -366,6 +371,15 @@ class TableInfo{
          }
 
          get => $this->non_defined_field_names;
+     }
+
+     //an array of the names of all the virtual fields
+     public array $virtual_field_names = [] {
+         set(array $value){
+             $this->virtual_field_names = $value;
+         }
+
+         get => $this->virtual_field_names;
      }
 
  	 //an array of the names of the file fields defined in the model

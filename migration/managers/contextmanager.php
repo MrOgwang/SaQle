@@ -10,6 +10,7 @@ use SaQle\Migration\Tracker\MigrationTracker;
 use SaQle\Dao\Field\Types\{TextType, NumberType, FileField, OneToOne, ManyToMany, OneToMany, Pk};
 use SaQle\Dao\Field\Types\Base\Relation;
 use SaQle\Dao\Model\Interfaces\IThroughModel;
+use SaQle\Dao\Model\Schema\Model;
 
 class ContextManager implements IMigrationManager{
      use FileUtils;
@@ -290,6 +291,17 @@ class ContextManager implements IMigrationManager{
          return $througnamespace."\\".$classname;
      }
 
+     private function has_manytomany_relationship_with(Model $model1, Model $model2){
+         $relation = false;
+         for($f = 0; $f < count($model1->meta->nav_field_names); $f++){
+             $field = $model1->meta->fields[$model1->meta->nav_field_names[$f]];
+             if($field->get_relation()->fmodel == $model2::class && $field instanceof ManyToMany){
+                $relation = $field;
+             }
+         }
+         return $relation;
+     }
+
      private function extract_model_fields($models, $project_root, &$manytomany_throughs, $ctx_class, $ctx_throughs, $generate_throughs = true){
          $model_fields = [];
          $through_models = [];
@@ -321,7 +333,7 @@ class ContextManager implements IMigrationManager{
 
                      echo "The foreign model {$fmodel} is defined\n";
                      $fmodel_instance = new $fmodel();
-                     $relationship_field = $fmodel_instance->has_manytomany_relationship_with($m);
+                     $relationship_field = $this->has_manytomany_relationship_with($fmodel_instance, $mi);
 
                      if($relationship_field === false)
                          continue;

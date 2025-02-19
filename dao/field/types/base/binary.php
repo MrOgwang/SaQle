@@ -3,7 +3,57 @@ namespace SaQle\Dao\Field\Types\Base;
 
 use SaQle\Core\Assert\Assert;
 
-abstract class Binary extends Simple{
+abstract class Binary extends RealField{
+	 /**
+	  * This is a virtual property to enable the client get the full disk path
+	  * of a file or an array of disk paths depending on whether the multiple setting is on or off.
+	  * */
+	 public mixed $file_path {
+	 	 get {
+	 	 	 $field_name = $this->field_name;
+	 	 	 $data       = !is_null($this->content) ? (object)$this->content : null;
+	 	 	 $file_value = $data->$field_name ?? null;
+	 	 	 if(!$file_value)
+	 	 	 	 return $this->multiple ? [] : null;
+
+	 	 	 $path  = $this->path($data);
+	 	     $files = explode("~", $file_value);
+	 	     $paths = [];
+	 	     foreach($files as $file_name){
+		 	     $paths[] = $path.$file_name;
+		     }
+	 	     return $this->multiple ? $paths : $paths[0];
+	 	 }
+	 }
+
+	 /**
+	  * This is a virtual property to enable the client get the name
+	  * of a file or an array of names depending on whether the multiple setting is on or off.
+	  * */
+	 public mixed $file_name {
+	 	 get {
+	 	 	 $field_name = $this->field_name;
+	 	 	 $data       = !is_null($this->content) ? (object)$this->content : null;
+	 	 	 $file_value = $data->$field_name ?? null;
+	 	 	 if(!$file_value)
+	 	 	 	 return $this->multiple ? [] : null;
+
+	 	     $files = explode("~", $file_value);
+	 	     return $this->multiple ? $files : $files[0];
+	 	 }
+	 }
+
+	 /**
+	  * Whether to allow multiple files for this field or not
+	  * */
+	 public protected(set) bool $multiple = true {
+	 	 set(bool $value){
+	 	 	 $this->multiple = $value;
+	 	 }
+
+	 	 get => $this->multiple;
+	 }
+
 	 /**
 	  * During file upload for images and videos, give an array of integer sizes
 	  * for cropping
@@ -76,13 +126,6 @@ abstract class Binary extends Simple{
 	 }
 
      /**
-      * Get the displayable urls for the files
-      * */
-	 public function url(mixed $model) : string | array {
-	 	 return "";
-	 }
-
-     /**
       * Where there were no files uploaded, but there is a default file that can be shown, return it with default url
       * */
 	 public function default_url(mixed $model) : string | array{
@@ -91,10 +134,11 @@ abstract class Binary extends Simple{
 
      //Create a new binary field object
 	 public function __construct(...$kwargs){
-		 $kwargs['column_type']    = "VARCHAR";
-		 $kwargs['primitive_type'] = "file";
-		 $kwargs['length']         = 255;
-		 $kwargs['maximum']        = 255;
+		 $kwargs['column_type']     = "VARCHAR";
+		 $kwargs['primitive_type']  = "file";
+		 $kwargs['validation_type'] = "text";
+		 $kwargs['length']          = 255;
+		 $kwargs['maximum']         = 255;
 		 parent::__construct(...$kwargs);
 	 }
 

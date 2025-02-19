@@ -5,7 +5,7 @@
  use SaQle\Dao\Operations\Crud\{SelectOperation, InsertOperation, DeleteOperation, UpdateOperation, TotalOperation, TableCreateOperation, RunOperation, TableDropOperation};
  use SaQle\Dao\Model\Exceptions\NullObjectException;
  use function SaQle\Exceptions\{modelnotfoundexception};
- use SaQle\Dao\Model\Model;
+ use SaQle\Dao\Model\Schema\Model;
  use SaQle\Image\Image;
  use SaQle\Commons\{DateUtils, UrlUtils, StringUtils};
  use SaQle\Services\Container\ContainerService;
@@ -19,6 +19,7 @@
  use SaQle\Dao\Model\Manager\Modes\FetchMode;
  use SaQle\Dao\Model\TempId;
  use SaQle\Dao\Model\Interfaces\{IThroughModel, ITempModel};
+ use SaQle\Dao\Model\Collection\ModelCollection;
 
 class ModelManager extends IModelManager{
 	 use DateUtils, UrlUtils, StringUtils;
@@ -173,9 +174,19 @@ class ModelManager extends IModelManager{
 	 	 return [$former_rel_field, $former_ref_key, $data];
      }
 
+     private function get_auto_include(Model $model){
+	 	$auto_includes = [];
+	 	foreach($model->meta->fields as $fn => $fv){
+	 		if($fv instanceof Relation && $fv->eager){
+	 			$auto_includes[] = ['relation' => $fv->get_relation(), 'with' => '', 'tuning' => null];
+	 		}
+	 	}
+	 	return $auto_includes;
+	 }
+
      private function process_includes($schema_instance, $ass_model_class, $data, $is_eager_loading, $data_formatted){
 	 	 $explicit_includes  = $this->get_select_manager()->get_includes();
-	 	 $auto_includes      = $schema_instance->get_auto_include();
+	 	 $auto_includes      = $this->get_auto_include($schema_instance);
 	 	 $include_instances  = array_merge(array_column($explicit_includes, 'relation'), array_column($auto_includes, 'relation'));
 
 	 	 if(!$include_instances){
@@ -230,7 +241,8 @@ class ModelManager extends IModelManager{
      	 $fmodel       = $ins->fmodel;
  	 	 $pkey         = $ins->pk;
 	 	 $fkey         = $ins->fk;
-	 	 $pkey_values  = array_unique(array_column($data, $pkey));
+	 	 $pkey_values  = array_unique(array_column($data instanceof ModelCollection ? $data->items() : $data, $pkey));
+
 	 	 $pkey_values  = array_filter($pkey_values, function($v){
 	 	 	 return trim($v) !== "" && !is_null($v);
 	 	 });
@@ -269,31 +281,24 @@ class ModelManager extends IModelManager{
 		 return $allHaveProperty;
      }
 
+     private function get_file_configurations(Model $model){
+     	 $fc = [];
+     	 foreach($model->meta->file_field_names as $ffn){
+     	 	$fc[$ffn] = $model->meta->fields[$ffn]->get_field_attributes();
+     	 }
+     	 return $fc;
+     }
+
      private function format_get_data($model_instance, $ass_model_class, $data){
      	 if(!$this->has_get_data_been_formatted($data)){
      	 	 $chain = new Chain();
 		 	 $chain->add(new DefaultHandler());
-		 	 
-		 	 //Format date and timestamps to human readable forms
-		     if($model_instance->meta->auto_cmdt && $model_instance->meta->format_cmdt && $model_instance->meta->cmdt_type === 'PHPTIMESTAMP'){
-		     	 $createdat_name = $model_instance->meta->created_at_field;
-		     	 $modifiedat_name = $model_instance->meta->modified_at_field;
-		     	 $chain->add(new FormatCmdt(cat_name: $createdat_name, mat_name: $modifiedat_name));
-		     }
 
-		     //Format file paths to urls
-		     $file_configurations = $model_instance->get_file_configurations();
-		     if(count($file_configurations) > 0){
-		     	 $chain->add(new PathsToUrls(model: $model_instance, config: $file_configurations));
-		     }
-
-		     //Cast the row data to value object type
-		     if($this->get_tomodel()){
-		     	 $chain->add(new TypeCast(type: $ass_model_class));
-		     }
-
-		     //Mark the data as having been formatted
+		 	 //Mark the data as having been formatted
 		     $chain->add(new FormattedChecker());
+
+		 	 //Cast the row data to value object type
+		 	 $chain->add(new TypeCast(type: $ass_model_class));
 
 		     //Process the data through the chain.
 		     if($chain->is_active()){
@@ -304,17 +309,24 @@ class ModelManager extends IModelManager{
 		     	 $data = $processed;
 		     }
 
-	     	 //If to model is on, return a typed model collection instead of a simple array
-	     	 if($this->get_tomodel()){
-	     	 	 $collection_class = $ass_model_class::get_collection_class();
-	     	 	 return new $collection_class($data);
-	     	 }
+		     //return a typed model collection
+		     //return new ModelCollection(type: $ass_model_class, elements: $data);
+		     return $data;
+
+		 	 /*/Format date and timestamps to human readable forms
+		     if($model_instance->meta->auto_cmdt && $model_instance->meta->format_cmdt && $model_instance->meta->cmdt_type === 'PHPTIMESTAMP'){
+		     	 $createdat_name = $model_instance->meta->created_at_field;
+		     	 $modifiedat_name = $model_instance->meta->modified_at_field;
+		     	 $chain->add(new FormatCmdt(cat_name: $createdat_name, mat_name: $modifiedat_name));
+		     }
+
+		     //Format file paths to urls
+		     $file_configurations = $this->get_file_configurations($model_instance);
+		     if(count($file_configurations) > 0){
+		     	 $chain->add(new PathsToUrls(model: $model_instance, config: $file_configurations));
+		     }*/
      	 }
 	     	 
-         
-         /*echo "Data after formatting!\n";
-         print_r($data);
-         echo "\n-----------------------------------------\n";*/
          return $data;
      }
 
@@ -386,7 +398,7 @@ class ModelManager extends IModelManager{
      	 #get the model associated with this table
      	 $model = $this->get_model($table);
      	 #get include field
-     	 $include_field = $model->is_include($field);
+     	 $include_field = $model->is_relation_field($field);
 
      	 if(!$include_field){
      	 	throw new \Exception("{$field} This is not an includable field!");
