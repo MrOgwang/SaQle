@@ -81,8 +81,14 @@ class MakeMigrations{
             'app_name'       => $app_name, 
             'db_context'     => $db_context,
             'timestamp'      => $timestamp,
-            'migration_name' => $migration_name
+            'migration_name' => $migration_name,
+            'tracker'        => $tracker
          ]);
+         $generated_throughs = $snapshot['generated_throughs'];
+         unset($snapshot['generated_throughs']);
+
+
+         echo "Making {$migration_name} migrations now!\n";
          [$up_models, $down_models, $touched_contexts] = $this->get_model_operations($snapshot);
          
          $template = "<?php\n";
@@ -113,13 +119,14 @@ class MakeMigrations{
 
          //create migrations folder
          if(!file_exists($migrations_folder)){
-            mkdir($migrations_folder);
+             mkdir($migrations_folder);
          }
 
          if(file_put_contents($migration_filename, $template) !== false){
              echo "Migration created: {$migration_filename}\n";
 
              $tracker->add_migration((Object)['file' => $class_name.".php", 'is_migrated' => false]);
+             $tracker->set_through_models($generated_throughs);
              $this->serialize_to_file($migration_tracker_filename, $tracker);
          }
      }

@@ -21,7 +21,7 @@ abstract class Scalar extends RealField{
 	 	 if(!$this->is_explicit_associative_array($choices)){
  	 	 	 $new_values = [];
  	 	 	 foreach($choices as $i => $v){
- 	 	 	 	 $new_values[$v] = !$use_keys ? ucwords($v) : $i;
+ 	 	 	 	 $new_values[$v] = !$use_keys ? $v : $i;
  	 	 	 }
  	 	 	 return $new_values;
  	 	 }else{

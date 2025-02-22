@@ -44,7 +44,7 @@ class Email implements INotification{
 	 * Email host port
 	 * @var integer
 	 */
-	 private int $port = EMAIL_PORT;
+	 private int $port = 0;
 	 
 	 /**
 	 * Email sender name and address
@@ -99,6 +99,7 @@ class Email implements INotification{
      * @param array $configurations
      */
 	 public function __construct(...$configurations){
+	 	 $this->port = (int)EMAIL_PORT;
 		 $this->to_address  = [$configurations['rec_email'], $configurations['rec_name']];
 		 $this->subject     = $configurations['subject'];
 		 $this->body        = [

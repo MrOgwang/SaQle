@@ -174,7 +174,7 @@ class ModelManager extends IModelManager{
 	 	 return [$former_rel_field, $former_ref_key, $data];
      }
 
-     private function get_auto_include(Model $model){
+     private function get_auto_includes(Model $model){
 	 	$auto_includes = [];
 	 	foreach($model->meta->fields as $fn => $fv){
 	 		if($fv instanceof Relation && $fv->eager){
@@ -184,10 +184,12 @@ class ModelManager extends IModelManager{
 	 	return $auto_includes;
 	 }
 
-     private function process_includes($schema_instance, $ass_model_class, $data, $is_eager_loading, $data_formatted){
+     private function process_includes($model_instance, $data, $is_eager_loading, $data_formatted){
 	 	 $explicit_includes  = $this->get_select_manager()->get_includes();
-	 	 $auto_includes      = $this->get_auto_include($schema_instance);
+	 	 $auto_includes      = $this->get_auto_includes($model_instance);
 	 	 $include_instances  = array_merge(array_column($explicit_includes, 'relation'), array_column($auto_includes, 'relation'));
+
+	 	 print_r($include_instances);
 
 	 	 if(!$include_instances){
 	 	 	 return $data;
@@ -202,10 +204,11 @@ class ModelManager extends IModelManager{
              $former_ref_key, 
              $data
          ]                   = $this->unpack_related_data($data, $is_eager_loading);
+
          if(!$data_formatted){
-         	 $data           = $this->format_get_data($schema_instance, $ass_model_class, $data);
+         	 $data           = $this->format_get_data($model_instance::class, $data);
          }
-	 	 
+
 	 	 foreach($include_instances as $index => $ins){
 	 	 	 $tracker::add_relation($ins);
 	 	 	 $with          = $nested_includes[$index];
@@ -218,7 +221,7 @@ class ModelManager extends IModelManager{
 	 	 	 	 $d->$rel_field = $include_data['rel_data'][$ref_key_value] ?? ($include_data['is_multiple'] ? [] : null);
 	 	 	 }
 	 	 }
-
+	 	
 	 	 if($is_eager_loading){
          	 $consolidated_data  = [];
          	 foreach($data as $r){
@@ -230,31 +233,48 @@ class ModelManager extends IModelManager{
          	 }
          	 $data = array_values($consolidated_data);
          	 foreach($data as $d){
-         	 	$d->$former_rel_field = json_encode($d->$former_rel_field);
+         	 	 //$d->$former_rel_field = json_encode($d->$former_rel_field);
          	 }
 	 	 }
 
 	 	 return $data;
      }
 
+     private function extrct_primarykey_values($pkey, $data){
+     	 if(!$data)
+     	 	return [];
+
+     	 $keyvalues = [];
+     	 if($data[0] instanceof Model){
+     	 	 foreach($data as $d){
+     	 	 	 $keyval = $d->$pkey;
+     	 	 	 if(!is_null($keyval) && trim($keyval) !== ""){
+     	 	 	 	 $keyvalues[] = $keyval;
+     	 	 	 }
+             }
+     	 }else{
+     	     $keyvalues = array_filter(array_column($data, $pkey), function($v){
+	 	 	     return !is_null($v) && trim($v) !== "";
+	 	     });
+     	 }
+
+     	 return array_unique($keyvalues);
+     }
+
      private function process_include($ins, $with, $tuning, $data){
      	 $fmodel       = $ins->fmodel;
  	 	 $pkey         = $ins->pk;
 	 	 $fkey         = $ins->fk;
-	 	 $pkey_values  = array_unique(array_column($data instanceof ModelCollection ? $data->items() : $data, $pkey));
-
-	 	 $pkey_values  = array_filter($pkey_values, function($v){
-	 	 	 return trim($v) !== "" && !is_null($v);
-	 	 });
+	 	 $pkey_values  = $this->extrct_primarykey_values($pkey, $data);
 
 	 	 $raw_data     = $this->fetch_related_data($fmodel, $fkey, $pkey_values, $ins->field, $with, $tuning);
 	 	 $rel_data     = [];
 	 	 $field        = $ins->field;
-	 	 $fmodelinstance = new $fmodel();
 	 	 foreach($raw_data as $rd){
 	 	 	 $pointer_value            = $rd->$fkey;
-	 	 	 $the_rows                 = json_decode(preg_replace('/,(\s*])/', '$1', $rd->$field));
-	 	 	 $the_rows                 = $this->format_get_data($fmodelinstance, $fmodel, $the_rows);
+	 	 	 $the_rows                 = !is_array($rd->$field) ? json_decode(preg_replace('/,(\s*])/', '$1', $rd->$field)) : $rd->$field;
+	 	 	 if(!is_array($rd->$field))
+	 	 	 	 $the_rows             = $this->format_get_data($fmodel,  $the_rows);
 	 	 	 $rel_data[$pointer_value] = $ins->multiple ? $the_rows : ($the_rows[0] ?? null);
 	 	 }
 	 	 return [
@@ -268,7 +288,7 @@ class ModelManager extends IModelManager{
 
      private function has_get_data_been_formatted($data){
      	 if(count($data) === 0)
-     	 	return true;
+     	 	 return true;
 
 		 $allHaveProperty = true;
 		 foreach($data as $d){
@@ -281,15 +301,7 @@ class ModelManager extends IModelManager{
 		 return $allHaveProperty;
      }
 
-     private function get_file_configurations(Model $model){
-     	 $fc = [];
-     	 foreach($model->meta->file_field_names as $ffn){
-     	 	$fc[$ffn] = $model->meta->fields[$ffn]->get_field_attributes();
-     	 }
-     	 return $fc;
-     }
-
-     private function format_get_data($model_instance, $ass_model_class, $data){
+     private function format_get_data($model_class, $data){
      	 if(!$this->has_get_data_been_formatted($data)){
      	 	 $chain = new Chain();
 		 	 $chain->add(new DefaultHandler());
@@ -298,7 +310,7 @@ class ModelManager extends IModelManager{
 		     $chain->add(new FormattedChecker());
 
 		 	 //Cast the row data to value object type
-		 	 $chain->add(new TypeCast(type: $ass_model_class));
+		 	 $chain->add(new TypeCast(type: $model_class));
 
 		     //Process the data through the chain.
 		     if($chain->is_active()){
@@ -310,7 +322,7 @@ class ModelManager extends IModelManager{
 		     }
 
 		     //return a typed model collection
-		     //return new ModelCollection(type: $ass_model_class, elements: $data);
+		     //return new ModelCollection(type: $model_class, elements: $data);
 		     return $data;
 
 		 	 /*/Format date and timestamps to human readable forms
@@ -319,31 +331,22 @@ class ModelManager extends IModelManager{
 		     	 $modifiedat_name = $model_instance->meta->modified_at_field;
 		     	 $chain->add(new FormatCmdt(cat_name: $createdat_name, mat_name: $modifiedat_name));
 		     }
-
-		     //Format file paths to urls
-		     $file_configurations = $this->get_file_configurations($model_instance);
-		     if(count($file_configurations) > 0){
-		     	 $chain->add(new PathsToUrls(model: $model_instance, config: $file_configurations));
-		     }*/
+		     */
      	 }
 	     	 
          return $data;
      }
 
 	 private function get(bool $tracker_active = false){
-	 	 #acquire the table being processed
-	 	 $table_name   = $this->get_context_tracker()->find_table_name(0);
-	 	 #acquire the dao model.
-	 	 $model_instance = $this->get_model($table_name);
-	 	 $model_class    = $model_instance::class;
-	 	 $ass_model_class = $model_class;
+	 	 $table_name     = $this->get_context_tracker()->find_table_name(0); //get db table name
+	 	 $model_instance = $this->get_model($table_name); //get model instance associated with table
 
-	 	 #activate tracker and add current model to it.
+	 	 //activate tracker and add current model to it.
 	 	 $tracker = EagerTracker::activate();
 	 	 if(!$tracker_active){
 	 	 	 $tracker::reset();
 	 	 }
-	 	 $tracker->add_model($model_class);
+	 	 $tracker->add_model($model_instance::class);
 
 	 	 #if soft delete is available, apply the fetch mode
 	 	 /*if($model_instance->meta->soft_delete){
@@ -366,13 +369,13 @@ class ModelManager extends IModelManager{
 	 	 $rows = $this->crud_command->execute();
 
          $data_formatted = false;
-	 	 if(!$tracker_active && $model_class !== "SaQle\Dao\Model\TempId"){
-	 	 	 $rows = $this->format_get_data($model_instance, $ass_model_class, $rows);
+	 	 if(!$tracker_active && $model_instance::class !== "SaQle\Dao\Model\TempId"){
+	 	 	 $rows = $this->format_get_data($model_instance::class, $rows);
 	 	 	 $data_formatted = true;
 	 	 }
 
 	 	 #process includes and return
-	 	 return $this->process_includes($model_instance, $ass_model_class, $rows, $tracker_active, $data_formatted);
+	 	 return $this->process_includes($model_instance, $rows, $tracker_active, $data_formatted);
 	 }
 
 	 public function total(){
@@ -728,7 +731,7 @@ class ModelManager extends IModelManager{
      	 }
      }
  
-     public function add(array $data, bool $skip_validation = false){
+     public function add(array $data, bool $skip_validation = false, int $index = 0){
      	
      	 /*get the name of the current table being manipulated*/
      	 $table = $this->get_context_tracker()->find_table_name(0);
@@ -736,8 +739,7 @@ class ModelManager extends IModelManager{
      	 $model = $this->get_model($table);
      	 [$clean_data, $file_data, $is_duplicate, $action_on_duplicate] = $model->prepare_insert_data($data, $this->request, $table, $model::class, $this->get_dbcontext_class(), $skip_validation);
 
-     	 $entry_key = spl_object_hash((object)$clean_data);
-
+     	 $entry_key = spl_object_hash((object)$clean_data).$index;
      	 if($is_duplicate !== false){
      	 	 if(array_key_exists("is_duplicate", $this->operation_status)){
      	 	 	 $this->operation_status['duplicate_entries'][$entry_key] = $is_duplicate[0];
@@ -763,12 +765,14 @@ class ModelManager extends IModelManager{
      	 
      	 $this->file_data[$entry_key] = $file_data;
      	 $this->insert_data_container["data"][$entry_key] = $clean_data;
+
      	 return $this;
      }
 
      public function add_multiple(array $data, bool $skip_validation = false){
+     	$this->insert_data_container["multiple"] = true;
      	foreach($data as $dk => $dv){
-     		$this->add($dv, $skip_validation);
+     		$this->add($dv, $skip_validation, $dk);
      	}
      	return $this;
      }
@@ -778,7 +782,7 @@ class ModelManager extends IModelManager{
      	 if(!$saved_data)
      	 	return new \Exception("Could not save object");
 
-     	 if(count($this->insert_data_container["data"]) > 1)
+     	 if($this->insert_data_container["multiple"] === true)
      	 	return $saved_data;
 
      	 return $saved_data[0];

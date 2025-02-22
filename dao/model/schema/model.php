@@ -15,8 +15,9 @@ use SaQle\Dao\Field\Types\Base\Relation;
 use SaQle\Dao\Model\Manager\ModelManager;
 use SaQle\Dao\Model\Interfaces\{IModel, IThroughModel, ITableSchema, ITempModel};
 use SaQle\Dao\Model\Collection\ModelCollection;
+use JsonSerializable;
 
-abstract class Model implements ITableSchema, IModel{
+abstract class Model implements ITableSchema, IModel, JsonSerializable{
 	 use StringUtils;
 
      /**
@@ -25,33 +26,7 @@ abstract class Model implements ITableSchema, IModel{
       * */
 	 protected private(set) array $data = []{
 	 	 set(array $value){
-	 	 	 $formatted_values = [];
-	 	     $db_columns = $this->meta->column_names;
-	 	     $db_columns_flip = array_flip($db_columns);
-		 	 foreach($value as $k => $v){
-		 	 	 $field_name = null;
-		 	 	 $col_name   = null;
-		 	 	 if(array_key_exists($k, $db_columns)){
-		 	 	 	 $field_name = $k;
-		 	 	 	 $col_name = $db_columns[$k];
-		 	 	 }
-
-		 	 	 if(!$field_name && !$col_name){
-		 	 	 	 if(array_key_exists($k, $db_columns_flip)){
-		 	 	 	     $col_name = $k;
-		 	 	 	     $field_name = $db_columns_flip[$k];
-		 	 	     }
-		 	 	 }
-
-		 	 	 if(!$field_name && !$col_name){
-		 	 	 	 $formatted_values[$k] = $v;
-		 	 	 	 continue;
-		 	 	 }
-
-		 	 	 $formatted_values[$field_name] = $v;
-		 	 }
-
-		 	 $this->data = $formatted_values;
+		 	 $this->data = $this->format_data($value);
 	 	 }
 
 	 	 get => $this->data;
@@ -80,10 +55,6 @@ abstract class Model implements ITableSchema, IModel{
 	 public function __construct(...$kwargs){
 	 	 $this->data = $kwargs;
 	 	 $this->data_state = $this->get_data_state();
-	 	 [$db_class, $table_name] = self::get_table_n_dbcontext();
-	 	 $this->meta->db_table    = $table_name;
-	 	 $this->meta->db_class    = $db_class;
-	 	 $this->meta->model_class = $this::class;
      }
 
      //method to ensure shared meta per class
@@ -91,6 +62,10 @@ abstract class Model implements ITableSchema, IModel{
          //Check if meta already exists for this class
          if(!isset(self::$shared_meta[$class_name])) {
              $table_info = new TableInfo();
+             [$db_class, $table_name] = self::get_table_n_dbcontext();
+	 	     $table_info->db_table    = $table_name;
+	 	     $table_info->db_class    = $db_class;
+	 	     $table_info->model_class = $this::class;
              $this->model_setup($table_info);
              self::$shared_meta[$class_name] = $table_info;
          }
@@ -104,11 +79,11 @@ abstract class Model implements ITableSchema, IModel{
 
      final public static function state(){
          $called_class = get_called_class();
-         if (!isset($instances[$called_class])){
-             $instances[$called_class] = new $called_class();
+         if (!isset(self::$instances[$called_class])){
+             self::$instances[$called_class] = new $called_class();
          }
 
-         return $instances[$called_class];
+         return self::$instances[$called_class];
      }
 
 	 public static function db2($table_name, $model_class, $db_class, $table_aliase = null, $table_ref = null){
@@ -492,17 +467,18 @@ abstract class Model implements ITableSchema, IModel{
      }
 
 	 public function __get($name){
-	 	 $name = $this->assert_field_defined($name);
-	 	 if(!$name)
-	 	 	return null;
+	 	 $field_name = $this->assert_field_defined($name);
+	 	 if(!$field_name){
+	 	 	 return $this->data[$name] ?? null;
+	 	 }
 
-	 	 return $this->meta->fields[$name]->render($this->data);
+	 	 return $this->meta->fields[$field_name]->render($this->format_data($this->data, 'columns'));
      }
 
      public function get_field(string $field_name) : IField{
      	 $field_name     = $this->assert_field_defined($field_name, true);
      	 $field          = $this->meta->fields[$field_name];
-     	 $field->content = $this->data;
+     	 $field->content = $this->format_data($this->data, 'columns');
      	 return $field;
      }
 
@@ -657,11 +633,13 @@ abstract class Model implements ITableSchema, IModel{
 	 	 #If there are foreign relations, save them first. FK relations are one to one, so the save is expected to return a single object.
 	 	 $saved_fk_ids = [];
 	 	 foreach($savable_fk as $fk_key => $fk_value){
-	 	 	 $with_fields[] = $fk_key;
-	 	 	 $s = $fk_value[0]->save();
-	 	 	 if($s){
-	 	 	 	 $fk_name = $fk_value[1]->fk;
-	 	 	 	 $saved_fk_ids[$fk_key] = $s->$fk_name;
+	 	 	 if(isset($fk_value[0])){
+	 	 	 	$with_fields[] = $fk_key;
+		 	 	 $s = $fk_value[0]->save();
+		 	 	 if($s){
+		 	 	 	 $fk_name = $fk_value[1]->fk;
+		 	 	 	 $saved_fk_ids[$fk_key] = $s->$fk_name;
+		 	 	 }
 	 	 	 }
 	 	 }
 
@@ -706,7 +684,7 @@ abstract class Model implements ITableSchema, IModel{
 	 	 #save navigation key data
 	 	 $saved_nk_ids = [];
 	 	 foreach($savable_nk as $nk_key => $nk_value){
-	 	 	 if($nk_value[0]){
+	 	 	 if(!is_null($nk_value[0])){
 	 	 	 	 $with_fields[] = $nk_key;
 		 	 	 $nk_pk_name = $nk_value[1]->pk;
 		 	 	 $nk_fk_name = $nk_value[1]->fk;
@@ -716,6 +694,7 @@ abstract class Model implements ITableSchema, IModel{
 		 	 	 	 $colection = new ModelCollection(type: $nk_value[0][0]::class, elements: $nk_value[0]);
 		 	 	 	 $s = $colection->save();
 	 	 	 	 	 $saved_nk_ids[$nk_key] = [$nk_pk_value, $s->$nk_fk_name, $nk_value[1]->get_through_model(), $nk_pk_name, $nk_fk_name];
+	 	 	 	 	 //print_r($saved_nk_ids);
 	 	 	 	 }else{
 	 	 	 	 	 $nk_fk_name = $nk_value[1]->fk;
 	 	 	 	 	 $nk_value[0]->$nk_fk_name = $nk_pk_value;
@@ -730,8 +709,8 @@ abstract class Model implements ITableSchema, IModel{
 		 	 	 $through_model_schema = $_ids[2];
 		 	 	 $through_model = $through_model_schema[1];
 		 	 	 $data = [];
-		 	 	 $pk_col_name = $_ids[3];
-		 	 	 $fk_col_name = $_ids[4];
+		 	 	 $pk_col_name = $through_model_schema[3]."_id";
+		 	 	 $fk_col_name = $through_model_schema[4]."_id";
 		 	 	 $pk_col_val = $_ids[0];
 		 	 	 foreach($_ids[1] as $fk_col_val){
 		 	 	 	 $data[] = [$pk_col_name => $pk_col_val, $fk_col_name => $fk_col_val];
@@ -749,7 +728,42 @@ abstract class Model implements ITableSchema, IModel{
 	 	 return $getmana->tomodel(true)->first_or_default();
 	 }
 
+	 public function jsonSerialize() : mixed{
+         return $this->data;
+     }
 
+     private function format_data(array $data, string $keytype = 'fields'){
+     	 $formatted_values = [];
+ 	     $db_columns = $this->meta->column_names;
+ 	     $db_columns_flip = array_flip($db_columns);
+	 	 foreach($data as $k => $v){
+	 	 	 $field_name = null;
+	 	 	 $col_name   = null;
+	 	 	 if(array_key_exists($k, $db_columns)){
+	 	 	 	 $field_name = $k;
+	 	 	 	 $col_name = $db_columns[$k];
+	 	 	 }
 
+	 	 	 if(!$field_name && !$col_name){
+	 	 	 	 if(array_key_exists($k, $db_columns_flip)){
+	 	 	 	     $col_name = $k;
+	 	 	 	     $field_name = $db_columns_flip[$k];
+	 	 	     }
+	 	 	 }
+
+	 	 	 if(!$field_name && !$col_name){
+	 	 	 	 $formatted_values[$k] = $v;
+	 	 	 	 continue;
+	 	 	 }
+
+	 	 	 if($keytype === 'fields'){
+	 	 	 	 $formatted_values[$field_name] = $v;
+	 	 	 }else{
+	 	 	 	 $formatted_values[$col_name] = $v;
+	 	 	 }
+	 	 }
+
+	 	 return $formatted_values;
+     }
 }
 ?>

@@ -45,7 +45,9 @@ abstract class Simple implements IField{
       * Override this function to display formatted values for a given field
       * */
 	 public function render(mixed $data) : mixed{
-	 	 return $data[$this->field_name] ?? null;
+	 	 $field_name  = $this->field_name;
+	 	 $column_name = $this->column_name;
+	 	 return is_array($data) ? ($data[$field_name] ?? ($data[$column_name] ?? null)) : ($data->$field_name ?? ($data->$column_name ?? null));
 	 }
 }
 ?>

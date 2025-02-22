@@ -45,7 +45,7 @@ class LengthValidator extends ValidatorDecorator{
 
 	 public function number_length_valid($input, $config){
 	 	 $strict_length = array_key_exists("strict_length", $config) && (bool)$config['strict_length'] === true;
-	 	 $count = $input !== 0 ? floor(log10(abs($input)) + 1) : 1;
+	 	 $count = $input !== 0 ? floor(log10(abs($input ?? 0)) + 1) : 1;
 		 return [
 		     'is_valid' => $strict_length ? $count === $config['length'] : $count <= $config['length'], 
 			 'error' => $this->get_readable_field_name($config['field_name']). ' has a length exceeding the required length of '.$config['length']

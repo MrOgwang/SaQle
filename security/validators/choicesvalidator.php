@@ -30,8 +30,8 @@ class ChoicesValidator extends ValidatorDecorator{
 	 }
 	 public function is_choice_valid($input, $config){
 		 return [
-		     'is_valid' => in_array($input, array_keys($config['choices'])), 
-			 'error' => $this->get_readable_field_name($config['field_name']). ' is not among the options allowed: options include['.implode(', ', array_keys($config['choices'])).']'
+		     'is_valid' => in_array($input, $config['choices']), 
+			 'error' => $this->get_readable_field_name($config['field_name']). ' is not among the options allowed: options include['.implode(', ', $config['choices']).']'
 		 ];
 	 }
 }

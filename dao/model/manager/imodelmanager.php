@@ -75,7 +75,7 @@
      * @var array  prmkeyvalues:   an array of GUID/INT values for the data to be inserted
      * @var array  navigationkeys: an array of names for the navigational keys in the table that is being curremtly manipulated
      */
- 	 protected array $insert_data_container = ["prmkeytype" => "", "data" => [], "prmkeyname" => "", "prmkeyvalues" => [], "navigationkeys" => []];
+ 	 protected array $insert_data_container = ["prmkeytype" => "", "data" => [], "prmkeyname" => "", "prmkeyvalues" => [], "navigationkeys" => [], 'multiple' => false];
 
  	 /**
  	  * This an array that contains information about the data to be updated and the update data itself.
@@ -298,12 +298,13 @@
 	 public function register_joining_model(string $table, ?string $tblref = null, ?string $as = null){
 	 	 //$refs = array_merge($this->dbclass::get_models(), $this->tmodels);
 	 	 //modelnotfoundexception($table, $refs, $this->get_context_options()->get_name());
+	 	 $meta = $this->get_model($table)->meta;
 		 $this->register_to_context_tracker(
 		 	 table_name:    $table,
 		 	 table_aliase:  !is_null($as) ? $as : "",
 		 	 database_name: $this->get_context_options()->get_name(),
-		 	 field_list:    $this->get_model($table)->meta->actual_column_names,
-		 	 ff_settings:   $this->get_model($table)->meta->file_required_fields,
+		 	 field_list:    $meta->actual_column_names,
+		 	 ff_settings:   $meta->file_required_fields,
 		 	 table_ref:     $tblref
 		 );
 	 }

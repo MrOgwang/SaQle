@@ -7,8 +7,8 @@ use SaQle\Dao\Field\Interfaces\IField;
 
 class ManyToMany extends Relation implements IField{
 	 //the class name for the through model for many to many relations
-	 public string $through {
-	 	 set(bool $value){
+	 public string $through = '' {
+	 	 set(string $value){
 	 	 	 $this->through = $value;
 	 	 }
 
@@ -20,7 +20,7 @@ class ManyToMany extends Relation implements IField{
 		 parent::__construct(...$kwargs);
 	 }
 
-	 protected function get_relation_kwargs(){
+	 protected function get_relation_kwargs() : array{
 		 return array_merge(parent::get_relation_kwargs(), ['through']);
 	 }
 }

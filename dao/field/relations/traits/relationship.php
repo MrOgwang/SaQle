@@ -20,7 +20,7 @@ trait Relationship{
 	 	 get => $this->pmodel;
 	 }
 
-       //the name of the primary key
+        //the name of the primary key
 	 public protected(set) ?string $pk = null {
 	 	 set(?string $value){
 	 	 	 $this->pk = $value;
@@ -29,7 +29,7 @@ trait Relationship{
 	 	 get => $this->pk;
 	 }
 
-       //the name of the foreign key
+        //the name of the foreign key
 	 public protected(set) ?string $fk = null {
 	 	 set(?string $value){
 	 	 	 $this->fk = $value;
@@ -38,7 +38,7 @@ trait Relationship{
 	 	 get => $this->fk;
 	 }
 
-       //whether this is a navigation field
+        //whether this is a navigation field
 	 public protected(set) bool $navigation = false {
 	 	 set(bool $value){
 	 	 	 $this->navigation = $value;

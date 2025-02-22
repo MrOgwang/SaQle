@@ -58,11 +58,11 @@ abstract class AuthService implements IAuthService, Observable{
 	  * @return string
 	  * */
 	 public function generate_jwt_token(
-	 	 int    $issued_at  = null, 
-	 	 string $issuer     = null, 
-	 	 int    $not_before = null, 
-	 	 int    $expiry     = 5, 
-	 	 array  $extra_info  = []
+	 	 ?int    $issued_at  = null, 
+	 	 ?string $issuer     = null, 
+	 	 ?int    $not_before = null, 
+	 	 int     $expiry     = 5, 
+	 	 array   $extra_info  = []
 	 ) : string{
 	     $issuer = $issuer ?? ROOT_DOMAIN;
 	     $issued_at = $issued_at ?? time();

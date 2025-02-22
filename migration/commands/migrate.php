@@ -5,7 +5,6 @@ use SaQle\Migration\Managers\Interfaces\IMigrationManager;
 use SaQle\Dao\DbContext\Manager\DbManagerFactory;
 use SaQle\Commons\FileUtils;
 use SaQle\Migration\Models\Migration;
-use SaQle\Migration\Models\Schema\MigrationSchema;
 use SaQle\Migration\Tracker\MigrationTracker;
 
 class Migrate{
@@ -152,7 +151,7 @@ class Migrate{
 
          if($isdbnew){
              echo "Creating migrations table!\n";
-             $dbmanager->create_table('migrations', MigrationSchema::class);
+             $dbmanager->create_table('migrations', Migration::class);
          }
 
          //record this migration in db

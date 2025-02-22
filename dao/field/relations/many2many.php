@@ -23,11 +23,14 @@ namespace SaQle\Dao\Field\Relations;
 
 use SaQle\Dao\Field\Relations\Base\BaseRelation;
 use SaQle\Migration\Tracker\MigrationTracker;
+use SaQle\Commons\FileUtils;
 
 class Many2Many extends BaseRelation{
+	 use FileUtils;
+
 	 //the class name of the through model
 	 public protected(set) ?string $through = null {
-	 	 set(string $value){
+	 	 set(?string $value){
 	 	 	 $this->through = $value;
 	 	 }
 
@@ -49,6 +52,11 @@ class Many2Many extends BaseRelation{
 	 	parent::__construct($pmodel, $fmodel, $field, $pk, $fk, $navigation, true, $eager);
 	 } 
 
+	 private function get_class_name(string $long_class_name){
+         $nameparts = explode("\\", $long_class_name);
+         return end($nameparts);
+     }
+
 	 public function get_through_model(){
 	 	 if($this->through)
 	 		 return $this->through;
@@ -62,9 +70,11 @@ class Many2Many extends BaseRelation{
              $tracker = new MigrationTracker();
          }
          $last_throughs = $tracker->get_through_models();
+         $pmodel_name = $this->get_class_name($this->pmodel); 
+         $fmodel_name = $this->get_class_name($this->fmodel); 
 
-         $first_pointer = strtolower($this->pmodel.$this->fmodel);
-         $other_pointer = strtolower($this->fmodel.$this->pmodel);
+         $first_pointer = strtolower($pmodel_name.$fmodel_name);
+         $other_pointer = strtolower($fmodel_name.$pmodel_name);
 
          foreach($last_throughs as $ctx => $throughs){
          	 foreach($throughs as $pointer => $model){
@@ -74,12 +84,12 @@ class Many2Many extends BaseRelation{
          	 		}else{
          	 			$table_name = $other_pointer;
          	 		}
-         	 		return [$table_name, $model, $ctx];
+         	 		return [$table_name, $model, $ctx, strtolower($pmodel_name), strtolower($fmodel_name)];
          	 	}
          	 }
          }
 
-         throw new \Exception("No through model was defined for this many to many relationship between: {$pdao} and {$fmodel}");
+         throw new \Exception("No through model was defined for this many to many relationship between: {$pmodel_name} and {$fmodel_name}");
 	 }
 }
 ?>

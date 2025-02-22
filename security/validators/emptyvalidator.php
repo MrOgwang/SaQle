@@ -36,7 +36,7 @@ class EmptyValidator extends ValidatorDecorator{
 	 }
 	 public function is_empty_valid($input, $config){
 		 return [
-		     'is_valid' => (bool)$config['empty'] === false && trim($input) == "" ? false : true, 
+		     'is_valid' => (bool)$config['empty'] === false && trim($input ?? "") == "" ? false : true, 
 			 'error' => $this->get_readable_field_name($config['field_name']). ' cannot be an empty string.'
 		 ]; 
 	 }
