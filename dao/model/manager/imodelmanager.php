@@ -65,7 +65,13 @@
  	 * Through models are not explicitly defined in the db context class. This is s separate reference
  	 * for them in the model manager.
  	 * */
- 	private array $tmodels = [];
+ 	public protected(set) array $tmodels = [] {
+ 		 set(array $value){
+ 		 	 $this->tmodels = array_merge($this->tmodels, $value);
+ 		 }
+
+ 		 get => $this->tmodels;
+ 	}
 
      /**
      * This is an array that contains information about the data to be inserted and the data itself. Has the following keys.
@@ -265,7 +271,7 @@
      	?string $table_ref = null){
      	 if($dbcontext_class){
      	 	 if($model_class){
-     	 	 	 $this->tmodels = array_merge($this->tmodels, [$table_name => $model_class]);
+     	 	 	 $this->tmodels = [$table_name => $model_class];
      	 	 }
              $this->set_dbcontext_class($dbcontext_class);
      	 }
@@ -296,8 +302,6 @@
 	 * @param string $as:    the aliase name of the joining table.
 	 */
 	 public function register_joining_model(string $table, ?string $tblref = null, ?string $as = null){
-	 	 //$refs = array_merge($this->dbclass::get_models(), $this->tmodels);
-	 	 //modelnotfoundexception($table, $refs, $this->get_context_options()->get_name());
 	 	 $meta = $this->get_model($table)->meta;
 		 $this->register_to_context_tracker(
 		 	 table_name:    $table,

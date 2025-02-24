@@ -11,7 +11,7 @@
  use SaQle\Services\Container\ContainerService;
  use SaQle\Services\Container\Cf;
  use SaQle\Dao\Field\Relations\{One2One, Many2Many};
- use SaQle\Dao\Model\Manager\Handlers\{TypeCast, FormattedChecker};
+ use SaQle\Dao\Model\Manager\Handlers\{PathsToUrls, EagerLoadAssign, TypeCast, FormatCmdt, FormattedChecker};
  use SaQle\Core\Chain\{Chain, DefaultHandler};
  use SaQle\Dao\Model\Manager\Trackers\EagerTracker;
  use SaQle\Core\Assert\Assert;
@@ -71,118 +71,15 @@ class ModelManager extends IModelManager{
      	 return strtolower($model_name)."_temp_ids";
      }
 
-     private function fetch_manytomany_related_data($foreign_model, $foreign_key, $pkey_values, $field_name, $with, $tuning, $through){
-     	 $original_foreignkey = $foreign_key;
-     	 $foreign_key = $through[3];
-     	 $other_key = $through[4];
+     private function fetch_related_data($foreign_model, $foreign_key, $pkey_values, $field_name, $with, $tuning, $through = null){
+     	 echo "Foreign model: $foreign_model\n";
+     	 echo "Foreign model key: $foreign_key\n";
+     	 echo "Key values:\n";
+     	 print_r($pkey_values);
+     	 echo "Field name: $field_name\n";
+     	 echo "Through model:\n";
+     	 print_r($through);
 
-         //get temporary table name
-     	 $temp_table_name = $this->get_temporary_table_name($foreign_model);
-
-         //get the database context class and the table name for foreign model
-     	 [$db_class, $foreign_table] = $foreign_model::get_table_n_dbcontext();
-
-     	 //create the temporary table
-     	 TempId::db2($temp_table_name, TempId::class, $db_class)->create_table();
-
-     	 /**
-     	  * Store the ids of the objects to retrieve from foreign model table in the temporary table
-     	  * 
-     	  * These ID values could be in hundreds, therefore using an IN clause in the resulting SQL is not sound,
-     	  * this is why they are kept in a temporary table to be referenced later
-     	  * */
-	 	 if($pkey_values){
-	 	 	 $temporary_table_model_manager = TempId::db2($temp_table_name, TempId::class, $db_class);
-	 	 	 $temporary_table_model_manager->config(fnqm: 'N-QUALIFY', ftnm: 'N-ONLY', ftqm: 'N-QUALIFY');
-	 	 	 $values_to_add = [];
-	 	 	 foreach($pkey_values as $id){
-	 	 	 	 $values_to_add[] = ['id_value' => $id];
-	 	 	 }
-	 	 	 $temporary_table_model_manager->add_multiple($values_to_add)->save();
-	 	 }
-
-	 	 /**
-	 	  * Construct the sql statement that will select the id values from the temporary table above.
-	 	  * 
-	 	  * This is the statement that will be used in place of an IN clause in our final sql
-	 	  * */
-	 	 $temporary_ids_select_query = TempId::db2($temp_table_name, TempId::class, $db_class)->select(['id_value'])->sql_info('select');
-
-         /**
-          * Fine tune how the results from the foreign model table should be by injecting:
-          * 
-          * Order clause  : as deined in the with callback
-          * Limit clause  : as defined in the with callback
-          * Filter clause : as defined in the with callback
-          * Select clause : as defined in the with callback
-          * */
-         $order_clause    = "";
-         $limit_records   = 10000;
-         $raw_filters     = [];
-         $selected_fields = null;
-	 	 if($tuning){ //turning is the with callback
-	 	 	 $tuning_manager = $foreign_model::db()->config(fnqm: 'N-QUALIFY', ftnm: 'N-ONLY', ftqm: 'N-QUALIFY');
-	 	 	 $tuning_manager = $tuning($tuning_manager);
-
-	 	 	 $order_clause   = $tuning_manager->get_order_clause();
-	 	 	 $limit_records  = (int)$tuning_manager->get_limit_records();
-	 	 	 $limit_records  = $limit_records === 0 ? 10000 : $limit_records;
-	 	 	 
-	 	 	 $tuning_manager->l_where("row_num__lte", (int)$limit_records);
-
-	 	 	 $raw_filters     = $tuning_manager->get_filter_manager()->get_raw_filter();
-	 	 	 $selected_fields = $tuning_manager->get_selected_fields();
-	 	 }
-
-         $throughtablename = $through[0];
-	 	 $cte_manager = $foreign_model::db()->config(fnqm: 'H-QUALIFY', ftnm: 'N-ONLY', ftqm: 'N-QUALIFY');
-         $cte_manager->tmodels = [$through[0] => $through[1]];
-         $cte_manager->select(null, function($fields) use ($foreign_key, $order_clause){
-			 return implode(", ", $fields).", ROW_NUMBER() OVER (PARTITION BY {$foreign_key}{$order_clause}) AS row_num";
- 	     })
- 	     ->l_where("{$foreign_key}__in", $temporary_ids_select_query['sql'])
- 	     ->inner_join(table: $throughtablename, from: $original_foreignkey, to: $through[4]);
- 	     $cte_manager_query = $cte_manager->sql_info('select');
-
-         $query_table_name = 'ranked_rows';
-         $outer_manager = $foreign_model::db(table_aliase: $query_table_name)->config(fnqm: 'H-QUALIFY', ftnm: 'A-ONLY')
-         ->select($selected_fields, function($fields) use ($foreign_key, $field_name){
- 	 	     $json_string = "";
-			 foreach ($fields as $_i => $f){
-		         $keyparts = explode(".", $f);
-		         $key = count($keyparts) === 3 ? $keyparts[2] : ( count($keyparts) === 2 ? $keyparts[1] : $keyparts[0]);
-		         $json_string .= "'{$key}', {$f}";
-		         if($_i < count($fields) - 1){
-		         	$json_string .= ", ";
-		         }
-			 }
-			 $sql_string  = "{$foreign_key}, CONCAT('[', GROUP_CONCAT(JSON_OBJECT(".$json_string.") SEPARATOR ', '), ']') AS {$field_name}";
-			 return $sql_string;
- 	     })
- 	     ->set_raw_filters($raw_filters)
- 	     ->group_by([$foreign_key]);
-
- 	     $testfilters = $outer_manager->get_filter_manager()->get_where_clause($outer_manager->get_context_tracker(), $outer_manager->get_configurations());
-
-	 	 $outer_manager_query = $outer_manager->sql_info("select");
-
-	 	 $finalsql = "WITH {$query_table_name} AS ({$cte_manager_query['sql']}) {$outer_manager_query['sql']} GROUP BY {$foreign_key}";
-
-	 	 $finalmanager = $foreign_model::db()->sqlndata($finalsql, $testfilters->data ? $testfilters->data : null);
-	 	 if($with){
-	 	 	 $withcallbacks = $this->get_select_manager()->get_withcallbacks();
-	 	 	 $finalmanager->with($with, !empty($withcallbacks) ? $withcallbacks : null);
-	 	 }
-	 	 
-	 	 $related_data = $finalmanager->eager_load();
-
-     	 //drop the temporary table
-     	 TempId::db2($temp_table_name, TempId::class, $db_class)->drop_table();
-
-     	 return $related_data;
-     }
-
-     private function fetch_related_data($foreign_model, $foreign_key, $pkey_values, $field_name, $with, $tuning){
          //get temporary table name
      	 $temp_table_name = $this->get_temporary_table_name($foreign_model);
 
@@ -289,36 +186,19 @@ class ModelManager extends IModelManager{
      }
 
      private function unpack_related_data($data, $is_eager_loading){
-     	 $tmp_data               = $data;
-     	 $tracker                = EagerTracker::activate();
-         $existing_relations     = $tracker::get_relations();
-         $exr_count              = count($existing_relations);
-         $exr_last_index         = $exr_count > 0 ? $exr_count - 1 : 0; 
-         $former_rel_field       = '';
-         $former_ref_key         = '';
-         $ismanytomany           = false;
-         if( isset($existing_relations[$exr_last_index]) ){
-         	 $relation           = $existing_relations[$exr_last_index];
-         	 $former_rel_field   = $relation->field;
-         	 $former_ref_key     = $relation->fk;
-         	 if($relation instanceof Many2Many){
-         	 	 $through        = $relation->get_through_model();
-         	 	 $former_ref_key = $through[3];
-         	 	 $ismanytomany   = true;
-         	 }
-         }
+     	 $tmp_data           = $data;
+     	 $tracker            = EagerTracker::activate();
+         $existing_relations = $tracker::get_relations();
+         $exr_count          = count($existing_relations);
+         $exr_last_index     = $exr_count > 0 ? $exr_count - 1 : 0; 
+         $former_rel_field   = isset($existing_relations[$exr_last_index]) ? $existing_relations[$exr_last_index]->field : '';
+         $former_ref_key     = isset($existing_relations[$exr_last_index]) ? $existing_relations[$exr_last_index]->fk : '';
 
          if($is_eager_loading){
          	 $data = [];
          	 foreach($tmp_data as $td){
                  $json_data = json_decode($td->$former_rel_field);
-                 if(!is_null($json_data)){
-                 	 $json_data = array_map(function($d) use ($td, $former_ref_key){
-                 	 	 $d->$former_ref_key = $td->$former_ref_key;
-                         return $d;
-                     }, $json_data);
-                 	 $data = array_merge($data, $json_data);
-                 }
+         	 	 $data = !is_null($json_data) ? array_merge($data, $json_data) : $data;
          	 }
 	 	 }
 
@@ -381,6 +261,9 @@ class ModelManager extends IModelManager{
          	 	 $consolidated_data[$former_ref_key_val]->$former_rel_field[] = $r;
          	 }
          	 $data = array_values($consolidated_data);
+         	 foreach($data as $d){
+         	 	 //$d->$former_rel_field = json_encode($d->$former_rel_field);
+         	 }
 	 	 }
 
 	 	 return $data;
@@ -410,23 +293,15 @@ class ModelManager extends IModelManager{
      private function process_include($ins, $with, $tuning, $data){
      	 $fmodel       = $ins->fmodel;
  	 	 $pkey         = $ins->pk;
- 	 	 $pointerkey   = $ins->fk;
 	 	 $fkey         = $ins->fk;
-	 	 $through      = null;
 	 	 $pkey_values  = $this->extrct_primarykey_values($pkey, $data);
+	 	 $through      = $ins instanceof Many2Many ? $ins->get_through_model() : null;
 
-	 	 if($ins instanceof Many2Many){
-	 	 	 $through    = $ins->get_through_model();
-	 	 	 $pointerkey = $through[3];
-	 	 }
-	 
-	 	 $raw_data     = $ins instanceof Many2Many ? 
-	 	                 $this->fetch_manytomany_related_data($fmodel, $fkey, $pkey_values, $ins->field, $with, $tuning, $through) : 
-	 	                 $this->fetch_related_data($fmodel, $fkey, $pkey_values, $ins->field, $with, $tuning);
+	 	 $raw_data     = $this->fetch_related_data($fmodel, $fkey, $pkey_values, $ins->field, $with, $tuning, $through);
 	 	 $rel_data     = []; 
 	 	 $field        = $ins->field;
 	 	 foreach($raw_data as $rd){
-	 	 	 $pointer_value            = $rd->$pointerkey;
+	 	 	 $pointer_value            = $rd->$fkey;
 	 	 	 $the_rows                 = !is_array($rd->$field) ? json_decode(preg_replace('/,(\s*])/', '$1', $rd->$field)) : $rd->$field;
 	 	 	 if(!is_array($rd->$field))
 	 	 	 	 $the_rows             = $this->format_get_data($fmodel,  $the_rows);
@@ -476,7 +351,17 @@ class ModelManager extends IModelManager{
 		     	 $data = $processed;
 		     }
 
+		     //return a typed model collection
+		     //return new ModelCollection(type: $model_class, elements: $data);
 		     return $data;
+
+		 	 /*/Format date and timestamps to human readable forms
+		     if($model_instance->meta->auto_cmdt && $model_instance->meta->format_cmdt && $model_instance->meta->cmdt_type === 'PHPTIMESTAMP'){
+		     	 $createdat_name = $model_instance->meta->created_at_field;
+		     	 $modifiedat_name = $model_instance->meta->modified_at_field;
+		     	 $chain->add(new FormatCmdt(cat_name: $createdat_name, mat_name: $modifiedat_name));
+		     }
+		     */
      	 }
 	     	 
          return $data;

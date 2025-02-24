@@ -61,7 +61,7 @@ class SelectManager implements ISelectManager{
 	 }
 
 	 private function get_hq_selected($table, $aliase, $fields){
-	 	 return array_map(function($f) use ($table, $aliase, $database){
+	 	 return array_map(function($f) use ($table, $aliase){
 		     return $aliase ? $aliase.".".$f : $table.".".$f;
 		 }, $fields);
 	 }
@@ -75,13 +75,24 @@ class SelectManager implements ISelectManager{
 
 	 	 if(!$this->_selected){
 	 		 $this->_selected = [];
+	 		 $original_columns = [];
+	 		
 	 		 foreach($fieldrefs as $t_index => $fields){
 	 		 	 $real_fields = array_values($fields);
-	 		 	 $this->_selected = array_merge($this->_selected, match($config['fnqm']){
+	 		 	 $qualified_fields = match($config['fnqm']){
 	 		 	 	 'N-QUALIFY' => $real_fields,
 	 		 	 	 'F-QUALIFY' => $this->get_fq_selected($tables[$t_index], $aliases[$t_index], $databases[$t_index], $real_fields),
 	 		 	 	 'H-QUALIFY' => $this->get_hq_selected($tables[$t_index], $aliases[$t_index], $real_fields)
-	 		 	 });
+	 		 	 };
+
+	 		 	 foreach($real_fields as $rf_index => $rf){
+	 		 	 	 if(in_array($rf, $original_columns)){ //there is a duplicate field that needs to be aliased
+	 		 	 	 	 $table_ref = isset($aliases[$t_index]) && $aliases[$t_index] ? strtolower($aliases[$t_index]) : strtolower($tables[$t_index]);
+	 		 	 	 	 $qualified_fields[$rf_index] = $qualified_fields[$rf_index]." AS ".$table_ref."_".$rf;
+	 		 	 	 }
+	 		 	 }
+	 		 	 $original_columns = array_merge($original_columns, $real_fields);
+	 		 	 $this->_selected = array_merge($this->_selected, $qualified_fields);
 	 		 }
 	 	 }else{ 
 	 	     /**

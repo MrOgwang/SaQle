@@ -2,10 +2,8 @@
 namespace SaQle\Dao\Model\Schema;
 
 use SaQle\Dao\Field\Relations\Interfaces\IRelation;
-use SaQle\Http\Request\Request;
 use SaQle\Services\Container\ContainerService;
 use SaQle\Services\Container\Cf;
-use SaQle\Dao\Model\Attributes\{CreatorModifierFields, CreateModifyDateTimeFields, SoftDeleteFields};
 use SaQle\Dao\Field\Interfaces\IField;
 use SaQle\Dao\Field\Types\{Pk, TextField, OneToOne, OneToMany, FloatField, IntegerField, BigIntegerField, PhpTimestampField, ManyToMany, FileField, TinyTextField, DateField, TimeField, DateTimeField, TimestampField, BooleanField};
 use SaQle\Dao\Field\Exceptions\FieldValidationException;
@@ -709,8 +707,8 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 		 	 	 $through_model_schema = $_ids[2];
 		 	 	 $through_model = $through_model_schema[1];
 		 	 	 $data = [];
-		 	 	 $pk_col_name = $through_model_schema[3]."_id";
-		 	 	 $fk_col_name = $through_model_schema[4]."_id";
+		 	 	 $pk_col_name = $through_model_schema[3];
+		 	 	 $fk_col_name = $through_model_schema[4];
 		 	 	 $pk_col_val = $_ids[0];
 		 	 	 foreach($_ids[1] as $fk_col_val){
 		 	 	 	 $data[] = [$pk_col_name => $pk_col_val, $fk_col_name => $fk_col_val];

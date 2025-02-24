@@ -56,7 +56,7 @@ class Parser implements IParser{
 		 $secend_index = strpos($filter, "~", $first_index + 1);
 		 $original_field = substr($filter, 0, $first_index);
 		 $original_value = substr($filter, $secend_index + 1);
-		 $filter_object["field"] = $this->qualify_name($original_field, $table, $database, $config);
+		 $filter_object["field"] = !$literal ? $this->qualify_name($original_field, $table, $database, $config) : $original_field;
 		 $filter_object["operator"] = substr($filter, $first_index + 1, ($secend_index - $first_index - 1));
 
 		 if(!$literal){

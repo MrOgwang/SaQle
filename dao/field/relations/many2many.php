@@ -84,7 +84,7 @@ class Many2Many extends BaseRelation{
          	 		}else{
          	 			$table_name = $other_pointer;
          	 		}
-         	 		return [$table_name, $model, $ctx, strtolower($pmodel_name), strtolower($fmodel_name)];
+         	 		return [$table_name, $model, $ctx, strtolower($pmodel_name)."_id", strtolower($fmodel_name)."_id"];
          	 	}
          	 }
          }

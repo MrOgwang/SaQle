@@ -1,6 +1,5 @@
 <?php
-namespace SaQle\Dao\Filter\Aggregator\interfaces;
-interface IAggregator{
-	 
-}
+namespace SaQle\Dao\Filter\Aggregator\Interfaces;
+
+interface IAggregator{}
 ?>
