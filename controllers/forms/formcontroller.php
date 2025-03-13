@@ -1,17 +1,17 @@
 <?php
 namespace SaQle\Controllers\Forms;
 
-use SaQle\Controllers\IController;
+use SaQle\Controllers\Base\BaseController;
 use SaQle\Http\Request\Request;
 use SaQle\Views\TemplateView;
 use SaQle\Views\TemplateOptions;
 use SaQle\Views\FormGroup;
-use SaQle\Dao\Field\Controls\FormControlCollection;
+use SaQle\Orm\Entities\Field\Controls\FormControlCollection;
 use SaQle\Observable\{Observable, ConcreteObservable};
 use SaQle\FeedBack\FeedBack;
 use SaQle\Http\Response\{HttpMessage, StatusCode};
 
-abstract class FormController extends IController implements FormSetup, Observable{
+abstract class FormController extends BaseController implements FormSetup, Observable{
 	 private array  $form_groups      = [];
 	 private array  $data_mapping     = [];
 	 private array  $result_mapping   = [];
@@ -117,7 +117,7 @@ abstract class FormController extends IController implements FormSetup, Observab
 
 		 	 		$field_key_name = $name.":".$is_file;
 		 	 		$value      = match($source){
-					    'form'     => $this->request->data->get($field->get_control()),
+					    'form'     => $this->request->data->get_or_fail($field->get_control()),
 					    'defined'  => $row_value,
 					    'callable' => $row_value(),
 					    'result'   => null,

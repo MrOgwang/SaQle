@@ -1,17 +1,17 @@
 <?php
 namespace SaQle\Controllers\Forms;
 
-use SaQle\Controllers\IController;
+use SaQle\Controllers\Base\BaseController;
 use SaQle\Http\Request\Request;
 use SaQle\Observable\{Observable, ConcreteObservable};
 use SaQle\FeedBack\FeedBack;
 use SaQle\Http\Response\{HttpMessage, StatusCode};
-use SaQle\Dao\Field\Controls\FormControl;
-use SaQle\Dao\Field\Types\Base\Relation;
-use SaQle\Dao\Field\FormControlTypes;
-use SaQle\Dao\Field\Relations\{One2One, One2Many, Many2Many};
+use SaQle\Orm\Entities\Field\Controls\FormControl;
+use SaQle\Orm\Entities\Field\Types\Base\Relation;
+use SaQle\Orm\Entities\Field\FormControlTypes;
+use SaQle\Orm\Entities\Field\Relations\{One2One, One2Many, Many2Many};
 
-abstract class AddController extends IController implements Observable{
+abstract class AddController extends BaseController implements Observable{
 	 public $model_form;
 	 private $model_name_property;
 
@@ -70,7 +70,7 @@ abstract class AddController extends IController implements Observable{
 		 	 		  * For non relation fields, create a data entry straight away
 		 	 		  * */
 		 	 		 if(!$f instanceof Relation){
-		 	 		 	 $data[$fn] = $required ? $this->request->data->get($fn) : $this->request->data->get($fn, '');
+		 	 		 	 $data[$fn] = $required ? $this->request->data->get_or_fail($fn) : $this->request->data->get($fn, '');
 			 	 	     continue;
 		 	 		 }
 
@@ -79,7 +79,7 @@ abstract class AddController extends IController implements Observable{
 		 	 		  * the model pointed by this key and provide a select box options of those records.
 		 	 		  * */
 		 	 		 if($f instanceof Relation && !$f->is_navigation()){
-		 	 		 	 $pkvalue = $required ? $this->request->data->get($fn) : $this->request->data->get($fn, '');
+		 	 		 	 $pkvalue = $required ? $this->request->data->get_or_fail($fn) : $this->request->data->get($fn, '');
 		 	 		 	 if($pkvalue){
 		 	 		 	 	 $fkrecord = $this->fetch_fk_record($pkvalue, $f);
 		 	 		 	 	 if($fkrecord){
@@ -106,7 +106,7 @@ abstract class AddController extends IController implements Observable{
 		 	 		 	 if(array_key_exists($fn, $model_form_instance->edit_with_existing)){
 		 	 		 	 	 
 		 	 		 	 	 if($relation instanceof One2One){
-		 	 		 	 	 	 $pkvalue = $required ? $this->request->data->get($fn) : $this->request->data->get($fn, '');
+		 	 		 	 	 	 $pkvalue = $required ? $this->request->data->get_or_fail($fn) : $this->request->data->get($fn, '');
 		 	 		 	 	 	 if($pkvalue){
 				 	 		 	 	 $fkrecord = $this->fetch_fk_record($pkvalue, $f);
 				 	 		 	 	 if($fkrecord){
@@ -117,7 +117,7 @@ abstract class AddController extends IController implements Observable{
 		 	 		 	 	 }
 
 		 	 		 	 	 if($relation instanceof One2Many || $relation instanceof Many2Many){
-		 	 		 	 	 	 $pkvalues = $required ? $this->request->data->get($fn) : $this->request->data->get($fn, []);
+		 	 		 	 	 	 $pkvalues = $required ? $this->request->data->get_or_fail($fn) : $this->request->data->get($fn, []);
 		 	 		 	 	 	 if($pkvalues){
 			 	 		 	 	 	 $fkrecords = $this->fetch_fk_record($pkvalues, $f, true);
 			 	 		 	 	 	 if(count($fkrecords) > 0){

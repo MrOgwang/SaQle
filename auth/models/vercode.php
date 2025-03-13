@@ -1,9 +1,9 @@
 <?php
 namespace SaQle\Auth\Models;
 
-use SaQle\Dao\Field\Types\{Pk, TinyTextField, BigIntegerField};
-use SaQle\Dao\Field\Interfaces\IField;
-use SaQle\Dao\Model\Schema\{Model, TableInfo};
+use SaQle\Orm\Entities\Field\Types\{Pk, TinyTextField, BigIntegerField};
+use SaQle\Orm\Entities\Field\Interfaces\IField;
+use SaQle\Orm\Entities\Model\Schema\{Model, TableInfo};
 
 class Vercode extends Model{
 	 protected function model_setup(TableInfo $meta) : void{

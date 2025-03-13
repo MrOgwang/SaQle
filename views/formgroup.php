@@ -1,7 +1,7 @@
 <?php
 namespace SaQle\Views;
 
-use SaQle\Dao\Field\Controls\FormControlCollection;
+use SaQle\Orm\Entities\Field\Controls\FormControlCollection;
 
 class FormGroup{
 	/**

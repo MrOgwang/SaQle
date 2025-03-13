@@ -23,7 +23,7 @@ use SaQle\Auth\Observers\SigninObserver;
 use SaQle\Auth\Services\Jwt;
 use SaQle\Http\Response\{HttpMessage, StatusCode};
 use SaQle\Http\Request\Processors\ApiRequestProcessor;
-use SaQle\Dao\Model\Exceptions\NullObjectException;
+use SaQle\Orm\Entities\Model\Exceptions\NullObjectException;
 use SaQle\FeedBack\FeedBack;
 
 class AuthMiddleware extends IMiddleware{

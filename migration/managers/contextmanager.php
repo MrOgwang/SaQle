@@ -7,10 +7,10 @@ use SaQle\Services\Container\ContainerService;
 use SaQle\Migration\Models\Migration;
 use SaQle\Commons\FileUtils;
 use SaQle\Migration\Tracker\MigrationTracker;
-use SaQle\Dao\Field\Types\{TextType, NumberType, FileField, OneToOne, ManyToMany, OneToMany, Pk};
-use SaQle\Dao\Field\Types\Base\Relation;
-use SaQle\Dao\Model\Interfaces\IThroughModel;
-use SaQle\Dao\Model\Schema\Model;
+use SaQle\Orm\Entities\Field\Types\{TextType, NumberType, FileField, OneToOne, ManyToMany, OneToMany, Pk};
+use SaQle\Orm\Entities\Field\Types\Base\Relation;
+use SaQle\Orm\Entities\Model\Interfaces\IThroughModel;
+use SaQle\Orm\Entities\Model\Schema\Model;
 
 class ContextManager implements IMigrationManager{
      use FileUtils;
@@ -181,9 +181,9 @@ class ContextManager implements IMigrationManager{
          $template .= "* when a model defines a many to many field with another model.\n";
          $template .= "* */\n\n";
          $template .= "namespace ".$througnamespace.";\n\n";
-         $template .= "use SaQle\\Dao\\Model\\Interfaces\\IThroughModel;\n";
-         $template .= "use SaQle\\Dao\Field\\Types\\{Pk, OneToOne};\n";
-         $template .= "use SaQle\\Dao\\Model\\Schema\\{Model, TableInfo};\n";
+         $template .= "use SaQle\\Orm\Entities\\Model\\Interfaces\\IThroughModel;\n";
+         $template .= "use SaQle\\Orm\Entities\Field\\Types\\{Pk, OneToOne};\n";
+         $template .= "use SaQle\\Orm\Entities\\Model\\Schema\\{Model, TableInfo};\n";
          $template .= "use ".$pnamespace."\\".$o_pmodel_name.";\n";
          $template .= "use ".$fnamespace."\\".$o_fmodel_name.";\n";
          $template .= "use SaQle\\Core\\Assert\\Assert;\n\n";

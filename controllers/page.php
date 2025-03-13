@@ -1,9 +1,9 @@
 <?php
 namespace SaQle\Controllers;
 
-use SaQle\Controllers\IController;
+use SaQle\Controllers\Base\BaseController;
 
-class Page extends IController{
+class Page extends BaseController{
 	 
 }
 ?>

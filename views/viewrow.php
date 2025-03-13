@@ -1,7 +1,7 @@
 <?php
 namespace SaQle\Views;
 
-use SaQle\Dao\Field\Controls\FormControl;
+use SaQle\Orm\Entities\Field\Controls\FormControl;
 use Closure;
 use stdClass;
 
@@ -199,7 +199,7 @@ class ViewRow{
 	 public function get_row($view_form_id = "", $delete_form_id = ""){
 	 	 $control_class = $this->control ? get_class($this->control) : "Undefined";
 	 	 return match($control_class){
-	 	 	'SaQle\Dao\Field\Controls\FormControl', 'Undefined' => $this->get_formcontrol_row($view_form_id, $delete_form_id),
+	 	 	'SaQle\Orm\Entities\Field\Controls\FormControl', 'Undefined' => $this->get_formcontrol_row($view_form_id, $delete_form_id),
 	 	 	'SaQle\Views\ViewGroupCollection'      => $this->get_viewgroupcollection_row($view_form_id, $delete_form_id),
 	 	 	'SaQle\Views\ViewGroup'                => $this->get_viewgroup_row($view_form_id, $delete_form_id)
 	 	 };

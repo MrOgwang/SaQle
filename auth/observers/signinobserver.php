@@ -26,7 +26,7 @@ class SigninObserver extends IAuthObserver{
 			 if(!$request->is_api_request()){
 
                  //set redirect location
-			 	 $this->redirect_to = $request->data->get('redirect_to', $request->route->get_query_param('next', ''));
+			 	 $this->redirect_to = $request->data->get('redirect_to', $request->route->queries->get('next', ''));
 
 			 	 //regenerate session id and set session data
 			 	 $tenant = array_key_exists("tenant", $feedback['feedback']) ? $feedback['feedback']['tenant'] : null;

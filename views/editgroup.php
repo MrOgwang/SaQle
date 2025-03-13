@@ -1,7 +1,7 @@
 <?php
 namespace SaQle\Views;
 
-use SaQle\Dao\Field\Controls\FormControl;
+use SaQle\Orm\Entities\Field\Controls\FormControl;
 use Closure;
 
 class EditGroup{

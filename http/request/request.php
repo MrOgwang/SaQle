@@ -19,28 +19,91 @@ namespace SaQle\Http\Request;
 use SaQle\Http\Request\Data\Data;
 use SaQle\Middleware\MiddlewareRequestInterface;
 use SaQle\Routes\Route;
-use SaQle\Auth\Models\User;
+use SaQle\Auth\Models\BaseUser;
 
 class Request implements MiddlewareRequestInterface{
-     /**
-      * Only one instance of a request will be available
-      * */
+     //only one instance of a request will be available
 	 private static $instance;
 
-	 public ?Data   $data                = null;
-     public         $user                = null;
-     public ?Route  $route               = null;
-     public ?array  $trail               = null;
-     public bool    $enforce_permissions = false;
-	 private function __construct(){
-         $this->data = new Data();
+     //a wrapper around superglobals $_POST, $_GET and $_PATCH data
+     public ?Data $data = null {
+         set(?Data $value){
+             $this->data = $value;
+         }
+
+         get => $this->data;
      }
+
+     //a wrapper around request headers
+     public ?Data $headers = null {
+         set(?Data $value){
+             $this->headers = $value;
+         }
+
+         get => $this->headers;
+     }
+
+     //a wrapper around request cookies
+     public ?Data $cookies = null {
+         set(?Data $value){
+             $this->cookies = $value;
+         }
+
+         get => $this->cookies;
+     }
+
+     //the user who is currently logged in
+     public ?BaseUser $user = null {
+         set(?BaseUser $value){
+             $this->user = $value;
+         }
+
+         get => $this->user;
+     }
+
+     //the selected route object
+     public ?Route $route = null {
+         set(?Route $value){
+             $this->route = $value;
+         }
+
+         get => $this->route;
+     }
+
+     //the trail of routes for a web request
+     public ?array $trail = null {
+         set(?array $value){
+             $this->trail = $value;
+         }
+
+         get => $this->trail;
+     }
+     
+     //whether to enforce permissions check on this route
+     public bool $enforce_permissions = false {
+         set(bool $value){
+             $this->enforce_permissions = $value;
+         }
+
+         get => $this->enforce_permissions;
+     }
+
+     //prevent direct creation of request object
+	 private function __construct(){
+         $this->data    = new Data();
+         $this->headers = new Data();
+         $this->cookies = new Data();
+     }
+
+     //prevent cloning and serialization of request object
      private function __clone(){}
      public function __wakeup(){}
+
+     //initialize a new request object
      public static function init(){
-         if(self::$instance === null){
+         if(self::$instance === null)
              self::$instance = new self();
-         }
+         
          return self::$instance;
      }
 
@@ -69,9 +132,9 @@ class Request implements MiddlewareRequestInterface{
       * @return bool
       * */
      public function is_ajax_request() : bool{
-         $origin = $_SERVER['HTTP_ORIGIN'] ?? null;
+         $origin  = $_SERVER['HTTP_ORIGIN'] ?? null;
          $referer = $_SERVER['HTTP_REFERER'] ?? null;
-         $host = $_SERVER['HTTP_HOST'];
+         $host    = $_SERVER['HTTP_HOST'];
 
          if( (($origin && parse_url($origin, PHP_URL_HOST) === $host) || ($referer && parse_url($referer, PHP_URL_HOST) === $host)) && $this->is_api_request()){
              return true;

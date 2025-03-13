@@ -1,8 +1,8 @@
 <?php
 namespace SaQle\Exceptions;
 
-use SaQle\Dao\DbContext\Exceptions\ModelNotFoundException;
-use SaQle\Dao\Trackers\Exceptions\{DatabaseNotFoundException, TableNotFoundException};
+use SaQle\Orm\Database\Exceptions\ModelNotFoundException;
+use SaQle\Orm\Database\Trackers\Exceptions\{DatabaseNotFoundException, TableNotFoundException};
 use SaQle\Http\Request\Data\Exceptions\KeyNotFoundException;
 
 /**

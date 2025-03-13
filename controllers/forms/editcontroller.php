@@ -1,18 +1,18 @@
 <?php
 namespace SaQle\Controllers\Forms;
 
-use SaQle\Controllers\IController;
+use SaQle\Controllers\Base\BaseController;
 use SaQle\Http\Request\Request;
 use SaQle\Observable\{Observable, ConcreteObservable};
 use SaQle\FeedBack\FeedBack;
 use SaQle\Http\Response\{HttpMessage, StatusCode};
-use SaQle\Dao\Field\Controls\FormControl;
-use SaQle\Dao\Field\Types\Base\Relation;
-use SaQle\Dao\Field\FormControlTypes;
-use SaQle\Dao\Field\Relations\{One2One, One2Many, Many2Many};
-use SaQle\Dao\Field\Types\{FileField};
+use SaQle\Orm\Entities\Field\Controls\FormControl;
+use SaQle\Orm\Entities\Field\Types\Base\Relation;
+use SaQle\Orm\Entities\Field\FormControlTypes;
+use SaQle\Orm\Entities\Field\Relations\{One2One, One2Many, Many2Many};
+use SaQle\Orm\Entities\Field\Types\{FileField};
 
-abstract class EditController extends IController implements Observable{
+abstract class EditController extends BaseController implements Observable{
 	 public  $model_form;
 	 private $object;
 
@@ -31,7 +31,7 @@ abstract class EditController extends IController implements Observable{
 		 /**
 	 	  * Make sure an id is available.
 	 	  * */
-	 	 $params = $this->request->route->get_params();
+	 	 $params = $this->request->route->params->get_all();
 	 	 if(!isset($params['id'])){
 	 	 	 throw new \Exception("Object to edit id not provided!");
 	 	 }
@@ -53,7 +53,7 @@ abstract class EditController extends IController implements Observable{
 	 	 if(count($model_form_instance->edit_with_existing) > 0){
 	 	 	 $manager->with(array_keys($model_form_instance->edit_with_existing));
 	 	 }
-	 	 $this->object        = $manager->where($pkname, $this->request->route->get_params()['id'])->tomodel(true)->first_or_default();
+	 	 $this->object        = $manager->where($pkname, $this->request->route->params->get_or_fail('id'))->tomodel(true)->first_or_default();
 	 	 if(!$this->object){
 	 	 	 throw new \Exception("Object to edit doesn't exists!");
 	 	 }
@@ -81,7 +81,7 @@ abstract class EditController extends IController implements Observable{
 		 	 		  * For non relation fields, create a data entry straight away
 		 	 		  * */
 		 	 		 if(!$f instanceof Relation){
-		 	 		 	 $this->object->$fn = $required ? $this->request->data->get($fn) : $this->request->data->get($fn, '');
+		 	 		 	 $this->object->$fn = $required ? $this->request->data->get_or_fail($fn) : $this->request->data->get($fn, '');
 			 	 	     continue;
 		 	 		 }
 
@@ -90,7 +90,7 @@ abstract class EditController extends IController implements Observable{
 		 	 		  * the model pointed by this key and provide a select box options of those records.
 		 	 		  * */
 		 	 		 if($f instanceof Relation && !$f->is_navigation()){
-		 	 		 	 $pkvalue = $required ? $this->request->data->get($fn) : $this->request->data->get($fn, '');
+		 	 		 	 $pkvalue = $required ? $this->request->data->get_or_fail($fn) : $this->request->data->get($fn, '');
 		 	 		 	 $fkrecord = $this->fetch_fk_record($pkvalue, $f);
 		 	 		 	 $this->object->$fn = $fkrecord;
 		 	 		 	 continue;
@@ -113,14 +113,14 @@ abstract class EditController extends IController implements Observable{
 		 	 		 	 if(array_key_exists($fn, $model_form_instance->create_with_existing)){
 		 	 		 	 	 
 		 	 		 	 	 if($relation instanceof One2One){
-		 	 		 	 	 	 $pkvalue = $required ? $this->request->data->get($fn) : $this->request->data->get($fn, '');
+		 	 		 	 	 	 $pkvalue = $required ? $this->request->data->get_or_fail($fn) : $this->request->data->get($fn, '');
 		 	 		 	 	 	 $fkrecord = $this->fetch_fk_record($pkvalue, $f);
 		 	 		 	 	 	 $this->object->$fn = $fkrecord;
 				 	 		 	 continue;
 		 	 		 	 	 }
 
 		 	 		 	 	 if($relation instanceof One2Many || $relation instanceof Many2Many){
-		 	 		 	 	 	 $pkvalues = $required ? $this->request->data->get($fn) : $this->request->data->get($fn, []);
+		 	 		 	 	 	 $pkvalues = $required ? $this->request->data->get_or_fail($fn) : $this->request->data->get($fn, []);
 		 	 		 	 	 	 $fkrecords = $this->fetch_fk_record($pkvalues, $f, true);
 		 	 		 	 	 	 $this->object->$fn = $fkrecords;
 			 	 		 	 	 continue;

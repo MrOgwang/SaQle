@@ -1,10 +1,10 @@
 <?php
 namespace SaQle\Controllers\Forms;
-use SaQle\Dao\Field\Attributes\{PrimaryKey, ForeignKey, NavigationKey};
-use SaQle\Dao\DbContext\DbContext;
-use SaQle\Dao\Model\Model;
+use SaQle\Orm\Entities\Field\Attributes\{PrimaryKey, ForeignKey, NavigationKey};
+use SaQle\Orm\Database\DbContext;
+use SaQle\Orm\Entities\Model\Model;
 use SaQle\Controllers\Forms\{FormDataSourceSettings};
-use SaQle\Dao\Field\Controls\FormControl;
+use SaQle\Orm\Entities\Field\Controls\FormControl;
 use SaQle\Commons\StringUtils;
 use stdClass;
 class FormDataSource{
@@ -40,7 +40,7 @@ class FormDataSource{
 			 foreach($properties as $p){
 			 	 $property_type   = str_replace("?", "", $p->getType()); 
 				 $property_name   = $p->getName();
-				 if($property_type === "SaQle\Dao\Field\Interfaces\IField"){
+				 if($property_type === "SaQle\Orm\Entities\Field\Interfaces\IField"){
 				 	 $pinstance = $p->getValue($dao);
 				 	 $this->fields[$property_name] = $pinstance->get_source_attributes();
 				 }else{

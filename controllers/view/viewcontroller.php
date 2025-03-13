@@ -1,18 +1,18 @@
 <?php
 namespace SaQle\Controllers\View;
 
-use SaQle\Controllers\IController;
+use SaQle\Controllers\Base\BaseController;
 use SaQle\Http\Request\Request;
 use SaQle\Views\TemplateView;
 use SaQle\Views\TemplateOptions;
 use SaQle\Views\ViewGroup;
-use SaQle\Dao\Field\Controls\FormControlCollection;
+use SaQle\Orm\Entities\Field\Controls\FormControlCollection;
 use SaQle\Observable\{Observable, ConcreteObservable};
 use SaQle\FeedBack\FeedBack;
 use SaQle\Http\Response\{HttpMessage, StatusCode};
 use SaQle\Commons\StringUtils;
 
-abstract class ViewController extends IController implements ViewSetup, Observable{
+abstract class ViewController extends BaseController implements ViewSetup, Observable{
       use StringUtils;
 	 private ?ViewAttributes   $view_attributes   = null;
 	 private ?EditAttributes   $edit_attributes   = null;

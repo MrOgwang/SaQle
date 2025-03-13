@@ -225,11 +225,14 @@ class Config{
           * What happens when duplicate data is encountered during insert or update operations.
           * 
           * Options include: 
-          * IGNORE_DUPLICATE - Continue insert operation even with duplicates.
-          * BYPASS_DUPLICATE - Bypass the duplicate data and add the rest if there are multiple records to add
           * ABORT_WITH_ERROR - Abort the insert or update operation and throw an exception
-          * ABORT_WITHOUT_ERROR - Abort the insert or update operation without throwing an exception.
+          * 
+          * INSERT_PLUS_DUPLICATE - Just add all the data including duplicates
+          * 
+          * INSERT_MINUS_DUPLICATE - Insert only the data that is not duplicating
+          * 
           * UPDATE_ON_DUPLICATE - Update the record that is already existing with incoming values and return the updated version.
+          * 
           * RETURN_EXISTING - Return existing record(s) as it is. (alongside newly added ones if multiple records are being inserted)
           * 
           * Defaults to RETURN_EXISTING

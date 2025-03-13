@@ -1,0 +1,101 @@
+<?php
+namespace SaQle\Orm\Entities\Field\Formatter;
+class DataFormatter extends IDataFormatter{
+	 public function format($value){
+	 	 return $value;
+	 }
+}
+
+class DataFormatter extends IDataFormatter{
+	 /*
+	     - set data formatting to be used with a query operation.
+		 @param string $field: the name of the field whose data you want to format.
+		 @param string $style: the formatting operation you want performed.
+		 @param string $type: where to apply this formatting. takes either of two values
+		  1. "filter" : formatting done on the filter data.
+		  2. "data" : formatting done on data to be used for insertion or updation.
+	 */
+     /***/public function format($field, $style, $type){
+		 $_formats = $this->manager->get_formats() ?? array();
+	     $_formats[] = array("field" =>$field, "style" => $style, "type" => $type);
+		 if($type == "data"){
+			 $tb_fields = $this->withdraw(fields: array($field), keep: true);
+			 $formatted_data = $this->manager->_format(fields: $tb_fields->fields, values: $tb_fields->values);
+			 for($c = 0; $c < count($formatted_data['fields']); $c++){
+				 $this->manager->get_fields()->set_field_value(name: $formatted_data['fields'][$c], value: $formatted_data['values'][$c]);
+			 }
+		 }
+		 $this->manager->set_formats(_formats: $_formats);
+		 return $this->manager;
+	 }
+	 protected function _format(array $fields, array $values){
+		 if(!is_null($this->_formats)){
+			 foreach($this->_formats as $format){
+				 for($c = 0; $c < count($fields); $c++){
+					 if($fields[$c] == $format['field']){
+						 $values[$c] = $this->doformat(value: $values[$c], style: $format['style']);
+						 break;
+					 }
+				 }
+			 }
+		 }
+		 return array("fields"=>$fields, "values"=>$values);
+	 }
+	 private function doformat($value, $style){
+		 $new_values = [];
+		 switch($format_style){
+			 case "uppercase":
+				 if(is_array($value)){
+					 foreach($value as $v){
+						 $new_values[] = strtoupper($v);
+					 }
+					 $value = $new_values;
+				 }else{
+					 $value = strtoupper($value);
+				 }
+			 break;
+			 case "lowercase":
+				 if(is_array($value)){
+					 foreach($value as $v){
+						 $new_values[] = strtolower($v);
+					 }
+					 $value = $new_values;
+				 }else{
+					 $value = strtolower($value);
+				 }
+			 break;
+			 case "capitalize":
+				 if(is_array($value)){
+					 foreach($value as $v){
+						 $new_values[] = ucwords($v);
+					 }
+					 $value = $new_values;
+				 }else{
+					 $value = ucwords($value);
+				 }
+			 break;
+			 case "encrypt":
+				 if(is_array($value)){
+					 foreach($value as $v){
+						 $new_values[] = MD5($v);
+					 }
+					 $value = $new_values;
+				 }else{
+					 $value = MD5($value);
+				 }
+			 break;
+		 }
+		return $value;
+	 }
+	 private function get_formatted_field_value($field, $value){
+		 $formatted_data = $this->_format(array($field), array($value));
+		 for($c = 0; $c < count($formatted_data['fields']); $c++){
+			 if($formatted_data['fields'][$c] == $field){
+				 $value = $formatted_data['values'][$c];
+				 break;
+			 }
+		 }
+		 return $value;
+	 }
+}
+?>

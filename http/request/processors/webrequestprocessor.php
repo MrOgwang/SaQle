@@ -9,14 +9,17 @@ use SaQle\Templates\Meta\AppMeta;
 use SaQle\Controllers\Refs\ControllerRef;
 use SaQle\Templates\Context\AppContext;
 use SaQle\Commons\StringUtils;
+use SaQle\Http\Request\Middleware\CsrfMiddleware;
 
 class WebRequestProcessor extends RequestProcessor{
 	 use StringUtils;
 
      private $controllerrefs = [];
+     private $templaterefs   = [];
 
      public function __construct(){
      	 $this->controllerrefs = ControllerRef::init()::get_controllers();
+     	 $this->templaterefs = ControllerRef::init()::get_views();
      	 parent::__construct();
      }
 
@@ -50,8 +53,12 @@ class WebRequestProcessor extends RequestProcessor{
          $all_meta  = [];
          $all_title = "";
          $all_html  = "";
+
+         $parent_context = [];
          for($t = 0; $t < count($trail); $t++){
-         	 [$css, $js, $meta, $title, $html, $default] = $this->process_target($trail[$t]->target, $this->controllerrefs);
+         	 [$css, $js, $meta, $title, $html, $default, $target_context] = $this->process_target($trail[$t]->target, $trail[$t]->action, $parent_context);
+         	 $parent_context = array_merge($parent_context, $target_context);
+
 	 	 	 $all_css   = array_merge($all_css, $css);
 	 	 	 $all_js    = array_merge($all_js, $js);
 	 	 	 $all_meta  = array_merge($all_meta, $meta);
@@ -60,7 +67,7 @@ class WebRequestProcessor extends RequestProcessor{
 	 	 	 if($t === count($trail) - 1 && $default){
 	 	 	 	 $default_controller = $this->controllerrefs[$default] ?? '';
 	 	 	 	 if($default_controller){
-	 	 	 	     $trail[] = (Object)['url' => '', 'target' => $default_controller];
+	 	 	 	     $trail[] = (Object)['url' => '', 'target' => $default_controller, 'action' => strtolower($this->request->route->method)]; //this must be checked, likely to be a problem
 	 	 	 	 }
 	 	 	 }
          }
@@ -92,15 +99,27 @@ class WebRequestProcessor extends RequestProcessor{
 	 	 echo $page->view();
 	 }
 
-	 private function process_target($target, $defaults = []){
+	 private function process_target($target, $action, $parent_context = []){
+         //inject global context data
+         $global_context = AppContext::init()::get_context();
 
-	 	 [$target_classname, $target_method] = $this->get_target_method($target);
-	 	 $http_message = $this->get_target_response($target_classname, $target_method);
-	 	 $template_file = $this->get_template_file($target_classname);
+         //inject csrf token input here
+         $token_key = CsrfMiddleware::get_token_key();
+         $token     = CsrfMiddleware::get_token();
+         $global_context[$token_key] = "<input type='hidden' id='".$token_key."' name='".$token_key."' value='".$token."'>";
 
-	 	 //add universal values
-	 	 $context = AppContext::init()::get_context();
-	 	 $response = array_merge($http_message->get_response(), $context);
+         //get target response
+	 	 if(!in_array($target, $this->controllerrefs)){ //this is a view without a controller
+	 	 	 $template_file  = $this->templaterefs[$target];
+	 	 	 $target_context = [];
+	 	 	 $response       = array_merge($global_context, $parent_context);
+	 	 }else{ //this is a controller
+	 	 	 $template_file = $this->templaterefs[array_flip($this->controllerrefs)[$target]];
+	 	 	 [$target_classname, $target_method] = $this->get_target_method($target, $action);
+	 	     [$http_message, $context_from_parent] = $this->get_target_response($target_classname, $target_method, $parent_context);
+	 	     $target_context = $http_message->get_response();
+	 	     $response = array_merge($target_context, $global_context, $context_from_parent);
+	 	 }
 
 	 	 $view = new View($template_file);
 
@@ -113,21 +132,19 @@ class WebRequestProcessor extends RequestProcessor{
 
          foreach($blocks as $b){
          	 $response[$b] = "";
-         	 $block_target = $defaults[$b] ?? '';
+         	 $block_target = $this->controllerrefs[$b] ?? ( array_key_exists($b, $this->templaterefs) ? $b : '');
          	 if($block_target){
-         	 	  $trail = [(Object)['url' => '', 'target' => $block_target]];
+         	 	  $trail = [(Object)['url' => '', 'target' => $block_target, 'action' => strtolower($this->request->route->method)]]; //must recheck this. Will cause problems
          	 	  [$block_css, $block_js, $block_meta, $block_title, $block_html] = $this->process_trail($trail);
          	 	  $css  = array_merge($css, $block_css);
          	 	  $js   = array_merge($js, $block_js);
-         	 	  //$meta = array_merge($meta, $block_meta);
-         	 	  //$title = $block_title;
          	 	  $response[$b] = $block_html;
          	 }
          }
 	 	 $view->set_context($response);
 	 	 $html    = $view->view();
 	 	 
-	 	 return [$css, $js, $meta, $title, $html, $default];
+	 	 return [$css, $js, $meta, $title, $html, $default, $target_context];
 	 }
 }
 ?>

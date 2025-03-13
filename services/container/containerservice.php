@@ -1,9 +1,9 @@
 <?php
 namespace SaQle\Services\Container;
 
-use SaQle\Dao\DbContext\Services\ContextOptionsFactory;
-use SaQle\Dao\Connection\Services\ConnectionFactory;
-use SaQle\Dao\Model\Services\ModelManagerFactory;
+use SaQle\Orm\Database\Services\ContextOptionsFactory;
+use SaQle\Orm\Connection\Services\ConnectionFactory;
+use SaQle\Orm\Entities\Model\Services\ModelManagerFactory;
 use Psr\Container\ContainerInterface;
 
 class ContainerService{

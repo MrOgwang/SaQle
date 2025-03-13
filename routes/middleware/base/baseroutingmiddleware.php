@@ -52,13 +52,13 @@ abstract class BaseRoutingMiddleware extends IMiddleware implements IRoutingMidd
          }
 
          if(!$matches[1]){ //a match was found with the wrong method
-             throw new MethodNotAllowedException(url: $_SERVER['REQUEST_URI'], method: $_SERVER['REQUEST_METHOD'], methods: $match->get_methods());
+             throw new MethodNotAllowedException(url: $_SERVER['REQUEST_URI'], method: $_SERVER['REQUEST_METHOD'], methods: $match->methods);
          }
 
          //resolve target for matching route
-         $target = $match->get_target();
+         $target = $match->target;
          if(is_callable($target)){
-             $match->set_target($target($match->get_params()));
+             $match->target = $target($match->params);
          }
 
          $request->route = $match;

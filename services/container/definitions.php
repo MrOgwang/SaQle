@@ -5,37 +5,23 @@
       use Psr\Container\ContainerInterface;
       use function DI\factory;
       use function DI\create;
-      use Booibo\Apps\Account\Data\AccountsDbContext;
-      use SaQle\Dao\Model\Manager\ModelManager;
-      use SaQle\Dao\DbContext\DbTypes;
-      use SaQle\Dao\DbContext\DbPorts;
-      use SaQle\Dao\DbContext\Attributes\DbContextOptions;
-      use SaQle\Dao\DbContext\Trackers\DbContextTracker;
+      use SaQle\Orm\Entities\Model\Manager\ModelManager;
+      use SaQle\Orm\Database\DbTypes;
+      use SaQle\Orm\Database\DbPorts;
+      use SaQle\Orm\Database\Attributes\DbContextOptions;
+      use SaQle\Orm\Database\Trackers\DbContextTracker;
       
-      use SaQle\Dao\Filter\Aggregator\Aggregator;
-      use SaQle\Dao\Filter\Translator\Translator;
-      use SaQle\Dao\Filter\Parser\Parser;
-
-      use SaQle\Dao\Filter\Interfaces\IFilterManager;
-      use SaQle\Dao\Filter\Manager\FilterManager;
-
-      use SaQle\Dao\Order\Interfaces\IOrderManager;
-      use SaQle\Dao\Order\Manager\OrderManager;
-
-      use SaQle\Dao\Connection\Connection;
-      use SaQle\Dao\Formatter\DataFormatter;
-
-      use SaQle\Dao\Join\Interfaces\IJoinManager;
-      use SaQle\Dao\Join\Manager\JoinManager;
-
-      use SaQle\Dao\Limit\Interfaces\ILimitManager;
-      use SaQle\Dao\Limit\Manager\LimitManager;
-      
-      use SaQle\Dao\Select\Interfaces\ISelectManager;
-      use SaQle\Dao\Select\Manager\SelectManager;
-
-      use SaQle\Dao\Group\Interfaces\IGroupManager;
-      use SaQle\Dao\Group\Manager\GroupManager;
+      use SaQle\Orm\Query\Where\Aggregator;
+      use SaQle\Orm\Query\Where\Translator;
+      use SaQle\Orm\Query\Where\Parser;
+      use SaQle\Orm\Query\Where\WhereBuilder;
+      use SaQle\Orm\Query\Order\OrderBuilder;
+      use SaQle\Orm\Connection\Connection;
+      use SaQle\Orm\Entities\Field\Formatter\DataFormatter;
+      use SaQle\Orm\Query\Join\JoinBuilder;
+      use SaQle\Orm\Query\Limit\LimitBuilder;
+      use SaQle\Orm\Query\Select\SelectBuilder;
+      use SaQle\Orm\Query\Group\GroupBuilder;
 
       use SaQle\Security\Security;
       use SaQle\Http\Request\Request;
@@ -74,67 +60,31 @@
 	       Aggregator::class => function(ContainerInterface $c){
 	     	       return new Aggregator();
 	       },
-
-	       //inject filter manager
-	       /*FilterManager::class => function(ContainerInterface $c){
-	     	       return new FilterManager(
-	     	       	 $c->get(Aggregator::class),
-		     	 	 $c->get(Translator::class),
-		     	 	 $c->get(Parser::class),
-		     	);
-	       },*/
-	       IFilterManager::class => function(ContainerInterface $c){
-	     	       return new FilterManager(
+	       WhereBuilder::class => function(ContainerInterface $c){
+	     	       return new WhereBuilder(
 	     	       	 $c->get(Aggregator::class),
 		     	 	 $c->get(Translator::class),
 		     	 	 $c->get(Parser::class),
 		     	);
 	       },
-
-	       //inject order manager
-	       IOrderManager::class => function(ContainerInterface $c){
-         	       return new OrderManager();
+	       OrderBuilder::class => function(ContainerInterface $c){
+         	       return new OrderBuilder();
 	       },
-	       OrderManager::class => function(ContainerInterface $c){
-         	       return new OrderManager();
+	       SelectBuilder::class => function(ContainerInterface $c){
+         	       return new SelectBuilder();
 	       },
-
-             //inject select manager
-	       ISelectManager::class => function(ContainerInterface $c){
-         	       return new SelectManager();
+	       GroupBuilder::class => function(ContainerInterface $c){
+         	       return new GroupBuilder();
 	       },
-	       SelectManager::class => function(ContainerInterface $c){
-         	       return new SelectManager();
+	       JoinBuilder::class => function(ContainerInterface $c){
+	     	       return new JoinBuilder();
 	       },
-
-	       //inject group manager
-	       IGroupManager::class => function(ContainerInterface $c){
-         	       return new GroupManager();
+	       LimitBuilder::class => function (ContainerInterface $c){
+	     	       return new LimitBuilder();
 	       },
-	       GroupManager::class => function(ContainerInterface $c){
-         	       return new GroupManager();
-	       },
-
-	       //inject join manager
-	       IJoinManager::class => function(ContainerInterface $c){
-	     	       return new JoinManager();
-	       },
-	       JoinManager::class => function(ContainerInterface $c){
-	     	       return new JoinManager();
-	       },
-
-             //inject limit manager
-	       ILimitManager::class => function (ContainerInterface $c){
-	     	       return new LimitManager();
-	       },
-	       LimitManager::class => function (ContainerInterface $c){
-	     	       return new LimitManager();
-	       },
-
 	       DataFormatter::class => function(ContainerInterface $c){
 	     	       return new DataFormatter();
 	       },
-	       
 	       Security::class => function (ContainerInterface $c){
 	     	       return new Security();
 	       },
@@ -143,9 +93,6 @@
 		     	 	 $c->get(Request::class),
 		     	 	 $c->get(DbContextTracker::class)
 	     	       );
-	       },
-	       AccountsDbContext::class => function (ContainerInterface $c){
-	     	       return new AccountsDbContext($c->get(ModelManager::class));
 	       },
 	       ContextManager::class => function (ContainerInterface $c){
 	     	       return new ContextManager();

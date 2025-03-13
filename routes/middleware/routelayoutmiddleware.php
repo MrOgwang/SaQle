@@ -19,6 +19,7 @@ namespace SaQle\Routes\Middleware;
 
 use SaQle\Routes\Middleware\Base\BaseRoutingMiddleware;
 use SaQle\Middleware\MiddlewareRequestInterface;
+use SaQle\Controllers\Refs\ControllerRef;
 
 class RouteLayoutMiddleware extends BaseRoutingMiddleware{
 
@@ -59,7 +60,7 @@ class RouteLayoutMiddleware extends BaseRoutingMiddleware{
      private function find_element(array $array, string $url, array $params){
          $result = [null, null];
          foreach($array as $a){
-             if(!is_array($a) && rtrim($a->get_url(), "/") === $url){
+             if(!is_array($a) && rtrim($a->url, "/") === $url){
                 $result[0] = $this->extract_route_trail($array[0], $params);
                 $result[1] = $this->extract_route_trail($a, $params);
              }
@@ -72,17 +73,17 @@ class RouteLayoutMiddleware extends BaseRoutingMiddleware{
      }
 
      private function extract_route_trail($route, $params){
-         $target = $route->get_target();
+         $target = $route->target;
          if(is_callable($target)){
              $target = $target($params);
          }
-         return (Object)['url' => $route->get_url(), 'target' => $target];
+         return (Object)['url' => $route->url, 'target' => $target, 'action' => $route->action];
      }
 
      private function contained_in_nested(array $array, string $url){
          $array = $this->flatten($array);
          $found = array_filter($array, function($item) use ($url){
-             return rtrim($item->get_url(), "/") === $url;
+             return rtrim($item->url, "/") === $url;
          });
 
          return !empty($found);
@@ -99,6 +100,8 @@ class RouteLayoutMiddleware extends BaseRoutingMiddleware{
      }
 
      public function handle(MiddlewareRequestInterface &$request){
+         $controllers = ControllerRef::init()::get_controllers();
+
          //Acquire project level routes.
          $routes = $this->get_routes_from_file(DOCUMENT_ROOT.'/routes/web.php', true);
         
@@ -106,16 +109,17 @@ class RouteLayoutMiddleware extends BaseRoutingMiddleware{
          foreach(INSTALLED_APPS as $app){
              $routes = array_merge($routes, $this->get_routes_from_file(DOCUMENT_ROOT.'/apps/'.$app.'/routes/web.php', true));
          }
-
-         $request->trail = $this->find_trail($routes, $request->route->get_url(), $request->route->get_params(), []);
+         
+         $request->trail = $this->find_trail($routes, $request->route->url, $request->route->params->get_all(), []);
 
          $targets = array_column($request->trail, 'target');
          foreach($targets as $controller){
-             $controller = explode("@", $controller)[0];
-             $permissions = (new $controller())->get_permissions();
-             if($permissions){
-                 $request->enforce_permissions = true;
-                 break;
+             if(in_array($controller, $controllers)){
+                 $permissions = (new $controller())->permissions;
+                 if($permissions){
+                     $request->enforce_permissions = true;
+                     break;
+                 }
              }
          }
 

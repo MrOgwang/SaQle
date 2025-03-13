@@ -1,0 +1,17 @@
+<?php
+namespace SaQle\Http\Request\Data\Sources\Managers\Types;
+
+use SaQle\Http\Request\Data\Sources\From;
+
+class CookieDataSourceManager extends DataSourceManager{
+
+	 public function __construct(From $from, ...$kwargs){
+	 	 parent::__construct($from, ...$kwargs);
+	 }
+
+	 public function get_value() : mixed {
+	 	 $this->is_valid();
+	 	 return $this->optional ? $this->request->cookies->get($this->name) : $this->request->cookies->get_or_fail($this->name);
+	 }
+}
+?>

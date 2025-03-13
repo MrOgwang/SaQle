@@ -1,8 +1,8 @@
 <?php
 namespace SaQle\Session\Models;
 
-use SaQle\Dao\Field\Types\{Pk, TinyTextField, TextField};
-use SaQle\Dao\Model\Schema\{Model, TableInfo};
+use SaQle\Orm\Entities\Field\Types\{Pk, TinyTextField, TextField};
+use SaQle\Orm\Entities\Model\Schema\{Model, TableInfo};
 
 class Session extends Model{
 	 protected function model_setup(TableInfo $meta) : void{

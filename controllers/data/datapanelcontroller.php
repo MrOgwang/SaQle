@@ -1,17 +1,17 @@
 <?php
 namespace SaQle\Controllers\Data;
 
-use SaQle\Controllers\IController;
+use SaQle\Controllers\Base\BaseController;
 use SaQle\Http\Request\Request;
 use SaQle\Views\TemplateView;
 use SaQle\Views\TemplateOptions;
 use SaQle\Views\FormGroup;
-use SaQle\Dao\Field\Controls\FormControlCollection;
+use SaQle\Orm\Entities\Field\Controls\FormControlCollection;
 use SaQle\Observable\{Observable, ConcreteObservable};
 use SaQle\FeedBack\FeedBack;
 use SaQle\Http\Response\{HttpMessage, StatusCode};
 
-abstract class DataPanelController extends IController implements PanelSetup, Observable{
+abstract class DataPanelController extends BaseController implements PanelSetup, Observable{
 	 private ?PanelHeader $header     = null;
 	 private ?PanelBody   $body       = null;
 	 private ?PanelFooter $footer     = null;

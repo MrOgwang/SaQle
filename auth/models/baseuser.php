@@ -1,9 +1,9 @@
 <?php
 namespace SaQle\Auth\Models;
 
-use SaQle\Dao\Field\Types\{Pk, TextField, OneToMany, ManyToMany};
-use SaQle\Dao\Field\Interfaces\IField;
-use SaQle\Dao\Model\Schema\{Model, TableInfo};
+use SaQle\Orm\Entities\Field\Types\{Pk, TextField, OneToMany, ManyToMany};
+use SaQle\Orm\Entities\Field\Interfaces\IField;
+use SaQle\Orm\Entities\Model\Schema\{Model, TableInfo};
 
 class BaseUser extends Model{
 	protected function model_setup(TableInfo $meta) : void{

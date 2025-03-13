@@ -13,6 +13,24 @@ abstract class IController implements IGet, IPost, IPatch, IDelete{
 	 protected $request;
 
 	 /**
+	  * Specify the context keys you want passed down from parent 
+	  * and whether to do that in api, web or all requests
+	  * */
+	 public ?array $pcontext = null {
+	 	 set(?array $value){
+	 	 	 $this->pcontext = $value;
+	 	 }
+
+	 	 get => $this->pcontext;
+	 }
+
+	 /**
+	  * Specify the context keys you want passed along from sibling 
+	  * and whether to do that in api, web or all requests
+	  * */
+	 protected $scontext;
+
+	 /**
 	  * The name of the template file
 	  * */
 	 protected string $template;
@@ -32,8 +50,8 @@ abstract class IController implements IGet, IPost, IPatch, IDelete{
       * @return HttpMessage
       * */
 	 public function post() : HttpMessage{
-	 	//do nothing
-	 	return new HttpMessage(StatusCode::OK);
+	 	 //do nothing
+	 	 return new HttpMessage(StatusCode::OK, $this->get()->get_response());
 	 }
 
 	 /**
@@ -41,8 +59,8 @@ abstract class IController implements IGet, IPost, IPatch, IDelete{
 	  * @return HttpMessage
 	  * */
 	 public function get() : HttpMessage{
-	 	//do nothing
-	 	return new HttpMessage(StatusCode::OK);
+	 	 //do nothing
+	 	 return new HttpMessage(StatusCode::OK);
 	 }
 
 	 /**
@@ -88,9 +106,8 @@ abstract class IController implements IGet, IPost, IPatch, IDelete{
 	 	 return $this->permissions;
 	 }
 
-	 public function expose_controller(string $name, string $class){
-	 	 $refs = ControllerRef::init();
-	 	 $refs->add($name, $class);
+	 public function context_from_parent(array $keys, string $type = 'web'){
+	 	 $this->pcontext = ['keys' => $keys, 'type' => $type];
 	 }
 }
 ?>

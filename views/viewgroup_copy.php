@@ -1,11 +1,11 @@
 <?php
 namespace SaQle\Views;
 
-use SaQle\Dao\Field\Controls\FormControl;
-use SaQle\Dao\Field\Attributes\{PrimaryKey, ForeignKey, NavigationKey};
-use SaQle\Dao\DbContext\DbContext;
+use SaQle\Orm\Entities\Field\Controls\FormControl;
+use SaQle\Orm\Entities\Field\Attributes\{PrimaryKey, ForeignKey, NavigationKey};
+use SaQle\Orm\Database\DbContext;
 use SaQle\Views\ViewGroupSettings;
-use SaQle\Dao\Model\Model;
+use SaQle\Orm\Entities\Model\Model;
 use SaQle\Commons\StringUtils;
 use Closure;
 use stdClass;

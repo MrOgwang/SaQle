@@ -2,7 +2,7 @@
 namespace SaQle\Migration\Commands;
 
 use SaQle\Migration\Managers\Interfaces\IMigrationManager;
-use SaQle\Dao\DbContext\Manager\DbManagerFactory;
+use SaQle\Orm\Database\Manager\DbManagerFactory;
 use SaQle\Commons\FileUtils;
 use SaQle\Migration\Models\Migration;
 use SaQle\Migration\Tracker\MigrationTracker;

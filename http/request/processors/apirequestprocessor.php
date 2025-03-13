@@ -30,8 +30,8 @@ class ApiRequestProcessor extends RequestProcessor{
 	 public function process(?HttpMessage $http_message = null){
 		 $this->send_json_headers();
 		 if(is_null($http_message)){
-		 	 [$target_classname, $target_method] = $this->get_target_method($this->request->route->get_target());
-	 	     $http_message     = $this->get_target_response($target_classname, $target_method);
+		 	 [$target_classname, $target_method]   = $this->get_target_method($this->request->route->target, $this->request->route->action);
+	 	     [$http_message, $context_from_parent] = $this->get_target_response($target_classname, $target_method);
 		 }
          $response_data    = $http_message->get_response();
          $http_status_code = (int)$http_message->get_code();

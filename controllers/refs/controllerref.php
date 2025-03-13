@@ -4,6 +4,7 @@ namespace SaQle\Controllers\Refs;
 class ControllerRef{
      private static $instance;
 	 private static $controllers = [];
+     private static $views       = [];
 
 	 private function __construct(){}
 
@@ -14,16 +15,20 @@ class ControllerRef{
          return self::$instance;
      }
 
-     public static function register(array $controllers) : void{
-         self::$controllers = array_merge(self::$controllers, $controllers);
-     }
-
-     public static function add(string $name, string $class) : void{
-         self::$controllers[$name] = $class;
+     public static function register(array $items, string $type = 'controllers') : void{
+         if($type === 'controllers'){
+             self::$controllers = array_merge(self::$controllers, $items);
+         }else{
+             self::$views = array_merge(self::$views, $items);
+         }
      }
 
      public static function get_controllers() : array{
          return self::$controllers;
+     }
+
+     public static function get_views() : array{
+         return self::$views;
      }
 }
 ?>

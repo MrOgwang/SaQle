@@ -1,9 +1,9 @@
 <?php
 namespace SaQle\Auth\Models;
 
-use SaQle\Dao\Field\Types\{Pk, ManyToMany, TinyTextField, TextField};
-use SaQle\Dao\Field\Interfaces\IField;
-use SaQle\Dao\Model\Schema\{Model, TableInfo};
+use SaQle\Orm\Entities\Field\Types\{Pk, ManyToMany, TinyTextField, TextField};
+use SaQle\Orm\Entities\Field\Interfaces\IField;
+use SaQle\Orm\Entities\Model\Schema\{Model, TableInfo};
 use SaQle\Auth\Models\Schema\PermissionSchema;
 
 class BaseRole extends Model{

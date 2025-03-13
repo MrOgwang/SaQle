@@ -1,19 +1,19 @@
 <?php
 namespace SaQle\Controllers\Edit;
 
-use SaQle\Controllers\IController;
+use SaQle\Controllers\Base\BaseController;
 use SaQle\Http\Request\Request;
 use SaQle\Views\TemplateView;
 use SaQle\Views\TemplateOptions;
 use SaQle\Views\EditGroup;
-use SaQle\Dao\Field\Controls\FormControlCollection;
+use SaQle\Orm\Entities\Field\Controls\FormControlCollection;
 use SaQle\Observable\{Observable, ConcreteObservable};
 use SaQle\FeedBack\FeedBack;
 use SaQle\Http\Response\{HttpMessage, StatusCode};
 use SaQle\Services\Container\ContainerService;
 use SaQle\Services\Container\Cf;
 
-abstract class EditController extends IController implements EditSetup, Observable{
+abstract class EditController extends BaseController implements EditSetup, Observable{
 	 private array  $edit_groups      = [];
 	 private string $edit_property    = "";
 	 private string $edit_title       = "";

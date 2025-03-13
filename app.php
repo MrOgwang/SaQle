@@ -9,8 +9,11 @@ use SaQle\Middleware\AppMiddleware;
 use SaQle\Templates\Context\AppContext;
 use SaQle\Templates\Meta\AppMeta;
 use SaQle\Controllers\Refs\ControllerRef;
+use SaQle\Http\Cors\AppCors;
 
 class App{
+     private static ?self $instance = null;
+
      private static Autoloader    $_autoloader;
      private static AppStatic     $_appstatic;
      private static string        $_environment;
@@ -19,8 +22,9 @@ class App{
      private static AppContext    $_appcontext;
      private static AppMeta       $_appmeta;
      private static ControllerRef $_appcontrollers;
+     private static AppCors       $_appcors;
 
-     public function __construct(){
+     private function __construct(){
          self::$_autoloader     = Autoloader::init();
          self::$_appconfig      = AppConfig::init();
          self::$_appstatic      = AppStatic::init();
@@ -28,7 +32,18 @@ class App{
          self::$_appcontext     = AppContext::init();
          self::$_appmeta        = AppMeta::init();
          self::$_appcontrollers = ControllerRef::init();
+         self::$_appcors        = AppCors::init();
      }
+
+     public static function init(): self{
+         if(self::$instance === null) {
+             self::$instance = new self();
+         }
+         return self::$instance;
+     }
+
+     private function __clone(){}
+     public function __wakeup(){}
 
      public static function autoloader(){
          return self::$_autoloader;
@@ -60,6 +75,14 @@ class App{
 
      public static function environment(string $env){
          self::$_environment = $env;
+     }
+
+     public static function getenvironment(){
+         return self::$_environment;
+     }
+
+     public static function cors(){
+         return self::$_appcors;
      }
 
      public static function run(){
