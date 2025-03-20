@@ -251,15 +251,24 @@ class TableInfo{
       * duplicate data is made.
       * 
       * Options include: 
-      * IGNORE_DUPLICATE - just ignore the duplicate data and add the rest if there are multiple records to add
       * ABORT_WITH_ERROR - Abort the insert or update operation and throw an exception
-      * ABORT_WITHOUT_ERROR - Abort the insert or update operation without throwing an exception
       * 
-      * Defaults to the value set using MODEL_ACTION_ON_DUPLICATE constant in app config, which defaults to IGNORE_DUPLICATE
+      * INSERT_MINUS_DUPLICATE - Insert only the data that is not duplicating
+      * 
+      * UPDATE_ON_DUPLICATE - Update the record that is already existing with incoming values and return the updated version.
+      * 
+      * RETURN_EXISTING - Return existing record(s) as it is. (alongside newly added ones if multiple records are being inserted)
+      * 
+      * Defaults to the value set using MODEL_ACTION_ON_DUPLICATE constant in app config, which defaults to ABORT_WITH_ERROR
       * 
       * */
  	 public string $action_on_duplicate = MODEL_ACTION_ON_DUPLICATE {
  	 	 set(string $value){
+             //ensure action is among the valid options
+             $actions = ['ABORT_WITH_ERROR', 'INSERT_MINUS_DUPLICATE', 'UPDATE_ON_DUPLICATE', 'RETURN_EXISTING'];
+             if(!in_array($value, $actions)){
+                 throw new \Exception('The duplicate action provided is not valid. Valid duplicate actions are: '.implode(',', $actions));
+             }
  	 	 	 $this->action_on_duplicate = $value;
  	 	 }
 
@@ -273,7 +282,20 @@ class TableInfo{
       * */
      public array $unique_fields = [] {
  	 	 set(array $value){
- 	 	 	 $this->unique_fields = $value;
+             //confirm that all the fields provided exists.
+             foreach($value as $v){
+                 if(!array_key_exists($v, $this->column_names) && !array_key_exists($v, array_flip($this->column_names))){
+                     throw new \Exception($v." is listed as a unique field but is not defined on this model!");
+                 }
+             }
+
+             //store unique fields using db column names instead of field names
+             $unique_columns = [];
+             foreach($value as $v){
+                 $unique_columns[] = $this->column_names[$v] ?? $v;
+             }
+
+ 	 	 	 $this->unique_fields = $unique_columns;
  	 	 }
 
  	 	 get => $this->unique_fields;

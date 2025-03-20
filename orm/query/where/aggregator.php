@@ -16,7 +16,7 @@
  * A raw filter is passed by the client code when it calls the methods: where, or_where, gwhere and or_gwhere on the model manager.
  * 
  * Example: Suppose inside a controller we want to get all the users who are 18 and above from a users table, we would do it this way:
- * User::db()->where('age__gte', 18)->all();
+ * User::get()->where('age__gte', 18)->all();
  * 
  * The where method in that construct passes a raw filter, which is collected by the aggregator.
  * 

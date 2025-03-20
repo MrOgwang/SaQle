@@ -1,18 +1,20 @@
 <?php
 namespace SaQle\Http\Request\Processors;
 
-use SaQle\Services\Container\Cf;
 use SaQle\Http\Response\HttpMessage;
-use SaQle\Http\Request\Data\Sources\{FromPath, FromForm, FromDb};
+use SaQle\Http\Request\Data\Sources\{From, FromPath, FromForm, FromDb};
 use SaQle\Http\Request\Data\Sources\Managers\HttpDataSourceManager;
+use SaQle\Controllers\Helpers\{Exceptions, ExceptionHandler};
+use SaQle\Auth\Models\Attributes\AuthUser;
 use ReflectionMethod;
 use ReflectionParameter;
+use Throwable;
 
 class RequestProcessor{
 	 protected $request;
 
 	 public function __construct(){
-	 	 $this->request = Cf::create('request');
+	 	 $this->request = resolve('request');
 	 }
      
      /**
@@ -62,34 +64,53 @@ class RequestProcessor{
 	 }
 
 	 private function call_target_method($target_instance, $method){
-         $reflection_method = new ReflectionMethod($target_instance::class, $method);
-         $parameters        = $reflection_method->getParameters();
-         $args              = [];
+	 	 try{
+	 	 	 $reflection_method = new ReflectionMethod($target_instance::class, $method);
+	         $parameters        = $reflection_method->getParameters();
+	         $args              = [];
 
-	     foreach ($parameters as $param){
-	     	 $param_name  = $param->getName();
-	         $param_type  = $param->getType();
-	         $default_val = $param->isDefaultValueAvailable() ? $param->getDefaultValue() : null;
-	         $optional    = $param->isOptional();
-		     $sourceattr  = $param->getAttributes()[0] ?? null;
+	         //extract exceptions from the method's attribute
+	         $exceptions_attr   = $reflection_method->getAttributes(Exceptions::class);
+	         $custom_exceptions = $exceptions_attr ? $exceptions_attr[0]->newInstance()->exceptions : [];
 
-		     if($sourceattr){
-		     	 $attribute_instance = $sourceattr->newInstance();
-	             $value = new HttpDataSourceManager(
-	             	 $attribute_instance, ...[
-	             	 	'name'     => $param_name,
-	             	 	'type'     => $param_type,
-	             	 	'default'  => $default_val,
-	             	 	'optional' => $optional
-	             	 ]
-	             )->get_value();
-	             $args[] = $value;
-		     }else{
-		     	 $args[] = $optional ? $this->request->data->get($param_name) : $this->request->data->get_or_fail($param_name);
+	         //merge with default exceptions
+             $handled_exceptions = array_merge(ExceptionHandler::get_default_exceptions(), $custom_exceptions);
+
+		     foreach ($parameters as $param){
+		     	 $param_name   = $param->getName();
+		         $param_type   = $param->getType();
+		         $param_type   = !is_null($param_type) ? str_replace('?', '', $param_type) : $param_type;
+		         $default_val  = $param->isDefaultValueAvailable() ? $param->getDefaultValue() : null;
+		         $optional     = $param->isOptional();
+			     $sourceattr   = $param->getAttributes()[0] ?? null;
+			     $attrinstance = $sourceattr ? $sourceattr->newInstance() : null;
+
+			     if($attrinstance){
+			     	 if($attrinstance instanceof From){
+			     	 	 $args[] = new HttpDataSourceManager($attrinstance, ...['name' => $param_name, 'type' => $param_type, 'default' => $default_val, 'optional' => $optional])->get_value();
+			     	 }elseif($attrinstance instanceof AuthUser){
+			     	 	 $args[] = $this->request->user;
+			     	 }
+			     }elseif($param_type && class_exists($param_type)){
+                     $args[] = resolve($param_type);
+                 }else{
+                 	 //check route params, then query, then data
+                 	 $value = $this->request->route->params->get(
+                 	 	 $param_name, 
+                 	 	 $this->request->route->queries->get(
+                 	 	 	 $param_name, 
+                 	 	 	 $optional ? $this->request->data->get($param_name, $default_val) : $this->request->data->get_or_fail($param_name)
+                 	 	 )
+                 	 );
+                     $args[] = $value;
+                 }
 		     }
-	     }
-	     
-	     return $reflection_method->invokeArgs($target_instance, $args);
+
+		     return $reflection_method->invokeArgs($target_instance, $args);
+	 	 }catch(Throwable $e){
+	 	 	 print_r($e);
+	 	 	 return ExceptionHandler::handle($e, $handled_exceptions);
+	 	 }  
      }
 }
 ?>

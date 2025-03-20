@@ -159,8 +159,6 @@ class Config{
 		  * */
 		 define("SYSTEM_ADMINISTRATOR_EMAIL", $settings['system_admin_email'] ?? 'wycliffomondiotieno@gmail.com');
 		 define("SYSTEM_ADMINISTRATOR_NAME",  $settings['system_admin_name']  ?? 'Wycliffe Omondi');
-		 define("DI_CONTAINER",  php_sapi_name() === 'cli' ? realpath(__DIR__ .'/../services/container/container.php')
-		 	: dirname($_SERVER['DOCUMENT_ROOT'])."/saqle/services/container/container.php");
 
 		 /**
 		  * 1. Handling db column of type timestamp
@@ -227,18 +225,16 @@ class Config{
           * Options include: 
           * ABORT_WITH_ERROR - Abort the insert or update operation and throw an exception
           * 
-          * INSERT_PLUS_DUPLICATE - Just add all the data including duplicates
-          * 
           * INSERT_MINUS_DUPLICATE - Insert only the data that is not duplicating
           * 
           * UPDATE_ON_DUPLICATE - Update the record that is already existing with incoming values and return the updated version.
           * 
           * RETURN_EXISTING - Return existing record(s) as it is. (alongside newly added ones if multiple records are being inserted)
           * 
-          * Defaults to RETURN_EXISTING
+          * Defaults to ABORT_WITH_ERROR
           * 
           * */
-		 define("MODEL_ACTION_ON_DUPLICATE", $settings['model_action_on_duplicate'] ?? 'RETURN_EXISTING');
+		 define("MODEL_ACTION_ON_DUPLICATE", $settings['model_action_on_duplicate'] ?? 'ABORT_WITH_ERROR');
 
 		 /**
 		  * During migrations, this class will be used to seed the database.

@@ -12,6 +12,17 @@ class MakeMigrations{
 
      }
 
+     private function arrays_are_equal(array $a, array $b): bool {
+         if(empty($a) && empty($b)){
+             return true;
+         }
+
+         sort($a);
+         sort($b);
+
+         return $a === $b;
+     }
+
      private function get_model_operations($snapshot){
          $up = "";
          $down = "";
@@ -19,8 +30,12 @@ class MakeMigrations{
          foreach($snapshot as $sk => $sv){
              $added_models = $sv['tables'][0];
              $removed_models = $sv['tables'][1];
+             $maintained_models = $sv['tables'][2];
              $added_columns = $sv['columns'][0] ?? [];
              $removed_columns = $sv['columns'][1] ?? [];
+             $unique_fields = $sv['unique'][0];
+             $last_unique_fields = $sv['unique'][1];
+
              $up .= "\t\t\t'".$sk."' => [\n";
              $down .= "\t\t\t'".$sk."' => [\n";
              foreach($added_models as $an => $am){
@@ -47,6 +62,35 @@ class MakeMigrations{
                  $up .= "\t\t\t\t['action' => 'drop_columns', 'params' => ['name' => '".$rcv['name']."', 'model' => '".$rcv['model']."', 'columns' => [\n".$columns_def."\t\t\t\t]]],\n";
                  $down .= "\t\t\t\t['action' => 'add_columns', 'params' => ['name' => '".$rcv['name']."', 'model' => '".$rcv['model']."', 'columns' => [\n".$columns_def."\t\t\t\t]]],\n";
              }
+             foreach($maintained_models as $an => $am){
+                 $ut  = array_key_exists($an, $unique_fields) ? ($unique_fields[$an]['unique_together'] ? 'true' : 'false') : 'false';
+                 $uf  = array_key_exists($an, $unique_fields) ? $unique_fields[$an]['fields'] : []; 
+                 $last_ut = array_key_exists($an, $last_unique_fields) ? ($last_unique_fields[$an]['unique_together'] ? 'true' : 'false') : 'false';
+                 $last_uf  = array_key_exists($an, $last_unique_fields) ? $last_unique_fields[$an]['fields'] : [];
+
+                 //something has changed
+                 if(!$this->arrays_are_equal($uf, $last_uf)){
+                     if(!empty($last_uf)){
+                         //first drop the previous unique fields
+                         $up .= "\t\t\t\t['action' => 'drop_unique', 'params' => ['name' => '".$an."', 'model' => '".$am."'], 'unique' => '".implode(',', $last_uf)."', 'unique_together' => ".$last_ut."],\n";
+                         $down .= "\t\t\t\t['action' => 'add_unique', 'params' => ['name' => '".$an."', 'model' => '".$am."'], 'unique' => '".implode(',', $last_uf)."', 'unique_together' => ".$last_ut."],\n";
+                     }
+
+                     if(!empty($uf)){
+                         //add the new unique fields
+                         $up .= "\t\t\t\t['action' => 'add_unique', 'params' => ['name' => '".$an."', 'model' => '".$am."'], 'unique' => '".implode(',', $uf)."', 'unique_together' => ".$ut."],\n";
+                         $down .= "\t\t\t\t['action' => 'drop_unique', 'params' => ['name' => '".$an."', 'model' => '".$am."'], 'unique' => '".implode(',', $uf)."', 'unique_together' => ".$ut."],\n";
+                     }
+                 }elseif( (!empty($uf) && !empty($last_uf)) && $ut !== $last_ut){
+                     //first drop the previous unique fields
+                     $up .= "\t\t\t\t['action' => 'drop_unique', 'params' => ['name' => '".$an."', 'model' => '".$am."'], 'unique' => '".implode(',', $last_uf)."', 'unique_together' => ".$last_ut."],\n";
+                     $down .= "\t\t\t\t['action' => 'add_unique', 'params' => ['name' => '".$an."', 'model' => '".$am."'], 'unique' => '".implode(',', $last_uf)."', 'unique_together' => ".$last_ut."],\n";
+                     //add the new unique fields
+                     $up .= "\t\t\t\t['action' => 'add_unique', 'params' => ['name' => '".$an."', 'model' => '".$am."'], 'unique' => '".implode(',', $uf)."', 'unique_together' => ".$ut."],\n";
+                     $down .= "\t\t\t\t['action' => 'drop_unique', 'params' => ['name' => '".$an."', 'model' => '".$am."'], 'unique' => '".implode(',', $uf)."', 'unique_together' => ".$ut."],\n";
+                 }
+             }
+
              $up .= "\t\t\t],\n";
              $down .= "\t\t\t],\n";
              $touched = "\t\t\t'".$sk."',\n";
@@ -69,10 +113,10 @@ class MakeMigrations{
          //check that the latest migration file has been migrated
          $current_migration_files = $tracker->get_migration_files();
          if($current_migration_files && $current_migration_files[ count($current_migration_files) - 1 ]->is_migrated === false){
-             $fn = $current_migration_files[ count($current_migration_files) - 1 ]->file;
+             /*$fn = $current_migration_files[ count($current_migration_files) - 1 ]->file;
              echo "You have a pending migration file [$fn] that should be migrated first!\n";
              echo "Run command: php manage.php migrate\n";
-             return;
+             return;*/
          }
 
          echo "Making {$migration_name} migrations now!\n";

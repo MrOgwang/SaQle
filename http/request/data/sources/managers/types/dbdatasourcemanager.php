@@ -2,6 +2,7 @@
 namespace SaQle\Http\Request\Data\Sources\Managers\Types;
 
 use SaQle\Http\Request\Data\Sources\From;
+use SaQle\Orm\Entities\Model\Schema\Model;
 
 class DbDataSourceManager extends DataSourceManager{
 
@@ -24,15 +25,23 @@ class DbDataSourceManager extends DataSourceManager{
 	 	 $refkey_value = $this->get_refkey_val();
 
 	 	 if($refkey_value){
-	 	 	 $modelclass = $this->type;
-	 	 	 $model      = $this->optional ? 
-	 	 	 $modelclass::db()->where($this->from->field ?? $this->from->refkey, $refkey_value)->first_or_default() : 
-	 	 	 $modelclass::db()->where($this->from->field ?? $this->from->refkey, $refkey_value)->first();
+	 	 	 $modelclass = $this->type === 'array' ? $this->from->model : $this->type;
 
-	 	 	 return $model;
+	 	 	 if(!is_a($modelclass, Model::class, true)){
+ 	 	 	     throw new \Exception('The parameter '.$this->name.' must be a valid existing model class or an array. If it is an array you must specify the model in the FromDb attribute! '.$this->type.' was found instead');
+ 	 	     }
+
+             $column_name = $this->from->field ?? $this->from->refkey;
+ 	 	     if($this->type === 'array'){
+ 	 	     	 return $modelclass::get()->where($column_name.'__in', is_array($refkey_value) ? $refkey_value : [$refkey_value])->all();
+ 	 	     }else{
+ 	 	     	 return $this->optional ? 
+	 	 	     $modelclass::get()->where($column_name, $refkey_value)->first_or_default() : 
+	 	 	     $modelclass::get()->where($column_name, $refkey_value)->first();
+ 	 	     }
 	 	 }
 
-	 	 return $refkey_value;
+	 	 return null;
 	 }
 
 }

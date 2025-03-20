@@ -2,8 +2,6 @@
 namespace SaQle\Migration\Managers;
 
 use SaQle\Migration\Managers\Interfaces\IMigrationManager;
-use SaQle\Services\Container\Cf;
-use SaQle\Services\Container\ContainerService;
 use SaQle\Migration\Models\Migration;
 use SaQle\Commons\FileUtils;
 use SaQle\Migration\Tracker\MigrationTracker;
@@ -11,6 +9,7 @@ use SaQle\Orm\Entities\Field\Types\{TextType, NumberType, FileField, OneToOne, M
 use SaQle\Orm\Entities\Field\Types\Base\Relation;
 use SaQle\Orm\Entities\Model\Interfaces\IThroughModel;
 use SaQle\Orm\Entities\Model\Schema\Model;
+use SaQle\Orm\Connection\Connection;
 
 class ContextManager implements IMigrationManager{
      use FileUtils;
@@ -99,6 +98,7 @@ class ContextManager implements IMigrationManager{
          $raw_fields    = $instance->get_model_fields();
          $raw_t_models  = $instance->get_through_models();
          $raw_t_fields  = $instance->get_through_model_fields();
+         $unique_fields = $instance->get_unique_fields();
 
 
          $clean_models   = [];
@@ -130,7 +130,7 @@ class ContextManager implements IMigrationManager{
              }
          }
 
-         return [$clean_models, $clean_fields, $clean_t_models, $clean_t_fields];
+         return [$clean_models, $clean_fields, $clean_t_models, $clean_t_fields, $unique_fields];
      }
 
      private function get_path_from_namespace(string $namespace, $project_root){
@@ -274,7 +274,7 @@ class ContextManager implements IMigrationManager{
                          continue;
 
                      echo "The foreign model {$fmodel} is defined\n";
-                     $fmodel_instance = new $fmodel();
+                     $fmodel_instance = $fmodel::state();
                      $relationship_field = $this->has_manytomany_relationship_with($fmodel_instance, $mi);
 
                      if($relationship_field === false)
@@ -309,7 +309,7 @@ class ContextManager implements IMigrationManager{
          return [$model_fields, $through_models];
      }
 
-     private function write_database_snapshot($migration_name, $timestamp, $models, $through_models, $dirname, $ctxname, $project_root){
+     private function write_database_snapshot($migration_name, $timestamp, $models, $through_models, $unique_fields, $dirname, $ctxname, $project_root){
          $class_name  = "{$ctxname}_{$timestamp}_{$migration_name}";
          $snap_folder = $dirname."/snapshots";
          $file_name   = $snap_folder."/".$class_name.".php";
@@ -380,6 +380,20 @@ class ContextManager implements IMigrationManager{
              }
          }
 
+         $uniques_template = "";
+         foreach($unique_fields as $n => $u){
+             $ut = $u['unique_together'] ? 'true' : 'false';
+
+             $uniques_template .= "\t\t\t'".$n."' => [\n";
+             $uniques_template .= "\t\t\t\t'unique_together' => ".$ut.",\n";
+             $uniques_template .= "\t\t\t\t'fields' => [\n";
+             foreach($u['fields'] as $uf){
+                 $uniques_template .= "\t\t\t\t\t'".$uf."',\n"; 
+             }
+             $uniques_template .= "\t\t\t\t]\n";
+             $uniques_template .= "\t\t\t],\n";
+         }
+
          $template = "<?php\n";
          $template .= "/**\n";
          $template .= "* This is an auto generated file.\n"; 
@@ -431,6 +445,15 @@ class ContextManager implements IMigrationManager{
          $template .= "\t\t];\n";
          $template .= "\t}\n\n";
 
+         /**
+          * Get unique fields.
+          * */
+         $template .= "\tpublic function get_unique_fields(){\n";
+         $template .= "\t\treturn [\n";
+         $template .= $uniques_template;
+         $template .= "\t\t];\n";
+         $template .= "\t}\n\n";
+
          $template .= "}\n";
 
          //create migrations folder
@@ -439,6 +462,19 @@ class ContextManager implements IMigrationManager{
          }
 
          file_put_contents($file_name, $template);
+     }
+
+     private function extract_unique_fields($models, $project_root){
+         $unique_fields = [];
+         foreach($models as $n => $m){
+             if(!$this->is_model_defined($m, $project_root))
+                 continue;
+
+             $mi = $m::state();
+             $unique_fields[$n] = ['unique_together' => $mi->meta->unique_together, 'fields' => $mi->meta->unique_fields];
+         }
+
+         return $unique_fields;
      }
 
      public function get_context_snapshot(...$options){
@@ -463,10 +499,14 @@ class ContextManager implements IMigrationManager{
 
              //Acquire models registered with db context
              $models   = $ctx::get_models(); 
-             
+
              //Acquire model fields for models registered with db context and at the same time generate through_models from those fields.
              [$model_fields, $through_models] = $this->extract_model_fields($models, $project_root, $manytomany_throughs, $ctx, $ctx_last_throughs);
              $generated_throughs[$ctx] = $through_models;
+
+             //acquire unique fields
+             $unique_fields = $this->extract_unique_fields(array_merge($models, $through_models), $project_root);
+             $last_unique_fields = [];
             
              //Then acquire model fields for the generated through_models.
              [$through_model_fields] = $this->extract_model_fields($through_models, $project_root, $manytomany_throughs, $ctx, $ctx_last_throughs, false);
@@ -475,12 +515,15 @@ class ContextManager implements IMigrationManager{
              $filename = $a->getFileName();
              $dirname  = pathinfo($filename)['dirname'];
 
-             $connection = (Cf::create(ContainerService::class))->createConnection(...['ctx' => $ctx, 'without_db' => true]);
+             $connection_params = DB_CONTEXT_CLASSES[$ctx];
+             $connection_params['name'] = ''; //we are connecting without a database, therefore set the database name to empty string
+             $connection = resolve(Connection::class, $connection_params);
 
-             $this->write_database_snapshot($migration_name, $timestamp, $models, $through_models, $dirname, $ctxname, $project_root);
+             $this->write_database_snapshot($migration_name, $timestamp, $models, $through_models, $unique_fields, $dirname, $ctxname, $project_root);
 
              $added_models    = array_merge($models, $through_models);
              $removed_models  = [];
+             $maintained_models = [];
 
              $added_columns   = [];
              $removed_columns = [];
@@ -493,13 +536,13 @@ class ContextManager implements IMigrationManager{
 
                  if($object){
                      //Database exists, acquire the timestamp for the last snapshot.
-                     $last_migration = Migration::db()
+                     $last_migration = Migration::get()
                      ->order(fields: ['migration_timestamp'], direction: 'DESC')
                      ->limit(page: 1, records: 1)
                      ->first_or_default();
                      if($last_migration){
 
-                         [$last_models, $last_model_fields, $last_through_models, $last_through_model_fields] = $this->get_snapshot(
+                         [$last_models, $last_model_fields, $last_through_models, $last_through_model_fields, $last_unique_fields] = $this->get_snapshot(
                             $last_migration->migration_name, 
                             $last_migration->migration_timestamp, 
                             $dirname, 
@@ -546,8 +589,9 @@ class ContextManager implements IMigrationManager{
                  
              }
 
-             $context_snapshot[$ctx]['tables'] = [$added_models, $removed_models];
+             $context_snapshot[$ctx]['tables'] = [$added_models, $removed_models, $maintained_models];
              $context_snapshot[$ctx]['columns'] = [$added_columns, $removed_columns];
+             $context_snapshot[$ctx]['unique'] = [$unique_fields, $last_unique_fields];
          }
 
          $context_snapshot['generated_throughs'] = $generated_throughs;
@@ -582,14 +626,17 @@ class ContextManager implements IMigrationManager{
              $path = implode(DIRECTORY_SEPARATOR, $pathparts);
              $seeder = DB_SEEDER;
              $seeds = $seeder::get_seeds();
-             foreach($seeds as $seed){
-                $model = $seed['model'];
-                $file  = $path.DIRECTORY_SEPARATOR.$seed['file'];
+             foreach($seeds as $c => $seed){
+                if($c === 0){
+                    $model = $seed['model'];
+                    $file  = $path.DIRECTORY_SEPARATOR.$seed['file'];
 
-                echo "Now seeding for model: {$model}\n";
-                $data = require_once $file;
-                $seeded_data = $model::db()->add_multiple($data)->save();
-                echo "Model: {$model} seeded!\n\n";
+                    echo "Now seeding for model: {$model}\n";
+                    $data = require_once $file;
+                    $seeded_data = $model::new($data)->save();
+                    print_r($seeded_data);
+                    echo "Model: {$model} seeded!\n\n";
+                }
              }
           }
      }

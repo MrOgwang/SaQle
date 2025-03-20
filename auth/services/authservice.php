@@ -4,11 +4,10 @@ namespace SaQle\Auth\Services;
 use SaQle\Http\Request\Request;
 use SaQle\Observable\{Observable, ConcreteObservable};
 use SaQle\FeedBack\FeedBack;
-use SaQle\Auth\Services\Interface\IAuthService;
 use SaQle\Auth\Models\Login;
 use SaQle\Auth\Services\Jwt;
 
-abstract class AuthService implements IAuthService, Observable{
+abstract class AuthService implements Observable{
 	 use ConcreteObservable{
 		 ConcreteObservable::__construct as private __coConstruct;
 	 }
@@ -20,8 +19,8 @@ abstract class AuthService implements IAuthService, Observable{
      abstract public function authenticate() : array;
      abstract public function update_online_status(string | int $user_id, bool $is_online = true) : void;
 	 public function record_signin(string | int $user_id){
-		 $count = Login::db()->where('user_id__eq', $user_id)->total();
-		 Login::db()->add([
+		 $count = Login::get()->where('user_id__eq', $user_id)->total();
+		 Login::new([
 		 	'login_count' => $count + 1, 
 		 	'login_datetime' => time(), 
 		 	'user_id' => $user_id,
@@ -30,11 +29,11 @@ abstract class AuthService implements IAuthService, Observable{
 		 ])->save();
 	 }
 	 public function record_signout(string | int $user_id) : void{
-		 $last_login = Login::db()->where('user_id__eq', $user_id)->order(["login_id"], "DESC")->limit(1, 1)->first_or_default();
+		 $last_login = Login::get()->where('user_id__eq', $user_id)->order(["login_id"], "DESC")->limit(1, 1)->first_or_default();
 		 if($last_login){
 		 	 $logout_datetime = time();
 		 	 $login_span = $logout_datetime - $last_login->login_datetime;
-			 Login::db()->where('login_id__eq', $last_login->login_id)->set(['logout_datetime' => time(), 'login_span' => $login_span])->update();
+			 Login::set(['logout_datetime' => time(), 'login_span' => $login_span])->where('login_id__eq', $last_login->login_id)->update();
 		 }
 	 }
 	 public function signout() : array{

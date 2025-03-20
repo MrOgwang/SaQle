@@ -123,7 +123,7 @@ class Route{
 
          //ensure every http method corresponds to a controller method
          if(count($actions) !== count($this->methods)){
-             throw new \Exception('Every http method must correspond with a specific controller method!');
+             throw new \Exception('Every http method must correspond with a specific controller method in '.$this->url);
          }
 
          $this->actions = $actions;

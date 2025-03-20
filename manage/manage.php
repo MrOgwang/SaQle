@@ -2,14 +2,11 @@
 namespace SaQle\Manage;
 
 use SaQle\Migration\Commands\{MakeMigrations, Migrate, MakeCollections, MakeModels, MakeThroughs, SeedDatabase, MakeSuperuser, StartProject, StartApps};
-use SaQle\Services\Container\Cf;
-use Psr\Container\ContainerInterface;
 
 class Manage{
 	 private string $command      = '';
 	 private array  $arguments    = [];
 	 private string $project_root = '';
-	 private ContainerInterface $container;
 	 public function __construct($args){
 	 	 $this->command = $args[1] ?? null;
 	 	 $this->arguments = match($this->command){
@@ -25,7 +22,6 @@ class Manage{
 	 	 	default            => throw new \Exception("Unknown command!")
 	 	 };
 	 	 $this->project_root = $args[ count($args) - 1];
-	 	 $this->container = Cf::create(ContainerInterface::class);
 	 }
 
 	 private function extract_args(array $expected_short, array $expected_long, array $args){
@@ -81,47 +77,47 @@ class Manage{
 	             $app_name       = $this->arguments['app']     ?? null;
 	             $db_context     = $this->arguments['context'] ?? null;
 		         if ($migration_name){
-		             (Cf::create(MakeMigrations::class))->execute($migration_name, $this->project_root, $app_name, $db_context);
+		             resolve(MakeMigrations::class)->execute($migration_name, $this->project_root, $app_name, $db_context);
 		         }else{
 		             throw new \Exception("Please provide a migration name!");
 		         }
 			 break;
 			 case 'migrate':
-			     (Cf::create(Migrate::class))->execute($this->project_root);
+			     resolve(Migrate::class)->execute($this->project_root);
 			 break;
 			 case 'make:backoffice':
-			     //(Cf::create(MakeBackoffice::class))->execute($this->project_root);
+			     //resolve(MakeBackoffice::class)->execute($this->project_root);
 			 break;
 			 case 'make:collections':
 	             $app_name       = $this->arguments['app']     ?? null;
 	             $db_context     = $this->arguments['context'] ?? null;
-			     (Cf::create(MakeCollections::class))->execute($this->project_root, $app_name, $db_context);
+			     resolve(MakeCollections::class)->execute($this->project_root, $app_name, $db_context);
 			 break;
 			 case 'make:models':
 			     $app_name       = $this->arguments['app']     ?? null;
 	             $db_context     = $this->arguments['context'] ?? null;
-			     (Cf::create(MakeModels::class))->execute($this->project_root, $app_name, $db_context);
+			     resolve(MakeModels::class)->execute($this->project_root, $app_name, $db_context);
 			 break;
 			 case 'make:throughs':
 			     $app_name       = $this->arguments['app']     ?? null;
 	             $db_context     = $this->arguments['context'] ?? null;
-			     (Cf::create(MakeThroughs::class))->execute($this->project_root, $app_name, $db_context);
+			     resolve(MakeThroughs::class)->execute($this->project_root, $app_name, $db_context);
 			 break;
 			 case 'make:superuser':
 			     $email      = $this->arguments['email']    ?? null;
 	             $password   = $this->arguments['password'] ?? null;
-			     (Cf::create(MakeSuperuser::class))->execute($this->project_root, $email, $password);
+			     resolve(MakeSuperuser::class)->execute($this->project_root, $email, $password);
 			 break;
 			 case 'db:seed':
-			     (Cf::create(SeedDatabase::class))->execute($this->project_root);
+			     resolve(SeedDatabase::class)->execute($this->project_root);
 			 break;
 			 case 'start:project':
 			     $name = $this->arguments['name'] ?? null;
-			     (Cf::create(StartProject::class))->execute($name);
+			     resolve(StartProject::class)->execute($name);
 			 break;
 			 case 'start:apps':
 			     $name = $this->arguments['name'] ?? null;
-			     (Cf::create(StartApps::class))->execute($this->project_root, $name);
+			     resolve(StartApps::class)->execute($this->project_root, $name);
 			 break;
 			 default:
 			     throw new \Exception("Unknown command!");

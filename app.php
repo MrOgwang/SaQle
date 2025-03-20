@@ -10,6 +10,8 @@ use SaQle\Templates\Context\AppContext;
 use SaQle\Templates\Meta\AppMeta;
 use SaQle\Controllers\Refs\ControllerRef;
 use SaQle\Http\Cors\AppCors;
+use SaQle\Core\Services\Container\AppContainer;
+use SaQle\Core\Services\Providers\DefaultServiceProvider;
 
 class App{
      private static ?self $instance = null;
@@ -23,6 +25,7 @@ class App{
      private static AppMeta       $_appmeta;
      private static ControllerRef $_appcontrollers;
      private static AppCors       $_appcors;
+     private static AppContainer  $_providers;
 
      private function __construct(){
          self::$_autoloader     = Autoloader::init();
@@ -33,6 +36,7 @@ class App{
          self::$_appmeta        = AppMeta::init();
          self::$_appcontrollers = ControllerRef::init();
          self::$_appcors        = AppCors::init();
+         self::$_providers      = AppContainer::init();
      }
 
      public static function init(): self{
@@ -85,9 +89,25 @@ class App{
          return self::$_appcors;
      }
 
+     public static function providers(){
+         return self::$_providers;
+     }
+
      public static function run(){
+         self::bootstrap();
+
+         //start and process request
          $request         = Request::init();
          $request_manager = new RequestManager($request);
          $request_manager->process();
+     }
+
+     public static function bootstrap(){
+         //bootstrap helpers
+         require_once __DIR__.'/shortcuts/helpers.php';
+
+         //register and load providers
+         self::$_providers::register([DefaultServiceProvider::class]);
+         self::$_providers::load();
      }
 }

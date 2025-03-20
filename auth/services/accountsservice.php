@@ -1,26 +1,18 @@
 <?php
 namespace SaQle\Auth\Services;
 
-use SaQle\Http\Request\Request;
 use SaQle\Observable\{Observable, ConcreteObservable};
 use SaQle\FeedBack\FeedBack;
 use SaQle\Commons\StringUtils;
-use SaQle\Services\Container\ContainerService;
-use SaQle\Services\Container\Cf;
-use SaQle\Auth\Services\Interface\IAccountService;
+use SaQle\Auth\Models\{Vercode, Contact};
 
-abstract class AccountsService implements IAccountService, Observable{
+abstract class AccountsService implements Observable{
 	 use StringUtils, ConcreteObservable{
 		 ConcreteObservable::__construct as private __coConstruct;
 	 }
-	 protected $context;
-	 public function __construct(protected Request $request, $context){
-	 	 $this->context = Cf::create(ContainerService::class)->createDbContext($context);
+	
+	 public function __construct(){
 		 $this->__coConstruct();
-	 }
-
-	 public function create_account(){
-	 	
 	 }
 
 	 /**
@@ -28,7 +20,7 @@ abstract class AccountsService implements IAccountService, Observable{
 	  * @param string $code: The code for which to checj existance
 	  * */
 	 protected function code_exists(string $code){
-	 	 return $this->context->verificationcodes->where('code__eq', $code)->first_or_default() ?? false;
+	 	 return Vercode::get()->where('code__eq', $code)->first_or_default() ?? false;
 	 }
 
 	 /**
@@ -53,14 +45,14 @@ abstract class AccountsService implements IAccountService, Observable{
 
 	 /**
 	  * Generate user verification code and save to database
-	  * @param string email: The email address to associate with verification code
+	  * @param string contact: The email address or phone number to associate with verification code
 	  * */
-	 public function save_verification_code(string $email){
+	 public function save_verification_code(string $contact){
 		 $generated_code = $this->create_code(len: 5, characters: "0123456789");
 		 //code expires 24 hours from the time of creation.
-		 $code = $this->context->verificationcodes->add([
+		 $code = Vercode::new([
 		 	"date_expires" => time() + (24 * 60 * 60), 
-		 	"email"        => $email, 
+		 	"contact"      => $email, 
 		 	"code_type"    => "verification", 
 		 	"code"         => $generated_code
 		 ])->save();
@@ -95,8 +87,7 @@ abstract class AccountsService implements IAccountService, Observable{
 	  * @param nullable string $owner_type:   The contact owner type, usually tenant or user
 	  * */
 	 protected function contact_exists(string $contact, ?string $contact_type = null, ?string $owner_type = null){
-	 	 $contact = $this->context->contacts
-	 	 ->where('contact__eq', $contact);
+	 	 $contact = Contact::get()->where('contact__eq', $contact);
 	 	 if($contact_type){
 	 	 	 $contact = $contact->where('contact_type__eq', $contact_type);
 	 	 }
@@ -106,40 +97,28 @@ abstract class AccountsService implements IAccountService, Observable{
 		 return $contact->first_or_default();
 	 }
 
-	 public function generate_verification_code($email, $password, $confirm_password){
-	 	 /**
-	 	 * Check that the provided email address does not already exists
-	 	 * */
-	 	 $contact = $this->contact_exists($email, 'email');
-		 if($contact){
-		 	 return $this->feedback->get(status: FeedBack::INVALID_INPUT, message: "The email address provided is already existing on our systems!");
-		 }
+	 public function generate_verification_code($type, $contact, $password, $confirm_password){
+	 	 //Check that the provided contact does not already exists
+		 if($this->contact_exists($contact, $type))
+		 	 return $this->feedback->get(status: FeedBack::INVALID_INPUT, message: "The ".$type." you provided is already existing on our systems!");
 
-		 /**
-		  * Check that the passwords provided match
-		  * */
-		 if($password != $confirm_password){
-		 	return $this->feedback->get(status: FeedBack::INVALID_INPUT, message: "The passwords provided do not match");
-		 }
+		 //Check that the passwords provided match
+		 if($password != $confirm_password)
+		 	 return $this->feedback->get(status: FeedBack::INVALID_INPUT, message: "The passwords provided do not match");
 
-		 /**
-		  * Generate and save code to the database
-		  * */
-		 $feedback = $this->save_verification_code($email);
+		 //Generate and save code to the database
+		 $feedback = $this->save_verification_code($contact);
+		 $feedback['feedback'] = null;
+
 		 $this->notify();
 		 
 		 return $feedback;
 	 }
 
-	 public function confirm_verification_code($email, $code){
-	 	 $saved_code = $this->context->verificationcodes->where('email__eq', $email)->last_or_default();
-		 if(!$saved_code){
+	 public function confirm_verification_code($contact, $code){
+	 	 $saved_code = Vercode::get()->where('contact__eq', $contact)->last_or_default();
+		 if(!$saved_code || ($saved_code && $saved_code->code != $code))
 		 	 return $this->feedback->get(status: FeedBack::INVALID_INPUT, message: "Invalid code provided!");
-		 }
-
-		 if($saved_code->code != $code){
-		 	return $this->feedback->get(status: FeedBack::INVALID_INPUT, message: "Invalid code provided");
-		 }
 
 		 return $this->feedback->get(status: FeedBack::SUCCESS, message: "Codes match!");
 	 }

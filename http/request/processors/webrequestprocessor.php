@@ -10,6 +10,7 @@ use SaQle\Controllers\Refs\ControllerRef;
 use SaQle\Templates\Context\AppContext;
 use SaQle\Commons\StringUtils;
 use SaQle\Http\Request\Middleware\CsrfMiddleware;
+use SaQle\Controllers\Interfaces\WebController;
 
 class WebRequestProcessor extends RequestProcessor{
 	 use StringUtils;
@@ -23,31 +24,8 @@ class WebRequestProcessor extends RequestProcessor{
      	 parent::__construct();
      }
 
-	 private function get_template_name(string $controllername){
-         $parts = explode('\\', $controllername);
-         return strtolower(end($parts));
-	 }
-
-	 private function get_template_folder(string $controllername){
-	 	 $reflection = new ReflectionClass($controllername);
-	     $file_path  = $reflection->getFileName();
-	     $folder     = dirname($file_path);
-	     return str_replace("controllers", "templates", $folder);
-	 }
-
-	 private function get_template_file(string $controllername){
-	     $template_folder = $this->get_template_folder($controllername);
-	     $template_name   = $this->get_template_name($controllername);
-	     $template_file   = $template_folder.DIRECTORY_SEPARATOR.$template_name.".html";
-
-	     if(!file_exists($template_file)){
-	     	 throw new \Exception("The template file: ".$template_file." does not exist!");
-	     }
-
-	     return $template_file;
-	 }
-
      private function process_trail(array $trail){
+
      	 $all_css   = [];
          $all_js    = [];
          $all_meta  = [];
@@ -65,13 +43,19 @@ class WebRequestProcessor extends RequestProcessor{
 	 	 	 $all_title = $title ? $title : $all_title;
 	 	 	 $all_html  = $t === 0 ? $html : preg_replace('/@content(.*?)@endcontent/', $html, $all_html);
 	 	 	 if($t === count($trail) - 1 && $default){
+
+	 	 	 	 $ctrl = $trail[$t]->target;
+	 	 	 	 $ctrlinstance = new $ctrl();
+	 	 	 	 if( in_array($trail[$t]->target, $this->controllerrefs) && $ctrlinstance instanceof WebController ){
+	 	 	 	 	 $default = $ctrlinstance->get_default();
+	 	 	 	 }
+
 	 	 	 	 $default_controller = $this->controllerrefs[$default] ?? '';
 	 	 	 	 if($default_controller){
 	 	 	 	     $trail[] = (Object)['url' => '', 'target' => $default_controller, 'action' => strtolower($this->request->route->method)]; //this must be checked, likely to be a problem
 	 	 	 	 }
 	 	 	 }
          }
-
          return [$all_css, $all_js, $all_meta, $all_title, $all_html];
      }
 
@@ -87,7 +71,7 @@ class WebRequestProcessor extends RequestProcessor{
 	 	 $appmeta   = AppMeta::init();
 	 	 $all_meta  = array_merge($appmeta::get_meta_tags(), $all_meta);
 
-         $pagetemplate = $this->get_template_file(Page::class);
+         $pagetemplate = $this->templaterefs['page'];
 	 	 $page = new View($pagetemplate);
 	 	 $page->set_context([
 	 	 	 'content' => $all_html, 

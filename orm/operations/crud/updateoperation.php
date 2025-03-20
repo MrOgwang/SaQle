@@ -2,11 +2,11 @@
 namespace SaQle\Orm\Operations\Crud;
 
 use SaQle\Orm\Operations\IOperation;
-use SaQle\Orm\Operations\Crud\Exceptions\{UpdateOperationFailedException, SelectOperationFailedException};
+use SaQle\Orm\Operations\Crud\Exceptions\UpdateOperationFailedException;
 
 class UpdateOperation extends IOperation{
 
-	 public function update(){ 
+	 public function update(&$pdo){ 
 	 	 try{
 	 	 	 $data     = $this->settings['where_clause']->data ? array_merge($this->settings['values'], $this->settings['where_clause']->data) 
 		 	             : $this->settings['values'];
@@ -15,13 +15,13 @@ class UpdateOperation extends IOperation{
 			 $clause   = $this->settings['where_clause']->clause;
 			 $fieldstring = implode(" = ?, ", $this->settings['fields'])." = ?";
 			 $sql = "UPDATE {$database}.{$table} SET {$fieldstring}{$clause}";
-			 $response = $this->getpdo($this->connection->execute($sql, $data, "update"), "update");
-			 if($response->error_code !== "00000"){
-			 	 throw new UpdateOperationFailedException(name: $table);
-			 	 return false;
-			 }
+			 $statement = $pdo->prepare($sql);
+			 $response  = $statement->execute($data);
 
-			 return $response;
+			 if($response === false || $statement->errorCode() !== "00000")
+			 	 throw new UpdateOperationFailedException(name: $table);
+
+			 return (Object)['row_count' => $statement->rowCount()];
 	 	 }catch(\Exception $ex){
 	 	 	 throw $ex;
 	 	 }

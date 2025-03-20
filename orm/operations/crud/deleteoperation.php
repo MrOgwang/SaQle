@@ -3,25 +3,26 @@ namespace SaQle\Orm\Operations\Crud;
 
 use SaQle\Orm\Operations\IOperation;
 use SaQle\Orm\Operations\Crud\Exceptions\DeleteOperationFailedException;
+use Exception;
 
 class DeleteOperation extends IOperation{
+	 public function delete(&$pdo){
+	 	 try{
+	 	 	 $data      = $this->settings['where_clause']->data;
+		     $database  = $this->settings['database_name'];
+		     $table     = $this->settings['table_name'];
+		     $clause    = $this->settings['where_clause']->clause;
+		     $sql       = "DELETE FROM {$database}.{$table}{$clause}";
+		     $statement = $pdo->prepare($sql);
+			 $response  = $statement->execute($data);
 
-	 public function delete(){
+			 if($response === false || $statement->errorCode() !== "00000")
+			 	 throw new DeleteOperationFailedException(name: $table);
 
-	 	 $data     = $this->settings['where_clause']->data;
-		 $database = $this->settings['database_name'];
-		 $table    = $this->settings['table_name'];
-		 $clause   = $this->settings['where_clause']->clause;
-		 $sql      = "DELETE FROM {$database}.{$table}{$clause}";
-
-		 $response = $this->getpdo($this->connection->execute($sql, $data, "delete"), "delete");
-		 if($response->error_code !== "00000"){
-		 	 throw new DeleteOperationFailedException(name: $table);
-		 	 return false;
-		 }
-		 
-		 return $response->row_count > 0 ? true : false;
+			 return $statement->rowCount() > 0 ? true : false;
+	 	 }catch(Exception $ex){
+	 	 	 throw $ex;
+	 	 }
 	 }
-
 }
 ?>

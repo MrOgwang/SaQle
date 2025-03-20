@@ -2,8 +2,8 @@
 namespace SaQle\Controllers\Base;
 
 use SaQle\Http\Response\{HttpMessage, StatusCode};
-use SaQle\Services\Container\Cf;
 use SaQle\Controllers\Helpers\DefaultHttpHandlers;
+use SaQle\Controllers\Refs\ControllerRef;
 
 abstract class BaseController{
 	 use DefaultHttpHandlers;
@@ -41,7 +41,7 @@ abstract class BaseController{
 	 }
 
 	 public function __construct(){
-	 	 $this->request = Cf::create('request');
+	 	 $this->request = resolve('request');
 	 }
 
 	 public function context_from_parent(array $keys, string $type = 'web'){
@@ -60,6 +60,11 @@ abstract class BaseController{
 	 	   	  header('Location: '.$this->current_url());
 	 	   }
            exit;
+	 }
+
+	  public function expose_controller(string $name, string $class){
+	 	 $refs = ControllerRef::init();
+	 	 $refs::register([$name => $class]);
 	 }
 }
 ?>

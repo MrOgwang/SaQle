@@ -22,11 +22,37 @@ use SaQle\Middleware\MiddlewareRequestInterface;
 use RecursiveIteratorIterator;
 use RecursiveDirectoryIterator;
 use SaQle\App;
+use SaQle\controllers\Page;
+use ReflectionClass;
 
 class VcSetupMiddleware extends IMiddleware{
      public function handle(MiddlewareRequestInterface &$request){
          self::vc_setup();
      	 parent::handle($request);
+     }
+
+     private static function get_template_name(string $controllername){
+         $parts = explode('\\', $controllername);
+         return strtolower(end($parts));
+     }
+
+     private static function get_template_folder(string $controllername){
+         $reflection = new ReflectionClass($controllername);
+         $file_path  = $reflection->getFileName();
+         $folder     = dirname($file_path);
+         return str_replace("controllers", "templates", $folder);
+     }
+
+     private static function get_template_file(string $controllername){
+         $template_folder = self::get_template_folder($controllername);
+         $template_name   = self::get_template_name($controllername);
+         $template_file   = $template_folder.DIRECTORY_SEPARATOR.$template_name.".html";
+
+         if(!file_exists($template_file)){
+             throw new \Exception("The template file: ".$template_file." does not exist!");
+         }
+
+         return $template_file;
      }
 
      private static function get_folder_vc($controllers_folder, $templates_folder){
@@ -124,6 +150,8 @@ class VcSetupMiddleware extends IMiddleware{
              $views       = require_once $cache_views_file;
          }
 
+         $controllers['page'] = Page::class;
+         $views['page']       = self::get_template_file(Page::class);
          $app::controllers()::register($controllers);
          $app::controllers()::register($views, 'views');
      }

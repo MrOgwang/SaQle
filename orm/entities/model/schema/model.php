@@ -2,21 +2,33 @@
 namespace SaQle\Orm\Entities\Model\Schema;
 
 use SaQle\Orm\Entities\Field\Relations\Interfaces\IRelation;
-use SaQle\Services\Container\ContainerService;
-use SaQle\Services\Container\Cf;
 use SaQle\Orm\Entities\Field\Interfaces\IField;
-use SaQle\Orm\Entities\Field\Types\{Pk, TextField, OneToOne, OneToMany, FloatField, IntegerField, BigIntegerField, PhpTimestampField, ManyToMany, FileField, TinyTextField, DateField, TimeField, DateTimeField, TimestampField, BooleanField};
+use SaQle\Orm\Entities\Field\Types\{Pk, TextField, OneToOne, OneToMany, FloatField, IntegerField, BigIntegerField, PhpTimestampField, ManyToMany, FileField, TinyTextField, DateField, TimeField, DateTimeField, TimestampField, BooleanField, VirtualField};
 use SaQle\Orm\Entities\Field\Exceptions\FieldValidationException;
 use SaQle\Security\Models\ModelValidator;
 use SaQle\Commons\StringUtils;
-use SaQle\Orm\Entities\Field\Types\Base\Relation;
-use SaQle\Orm\Entities\Model\Manager\ModelManager;
+use SaQle\Orm\Entities\Field\Types\Base\{Relation, Scalar};
+use SaQle\Orm\Entities\Model\Manager\{CreateManager, UpdateManager, DeleteManager, ReadManager, RunManager};
 use SaQle\Orm\Entities\Model\Interfaces\{IModel, IThroughModel, ITableSchema, ITempModel};
 use SaQle\Orm\Entities\Model\Collection\ModelCollection;
+
 use JsonSerializable;
 
 abstract class Model implements ITableSchema, IModel, JsonSerializable{
 	 use StringUtils;
+
+     /**
+      * Mark a model as read only. When a model instant is read only,
+      * the fields cannot be read or set. This is a model that is only meant
+      * accessing the meta information about a model
+      * */
+	 private bool $readonly;
+
+	 /**
+	  * Mark a model as having been instantiated via the static method.
+	  * Models instantiated via the static method do not need data passed to the constructor.
+	  * */
+	 private static bool $from_static_method = false;
 
      /**
       * A key => value array of raw model data: keys are field names.
@@ -24,7 +36,11 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
       * */
 	 protected private(set) array $data = []{
 	 	 set(array $value){
-		 	 $this->data = $this->format_data($value);
+	 	 	 $tmp_value = $this->format_data($value);
+	 	 	 
+	 	 	 //ensure all fields with default values have been added
+	 	 	 //run validation on the data
+		 	 $this->data = $tmp_value;
 	 	 }
 
 	 	 get => $this->data;
@@ -34,7 +50,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
       * A memory record of data between the time it is set and the time
       * updates are made on the data
       * */
-	 private $data_state = [];
+	 private $data_state = null;
 
 	 /**
 	  * Static cache to store shared metadata per class
@@ -51,8 +67,29 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 	 protected static array $instances = [];
 	 
 	 public function __construct(...$kwargs){
+	 	 if(!self::$from_static_method){
+	 	 	 if(empty($kwargs))
+	 	 	 	 throw new \Exception("Please provide data for: ".$this::class." when creating a new model instant!");
+
+             //ensure all the data keys are column names or fields defined on model
+	 	 	 $this->assert_correct_fields($kwargs);
+
+	 	 	 //convert any values coming in with column names to field names
+	 	 	 $kwargs = $this->format_data($kwargs);
+
+	 	 	 //make sure data is provided for all the required fields
+             $kwargs = $this->assert_required_fields($kwargs);
+
+             //fill in defaults for all the non required fields that haven't been provided
+             $kwargs = $this->fill_defaults($kwargs);
+
+             //run validation on the data
+             $this->run_data_validation($kwargs);
+         }
+
 	 	 $this->data = $kwargs;
-	 	 $this->data_state = $this->get_data_state();
+	 	 $this->readonly = self::$from_static_method;
+         self::$from_static_method = false;
      }
 
      //method to ensure shared meta per class
@@ -75,40 +112,17 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
      //abstract method that must be implemented by concrete classes to define fields
      abstract protected function model_setup(TableInfo $meta): void;
 
+     
      final public static function state(){
+     	 self::$from_static_method = true;
+
          $called_class = get_called_class();
          if (!isset(self::$instances[$called_class])){
-             self::$instances[$called_class] = new $called_class();
+             self::$instances[$called_class] = new $called_class([]);
          }
 
          return self::$instances[$called_class];
      }
-
-	 public static function db2($table_name, $model_class, $db_class, $table_aliase = null, $table_ref = null){
-	 	 $manager = Cf::create(ContainerService::class)->createContextModelManager($db_class);
-         $manager->initialize(
-         	table_name:      $table_name, 
-         	dbcontext_class: $db_class, 
-         	model_class:     $model_class,
-         	table_aliase:    $table_aliase,
-         	table_ref:       $table_ref
-         );
-         return $manager;
-	 }
-
-	 public static function db($table_aliase = null, $table_ref = null){
-	 	 $called_class = get_called_class();
-	 	 [$db_class, $table_name] = $called_class::get_table_n_dbcontext();
-	 	 
-	 	 $manager = Cf::create(ContainerService::class)->createContextModelManager($db_class);
-         $manager->initialize(
-             table_name:      $table_name, 
-         	 dbcontext_class: $db_class, 
-         	 table_aliase:    $table_aliase,
-         	 table_ref:       $table_ref
-         );
-         return $manager;
-	 }
 
 	 public static function get_table_n_dbcontext(){
 	 	 $db_class = false;
@@ -481,6 +495,19 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
      }
 
      public function __set($name, $value){
+     	 if($this->readonly){
+             throw new \Exception("This is a read only model. You cannot modify the values!");
+         }
+
+         if(!array_key_exists($name, $this->data)){
+             throw new \Exception("Property '$name' does not exist! on the model: ".$this::class);
+         }
+
+         //save the data state so we can track changes from now on
+         if(!$this->data_state){
+         	 $this->data_state = $this->get_data_state();
+         }
+
          $this->data = array_merge($this->data, [$name => $value]);
      }
 
@@ -648,7 +675,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 	 	 	 
 	 	 	 #acquire the object
 	 	 	 $object = self::db()->with(array_merge(array_keys($savable_nk), array_keys($savable_fk)))
-	 	 	 ->where($pk_name, $savable_simple[$pk_name][0])->tomodel(true)->first_or_default();
+	 	 	 ->where($pk_name, $savable_simple[$pk_name][0])->first_or_default();
 
 	 	 	 if($object){
 
@@ -658,7 +685,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 	 	 	 	 if($simple_changes){
 	 	 	 	 	 #attempt an update
 		 	 	 	 self::db()->set_data_state($current_data_state)->where($pk_name, $savable_simple[$pk_name][0])
-		 	 	 	 ->set($simple_changes)->tomodel(true)->update();
+		 	 	 	 ->set($simple_changes)->update();
 	 	 	 	 }
                  
 	 	 	 	 #remove any many to many bondings that are no longer existing.
@@ -673,7 +700,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
          
          #save object in db if its null upto this point
 	 	 if(!$object)
-	 	 	 $object = self::db()->set_data_state($current_data_state)->add(array_merge($object_data, $saved_fk_ids))->tomodel(true)->save();
+	 	 	 $object = self::new(array_merge($object_data, $saved_fk_ids))->set_data_state($current_data_state)->save();
 
 	 	 #abort save operation if object its still null at this point.
 	 	 if(!$object)
@@ -723,7 +750,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 	 	 	$getmana->with($with_fields);
 	 	 }
 
-	 	 return $getmana->tomodel(true)->first_or_default();
+	 	 return $getmana->first_or_default();
 	 }
 
 	 public function jsonSerialize() : mixed{
@@ -767,5 +794,212 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 
 	 	 return $formatted_values;
      }
+
+     private function assert_required_fields(array $data){
+     	 $required_fields = [];
+     	 foreach($this->meta->fields as $f){
+     	 	 if(!$f instanceof VirtualField && $f->required){
+     	 	 	 /**
+     	 	 	  * generate a value for primary key here if there is none
+     	 	 	  * 
+     	 	 	  * For integer primary keys, just assign 1. The database will assign the right pk value
+     	 	 	  * */
+     	 	 	 if($f instanceof Pk && !array_key_exists($f->field_name, $data)){
+     	 	 	 	 $data[$f->field_name] = $this->meta->pk_type === 'GUID' ? $this->guid() : 1;
+     	 	 	 }
+
+     	 	 	 $required_fields[] = $f->field_name;
+     	 	 }
+     	 }
+     	 $missing_fields = array_diff($required_fields, array_keys($data));
+
+     	 if(!empty($missing_fields)){
+     	 	 throw new \Exception('The values for the following required fields were not provided: '.implode(", ", $missing_fields));
+     	 }
+
+     	 return $data;
+     }
+
+     private function fill_defaults(array $data){
+     	 foreach($this->meta->fields as $f){
+     	 	 if(!$f instanceof VirtualField && !$f->required && $f instanceof Scalar && !in_array($f->field_name, $this->meta->non_defined_field_names)){
+     	 	 	 if(!array_key_exists($f->field_name, $data)){
+     	 	 	 	 $data[$f->field_name] = $f->default;
+     	 	 	 }
+     	 	 }
+     	 }
+
+     	 return $data;
+     }
+
+     private function assert_correct_fields(array $data){
+     	 $model_field_names = array_unique(array_merge(array_keys($this->meta->column_names), array_values($this->meta->column_names)));
+     	 foreach(array_keys($data) as $dk){
+     	 	 if(!in_array($dk, $model_field_names)){
+     	 		 throw new \Exception('The key: '.$dk.' is not a field on this model!');
+     	 	 }
+     	 }
+     }
+
+     private function run_data_validation(array $data, bool $partial = false){
+     	 /**
+     	  * Strip the data of keys the following:
+     	  * 
+     	  * 1. Keys that are not actual column names - These are navigational and virtual field names
+     	  * 2. Primary key name - this does not need validation
+     	  * 3. File keys whose valus are just strings (File names)
+     	  * 4. Non defined field names - these are fields injected by auto_cm family of settings
+     	  * 5. If partial, especially for updates, fields that are not in data
+     	  * */
+     	 $fields_to_validate = $this->meta->actual_column_names;
+     	 unset($fields_to_validate[$this->meta->pk_name]);
+     	 foreach($this->meta->file_field_names as $ffn){
+	 	 	 if(isset($data[$ffn]) && !is_array($data[$ffn])){
+	 	 	 	 unset($fields_to_validate[$ffn]);
+	 	 	 }
+	 	 }
+	 	 foreach($this->meta->non_defined_field_names as $ndfn){
+	 	 	 unset($fields_to_validate[$ndfn]);
+	 	 }
+	 	 if($partial){
+	 	 	 $current_fields = array_keys($fields_to_validate);
+	 	 	 foreach($current_fields as $cf){
+	 	 	 	 if(!array_key_exists($cf, $data)){
+	 	 	 	 	 unset($fields_to_validate[$cf]);
+	 	 	 	 }
+	 	 	 }
+	 	 }
+
+	 	 $validation_config = [];
+	 	 $datato_validate   = [];
+	 	 foreach($fields_to_validate as $ftv){
+	 	 	 $datato_validate[$ftv] = $data[$ftv];
+	 	 	 $validation_config[$ftv] = $this->meta->fields[$ftv]->get_validation_configurations();
+	 	 }
+
+	 	 $validation_feedback = ModelValidator::validate($validation_config, $datato_validate);
+
+	 	 if($validation_feedback["status"] !== 0){
+			 throw new FieldValidationException([
+			 	 'model'     => $this::class,
+			 	 'operation' => '',
+			 	 'dirty'     => $validation_feedback['dirty']
+			 ]);
+		 }
+	 }
+
+	 public function get_insert_data($request){
+	 	 $fields_to_save = $this->meta->actual_column_names;
+	 	 $data_to_save   = array_intersect_key($this->data, array_flip($fields_to_save));
+	 	 $data_to_save   = $this->swap_properties_with_columns($data_to_save);
+
+	 	 //Inject creator and modifier fields, created and modified date time fields and deleted fields
+	 	 if($this->meta->auto_cm){
+	 	 	 $data_to_save[$this->meta->created_by_field] = $request->user->user_id ?? 0; #Id of current user
+	 	 	 $data_to_save[$this->meta->modified_by_field] = $request->user->user_id ?? 0; #Id of current user
+	 	 }
+	 	 if($this->meta->auto_cmdt){
+	 	 	 $data_to_save[$this->meta->created_at_field] = time(); #current date time.
+	 	 	 $data_to_save[$this->meta->modified_at_field] = time(); #Current date time
+	 	 }
+	 	 if($this->meta->soft_delete){
+	 	 	 $data_to_save[$this->meta->deleted_field] = 0; #0 or 1, will be updated according to the operation
+	 	 	 $data_to_save[$this->meta->deleted_by_field] = $request->user->user_id ?? 0; #Id of current user
+	 	 	 $data_to_save[$this->meta->deleted_at_field] = time(); #current date and time stamp
+	 	 }
+
+	 	 $file_data = $this->prepare_file_data($data_to_save);
+
+	 	 return [$data_to_save, $file_data];
+	 }
+
+	 public function get_update_data($data, $request, $data_state = null, $skip_validation = false){
+	 	 /**
+	 	  * strip the data array of keys of the following:
+	 	  * 1. All keys that are not field names of current model
+	 	  * 2. PrimaryKey key: GUID key values will be auto generated by the application,
+	 	  *    while AUTO key values are generated by the db engine on insert
+	 	  * */
+     	 $tmp_data = [];
+     	 $model_field_names = array_unique(array_merge(array_keys($this->meta->column_names), array_values($this->meta->column_names)));
+     	 foreach(array_keys($data) as $_dk){
+     	 	if(in_array($_dk, $model_field_names) && $_dk != $this->meta->pk_name && !in_array($_dk, $this->meta->nav_field_names)){
+     	 		$tmp_data[$_dk] = $data[$_dk];
+     	 	}
+     	 }
+     	 
+     	 $data = $tmp_data;
+
+	 	 //Make sure data only uses db column names.
+	 	 $data = $this->swap_properties_with_columns($data);
+
+	 	 //Inject modifier and modified date time fields
+	 	 if($this->meta->auto_cm){
+	 	 	$data[$this->meta->modified_by_field] = $request->user->user_id ?? 0; #Id of current user
+	 	 }
+	 	 if($this->meta->auto_cmdt){
+	 	 	 $data[$this->meta->modified_at_field] = time(); #Current date time
+	 	 }
+
+	 	 $this->run_data_validation($data, true);
+
+	 	 /**
+	 	  * For models supporting soft delete, the deleted field(Whatever name its called in meta),
+	 	  * must not be updated from here.
+	 	  * */
+	 	 unset($data[$this->meta->deleted_field]);
+
+	 	 //Prepare file data.
+	 	 $file_data = $this->prepare_file_data($data, $data_state);
+
+	 	 //If there is primary key field, remove it too
+	 	 unset($data[$this->meta->pk_name]);
+
+	 	 return [$data, $file_data];
+	 }
+
+     //add new row(s) to database or batch create new instances
+	 public static function new(array $data){
+	 	 return new CreateManager(get_called_class(), $data);
+	 }
+
+	 //update exisitng rows (s)
+	 public static function set(array $data){
+	 	 return new UpdateManager(get_called_class(), $data);
+	 }
+
+	 //delete one or more rows
+	 public static function del(){
+	 	 return new DeleteManager(get_called_class());
+	 }
+
+	 //get one or more rows
+	 public static function get2($tablename, $modelclass, $dbclass, $tablealiase = null, $tableref = null){
+	 	 return $this->init_readmanager($tablename, $modelclass, $dbclass, $tablealiase, $tableref);
+	 }
+
+	 public static function get($tablealiase = null, $tableref = null){
+	 	 $calledclass = get_called_class();
+	 	 [$dbclass, $tablename] = $calledclass::get_table_n_dbcontext();
+
+	 	 return self::init_readmanager($tablename, $calledclass, $dbclass, $tablealiase, $tableref);
+	 }
+
+	 private static function init_readmanager($tablename, $modelclass, $dbclass, $tablealiase, $tableref){
+	 	 $readmanager = new ReadManager();
+	 	 $readmanager->initialize(
+         	table_name:      $tablename, 
+         	dbcontext_class: $dbclass, 
+         	model_class:     $modelclass,
+         	table_aliase:    $tablealiase,
+         	table_ref:       $tableref
+         );
+	 	 return $readmanager;
+	 }
+
+	 //run custom sql and data
+	 public static function run(string $sql, string $operation, ?array $data = null, bool $multiple = true){
+	 	 return new RunManager($sql, $operation, $data, $multiple);
+	 }
 }
 ?>

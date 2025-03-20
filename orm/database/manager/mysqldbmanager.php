@@ -2,30 +2,28 @@
 namespace SaQle\Orm\Database\Manager;
 
 use SaQle\Orm\Database\Manager\Base\DbManager;
-use SaQle\Services\Container\Cf;
-use SaQle\Services\Container\ContainerService;
 use SaQle\Orm\Commands\Crud\{TableCreateCommand};
 use SaQle\Orm\Operations\Crud\{TableCreateOperation};
+use SaQle\Orm\Connection\Connection;
 
 class MySQLDbManager extends DbManager{
 	 public function __construct(...$params){
 	 	 $this->connection_params = $params;
-	 	 $this->connection = (Cf::create(ContainerService::class))->createConnection(...[
-	 	 	 'ctx'        => $this->connection_params['ctx'],
-	 	 	 'without_db' => true
-         ]);
+	 	 $real_params = DB_CONTEXT_CLASSES[$this->connection_params['ctx']];
+	 	 $real_params['name'] = ''; //connect without a database, hence name is empty
+	 	 $this->connection = resolve(Connection::class, $real_params);
 	 }
 
 	 public function connect(){
-	 	 $this->connection = (Cf::create(ContainerService::class))->createConnection(...[
-         	 'ctx' => $this->connection_params['ctx']
-         ]);
+	 	 $this->connection = resolve(Connection::class, DB_CONTEXT_CLASSES[$this->connection_params['ctx']]);
 	 }
 
 	 public function check_database_exists($ctx){
          $sql = "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?";
          $data = [$this->connection_params['name']];
+
          $statement = $this->connection->execute($sql, $data)['statement'];
+         
          $object = $statement->fetchObject(); 
          return $object ? true : false;
      }
@@ -42,22 +40,32 @@ class MySQLDbManager extends DbManager{
 	 /**
       * Create a new database table.
       * */
-     public function create_table($table, $model_class){
+     public function create_table($table, $model_class, $temporary = false){
      	 $model = $model_class::state();
+     	 $unique_fields = $model->meta->unique_fields; 
+     	 $unique_together = $model->meta->unique_together;
      	 $defs  = $model->get_field_definitions();
 
      	 /*setup a create command*/
 	 	 $crud_command = new TableCreateCommand(
 	 	 	 new TableCreateOperation($this->connection),
 	 	 	 table:  $table,
-	 	 	 fields: implode(", ", $defs)
+	 	 	 fields: implode(", ", $defs),
+	 	 	 temporary: $temporary
 	 	 );
 
 	 	 /*execute command and return response*/
-	 	 return $crud_command->execute();
+	 	 $tblcreated = $crud_command->execute();
+
+	 	 //add unique constraints
+	 	 if(!empty($unique_fields)){
+	 	 	 $this->add_unique_columns($table, $unique_fields, $unique_together);
+	 	 }
+
+	 	 return $tblcreated;
      }
 
-     public function drop_table($table){
+     public function drop_table($table, $temporary = false){
      	 $sql = "DROP TABLE IF EXISTS $table";
 		 $data = null;
 		 return $this->connection->execute($sql, $data)['response'];
@@ -111,7 +119,6 @@ class MySQLDbManager extends DbManager{
      	 	}
      	 }
 
-
      	 $definitions = array_map(function($c){
      	 	return "DROP COLUMN ".$c;
      	 }, $columns_to_drop);
@@ -121,6 +128,33 @@ class MySQLDbManager extends DbManager{
 		 $data = null;
 		 return $this->connection->execute($sql, $data)['response'];
      }
+
+     public function add_unique_columns($table, $columns, $together){
+     	 if($together){
+     	     $sql = "ALTER TABLE $table ADD CONSTRAINT unique_".implode('_', $columns)." UNIQUE (".implode(", ", $columns).")";
+     	     return $this->connection->execute($sql)['response'];
+     	 }else{
+     	 	 foreach($columns as $c){
+     	 	 	 $sql = "ALTER TABLE $table ADD CONSTRAINT unique_".$c." UNIQUE (".$c.")";
+     	 	 	 $ua = $this->connection->execute($sql)['response'];
+     	 	 }
+     	 	 return true;
+     	 }
+     }
+
+     public function drop_unique_columns($table, $columns, $together){
+     	 if($together){
+     	     $sql = "ALTER TABLE $table DROP INDEX unique_".implode('_', $columns);
+     	     return $this->connection->execute($sql)['response'];
+     	 }else{
+     	 	 foreach($columns as $c){
+     	 	 	 $sql = "ALTER TABLE $table DROP INDEX unique_".$c;
+     	 	 	 $ua = $this->connection->execute($sql)['response'];
+     	 	 }
+     	 	 return true;
+     	 }
+     }
      
 }
 ?>
+

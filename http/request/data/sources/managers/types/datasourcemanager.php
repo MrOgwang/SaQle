@@ -4,11 +4,10 @@ namespace SaQle\Http\Request\Data\Sources\Managers\Types;
 use SaQle\Http\Request\Data\Sources\Managers\Interfaces\IHttpDataSourceManager;
 use SaQle\Http\Request\Data\Sources\From;
 use SaQle\Http\Request\Request;
-use SaQle\Services\Container\Cf;
 
 abstract class DataSourceManager implements IHttpDataSourceManager{
 
-     protected Request $request;
+      protected Request $request;
 	 protected From    $from;
 	 protected string  $name;
 	 protected string  $type;
@@ -16,7 +15,7 @@ abstract class DataSourceManager implements IHttpDataSourceManager{
 	 protected bool    $optional;
 
 	 public function __construct(From $from, ...$kwargs){
-	 	 $this->request  = Cf::create('request');
+	 	 $this->request  = resolve('request');
 	 	 $this->from     = $from;
 	 	 $this->name     = $kwargs['name'];
 	 	 $this->type     = $kwargs['type'];

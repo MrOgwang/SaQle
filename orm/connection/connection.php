@@ -4,28 +4,16 @@ use SaQle\Orm\Database\Attributes\IDbContextOptions;
 use SaQle\Orm\Connection\Interfaces\IConnection;
 ob_start();
 class Connection implements IConnection{
-	 /**
-	 * An array of pdo objects
-	 */
 	 private static $connection = null;
 	 private static $last_connection_string = "";
 
-	 protected function __construct(){
-
-	 }
-
-	 protected function __clone(){
-
-	 }
-
+	 protected function __construct(){}
+	 protected function __clone(){}
      public function __wakeup(){
-        throw new \Exception("Cannot unserialize db connection!");
+         throw new \Exception("Cannot unserialize db connection!");
      }
 
-     /**
-	 * Create a new database connection instance
-	 * @param IDbContextOptions: current database context options
-	 */
+     //Create a new database connection instance
      public static function make(IDbContextOptions $context){
      	 $connection_string = self::get_connection_string($context);
      	 if($connection_string !== self::$last_connection_string){
@@ -33,19 +21,15 @@ class Connection implements IConnection{
      	     self::$connection = $pdo;
      	     self::$last_connection_string = $connection_string;
      	 }
-     	 return new self();
+     	 return self::$connection;
      }
 
-     /**
-     * Construct a connection string from the database context options
-     */
+     //Construct a connection string from the database context options
 	 private static function get_connection_string(IDbContextOptions $context){
 		 return $context->get_type()->value.":host=".$context->get_host().";port=".$context->get_port()->value.";dbname=".$context->get_name().";";
 	 }
 
-	 /**
-	 * Create the pdo connection object
-	 */
+	 //Create the pdo connection object
 	 private static function connect(string $connection_string, string $username, string $password){
 	 	try{
 			 $pdo = new \PDO($connection_string, $username, $password);
@@ -68,7 +52,7 @@ class Connection implements IConnection{
 			 $pdo->beginTransaction();
 			 $statement = $pdo->prepare($sql);
 			 $response  = $statement->execute($data);
-
+			 
 			 if($response === false && $pdo->inTransaction()){
 				 $pdo->rollback();
 			 }else{
@@ -89,5 +73,6 @@ class Connection implements IConnection{
 			 throw $ex;
 		 }
 	 }
+
 }
 ?>

@@ -11,7 +11,7 @@ class Vercode extends Model{
 	 	 	 'id'           => new Pk(),
 		     'code'         => new TinyTextField(required: true, length: 100),
 		     'code_type'    => new TinyTextField(required: true, length: 50),
-		     'email'        => new TinyTextField(required: true, length: 200),
+		     'contact'      => new TinyTextField(required: true, length: 200),
 		     'date_expires' => new BigIntegerField(required: true, absolute: true, zero: false)
 	 	 ];
 	 }

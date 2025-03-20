@@ -7,7 +7,9 @@ class TypeCast extends BaseHandler{
 
      public function handle(mixed $row): mixed{
          $type = $this->params['type'];
-         $row = new $type(...(array)$row);
+         $params = (array)$row;
+         unset($params['_sql_data_formatted']);
+         $row = new $type(...$params);
 
          return parent::handle($row);
      }

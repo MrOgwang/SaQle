@@ -13,7 +13,7 @@ class FromDb extends From{
 	 	 get => $this->field;
 	 }
 
-	 public protected(set) ?string $source = null {
+	 public protected(set) ?string $source = 'form' {
 	 	 set(?string $value){
 	 	 	 $this->source = $value;
 	 	 }
@@ -21,7 +21,15 @@ class FromDb extends From{
 	 	 get => $this->source;
 	 }
 
-	 public function __construct(?string $type = null, ?array $props = null, ?string $refkey = null, ?string $field = null, ?string $source = null){
+	 public protected(set) ?string $model = null {
+	 	 set(?string $value){
+	 	 	 $this->model = $value;
+	 	 }
+
+	 	 get => $this->model;
+	 }
+
+	 public function __construct(?string $type = null, ?array $props = null, ?string $refkey = null, ?string $field = null, ?string $source = null, ?string $model = null){
 	 	 parent::__construct($type, $props, $refkey);
 
 	 	 if($field)
@@ -29,6 +37,9 @@ class FromDb extends From{
 
 	 	 if($source)
 	 	     $this->source = $source;
+
+	 	 if($model)
+	 	     $this->model = $model;
 	 }
 }
 ?>

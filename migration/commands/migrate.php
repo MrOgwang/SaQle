@@ -16,9 +16,13 @@ class Migrate{
      private static function process_migration_file($file, $migrations_folder, $project_root){
          $file_name = pathinfo($file, PATHINFO_FILENAME);
          $file_name_parts = explode("_", $file_name);
+         $file_path = $migrations_folder."/".$file;
+         if(!file_exists($file_path)){
+             return;
+         }
 
          echo "Scanning file {$file_name} for changes!\n";
-         require_once $migrations_folder."/".$file;
+         require_once $file_path;
          $class_instance = new $file_name();
          echo "Getting affected database contexts!\n";
          $touched_contexts = $class_instance->touched_contexts();
@@ -113,12 +117,44 @@ class Migrate{
          return;
      }
 
+     private static function add_unique($op, $dbmanager){
+         $table_name = $op['params']['name'];
+         $columns    = explode(",", $op['unique']);
+         echo "Attempting to add unique fields to table: {$table_name}!\n";
+         $uniqueadded = $dbmanager->add_unique_columns($table_name, $columns, $op['unique_together']);
+
+         if(!$uniqueadded){
+             echo "Failed to set unique columns (".$op['unique'].") on table {$table_name}!\n";
+             return;
+         }
+
+         echo "Unique columns (".$op['unique'].") set on table {$table_name}!\n";
+         return;
+     }
+
+     private static function drop_unique($op, $dbmanager){
+         $table_name = $op['params']['name'];
+         $columns    = explode(",", $op['unique']);
+         echo "Attempting to drop unique fields from table table: {$table_name}!\n";
+         $uniqueadded = $dbmanager->drop_unique_columns($table_name, $columns, $op['unique_together']);
+
+         if(!$uniqueadded){
+             echo "Failed to drop unique columns (".$op['unique'].") from table {$table_name}!\n";
+             return;
+         }
+
+         echo "Unique columns (".$op['unique'].") dropped from table {$table_name}!\n";
+         return;
+     }
+
      private static function process_up_operation($op, $project_root, $dbmanager){
          return match($op['action']){
              'create_table' => self::create_table($op, $project_root, $dbmanager),
              'drop_table'   => self::drop_table($op, $dbmanager),
              'add_columns'  => self::add_columns($op, $dbmanager),
-             'drop_columns' => self::drop_columns($op, $dbmanager)
+             'drop_columns' => self::drop_columns($op, $dbmanager),
+             'add_unique'   => self::add_unique($op, $dbmanager),
+             'drop_unique'  => self::drop_unique($op, $dbmanager),
          };
      }
 
@@ -156,7 +192,7 @@ class Migrate{
 
          //record this migration in db
          $fn_parts = explode("_", $file_name);
-         $recorded = Migration::db()->add(['migration_name' => $migration_name, 'migration_timestamp' => $fn_parts[1], 'is_migrated' => 0])->save();
+         $recorded = Migration::new(['migration_name' => $migration_name, 'migration_timestamp' => $fn_parts[1], 'is_migrated' => 0])->save();
 
          #Get and execute the up operations.
          $ctx_up_operations = $up_operations[$ctx];
@@ -164,7 +200,7 @@ class Migrate{
          $op_results = array_map(fn($op) => self::process_up_operation($op, $project_root, $dbmanager), $ctx_up_operations);
 
          #mark current migration file as having been migrated
-         Migration::db()->set(['is_migrated' => 1])->where('migration_id', $recorded->migration_id)->update();
+         Migration::set(['is_migrated' => 1])->where('migration_id', $recorded->migration_id)->update();
 
          return;
      }

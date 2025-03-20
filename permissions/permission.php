@@ -2,7 +2,6 @@
 namespace SaQle\Permissions;
 
 use SaQle\Commons\UrlUtils;
-use SaQle\Services\Container\Cf;
 
 abstract class Permission{
 	 use UrlUtils;
@@ -12,7 +11,7 @@ abstract class Permission{
 	 protected $setup_info   = null;
 	 protected $request      = null;
 	 public function __construct(...$setup_info){
-	 	 $this->request      = Cf::create('request');
+	 	 $this->request      = resolve('request');
 		 $this->request_url  = self::get_full_url();
 		 $this->setup_info   = $setup_info;
 	 }
