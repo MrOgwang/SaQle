@@ -20,6 +20,12 @@ class ContextManager implements IMigrationManager{
          return implode("\\", $nameparts);
      }
 
+     private function execute($pdo, $sql, $data = null){
+         $statement = $pdo->prepare($sql);
+         $response  = $statement->execute($data);
+         return ['statement' => $statement, 'response' => $response];
+     }
+
      private function get_class_name(string $long_class_name, bool $include_namespace = false){
          if($include_namespace)
              return $long_class_name;
@@ -531,7 +537,7 @@ class ContextManager implements IMigrationManager{
              try{
                  $sql = "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?";
                  $data = [DB_CONTEXT_CLASSES[$ctx]['name']];
-                 $statement = $connection->execute($sql, $data)['statement'];
+                 $statement = $this->execute($connection, $sql, $data)['statement'];
                  $object = $statement->fetchObject(); 
 
                  if($object){

@@ -18,11 +18,17 @@ class MySQLDbManager extends DbManager{
 	 	 $this->connection = resolve(Connection::class, DB_CONTEXT_CLASSES[$this->connection_params['ctx']]);
 	 }
 
+	 private function execute($sql, $data = null){
+	 	 $statement = $this->connection->prepare($sql);
+	     $response  = $statement->execute($data);
+	     return ['statement' => $statement, 'response' => $response];
+	 }
+
 	 public function check_database_exists($ctx){
          $sql = "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?";
          $data = [$this->connection_params['name']];
 
-         $statement = $this->connection->execute($sql, $data)['statement'];
+         $statement = $this->execute($sql, $data)['statement'];
          
          $object = $statement->fetchObject(); 
          return $object ? true : false;
@@ -34,7 +40,7 @@ class MySQLDbManager extends DbManager{
 		 $db_name = $this->connection_params['name'];
 		 $sql = "CREATE DATABASE IF NOT EXISTS $db_name CHARACTER SET $char_set COLLATE $collation";
 		 $data = []; //[$db_name, $char_set, $collation];
-		 return $this->connection->execute($sql, $data)['response'];
+		 return $this->execute($sql, $data)['response'];
 	 }
 
 	 /**
@@ -68,13 +74,13 @@ class MySQLDbManager extends DbManager{
      public function drop_table($table, $temporary = false){
      	 $sql = "DROP TABLE IF EXISTS $table";
 		 $data = null;
-		 return $this->connection->execute($sql, $data)['response'];
+		 return $this->execute($sql, $data)['response'];
      }
 
      private function table_column_exists($table, $column){
      	 $sql = "SELECT IF(count(*) = 1, 'Exist','Not Exist') AS result FROM information_schema.columns WHERE table_schema = ? AND table_name = ? AND column_name = ?";
          $data = [$this->connection_params['name'], $table, $column];
-         $statement = $this->connection->execute($sql, $data)['statement'];
+         $statement = $this->execute($sql, $data)['statement'];
          $object = $statement->fetchObject(); 
          return $object->result == "Exist" ? true : false;
      }
@@ -101,7 +107,7 @@ class MySQLDbManager extends DbManager{
      	 $definitions = implode(", ", $definitions);
      	 $sql = "ALTER TABLE $table $definitions";
 		 $data = null;
-		 return $this->connection->execute($sql, $data)['response'];
+		 return $this->execute($sql, $data)['response'];
      }
 
      /**
@@ -126,17 +132,17 @@ class MySQLDbManager extends DbManager{
      	 $definitions = implode(", ", $definitions);
      	 $sql = "ALTER TABLE $table $definitions";
 		 $data = null;
-		 return $this->connection->execute($sql, $data)['response'];
+		 return $this->execute($sql, $data)['response'];
      }
 
      public function add_unique_columns($table, $columns, $together){
      	 if($together){
      	     $sql = "ALTER TABLE $table ADD CONSTRAINT unique_".implode('_', $columns)." UNIQUE (".implode(", ", $columns).")";
-     	     return $this->connection->execute($sql)['response'];
+     	     return $this->execute($sql)['response'];
      	 }else{
      	 	 foreach($columns as $c){
      	 	 	 $sql = "ALTER TABLE $table ADD CONSTRAINT unique_".$c." UNIQUE (".$c.")";
-     	 	 	 $ua = $this->connection->execute($sql)['response'];
+     	 	 	 $ua = $this->execute($sql)['response'];
      	 	 }
      	 	 return true;
      	 }
@@ -145,11 +151,11 @@ class MySQLDbManager extends DbManager{
      public function drop_unique_columns($table, $columns, $together){
      	 if($together){
      	     $sql = "ALTER TABLE $table DROP INDEX unique_".implode('_', $columns);
-     	     return $this->connection->execute($sql)['response'];
+     	     return $this->execute($sql)['response'];
      	 }else{
      	 	 foreach($columns as $c){
      	 	 	 $sql = "ALTER TABLE $table DROP INDEX unique_".$c;
-     	 	 	 $ua = $this->connection->execute($sql)['response'];
+     	 	 	 $ua = $this->execute($sql)['response'];
      	 	 }
      	 	 return true;
      	 }

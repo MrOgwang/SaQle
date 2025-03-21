@@ -7,29 +7,35 @@ use Exception;
 class RunOperation extends IOperation{
 
 	 public function run(){
-	 	 /*try{
+	 	 try{
 	 	 	 $data      = $this->settings['data'];
 		     $sql       = $this->settings['sql'];
 		     $operation = $this->settings['operation'];
 		     $multiple  = $this->settings['multiple'];
+
+		     $statement  = $pdo->prepare($sql);
+			 $response   = $statement->execute($data);
+
+			 if($response === false || $statement->errorCode() !== "00000")
+			 	 throw new InsertOperationFailedException(name: $table);
+
+             if($operation === 'insert')
+             	 return (Object)['last_insert_id' => $pdo->lastInsertId(), 'row_count' => $statement->rowCount()];
+
+             if($operation === 'select'){
+             	 $rows = $statement->fetchAll(PDO::FETCH_OBJ);
+             	 return $multiple ? $rows : ($rows[0] ?? null);
+             }
+
+             if($operation === 'update')
+             	 return (Object)['row_count' => $statement->rowCount()];
+
+             if($operation === 'delete')
+             	 return $statement->rowCount() > 0 ? true : false;
+
 	 	 }catch(Exception $ex){
 	 	 	 throw $ex;
 	 	 }
-	 	 
-
-		 $response = $this->getpdo($this->connection->execute($sql, $data, $operation), $operation);
-		 if($response->error_code !== "00000"){
-		 	 throw new \Exception("Operation failed!");
-		 	 return;
-		 }
-
-		 if($multiple){
-		 	return $response->rows ?? true;
-		 }elseif(!$multiple && $response->rows){
-		 	return $response->rows[0];
-		 }else{
-		 	return null;
-		 }*/
 	 }
 
 }

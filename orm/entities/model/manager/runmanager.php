@@ -46,17 +46,18 @@ class RunManager{
 	 }
 
 	 public function now(){
-	 	 /*setup a run command*/
-	 	 $this->crud_command = new RunCommand(
-	 	 	 new RunOperation($this->get_connection()),
-	 	 	 sql:       $sql,
-	 	 	 operation: $operation,
-	 	 	 data:      $data,
-	 	 	 multiple: $multiple,
-	 	 );
-
-	 	 /*execute command and return response*/
-	 	 return $this->crud_command->execute();
+	 	 try{
+	 	 	 $pdo = resolve(Connection::class, DB_CONTEXT_CLASSES[$this->dbclass]);
+	 	 	 $operation = new RunOperation(
+		 	 	 sql:       $sql,
+		 	 	 operation: $operation,
+		 	 	 data:      $data,
+		 	 	 multiple: $multiple
+		 	 );
+		 	 return $operation->run($pdo);
+	 	 }catch(Exception $ex){
+	 	 	 throw $ex;
+	 	 }
 	 }
 }
 ?>
