@@ -253,7 +253,6 @@ class StartProject{
            $content .= "\n\t\t->where('password__eq', $"."password)";
            $content .= "\n\t\t->where('username__eq', $"."username)";
            $content .= "\n\t\t->limit(1, 1)";
-           $content .= "\n\t\t->tomodel()";
            $content .= "\n\t\t->first_or_default();";
            $content .= "\n\t\t//Is user available";
            $content .= "\n\t\tif(!$"."user) return $"."this->feedback->get(status: FeedBack::INVALID_INPUT, message: 'Invalid Credentials!');";
@@ -447,7 +446,7 @@ class StartProject{
            $content .= "\nuse SaQle\Orm\Database\SetupDbContext;";
            $content .= "\n";
            $content .= "\nclass AccountsDbContext extends SetupDbContext{";
-           $content .= "\n\tstatic public function get_models(){";
+           $content .= "\n\tpublic function get_models(){";
            $content .= "\n\t\t$"."models = [";
            $content .= "\n\t\t\t//'tablename' => TableSchema::class,";
            $content .= "\n\t\t];";

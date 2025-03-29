@@ -144,7 +144,8 @@
 
      //Get a single model object from name
      protected function get_model(string $name) : ITableSchema {
-     	 $refs = array_merge($this->dbclass::get_models(), $this->tmodels);
+     	 $dbclass = $this->dbclass;
+     	 $refs = array_merge(new $dbclass()->get_models(), $this->tmodels);
      	 $model_class = $refs[$name];
      	 return $model_class::state();
      }

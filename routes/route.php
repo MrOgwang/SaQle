@@ -10,8 +10,9 @@ use Closure;
 use SaQle\Permissions\IsAuthorized;
 use SaQle\Core\Assert\Assert;
 use SaQle\Http\Request\Data\Data;
+use SaQle\Routes\Interfaces\IRoute;
 
-class Route{
+class Route implements IRoute{
      //the http methods that the route will handle
      public protected(set) array $methods = [] {
          set(array $value){
@@ -134,8 +135,13 @@ class Route{
          }
 	 }
      
-     //determine whether a route matches the current request or not
-	 public function matches() : array{
+     /**
+      * determine whether a route matches the current request or not
+      * a match is done for both the route and the http method.
+      * 
+      * @returns array of bool values. route match and a method match
+      * */
+	 public function matches() : array {
          $this->url = rtrim($this->url, '/');
          $url_parts = parse_url($_SERVER['REQUEST_URI']);
          $path      = str_ends_with($url_parts['path'], '/') ? rtrim($url_parts['path'], '/') : $url_parts['path'];
@@ -152,7 +158,7 @@ class Route{
                      $this->queries->set($q, $qv);
                  }
              }
-             return in_array($this->method, $this->methods) ? [true, true] : [true, false];
+             return in_array($this->method, $this->methods) ? [true, true, $this] : [true, false];
          }
 
          return [false, false];

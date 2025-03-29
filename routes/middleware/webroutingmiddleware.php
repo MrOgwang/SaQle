@@ -21,37 +21,62 @@ namespace SaQle\Routes\Middleware;
 use SaQle\Middleware\MiddlewareRequestInterface;
 use SaQle\Routes\Middleware\Base\BaseRoutingMiddleware;
 use SaQle\Routes\Exceptions\{RouteNotFoundException, MethodNotAllowedException};
+use SaQle\Controllers\Refs\ControllerRef;
 
 class WebRoutingMiddleware extends BaseRoutingMiddleware{
 
-     private function flatten(array $routes): array{
-         $result = [];
-         foreach($routes as $value){
-             if(is_array($value)) {
-                 $result = array_merge($result, $this->flatten($value));
-             }else{
-                 $result[] = $value;
+     private function extract_trail(&$request, array $matches, array $trail = []){
+         if(isset($matches[2])){
+             $route   = $matches[2];
+             $trail[] = (Object)['url' => $route->url, 'target' => $route->target, 'action' => $route->action];
+         }
+
+         if(is_array($matches[1])){
+             $trail = $this->extract_trail($request, $matches[1], $trail);
+         }else{
+             if(!$matches[1]){ //a match was found with the wrong method
+                 throw new MethodNotAllowedException(url: $_SERVER['REQUEST_URI'], method: $_SERVER['REQUEST_METHOD'], methods: $matches[2]->methods);
+             }
+
+             $request->route = $matches[2];
+         }
+
+         return $trail;
+     }
+
+     public function get_routes_from_file(string $path) : mixed {
+         if(file_exists($path)){
+             return require $path;
+         }
+
+         return null;
+     }
+
+     public function find_and_assign_route(MiddlewareRequestInterface &$request, mixed $routes) : void{
+         $matches = $routes->matches();
+         if(!$matches[0]){
+             throw new RouteNotFoundException(url: $_SERVER['REQUEST_URI']);
+         }
+         $request->trail = $this->extract_trail($request, $matches, []);
+
+         $controllers = ControllerRef::init()::get_controllers();
+         $targets = array_column($request->trail, 'target');
+         foreach($targets as $controller){
+             if(in_array($controller, $controllers)){
+                 $permissions = (new $controller())->permissions;
+                 if($permissions){
+                     $request->enforce_permissions = true;
+                     break;
+                 }
              }
          }
-         return $result;
      }
 
      public function handle(MiddlewareRequestInterface &$request){
          try{
-
              //Acquire project level routes.
-             $routes = $this->get_routes_from_file(DOCUMENT_ROOT.'/routes/web.php', true);
-            
-             //Acquire routes for all installed apps.
-             foreach(INSTALLED_APPS as $app){
-                 $routes = array_merge($routes, $this->get_routes_from_file(DOCUMENT_ROOT.'/apps/'.$app.'/routes/web.php', true));
-             }
-
-             $routes = $this->flatten($routes);
-
-             $this->assert_all_routes($routes);
-
-             $this->find_and_assign_route($routes, $request);
+             $layoutroute = $this->get_routes_from_file(DOCUMENT_ROOT.'/routes/web.php', true);
+             $this->find_and_assign_route($request, $layoutroute);
          }catch(RouteNotFoundException $e){
              throw $e;
          }catch(MethodNotAllowedException $e){

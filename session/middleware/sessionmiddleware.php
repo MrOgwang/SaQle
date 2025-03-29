@@ -28,12 +28,11 @@ use SaQle\Middleware\MiddlewareRequestInterface;
 use SaQle\Auth\Observers\SigninObserver;
 use SaQle\FeedBack\FeedBack;
 use SaQle\Log\FileLogger;
+use SaQle\FeedBack\ExceptionFeedBack;
 
 class SessionMiddleware extends IMiddleware{
       public function handle(MiddlewareRequestInterface &$request){
-           /**
-           * Set the session handler and start session.
-           */
+           //Set the session handler and start session.
      	 $handler_class = SESSION_HANDLER;
            if($handler_class){
                 session_set_save_handler(new $handler_class(), true);
@@ -47,9 +46,7 @@ class SessionMiddleware extends IMiddleware{
                 session_start();
            }
 
-           /**
-           * Set error reporting
-           */
+           //Set error reporting
            ini_set('display_errors', DISPLAY_ERRORS);
            ini_set('display_startup_errors', DISPLAY_STARTUP_ERRORS);
 
@@ -69,6 +66,13 @@ class SessionMiddleware extends IMiddleware{
                 if($feedback['status'] === FeedBack::SUCCESS && $feedback['feedback']){
                      $request->user = $feedback['feedback']['user'];
                 }
+           }
+
+           //create a feedback exception object from previous request
+           if(isset($_SESSION['FeedbackException'])){
+                $feedback = ExceptionFeedBack::init();
+                $feedback->set($_SESSION['FeedbackException']->code, $_SESSION['FeedbackException']->data, $_SESSION['FeedbackException']->message);
+                unset($_SESSION['FeedbackException']);
            }
      	 parent::handle($request);
      }

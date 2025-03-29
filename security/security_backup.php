@@ -117,7 +117,6 @@ class Security{
 			 $config['field_name'] = $key;
 			 $this->fill_defaults($config);
 			 $incoming = $this->get_incoming($key, $origin, $config['method'], $src);
-			 print_r($incoming);
 			 switch($config['general_type']){
 				 case "number":
 				     $validator = new TypeValidator(

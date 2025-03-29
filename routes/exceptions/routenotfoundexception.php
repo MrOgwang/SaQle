@@ -5,7 +5,6 @@ class RouteNotFoundException extends \Exception{
      protected $details;
      public function __construct(...$details){
          $this->details = $details;
-         print_r($this->details);
          parent::__construct();
      }
      public function __toString(){

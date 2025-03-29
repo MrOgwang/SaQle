@@ -115,6 +115,17 @@ class HttpMessage{
 		return $this->response;
 	}
 
+	/**
+     * Set http message data
+     * 
+     * @return mixed
+     * */
+	public function set_response(array $response){
+		 $this->response = $response;
+	}
+
+
+
 	private function set_status_message(){
 		 $http_status_code = [
 		 	102 => 'Processing',

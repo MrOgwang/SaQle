@@ -4,7 +4,7 @@ namespace SaQle\Http\Request\Processors;
 use SaQle\Http\Response\HttpMessage;
 use SaQle\Http\Request\Data\Sources\{From, FromPath, FromForm, FromDb};
 use SaQle\Http\Request\Data\Sources\Managers\HttpDataSourceManager;
-use SaQle\Controllers\Helpers\{Exceptions, ExceptionHandler};
+use SaQle\Controllers\Helpers\{RespondWith, Exceptions, ExceptionHandler};
 use SaQle\Auth\Models\Attributes\AuthUser;
 use ReflectionMethod;
 use ReflectionParameter;
@@ -76,6 +76,10 @@ class RequestProcessor{
 	         //merge with default exceptions
              $handled_exceptions = array_merge(ExceptionHandler::get_default_exceptions(), $custom_exceptions);
 
+             //extract response types if any
+             $responds_attr     = $reflection_method->getAttributes(RespondWith::class);
+             $custom_response   = $responds_attr ? $responds_attr[0]->newInstance() : null;
+
 		     foreach ($parameters as $param){
 		     	 $param_name   = $param->getName();
 		         $param_type   = $param->getType();
@@ -95,6 +99,7 @@ class RequestProcessor{
                      $args[] = resolve($param_type);
                  }else{
                  	 //check route params, then query, then data
+                 	 print_r($this->request);
                  	 $value = $this->request->route->params->get(
                  	 	 $param_name, 
                  	 	 $this->request->route->queries->get(
@@ -106,10 +111,18 @@ class RequestProcessor{
                  }
 		     }
 
-		     return $reflection_method->invokeArgs($target_instance, $args);
+		     $http_message = $reflection_method->invokeArgs($target_instance, $args);
+
+		     //override the context with custom response if any.
+		     if($custom_response){
+		     	 $http_message->set_response($custom_response->get_context());
+		     }
+
+		     return $http_message;
+
 	 	 }catch(Throwable $e){
 	 	 	 print_r($e);
-	 	 	 return ExceptionHandler::handle($e, $handled_exceptions);
+	 	 	 return ExceptionHandler::handle($e, $handled_exceptions, $this->request->is_web_request());
 	 	 }  
      }
 }

@@ -6,7 +6,7 @@ use SaQle\Orm\Entities\Field\Interfaces\IField;
 use SaQle\Orm\Entities\Model\Schema\{Model, TableInfo};
 
 class BaseUser extends Model{
-	protected function model_setup(TableInfo $meta) : void{
+	 protected function model_setup(TableInfo $meta) : void{
 		 $fields = [
 		 	 'user_id'    => new Pk(),
 		     'first_name' => new TextField(required: true, strict: false),
@@ -17,15 +17,15 @@ class BaseUser extends Model{
 		 ];
 
 		 if(ENABLE_RBAC){
-			 $fields['roles'] = new ManyToMany(fmodel: ROLE_MODEL_CLASS, pk: 'user_id', fk: 'user_id');
-			 $fields['permissions'] = new ManyToMany(fmodel: PERMISSION_MODEL_CLASS, pk: 'user_id', fk: 'user_id');
+			 $fields['roles'] = new ManyToMany(fmodel: ROLE_MODEL_CLASS, pk: 'user_id', fk: 'user_id', through: USER_ROLE_MODEL_CLASS);
+			 $fields['permissions'] = new ManyToMany(fmodel: PERMISSION_MODEL_CLASS, pk: 'user_id', fk: 'user_id', through: USER_PERMISSION_MODEL_CLASS);
 		 }
 
 		 if(ENABLE_MULTITENANCY){
-			 $fields['tenants'] = new ManyToMany(fmodel: TENANT_MODEL_CLASS, pk: 'user_id', fk: 'user_id');
+			 $fields['tenants'] = new ManyToMany(fmodel: TENANT_MODEL_CLASS, pk: 'user_id', fk: 'user_id', through: TENANT_USER_MODEL_CLASS);
 		 }
 
 		 $meta->fields = $fields;
-	}
+	 }
 }
 ?>

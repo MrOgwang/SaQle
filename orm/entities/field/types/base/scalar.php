@@ -38,15 +38,6 @@ abstract class Scalar extends RealField{
 	 	 get => $this->choices;
 	 }
 
-	 //the default value to use if the value is not provided
-	 public mixed $default = null {
-	 	 set(mixed $value){
-	 	 	 $this->default = $value;
-	 	 }
-
-	 	 get => $this->default;
-	 }
-
 	 protected bool $use_keys = false;
  
 	 public function __construct(...$kwargs){

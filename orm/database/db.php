@@ -10,16 +10,21 @@ use ReflectionFunction;
 use Exception;
 
 class Db{
-	 static public function transaction(array $callbacks){
-	 	 Assert::allIsCallable($callbacks);
 
-	 	 $pdo = resolve(Connection::class, DB_CONTEXT_CLASSES[$this->dbclass]);
-	 	 $pdo->beginTransaction();
+	 public function __construct(private string $dbclass){
 
-	 	 //array to hold the results of each callback, indexed by parameter names
-         $results = [];
+	 }
 
+	 public function transaction(array $callbacks){
          try{
+         	 Assert::allIsCallable($callbacks);
+
+		 	 $pdo = resolve(Connection::class, DB_CONTEXT_CLASSES[$this->dbclass]);
+		 	 $pdo->beginTransaction();
+
+		 	 //array to hold the results of each callback, indexed by parameter names
+	         $results = [];
+
              foreach($callbacks as $callback){
                  //get parameter names using Reflection
                  $reflection = new ReflectionFunction($callback);

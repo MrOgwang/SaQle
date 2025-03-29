@@ -18,7 +18,6 @@ namespace SaQle\Auth\Middleware;
 
 use SaQle\Middleware\IMiddleware;
 use SaQle\Middleware\MiddlewareRequestInterface;
-use SaQle\Auth\Services\AuthService;
 use SaQle\Auth\Observers\SigninObserver;
 use SaQle\Auth\Services\Jwt;
 use SaQle\Http\Response\{HttpMessage, StatusCode};

@@ -13,7 +13,15 @@ class AppConfig{
      }
 
      public static function load(){
-         $configurations = require_once self::$directory.'/config.php';
+         $files = ['app', 'auth', 'database', 'email', 'model', 'tenant'];
+         $configurations = [];
+         foreach($files as $f){
+             $path = self::$directory.'/'.$f.'.config.php';
+             if(file_exists($path)){
+                 $configurations = array_merge($configurations, require_once $path);
+             }
+         }
+         
          $config = new Config(...$configurations);
      }
 

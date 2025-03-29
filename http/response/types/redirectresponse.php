@@ -1,11 +1,18 @@
 <?php
-class RedirectResponse{
-     protected $url;
-     protected $status;
+namespace SaQle\Http\Response\Types;
 
-     public function __construct($url, $status = 302){
-         $this->url = $url;
+class RedirectResponse{
+     protected ?string $url = null;
+     protected int $status = 302;
+
+     public function __construct(?string $url = null, int $status = 302){
+         $this->url = $url ?? $this->current_url();
          $this->status = $status;
+     }
+
+     public function current_url(){
+         $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? 'https://' : 'http://';
+         return $protocol.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
      }
 
      public function send(){

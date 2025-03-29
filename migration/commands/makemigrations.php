@@ -128,9 +128,6 @@ class MakeMigrations{
             'migration_name' => $migration_name,
             'tracker'        => $tracker
          ]);
-         $generated_throughs = $snapshot['generated_throughs'];
-         unset($snapshot['generated_throughs']);
-
 
          echo "Making {$migration_name} migrations now!\n";
          [$up_models, $down_models, $touched_contexts] = $this->get_model_operations($snapshot);
@@ -170,7 +167,6 @@ class MakeMigrations{
              echo "Migration created: {$migration_filename}\n";
 
              $tracker->add_migration((Object)['file' => $class_name.".php", 'is_migrated' => false]);
-             $tracker->set_through_models($generated_throughs);
              $this->serialize_to_file($migration_tracker_filename, $tracker);
          }
      }

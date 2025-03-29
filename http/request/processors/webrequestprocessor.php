@@ -42,8 +42,8 @@ class WebRequestProcessor extends RequestProcessor{
 	 	 	 $all_meta  = array_merge($all_meta, $meta);
 	 	 	 $all_title = $title ? $title : $all_title;
 	 	 	 $all_html  = $t === 0 ? $html : preg_replace('/@content(.*?)@endcontent/', $html, $all_html);
-	 	 	 if($t === count($trail) - 1 && $default){
-
+	 	 	 
+	 	 	 /*if($t === count($trail) - 1 && $default){
 	 	 	 	 $ctrl = $trail[$t]->target;
 	 	 	 	 $ctrlinstance = new $ctrl();
 	 	 	 	 if( in_array($trail[$t]->target, $this->controllerrefs) && $ctrlinstance instanceof WebController ){
@@ -54,7 +54,7 @@ class WebRequestProcessor extends RequestProcessor{
 	 	 	 	 if($default_controller){
 	 	 	 	     $trail[] = (Object)['url' => '', 'target' => $default_controller, 'action' => strtolower($this->request->route->method)]; //this must be checked, likely to be a problem
 	 	 	 	 }
-	 	 	 }
+	 	 	 }*/
          }
          return [$all_css, $all_js, $all_meta, $all_title, $all_html];
      }
@@ -118,7 +118,7 @@ class WebRequestProcessor extends RequestProcessor{
          	 $response[$b] = "";
          	 $block_target = $this->controllerrefs[$b] ?? ( array_key_exists($b, $this->templaterefs) ? $b : '');
          	 if($block_target){
-         	 	  $trail = [(Object)['url' => '', 'target' => $block_target, 'action' => strtolower($this->request->route->method)]]; //must recheck this. Will cause problems
+         	 	  $trail = [(Object)['url' => '', 'target' => $block_target, 'action' => strtolower($this->request->route->method)]];
          	 	  [$block_css, $block_js, $block_meta, $block_title, $block_html] = $this->process_trail($trail);
          	 	  $css  = array_merge($css, $block_css);
          	 	  $js   = array_merge($js, $block_js);

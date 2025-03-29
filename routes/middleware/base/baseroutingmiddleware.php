@@ -24,45 +24,9 @@ use SaQle\Routes\Route;
 use SaQle\Routes\Exceptions\{RouteNotFoundException, MethodNotAllowedException};
 
 abstract class BaseRoutingMiddleware extends IMiddleware implements IRoutingMiddleware{
-     public function get_routes_from_file(string $path) : array{
-         if(file_exists($path)){
-             $routes = require $path;
-             //assert indexed array
-             Assert::isList($routes, 'The file at: '.$path.' does not return an indexed array!');
-             return $routes;
-         }
+     abstract public function get_routes_from_file(string $path) : mixed;
 
-         return [];
-     }
-
-     protected function find_and_assign_route(array $routes, MiddlewareRequestInterface &$request) : void{
-         //get a matching route
-         $match = null;
-         $matches = [false, false];
-         foreach($routes as $r){
-             $matches = $r->matches();
-             if($matches[0] === true){
-                 $match = $r;
-                 break;
-             }
-         }
-
-         if(!$match){ //a match wasn't found
-             throw new RouteNotFoundException(url: $_SERVER['REQUEST_URI']);
-         }
-
-         if(!$matches[1]){ //a match was found with the wrong method
-             throw new MethodNotAllowedException(url: $_SERVER['REQUEST_URI'], method: $_SERVER['REQUEST_METHOD'], methods: $match->methods);
-         }
-
-         //resolve target for matching route
-         $target = $match->target;
-         if(is_callable($target)){
-             $match->target = $target($match->params);
-         }
-
-         $request->route = $match;
-     }
+     abstract public function find_and_assign_route(MiddlewareRequestInterface &$request, mixed $routes) : void;
 
      protected function assert_all_routes(array $routes) : void{
          //asset array of route objects

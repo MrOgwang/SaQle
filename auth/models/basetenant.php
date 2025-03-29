@@ -10,7 +10,7 @@ class BaseTenant extends Model{
 		$meta->fields = [
 			 'tenant_id'   => new Pk(),
 		     'tenant_name' => new TextField(required: true, strict: false),
-		     'users'       => new ManyToMany(fmodel: AUTH_MODEL_CLASS, pk: 'tenant_id', fk: 'tenant_id')
+		     'users'       => new ManyToMany(fmodel: AUTH_MODEL_CLASS, pk: 'tenant_id', fk: 'tenant_id', through: TENANT_USER_MODEL_CLASS)
 		];
 	}
 }

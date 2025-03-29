@@ -159,5 +159,9 @@ class Request implements MiddlewareRequestInterface{
         }
         return $is_sse_request;
      }
+
+     public function is_web_request() : bool{
+         return !$this->is_api_request() && !$this->is_ajax_request() && !$this->is_sse_request();
+     }
 }
 ?>

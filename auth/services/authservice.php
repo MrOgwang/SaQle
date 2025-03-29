@@ -16,8 +16,8 @@ abstract class AuthService implements Observable{
 	 	 $this->request = Request::init();
 		 $this->__coConstruct();
 	 }
-     abstract public function authenticate() : array;
      abstract public function update_online_status(string | int $user_id, bool $is_online = true) : void;
+     abstract public function authenticate(...$kwargs) : array;
 	 public function record_signin(string | int $user_id){
 		 $count = Login::get()->where('user_id__eq', $user_id)->total();
 		 Login::new([
@@ -62,7 +62,7 @@ abstract class AuthService implements Observable{
 	 	 ?int    $not_before = null, 
 	 	 int     $expiry     = 5, 
 	 	 array   $extra_info  = []
-	 ) : string{
+	 ) : string {
 	     $issuer = $issuer ?? ROOT_DOMAIN;
 	     $issued_at = $issued_at ?? time();
 	     $not_before = $not_before ?? time();

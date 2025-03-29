@@ -2,8 +2,7 @@
 namespace SaQle\Orm\Database\Manager;
 
 use SaQle\Orm\Database\Manager\Base\DbManager;
-use SaQle\Orm\Commands\Crud\{TableCreateCommand};
-use SaQle\Orm\Operations\Crud\{TableCreateOperation};
+use SaQle\Orm\Operations\Crud\TableCreateOperation;
 use SaQle\Orm\Connection\Connection;
 
 class MySQLDbManager extends DbManager{
@@ -52,16 +51,12 @@ class MySQLDbManager extends DbManager{
      	 $unique_together = $model->meta->unique_together;
      	 $defs  = $model->get_field_definitions();
 
-     	 /*setup a create command*/
-	 	 $crud_command = new TableCreateCommand(
-	 	 	 new TableCreateOperation($this->connection),
+     	 $operation = new TableCreateOperation(
 	 	 	 table:  $table,
 	 	 	 fields: implode(", ", $defs),
 	 	 	 temporary: $temporary
 	 	 );
-
-	 	 /*execute command and return response*/
-	 	 $tblcreated = $crud_command->execute();
+	 	 $tblcreated = $operation->create($this->connection);
 
 	 	 //add unique constraints
 	 	 if(!empty($unique_fields)){

@@ -3,6 +3,7 @@ namespace SaQle\Orm\Operations\Crud;
 
 use SaQle\Orm\Operations\IOperation;
 use SaQle\Orm\Operations\Crud\Exceptions\SelectOperationFailedException;
+use PDO;
 use Exception;
 
 class TotalOperation extends IOperation{
@@ -20,6 +21,8 @@ class TotalOperation extends IOperation{
 			 $sql .= $this->settings['where_clause']->clause;
 			 $sql .= $this->settings['order_clause'];
 			 $sql .= $this->settings['limit_clause'];
+			 $statement = $pdo->prepare($sql);
+		     $response  = $statement->execute($data);
 
 			 if($response === false || $statement->errorCode() !== "00000")
 			 	 throw new SelectOperationFailedException(name: $table);

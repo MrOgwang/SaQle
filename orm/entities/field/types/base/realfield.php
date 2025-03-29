@@ -6,6 +6,15 @@ use SaQle\Orm\Entities\Field\Types\{Pk, TextType, NumberType, FileField, Timesta
 use SaQle\Orm\Entities\Field\Types\Base\Relation;
 
 abstract class RealField extends Simple{
+	 //the default value to use if the value is not provided
+	 public mixed $default = null {
+	 	 set(mixed $value){
+	 	 	 $this->default = $value;
+	 	 }
+
+	 	 get => $this->default;
+	 }
+	 
 	 //Whether this field is required or not. If true, allow_null will be false
 	 public bool $required = false {
 	 	 set(bool $value){

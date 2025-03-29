@@ -7,10 +7,11 @@ use SaQle\Orm\Entities\Field\Types\{Pk, TextField, OneToOne, OneToMany, FloatFie
 use SaQle\Orm\Entities\Field\Exceptions\FieldValidationException;
 use SaQle\Security\Models\ModelValidator;
 use SaQle\Commons\StringUtils;
-use SaQle\Orm\Entities\Field\Types\Base\{Relation, Scalar};
+use SaQle\Orm\Entities\Field\Types\Base\{Relation, RealField};
 use SaQle\Orm\Entities\Model\Manager\{CreateManager, UpdateManager, DeleteManager, ReadManager, RunManager};
 use SaQle\Orm\Entities\Model\Interfaces\{IModel, IThroughModel, ITableSchema, ITempModel};
 use SaQle\Orm\Entities\Model\Collection\ModelCollection;
+use SaQle\Core\Exceptions\Model\{UndefinedFieldException, MissingRequiredFieldsException};
 
 use JsonSerializable;
 
@@ -36,11 +37,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
       * */
 	 protected private(set) array $data = []{
 	 	 set(array $value){
-	 	 	 $tmp_value = $this->format_data($value);
-	 	 	 
-	 	 	 //ensure all fields with default values have been added
-	 	 	 //run validation on the data
-		 	 $this->data = $tmp_value;
+		 	 $this->data = $value;
 	 	 }
 
 	 	 get => $this->data;
@@ -71,11 +68,12 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 	 	 	 if(empty($kwargs))
 	 	 	 	 throw new \Exception("Please provide data for: ".$this::class." when creating a new model instant!");
 
-             //ensure all the data keys are column names or fields defined on model
-	 	 	 $this->assert_correct_fields($kwargs);
-
 	 	 	 //convert any values coming in with column names to field names
 	 	 	 $kwargs = $this->format_data($kwargs);
+	 	 	 //print_r($kwargs);
+
+             //ensure all the data keys are column names or fields defined on model
+	 	 	 $this->assert_correct_fields($kwargs);
 
 	 	 	 //make sure data is provided for all the required fields
              $kwargs = $this->assert_required_fields($kwargs);
@@ -85,6 +83,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 
              //run validation on the data
              $this->run_data_validation($kwargs);
+             //print_r($kwargs);
          }
 
 	 	 $this->data = $kwargs;
@@ -117,8 +116,10 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
      	 self::$from_static_method = true;
 
          $called_class = get_called_class();
-         if (!isset(self::$instances[$called_class])){
+         if(!isset(self::$instances[$called_class])){
              self::$instances[$called_class] = new $called_class([]);
+         }else{
+         	 self::$from_static_method = false;
          }
 
          return self::$instances[$called_class];
@@ -152,7 +153,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 	 	 	 $context_classes = array_keys(DB_CONTEXT_CLASSES);
 		 	 for($x = 0; $x < count($context_classes); $x++){
 		 	 	$context_class_name = $context_classes[$x];
-		 	 	$models = $context_class_name::get_models();
+		 	 	$models = new $context_class_name()->get_models();
 		 	 	$model_classes = array_values($models);
 		 	 	if(in_array($current_model_name, $model_classes)){
 		 	 		$db_class = $context_class_name;
@@ -354,102 +355,6 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
      	 }
      	 return $swapped;
      }
-
-	 public function prepare_insert_data($data, $request, $table_name = null, $model_class = null, $db_class = null, $skip_validation = false){
-	 	/**
-	 	 * Make sure data only uses db column names.
-	 	 * */
-	 	 $data = $this->swap_properties_with_columns($data);
-
-	 	/**
-	 	 * check an attempt to insert duplicate data.
-	 	 * */
-	 	 $is_duplicate = $this->check_if_duplicate($data, $table_name, $model_class, $db_class);
-
-	 	 /**
-	 	  * Inject creator and modifier fields, created and modified date time fields and deleted fields
-	 	  * */
-	 	 if($this->meta->auto_cm){
-	 	 	$data[$this->meta->created_by_field] = $request->user->user_id ?? 0; #Id of current user
-	 	 	$data[$this->meta->modified_by_field] = $request->user->user_id ?? 0; #Id of current user
-	 	 }
-	 	 if($this->meta->auto_cmdt){
-	 	 	 $data[$this->meta->created_at_field] = time(); #current date time.
-	 	 	 $data[$this->meta->modified_at_field] = time(); #Current date time
-	 	 }
-	 	 if($this->meta->soft_delete){
-	 	 	 $data[$this->meta->deleted_field] = 0; #0 or 1, will be updated according to the operation
-	 	 	 $data[$this->meta->deleted_by_field] = $request->user->user_id ?? 0; #Id of current user
-	 	 	 $data[$this->meta->deleted_at_field] = time(); #current date and time stamp
-	 	 }
-
-	 	 /**
-	 	  * Get validated data.
-	 	  * */
-	 	 $clean_data = !$skip_validation ? $this->get_clean_data($data, "insert") : $data;
-
-	 	 /**
-	 	  * Generate GUID if the primary key is of that type.
-	 	  * */
-	 	 if($this->meta->pk_type === 'GUID'){
-	 	 	$clean_data[$this->meta->pk_name] = $this->guid();
-	 	 }
-
-	 	 /**
-	 	  * Get file data if any.
-	 	  * */
-	 	 $file_data = $this->prepare_file_data($clean_data);
-
-	 	 return [$clean_data, $file_data, $is_duplicate, $this->meta->action_on_duplicate];
-	 }
-
-	 public function prepare_update_data($data, $request, $data_state = null, $skip_validation = false){
-	 	 /**
-	 	 * Make sure data only uses db column names.
-	 	 * */
-	 	 $data = $this->swap_properties_with_columns($data);
-
-	 	 /**
-	 	 * Before anything else happens,
-	 	 * check an attempt to insert duplicate data.
-	 	 * */
-	 	 $is_duplicate = $this->check_if_duplicate($data);
-
-	 	 /**
-	 	  * Inject modifier and modified date time fields
-	 	  * */
-	 	 if($this->meta->auto_cm){
-	 	 	$data[$this->meta->modified_by_field] = $request->user->user_id ?? 0; #Id of current user
-	 	 }
-	 	 if($this->meta->auto_cmdt){
-	 	 	 $data[$this->meta->modified_at_field] = time(); #Current date time
-	 	 }
-
-	 	 /**
-	 	  * Get validated data
-	 	  * */
-	 	 $clean_data = !$skip_validation ? $this->get_clean_data($data, "update") : $data;
-
-	 	 /**
-	 	  * For models supporting soft delete, the deleted field(Whatever name its called in meta),
-	 	  * must not be updated from here.
-	 	  * */
-	 	 unset($clean_data[$this->meta->deleted_field]);
-
-	 	  /**
-	 	  * Prepare file data.
-	 	  * */
-	 	 $file_data = $this->prepare_file_data($clean_data, $data_state);
-
-	 	 /**
-	 	  * If there is primary key field, remove it too
-	 	  * */
-	 	 if(isset($clean_data[$this->meta->pk_name])){
-	 	 	unset($clean_data[$this->meta->pk_name]);
-	 	 }
-
-	 	 return [$clean_data, $file_data, $is_duplicate, $this->meta->action_on_duplicate];
-	 }
 
 	 public function get_field_definitions(){
 	 	 $defs = [];
@@ -761,6 +666,14 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
          return $formatted_data;
      }
 
+     /**
+      * Takes in a key => value array of data and converts all the keys to column names or field names
+      * depending on the keytype setting.
+      * 
+      * @param array $data - the data to convert
+      * @param string $keytype - fields or columns
+      * 
+      * */
      private function format_data(array $data, string $keytype = 'fields'){
      	 $formatted_values = [];
  	     $db_columns = $this->meta->column_names;
@@ -814,7 +727,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
      	 $missing_fields = array_diff($required_fields, array_keys($data));
 
      	 if(!empty($missing_fields)){
-     	 	 throw new \Exception('The values for the following required fields were not provided: '.implode(", ", $missing_fields));
+     	 	 throw new MissingRequiredFieldsException('The values for the following required fields were not provided: '.implode(", ", $missing_fields));
      	 }
 
      	 return $data;
@@ -822,7 +735,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 
      private function fill_defaults(array $data){
      	 foreach($this->meta->fields as $f){
-     	 	 if(!$f instanceof VirtualField && !$f->required && $f instanceof Scalar && !in_array($f->field_name, $this->meta->non_defined_field_names)){
+     	 	 if(!$f instanceof VirtualField && !$f->required && $f instanceof RealField && !in_array($f->field_name, $this->meta->non_defined_field_names)){
      	 	 	 if(!array_key_exists($f->field_name, $data)){
      	 	 	 	 $data[$f->field_name] = $f->default;
      	 	 	 }
@@ -832,11 +745,22 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
      	 return $data;
      }
 
+     /**
+      * Ensure that the keys of the data array are field names defined on the model.
+      * Note: at this point even a column name instead of a field name will be disregarded.
+      * 
+      * Column names are the db representations of the model field names and field names 
+      * are how the properties are named on the model itself.
+      * 
+      * @param array $data - the key => value data array
+      * @param bool  $trict - if strict is true, an exception will be thrown where a key name is not a field defined on 
+      *                       the model
+      * */
      private function assert_correct_fields(array $data){
-     	 $model_field_names = array_unique(array_merge(array_keys($this->meta->column_names), array_values($this->meta->column_names)));
+     	 $model_field_names = array_keys($this->meta->column_names);
      	 foreach(array_keys($data) as $dk){
      	 	 if(!in_array($dk, $model_field_names)){
-     	 		 throw new \Exception('The key: '.$dk.' is not a field on this model!');
+     	 		 throw new UndefinedFieldException('The key: '.$dk.' is not a field on this model!');
      	 	 }
      	 }
      }
@@ -847,6 +771,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
      	  * 
      	  * 1. Keys that are not actual column names - These are navigational and virtual field names
      	  * 2. Primary key name - this does not need validation
+     	  * 3. Foreign key names
      	  * 3. File keys whose valus are just strings (File names)
      	  * 4. Non defined field names - these are fields injected by auto_cm family of settings
      	  * 5. If partial, especially for updates, fields that are not in data
@@ -861,6 +786,9 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 	 	 foreach($this->meta->non_defined_field_names as $ndfn){
 	 	 	 unset($fields_to_validate[$ndfn]);
 	 	 }
+	 	 foreach($this->meta->fk_field_names as $fkfn){
+	 	 	 unset($fields_to_validate[$fkfn]);
+	 	 }
 	 	 if($partial){
 	 	 	 $current_fields = array_keys($fields_to_validate);
 	 	 	 foreach($current_fields as $cf){
@@ -872,9 +800,9 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 
 	 	 $validation_config = [];
 	 	 $datato_validate   = [];
-	 	 foreach($fields_to_validate as $ftv){
-	 	 	 $datato_validate[$ftv] = $data[$ftv];
-	 	 	 $validation_config[$ftv] = $this->meta->fields[$ftv]->get_validation_configurations();
+	 	 foreach($fields_to_validate as $ftv_key => $ftv){
+	 	 	 $datato_validate[$ftv_key] = $data[$ftv_key];
+	 	 	 $validation_config[$ftv_key] = $this->meta->fields[$ftv_key]->get_validation_configurations();
 	 	 }
 
 	 	 $validation_feedback = ModelValidator::validate($validation_config, $datato_validate);
@@ -891,6 +819,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 	 public function get_insert_data($request){
 	 	 $fields_to_save = $this->meta->actual_column_names;
 	 	 $data_to_save   = array_intersect_key($this->data, array_flip($fields_to_save));
+
 	 	 $data_to_save   = $this->swap_properties_with_columns($data_to_save);
 
 	 	 //Inject creator and modifier fields, created and modified date time fields and deleted fields
@@ -914,24 +843,30 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 	 }
 
 	 public function get_update_data($data, $request, $data_state = null, $skip_validation = false){
-	 	 /**
-	 	  * strip the data array of keys of the following:
-	 	  * 1. All keys that are not field names of current model
-	 	  * 2. PrimaryKey key: GUID key values will be auto generated by the application,
-	 	  *    while AUTO key values are generated by the db engine on insert
-	 	  * */
-     	 $tmp_data = [];
-     	 $model_field_names = array_unique(array_merge(array_keys($this->meta->column_names), array_values($this->meta->column_names)));
+	 	 //convert any values coming in with column names to field names
+	 	 $data = $this->format_data($data);
+
+         //ensure all the data keys are column names or fields defined on model
+	 	 $this->assert_correct_fields($data);
+
+         //run validation on the data
+         $this->run_data_validation($data, true);
+
+         //strip the primary key field, navigtaional and virtual fields, and the deleted field
+	 	 unset($data[$this->meta->deleted_field]);
+	 	 unset($data[$this->meta->pk_name]);
+	 	 $actual_fields = array_keys($this->meta->actual_column_names);
+
+         $clean_data = [];
      	 foreach(array_keys($data) as $_dk){
-     	 	if(in_array($_dk, $model_field_names) && $_dk != $this->meta->pk_name && !in_array($_dk, $this->meta->nav_field_names)){
-     	 		$tmp_data[$_dk] = $data[$_dk];
-     	 	}
+     	 	 if(in_array($_dk, $actual_fields)){
+     	 	 	 $clean_data[$_dk] = $data[$_dk];
+     	 	 }
      	 }
-     	 
-     	 $data = $tmp_data;
+     	 $data = $clean_data;
 
 	 	 //Make sure data only uses db column names.
-	 	 $data = $this->swap_properties_with_columns($data);
+	 	 $data = $this->format_data($data, 'columns');
 
 	 	 //Inject modifier and modified date time fields
 	 	 if($this->meta->auto_cm){
@@ -941,19 +876,8 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 	 	 	 $data[$this->meta->modified_at_field] = time(); #Current date time
 	 	 }
 
-	 	 $this->run_data_validation($data, true);
-
-	 	 /**
-	 	  * For models supporting soft delete, the deleted field(Whatever name its called in meta),
-	 	  * must not be updated from here.
-	 	  * */
-	 	 unset($data[$this->meta->deleted_field]);
-
 	 	 //Prepare file data.
 	 	 $file_data = $this->prepare_file_data($data, $data_state);
-
-	 	 //If there is primary key field, remove it too
-	 	 unset($data[$this->meta->pk_name]);
 
 	 	 return [$data, $file_data];
 	 }

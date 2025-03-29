@@ -52,7 +52,7 @@ abstract class AccountsService implements Observable{
 		 //code expires 24 hours from the time of creation.
 		 $code = Vercode::new([
 		 	"date_expires" => time() + (24 * 60 * 60), 
-		 	"contact"      => $email, 
+		 	"contact"      => $contact, 
 		 	"code_type"    => "verification", 
 		 	"code"         => $generated_code
 		 ])->save();

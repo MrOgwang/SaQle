@@ -29,7 +29,7 @@ class Config{
 	 	 * */
 	 	define("ENABLE_RBAC", $settings['enable_rbac'] ?? false);
 	 	define("ROLE_MODEL_CLASS", $settings['role_model_class'] ?? BaseRole::class);
-	 	define("PERMISSION_MODEL_CLASS", $settings['role_model_class'] ?? BasePermission::class);
+	 	define("PERMISSION_MODEL_CLASS", $settings['permission_model_class'] ?? BasePermission::class);
 	 	
 	 	/**
 	 	 * Array of all the db context classes.
@@ -118,14 +118,6 @@ class Config{
 		 define("SSE_URL_PREFIXES", $settings['sse_url_prefixes'] ?? ['/sse/v1/', '/sse/v2/']);
 
 		 define("PAGE_CONTROLLER_CLASS", $settings['page_controller_class'] ?? '');
-
-		 /**
-		  * Database settings
-		  * */
-		 define("DATABASE_USER",     $settings['database_user']     ?? '');
-		 define("DATABASE_PASSWORD", $settings['database_password'] ?? '');
-		 define("DATABASE_NAME",     $settings['database_name']     ?? '');
-		 define("DATABASE_HOST",     $settings['database_host']     ?? 'localhost');
 
 		 /**
 		  * Date and time

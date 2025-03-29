@@ -3,7 +3,7 @@ namespace SaQle\Middleware\Group;
 
 use SaQle\Middleware\Interface\IMiddlewareGroup;
 use SaQle\Session\Middleware\SessionMiddleware;
-use SaQle\Routes\Middleware\{RoutingMiddleware, RouteLayoutMiddleware};
+use SaQle\Routes\Middleware\RoutingMiddleware;
 use SaQle\Http\Request\Middleware\{DataConsolidatorMiddleware, CsrfMiddleware};
 use SaQle\Permissions\Middleware\PermissionsMiddleware;
 use SaQle\Config\Middlewares\{VcSetupMiddleware, PageSetupMiddleware};
@@ -17,7 +17,6 @@ class WebMiddlewareGroup implements IMiddlewareGroup{
 	 	 	 PageSetupMiddleware::class,
 	 	 	 SessionMiddleware::class,
 	 	 	 RoutingMiddleware::class,
-             RouteLayoutMiddleware::class,
              DataConsolidatorMiddleware::class,
              CsrfMiddleware::class,
              PermissionsMiddleware::class

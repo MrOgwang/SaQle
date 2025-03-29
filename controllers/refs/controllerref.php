@@ -5,6 +5,7 @@ class ControllerRef{
      private static $instance;
 	 private static $controllers = [];
      private static $views       = [];
+     private static $targets     = [];
 
 	 private function __construct(){}
 
@@ -29,6 +30,10 @@ class ControllerRef{
 
      public static function get_views() : array{
          return self::$views;
+     }
+
+     public static function get_targets() : array{
+         return self::$targets;
      }
 }
 ?>

@@ -1,7 +1,7 @@
 <?php
  namespace SaQle\Orm\Entities\Model\Manager;
 
- use SaQle\Orm\Operations\Crud\SelectOperation;
+ use SaQle\Orm\Operations\Crud\{SelectOperation, TotalOperation};
  use SaQle\Orm\Entities\Model\Exceptions\NullObjectException;
  use SaQle\Orm\Entities\Model\Schema\Model;
  use SaQle\Commons\{DateUtils, UrlUtils, StringUtils};
@@ -430,10 +430,8 @@ class ReadManager extends IReadManager{
 		 	 	 table_aliase:  $this->ctxtracker->find_table_aliase(0),
 		 	 	 database_name: $this->ctxtracker->find_database_name(0)
 		 	 );
-		 	 $pdo->commit();
 		 	 return $operation->total($pdo);
 	 	 }catch(Exception $ex){
-	 	 	 $pdo->rollback();
      	 	 throw $ex;
 	 	 }
 	 }

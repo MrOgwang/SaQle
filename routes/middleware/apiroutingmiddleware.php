@@ -27,6 +27,46 @@ use SaQle\Routes\Exceptions\{RouteNotFoundException, MethodNotAllowedException};
 
 class ApiRoutingMiddleware extends BaseRoutingMiddleware{
 
+     public function get_routes_from_file(string $path) : mixed {
+         if(file_exists($path)){
+             $routes = require $path;
+             //assert indexed array
+             Assert::isList($routes, 'The file at: '.$path.' does not return an indexed array!');
+             return $routes;
+         }
+
+         return [];
+     }
+
+     public function find_and_assign_route(MiddlewareRequestInterface &$request, array $routes) : void{
+         //get a matching route
+         $match = null;
+         $matches = [false, false];
+         foreach($routes as $r){
+             $matches = $r->matches();
+             if($matches[0] === true){
+                 $match = $r;
+                 break;
+             }
+         }
+
+         if(!$match){ //a match wasn't found
+             throw new RouteNotFoundException(url: $_SERVER['REQUEST_URI']);
+         }
+
+         if(!$matches[1]){ //a match was found with the wrong method
+             throw new MethodNotAllowedException(url: $_SERVER['REQUEST_URI'], method: $_SERVER['REQUEST_METHOD'], methods: $match->methods);
+         }
+
+         //resolve target for matching route
+         $target = $match->target;
+         if(is_callable($target)){
+             $match->target = $target($match->params);
+         }
+
+         $request->route = $match;
+     }
+
      public function handle(MiddlewareRequestInterface &$request){
          try{
              //Acquire project level routes.
@@ -39,7 +79,7 @@ class ApiRoutingMiddleware extends BaseRoutingMiddleware{
 
              $this->assert_all_routes($routes);
 
-             $this->find_and_assign_route($routes, $request);
+             $this->find_and_assign_route($request, $routes);
 
              $controller = $request->route->target;
 

@@ -146,7 +146,7 @@ class TableInfo{
  	 	 get => $this->column_names;
  	 }
 
- 	 //all the table column names as they have been defined in the model, excluding navigation column names
+ 	 //all the table column names as they have been defined in the model, excluding navigation and virtual column names
  	 public private(set) array $actual_column_names = [] {
  	 	 set(array $value){
  	 	 	 $this->actual_column_names = $value;

@@ -6,7 +6,7 @@ class FeedBack{
 	 const DB_ERROR = 500;
 	 const GENERAL_ERROR = 500;
 	 const SUCCESS = 200;
-	 private $feedback;
+	 protected $feedback;
 	 public function __construct(){
 		 $this->feedback = ["status" => 0, "feedback" => null, "message" => null];
 	 }
