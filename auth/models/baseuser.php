@@ -13,7 +13,6 @@ class BaseUser extends Model{
 		     'last_name'  => new TextField(required: true, strict: false),
 		     'username'   => new TextField(required: true, strict: false),
 		     'password'   => new TextField(required: true, strict: false),
-		     'label'      => new TextField(required: true, strict: true)
 		 ];
 
 		 if(ENABLE_RBAC){

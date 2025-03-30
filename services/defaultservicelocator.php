@@ -1,6 +1,7 @@
 <?php
-namespace SaQle\Core\Services\Providers;
+namespace SaQle\Services;
 
+use SaQle\Core\Services\Container\ServiceLocator;
 use SaQle\Core\Services\Container\Container;
 use SaQle\Orm\Database\DbTypes;
 use SaQle\Orm\Database\DbPorts;
@@ -26,7 +27,7 @@ use SaQle\Migration\Managers\Interfaces\IMigrationManager;
 use SaQle\Log\FileLogger;
 use SaQle\Auth\Models\Interfaces\SessionUser;
 
-class DefaultServiceProvider extends ServiceProvider {
+class DefaultServiceLocator extends ServiceLocator {
      public function register(Container $container): void {
          $container->singleton(Request::class, function($c){
              return Request::init();

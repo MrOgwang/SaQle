@@ -11,7 +11,8 @@ use SaQle\Templates\Meta\AppMeta;
 use SaQle\Controllers\Refs\ControllerRef;
 use SaQle\Http\Cors\AppCors;
 use SaQle\Core\Services\Container\AppContainer;
-use SaQle\Core\Services\Providers\DefaultServiceProvider;
+use SaQle\Core\Services\Providers\AppProvider;
+use SaQle\Services\DefaultServiceLocator;
 
 class App{
      private static ?self $instance = null;
@@ -25,7 +26,8 @@ class App{
      private static AppMeta       $_appmeta;
      private static ControllerRef $_appcontrollers;
      private static AppCors       $_appcors;
-     private static AppContainer  $_providers;
+     private static AppContainer  $_locators;
+     private static AppProvider   $_providers;
 
      private function __construct(){
          self::$_autoloader     = Autoloader::init();
@@ -36,7 +38,8 @@ class App{
          self::$_appmeta        = AppMeta::init();
          self::$_appcontrollers = ControllerRef::init();
          self::$_appcors        = AppCors::init();
-         self::$_providers      = AppContainer::init();
+         self::$_locators       = AppContainer::init();
+         self::$_providers      = AppProvider::init();
      }
 
      public static function init(): self{
@@ -89,6 +92,10 @@ class App{
          return self::$_appcors;
      }
 
+     public static function locators(){
+         return self::$_locators;
+     }
+
      public static function providers(){
          return self::$_providers;
      }
@@ -106,8 +113,12 @@ class App{
          //bootstrap helpers
          require_once __DIR__.'/shortcuts/helpers.php';
 
+         //register and load locators
+         self::$_locators::register([DefaultServiceLocator::class]);
+         self::$_locators::load();
+
          //register and load providers
-         self::$_providers::register([DefaultServiceProvider::class]);
-         self::$_providers::load();
+         self::$_providers::register([AUTHORIZATION_PROVIDER]);
+         self::$_providers::load(); 
      }
 }

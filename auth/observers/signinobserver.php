@@ -10,17 +10,19 @@ class SigninObserver extends IAuthObserver{
 	
 	 public function do_update(AuthService $auth_service){
 		 $feedback = $auth_service->status();
-		 if($feedback['status'] == FeedBack::SUCCESS && $feedback['feedback']){
+		 if($feedback['status'] == FeedBack::SUCCESS && $feedback['feedback'] && $feedback['action'] === 'signin'){
+
+		 	 $user = $feedback['feedback'];
 
 		 	 $request = Request::init();
 		 	 //set request user
-		 	 $request->user = $feedback['feedback']['user'];
+		 	 $request->user = $user;
 
 	         //record user login
-			 $auth_service->record_signin($feedback['feedback']['user']->user_id);
+			 $auth_service->record_signin($user->user_id);
 			 
 			 //Set user online status to true
-			 $auth_service->update_online_status($feedback['feedback']['user']->user_id, true);
+			 $auth_service->update_online_status($user->user_id, true);
 
              //if this is not an api request
 			 if(!$request->is_api_request()){
@@ -29,10 +31,10 @@ class SigninObserver extends IAuthObserver{
 			 	 $this->redirect_to = $request->data->get('redirect_to', $request->route->queries->get('next', ''));
 
 			 	 //regenerate session id and set session data
-			 	 $tenant = array_key_exists("tenant", $feedback['feedback']) ? $feedback['feedback']['tenant'] : null;
+			 	 $tenant = null; //array_key_exists("tenant", $feedback['feedback']) ? $feedback['feedback']['tenant'] : null;
 			 	 session_regenerate_id();
 			 	 $_SESSION['is_user_authenticated'] = true;
-			     $_SESSION['user']                  = $feedback['feedback']['user'];
+			     $_SESSION['user']                  = $user;
 			     $_SESSION['user_has_tenant']       = $tenant ? true : false;
 			     if($_SESSION['user_has_tenant']){
 			 	     $_SESSION['tenant']            = $tenant;

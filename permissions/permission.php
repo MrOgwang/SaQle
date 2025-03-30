@@ -15,6 +15,7 @@ abstract class Permission{
 		 $this->request_url  = self::get_full_url();
 		 $this->setup_info   = $setup_info;
 	 }
+	 
 	 public abstract function has_permission() : bool;
 
 	 public function get_redirect_url(){

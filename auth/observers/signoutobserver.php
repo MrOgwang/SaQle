@@ -9,7 +9,8 @@ use SaQle\FeedBack\FeedBack;
 class SignoutObserver extends IAuthObserver{
 	 function do_update(AuthService $auth_service){
 	 	 $feedback = $auth_service->status();
-		 if($feedback['status'] == FeedBack::SUCCESS){
+	 	 print_r($feedback);
+		 if($feedback['status'] == FeedBack::SUCCESS && $feedback['feedback'] && $feedback['action'] === 'signout'){
 		 	 $user = $feedback['feedback'];
 		 	 $auth_service->record_signout(user_id: $user->user_id);
 		 	 header("Location: ".ROOT_DOMAIN);

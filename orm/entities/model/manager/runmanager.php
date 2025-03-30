@@ -14,7 +14,7 @@ class RunManager{
 	 	 get => $this->sql;
 	 }
 
-	 private string $operation = {
+	 private string $operation = '' {
 	 	 set(string $value){
 	 	 	 $this->operation = $value;
 	 	 }

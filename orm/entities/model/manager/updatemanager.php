@@ -70,23 +70,16 @@ class UpdateManager{
 
 	 public function __construct(string $modelclass, array $data){
 	 	 Assert::isNonEmptyMap($data, "The data to update is not properly defined!");
-	 	 
-	 	 $dbclasses = DB_CONTEXT_CLASSES;
-	 	 foreach($dbclasses as $dbc => $config){
-	 	 	 $models  = new $dbc()->get_models();
-	 	 	 $flipped = array_flip($models);
-	 	 	 if(array_key_exists($modelclass, $flipped)){
-	 	 	 	 $this->table   = $flipped[$modelclass];
-	 	 	 	 $this->dbclass = $dbc;
-	 	 	 	 $this->modelclass = $modelclass;
-	 	 	 	 break;
-	 	 	 }
-	 	 }
 
-	 	 if(!$this->table || !$this->dbclass || !$this->modelclass)
+	 	 [$dbclass, $table] = $modelclass::get_table_n_dbcontext();
+	 	 
+	 	 if(!$table || !$dbclass || !$modelclass)
 	 	 	 throw new \Exception('Cannot instantiate update manager! Unknown model.');
 
-         $this->container = new DataContainer();
+	 	 $this->table      = $table;
+	 	 $this->dbclass    = $dbclass;
+	 	 $this->modelclass = $modelclass;
+         $this->container  = new DataContainer();
 	 	 $this->container->data = $data;
 
 	 	 $meta = $modelclass::state()->meta;

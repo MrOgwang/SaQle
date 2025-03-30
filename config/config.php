@@ -18,12 +18,16 @@
 namespace SaQle\Config;
 
 use SaQle\Auth\Models\{BaseRole, BasePermission, BaseTenant, BaseUser};
+use SaQle\Auth\Services\Providers\AuthorizationProvider;
 use SaQle\Commons\StringUtils;
 
 class Config{
 	 use StringUtils;
 
 	 public function __construct(...$settings){
+	 	//authorization provider
+	 	define('AUTHORIZATION_PROVIDER', $settings['authorization_provider'] ?? AuthorizationProvider::class);
+	 	
 	 	/**
 	 	 * Enable role based accesscontrol with the following flags.
 	 	 * */

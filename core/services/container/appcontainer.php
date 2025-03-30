@@ -4,7 +4,7 @@ namespace SaQle\Core\Services\Container;
 class AppContainer{
      private static Container $container;
      private static $instance;
-     private static $providers = [];
+     private static $locators = [];
 
      private function __construct(){
          self::$container = Container::init();
@@ -18,12 +18,12 @@ class AppContainer{
      }
 
      public static function register(array $items) : void{
-         self::$providers = array_unique(array_merge(self::$providers, $items));
+         self::$locators = array_unique(array_merge(self::$locators, $items));
      }
 
      public static function load(){
-         foreach(self::$providers as $provider){
-             (new $provider())->register(self::$container);
+         foreach(self::$locators as $loc){
+             (new $loc())->register(self::$container);
          }
      }
 }

@@ -99,7 +99,6 @@ class RequestProcessor{
                      $args[] = resolve($param_type);
                  }else{
                  	 //check route params, then query, then data
-                 	 print_r($this->request);
                  	 $value = $this->request->route->params->get(
                  	 	 $param_name, 
                  	 	 $this->request->route->queries->get(

@@ -48,22 +48,15 @@ class CreateManager{
 	 	 if(empty($data))
 	 	 	 throw new \Exception('You did not pass in data to add!');
 
-	 	 $dbclasses = DB_CONTEXT_CLASSES;
-	 	 foreach($dbclasses as $dbc => $config){
-	 	 	 $models  = new $dbc()->get_models();
-	 	 	 $flipped = array_flip($models);
-	 	 	 if(array_key_exists($modelclass, $flipped)){
-	 	 	 	 $this->table   = $flipped[$modelclass];
-	 	 	 	 $this->dbclass = $dbc;
-	 	 	 	 $this->modelclass = $modelclass;
-	 	 	 	 break;
-	 	 	 }
-	 	 }
+	 	 [$dbclass, $table] = $modelclass::get_table_n_dbcontext();
 
-	 	 if(!$this->table || !$this->dbclass || !$this->modelclass)
+	 	 if(!$table || !$dbclass || !$modelclass)
 	 	 	 throw new \Exception('Cannot instantiate create manager! Unknown model.');
 
-	 	 $this->container = new DataContainer();
+	 	 $this->table      = $table;
+	 	 $this->dbclass    = $dbclass;
+	 	 $this->modelclass = $modelclass;
+	 	 $this->container  = new DataContainer();
 	 	 $this->set_data($data);
 	 }
 

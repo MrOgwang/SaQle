@@ -25,7 +25,6 @@ class WebRequestProcessor extends RequestProcessor{
      }
 
      private function process_trail(array $trail){
-
      	 $all_css   = [];
          $all_js    = [];
          $all_meta  = [];
@@ -98,7 +97,7 @@ class WebRequestProcessor extends RequestProcessor{
 	 	 	 $target_context = [];
 	 	 	 $response       = array_merge($global_context, $parent_context);
 	 	 }else{ //this is a controller
-	 	 	 $template_file = $this->templaterefs[array_flip($this->controllerrefs)[$target]];
+	 	 	 $template_file = $this->templaterefs[array_flip($this->controllerrefs)[$target]] ?? '';
 	 	 	 [$target_classname, $target_method] = $this->get_target_method($target, $action);
 	 	     [$http_message, $context_from_parent] = $this->get_target_response($target_classname, $target_method, $parent_context);
 	 	     $target_context = $http_message->get_response();

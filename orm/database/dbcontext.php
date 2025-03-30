@@ -6,6 +6,7 @@ namespace SaQle\Orm\Database;
 use SaQle\Migration\Models\Migration;
 use SaQle\Auth\Models\{Login, Contact, Vercode};
 use SaQle\Session\Models\Session;
+use SaQle\Orm\Entities\Model\TempId;
 
 abstract class DbContext{
 	 protected array $models = [];
@@ -14,7 +15,10 @@ abstract class DbContext{
 	 protected bool  $include_tenant_models = false;
 
 	 public function __construct(){
-	 	 $this->models = array_merge($this->models, ['migrations' => Migration::class]);
+	 	 $this->models = array_merge($this->models, [
+	 	 	 'migrations' => Migration::class,
+	 	 	 'model_temp_ids' => TempId::class
+	 	 ]);
 
 	 	 if(ENABLE_RBAC && $this->include_rbac_models){
 	 	 	 $this->models['roles']           = ROLE_MODEL_CLASS;

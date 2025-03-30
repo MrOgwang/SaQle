@@ -73,7 +73,8 @@ class ReadManager extends IReadManager{
          //get the database context class and the table name for foreign model
      	 [$db_class, $foreign_table] = $foreign_model::get_table_n_dbcontext();
 
-     	 $dbmanager = new MySQLDbManager(ctx: $db_class)->connect();
+     	 $dbmanager = new MySQLDbManager(ctx: $db_class);
+     	 $dbmanager->connect();
 
      	 //create the temporary table
      	 $dbmanager->create_table($temp_table_name, TempId::class, true);

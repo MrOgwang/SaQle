@@ -40,7 +40,7 @@ abstract class AuthService implements Observable{
 	 	 //session_start();
 	 	 session_unset();
          session_destroy();
-         $this->feedback->set(FeedBack::SUCCESS, $this->request->user);
+         $this->feedback->set(FeedBack::SUCCESS, $this->request->user, action: 'signout');
 		 $this->notify();
 		 return $this->feedback->get_feedback();
 	 }

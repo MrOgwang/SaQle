@@ -22,53 +22,47 @@ class DeleteManager{
 	 	 get => $this->permanently;
 	 }
 
-	 private string $table = null {
-	 	 set(string $value){
+	 private ?string $table = null {
+	 	 set(?string $value){
 	 	 	 $this->table = $value;
 	 	 }
 
 	 	 get => $this->table;
 	 }
 
-	 private string $dbclass = null {
-	 	 set(string $value){
+	 private ?string $dbclass = null {
+	 	 set(?string $value){
 	 	 	 $this->dbclass = $value;
 	 	 }
 
 	 	 get => $this->dbclass;
 	 }
 
-	 private string $modelclass = null {
-	 	 set(string $value){
+	 private ?string $modelclass = null {
+	 	 set(?string $value){
 	 	 	 $this->modelclass = $value;
 	 	 }
 
 	 	 get => $this->modelclass;
 	 }
 
-	 private DbContextTracker $ctxtracker = null {
-	 	 set(DbContextTracker $value){
+	 private ?DbContextTracker $ctxtracker = null {
+	 	 set(?DbContextTracker $value){
 	 	 	 $this->ctxtracker = $value;
 	 	 }
 
 	 	 get => $this->ctxtracker;
 	 }
 
-	 public function __construct(){
-	 	 $dbclasses = DB_CONTEXT_CLASSES;
-	 	 foreach($dbclasses as $dbc => $config){
-	 	 	 $models  = new $dbc()->get_models();
-	 	 	 $flipped = array_flip($models);
-	 	 	 if(array_key_exists($modelclass, $flipped)){
-	 	 	 	 $this->table   = $flipped[$modelclass];
-	 	 	 	 $this->dbclass = $dbc;
-	 	 	 	 $this->modelclass = $modelclass;
-	 	 	 	 break;
-	 	 	 }
-	 	 }
+	 public function __construct(string $modelclass){
+	 	 [$dbclass, $table] = $modelclass::get_table_n_dbcontext();
+	 	 
+	 	 if(!$table || !$dbclass || !$modelclass)
+	 	 	 throw new \Exception('Cannot instantiate delete manager! Unknown model.');
 
-	 	 if(!$this->table || !$this->dbclass || !$this->modelclass)
-	 	 	 throw new \Exception('Cannot instantiate create manager! Unknown model.');
+	 	 $this->table      = $table;
+	 	 $this->dbclass    = $dbclass;
+	 	 $this->modelclass = $modelclass;
 
 	 	 $this->__filterConstruct();
 
@@ -92,12 +86,9 @@ class DeleteManager{
 	 	 }
 	 }
 
-	 public function transaction_save(){
-
-	 }
-
 	 public function permanently(){
 	 	 $this->permanently = true;
+	 	 return $this;
 	 }
 
 	 private function soft_delete($pdo){

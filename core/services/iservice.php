@@ -1,5 +1,5 @@
 <?php
-namespace SaQle\Services;
+namespace SaQle\Core\Services;
 
 interface IService{
 

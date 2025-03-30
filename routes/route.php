@@ -11,6 +11,7 @@ use SaQle\Permissions\IsAuthorized;
 use SaQle\Core\Assert\Assert;
 use SaQle\Http\Request\Data\Data;
 use SaQle\Routes\Interfaces\IRoute;
+use SaQle\Controllers\ProxyController;
 
 class Route implements IRoute{
      //the http methods that the route will handle
@@ -99,7 +100,11 @@ class Route implements IRoute{
          $this->params  = new Data();
          $this->queries = new Data();
 		 $this->url     = $url;
-		 $this->target  = $target;
+         $this->target  = $target;
+         if(is_a($target, ProxyController::class, true)){
+             $target_controller = new $target()->controller;
+             $this->target = $target_controller::class;
+         }
          $this->method  = $_SERVER['REQUEST_METHOD'];
 
          $tmpmethods    = [];
