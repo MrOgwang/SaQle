@@ -6,15 +6,16 @@ use SaQle\Orm\Operations\Crud\TableCreateOperation;
 use SaQle\Orm\Connection\Connection;
 
 class MySQLDbManager extends DbManager{
-	 public function __construct(...$params){
+	 protected array $tempparams;
+	 public function __construct(array $params){
 	 	 $this->connection_params = $params;
-	 	 $real_params = DB_CONTEXT_CLASSES[$this->connection_params['ctx']];
-	 	 $real_params['name'] = ''; //connect without a database, hence name is empty
-	 	 $this->connection = resolve(Connection::class, $real_params);
+	 	 $this->tempparams = $params;
+	 	 $this->tempparams['name'] = ''; //connect without a database, hence name is empty
+	 	 $this->connection = resolve(Connection::class, $this->tempparams);
 	 }
 
 	 public function connect(){
-	 	 $this->connection = resolve(Connection::class, DB_CONTEXT_CLASSES[$this->connection_params['ctx']]);
+	 	 $this->connection = resolve(Connection::class, $this->connection_params);
 	 }
 
 	 private function execute($sql, $data = null){
@@ -66,7 +67,7 @@ class MySQLDbManager extends DbManager{
 	 	 return $tblcreated;
      }
 
-     public function drop_table($table, $temporary = false){
+     public function drop_table($table){
      	 $sql = "DROP TABLE IF EXISTS $table";
 		 $data = null;
 		 return $this->execute($sql, $data)['response'];

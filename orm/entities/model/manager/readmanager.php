@@ -12,7 +12,6 @@
  use SaQle\Core\Assert\Assert;
  use SaQle\Orm\Entities\Model\Manager\Modes\FetchMode;
  use SaQle\Orm\Entities\Model\TempId;
- use SaQle\Orm\Database\Manager\MySQLDbManager;
  use SaQle\Orm\Connection\Connection;
  use Exception;
 
@@ -60,24 +59,11 @@ class ReadManager extends IReadManager{
 	 }
 
      private function fetch_related_data($foreign_model, $foreign_key, $pkey_values, $field_name, $with, $tuning, $through){
-
      	 if($through){
      	 	 $original_foreignkey = $foreign_key;
      	     $foreign_key = $through[3];
      	     $other_key = $through[4];
      	 }
-
-         //get temporary table name
-     	 $temp_table_name = 'model_temp_ids';
-
-         //get the database context class and the table name for foreign model
-     	 [$db_class, $foreign_table] = $foreign_model::get_table_n_dbcontext();
-
-     	 $dbmanager = new MySQLDbManager(ctx: $db_class);
-     	 $dbmanager->connect();
-
-     	 //create the temporary table
-     	 $dbmanager->create_table($temp_table_name, TempId::class, true);
 
      	 /**
      	  * Store the ids of the objects to retrieve from foreign model table in the temporary table
@@ -85,14 +71,14 @@ class ReadManager extends IReadManager{
      	  * These ID values could be in hundreds, therefore using an IN clause in the resulting SQL is not sound,
      	  * this is why they are kept in a temporary table to be referenced later
      	  * */
+     	 TempId::create();
 	 	 if($pkey_values){
-	 	 	 $temporary_table_model_manager = TempId::db2($temp_table_name, TempId::class, $db_class);
-	 	 	 $temporary_table_model_manager->config(fnqm: 'N-QUALIFY', ftnm: 'N-ONLY', ftqm: 'N-QUALIFY');
 	 	 	 $values_to_add = [];
 	 	 	 foreach($pkey_values as $id){
 	 	 	 	 $values_to_add[] = ['id_value' => $id];
 	 	 	 }
-	 	 	 $temporary_table_model_manager::new($values_to_add)->save();
+
+	 	 	 TempId::new($values_to_add)->save();
 	 	 }
 
 	 	 /**
@@ -100,7 +86,9 @@ class ReadManager extends IReadManager{
 	 	  * 
 	 	  * This is the statement that will be used in place of an IN clause in our final sql
 	 	  * */
-	 	 $temporary_ids_select_query = TempId::db2($temp_table_name, TempId::class, $db_class)->select(['id_value'])->get_select_sql_info();
+	 	 $temporary_ids_select_query = TempId::get()
+	 	 ->config(fnqm: 'N-QUALIFY', ftnm: 'N-ONLY', ftqm: 'N-QUALIFY')
+	 	 ->select(['id_value'])->get_select_sql_info();
 
          /**
           * Fine tune how the results from the foreign model table should be by injecting:
@@ -131,7 +119,6 @@ class ReadManager extends IReadManager{
          if($through){
          	 $throughtablename = $through[0];
 		 	 $cte_manager = $foreign_model::get()->config(fnqm: 'H-QUALIFY', ftnm: 'N-ONLY', ftqm: 'N-QUALIFY');
-	         $cte_manager->tmodels = [$through[0] => $through[1]];
 	         $cte_manager->select(null, function($fields) use ($foreign_key, $order_clause){
 				 return implode(", ", $fields).", ROW_NUMBER() OVER (PARTITION BY {$foreign_key}{$order_clause}) AS row_num";
 	 	     })
@@ -183,7 +170,7 @@ class ReadManager extends IReadManager{
 	 	 $related_data = $finalmanager->eager_load();
 
      	 //drop the temporary table
-     	 $dbmanager->drop_table($temp_table_name, true);
+     	 TempId::drop();
 
      	 return $related_data;
      }
@@ -495,7 +482,6 @@ class ReadManager extends IReadManager{
 	 	 }
 
 	 	 $this->sbuilder->withcallbacks = $callables;
-	 	 //print_r($this->sbuilder);
 	 	 return $this;
 	 }
 }

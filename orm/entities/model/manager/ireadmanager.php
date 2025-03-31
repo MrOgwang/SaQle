@@ -68,22 +68,8 @@
  		'data' => null
  	];
 
- 	/**
- 	 * The db context class being manipulated
- 	 * */
- 	protected string $dbclass;
-
- 	 /**
- 	 * Through models are not explicitly defined in the db context class. This is s separate reference
- 	 * for them in the model manager.
- 	 * */
- 	 public protected(set) array $tmodels = [] {
- 		 set(array $value){
- 		 	 $this->tmodels = array_merge($this->tmodels, $value);
- 		 }
-
- 		 get => $this->tmodels;
- 	 }
+ 	 //the db context class being manipulated
+ 	 protected string $dbclass;
 
  	 //The fetch mode: whether to fetch deleted rows only, non deleted rows only or both
  	 protected FetchMode $fetchmode = FetchMode::NON_DELETED;
@@ -118,11 +104,6 @@
 	 	 return $this;
 	 }
 
-	 //Set the current db context class
-	 public function set_dbcontext_class(string $dbclass){
-	 	$this->dbclass = $dbclass;
-	 }
-
      //Get sql and data
 	 public function get_sqlndata(){
 	 	 return $this->sqldata;
@@ -142,24 +123,20 @@
 	 	 return $this->ctxtracker;
 	 }
 
-     //Get a single model object from name
+     //get a single model object from name
      protected function get_model(string $name) : ITableSchema {
      	 $dbclass = $this->dbclass;
-     	 $refs = array_merge(new $dbclass()->get_models(), $this->tmodels);
+     	 $refs = new $dbclass()->get_models();
      	 $model_class = $refs[$name];
      	 return $model_class::state();
      }
 
-     //Initilialize a model manager
-     public function initialize(string $table_name, ?string $dbcontext_class = null, ?string $model_class = null, ?string $table_aliase = null, 
-     	?string $table_ref = null){
-     	 if($dbcontext_class){
-     	 	 if($model_class){
-     	 	 	 $this->tmodels = [$table_name => $model_class];
-     	 	 }
-             $this->set_dbcontext_class($dbcontext_class);
-     	 }
-     	 $this->register_joining_model(table: $table_name, tblref: $table_ref, as: $table_aliase);
+     //Initilialize a read manager
+     public function initialize(
+     	 string  $table, ?string $dbclass = null, ?string $tablealiase = null, ?string $tableref = null
+     ){
+     	 $this->dbclass = $dbclass;
+     	 $this->register_joining_model(table: $table, tblref: $tableref, as: $tablealiase);
      }
 
      /**

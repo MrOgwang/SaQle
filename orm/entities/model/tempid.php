@@ -1,13 +1,12 @@
 <?php
 namespace SaQle\Orm\Entities\Model;
 
+use SaQle\Orm\Entities\Model\Schema\TempModel;
 use SaQle\Orm\Entities\Field\Types\{Pk, TinyTextField, IntegerField};
-use SaQle\Orm\Entities\Field\Interfaces\IField;
-use SaQle\Orm\Entities\Model\Interfaces\ITempModel;
-use SaQle\Orm\Entities\Model\Schema\{Model, TableInfo};
+use SaQle\Orm\Entities\Model\Schema\TableInfo;
 
-class TempId extends Model implements ITempModel{
-	 protected function model_setup(TableInfo $meta) : void{
+class TempId extends TempModel {
+	 protected function model_setup(TableInfo $meta) : void {
 	 	 $meta->fields = [
 	 	 	 'id' => new Pk(),
 		     'id_value' => PRIMARY_KEY_TYPE === 'auto' ? 

@@ -9,10 +9,11 @@ class DbManagerFactory{
 	 const MYSQL = 'mysql';
 	 const POSTGRESS = 'pgsql';
 	 private $_manager;
-	 public function __construct(...$params){
-		 switch($params['type']->value){
+	 public function __construct(string $dbclass){
+	 	 $contextparams = DB_CONTEXT_CLASSES[$dbclass];
+		 switch($contextparams['type']->value){
 			 case self::MYSQL:
-			     $this->_manager = new MySQLDbManager(...$params);
+			     $this->_manager = new MySQLDbManager($contextparams);
 			 break;
 			 case self::POSTGRESS:
 			     $this->_manager = new PostgressSQLDbManager();

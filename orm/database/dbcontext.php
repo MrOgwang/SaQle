@@ -7,6 +7,7 @@ use SaQle\Migration\Models\Migration;
 use SaQle\Auth\Models\{Login, Contact, Vercode};
 use SaQle\Session\Models\Session;
 use SaQle\Orm\Entities\Model\TempId;
+use SaQle\Orm\Entities\Model\Interfaces\{IThroughModel, ITempModel};
 
 abstract class DbContext{
 	 protected array $models = [];
@@ -43,6 +44,42 @@ abstract class DbContext{
 
 	 public function get_models() : array {
 	 	 return $this->models;
+	 }
+
+	 public function get_temporary_models() : array {
+	 	 $models = [];
+	 	 foreach($this->models as $tablename => $modelclass){
+	 	 	 $interfaces = class_implements($modelclass);
+	 	 	 if(in_array(ITempModel::class, $interfaces)){
+	 	 	     $models[$tablename] = $modelclass;
+	 	     }
+	 	 }
+
+	 	 return $models;
+	 }
+
+	 public function get_permanent_models() : array {
+	 	 $models = [];
+	 	 foreach($this->models as $tablename => $modelclass){
+	 	 	 $interfaces = class_implements($modelclass);
+	 	 	 if(!in_array(ITempModel::class, $interfaces)){
+	 	 	     $models[$tablename] = $modelclass;
+	 	     }
+	 	 }
+
+	 	 return $models;
+	 }
+
+	 public function get_through_models() : array {
+	 	 $models = [];
+	 	 foreach($this->models as $tablename => $modelclass){
+	 	 	 $interfaces = class_implements($modelclass);
+	 	 	 if(in_array(IThroughModel::class, $interfaces)){
+	 	 	     $models[$tablename] = $modelclass;
+	 	     }
+	 	 }
+
+	 	 return $models;
 	 }
 }
 ?>

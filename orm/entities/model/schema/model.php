@@ -9,7 +9,7 @@ use SaQle\Security\Models\ModelValidator;
 use SaQle\Commons\StringUtils;
 use SaQle\Orm\Entities\Field\Types\Base\{Relation, RealField};
 use SaQle\Orm\Entities\Model\Manager\{CreateManager, UpdateManager, DeleteManager, ReadManager, RunManager};
-use SaQle\Orm\Entities\Model\Interfaces\{IModel, IThroughModel, ITableSchema, ITempModel};
+use SaQle\Orm\Entities\Model\Interfaces\{IModel, ITableSchema};
 use SaQle\Orm\Entities\Model\Collection\ModelCollection;
 use SaQle\Core\Exceptions\Model\{UndefinedFieldException, MissingRequiredFieldsException};
 use Exception;
@@ -129,33 +129,26 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 	 public static function get_table_n_dbcontext(?string $dbclass = null){
 	 	 $table = null;
 	 	 $current_model_name = get_called_class();
-	 	 $interfaces = class_implements($current_model_name);
 	 	 
 	 	 /**
 	 	  * Note:
-	 	  * For regular models defined by the user, the model is expected to have been registered with
-	 	  * one or more database contexts.
+	 	  * All models must be registered with one or more database context classes,
+	 	  * whether they are temporary, through or regular models
 	 	  * 
 	 	  * The first database context will be picked as the default database context unless
 	 	  * the context class is passed to this method
-	 	  * 
-	 	  * Temporary models i.e models that implement the ITempModel interface are never tied
-	 	  * to a specific database and are not associated to a specific table
 	 	  * */
-	 	 if(in_array(ITempModel::class, $interfaces)){
-	 	 	 return ['', ''];
-	 	 }else{
-	 	 	 $dbclass = $dbclass ?? array_keys(DB_CONTEXT_CLASSES)[0];
-	 	 	 $models = new $dbclass()->get_models();
-	 	 	 $model_classes = array_values($models);
-	 	 	 if(in_array($current_model_name, $model_classes)){
-	 	 		$table = array_keys($models)[array_search($current_model_name, $model_classes)];
-	 	 	 }
-	 	 } 
+	 	 $dbclass = $dbclass ?? array_keys(DB_CONTEXT_CLASSES)[0];
+ 	 	 $models = new $dbclass()->get_models();
+ 	 	 $model_classes = array_values($models);
+ 	 	 if(in_array($current_model_name, $model_classes)){
+ 	 		 $table = array_keys($models)[array_search($current_model_name, $model_classes)];
+ 	 	 }
 
 	 	 if(!$dbclass || !$table){
 	 	 	 throw new Exception($current_model_name.": Model not registered with any db contexts!");
 	 	 }
+
 	 	 return [$dbclass, $table];
 	 }
 
@@ -888,26 +881,16 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 	 }
 
 	 //get one or more rows
-	 public static function get2($tablename, $modelclass, $dbclass, $tablealiase = null, $tableref = null){
-	 	 return $this->init_readmanager($tablename, $modelclass, $dbclass, $tablealiase, $tableref);
-	 }
-
 	 public static function get($tablealiase = null, $tableref = null){
 	 	 $calledclass = get_called_class();
 	 	 [$dbclass, $tablename] = $calledclass::get_table_n_dbcontext();
 
-	 	 return self::init_readmanager($tablename, $calledclass, $dbclass, $tablealiase, $tableref);
+	 	 return self::init_readmanager($tablename, $dbclass, $tablealiase, $tableref);
 	 }
 
-	 private static function init_readmanager($tablename, $modelclass, $dbclass, $tablealiase, $tableref){
+	 private static function init_readmanager($table, $dbclass, $tablealiase, $tableref){
 	 	 $readmanager = new ReadManager();
-	 	 $readmanager->initialize(
-         	table_name:      $tablename, 
-         	dbcontext_class: $dbclass, 
-         	model_class:     $modelclass,
-         	table_aliase:    $tablealiase,
-         	table_ref:       $tableref
-         );
+	 	 $readmanager->initialize(table: $table, dbclass: $dbclass, tablealiase: $tablealiase, tableref: $tableref);
 	 	 return $readmanager;
 	 }
 

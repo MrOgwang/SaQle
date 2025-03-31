@@ -12,7 +12,7 @@ class TableCreateOperation extends IOperation{
 	 	 	 $table     = $this->settings['table'];
 		     $fields    = $this->settings['fields'];
 		     $temp      = $this->settings['temporary'] ?? false;
-		     $sql       = $temp ? "CREATE TEMPORARY TABLE {$table} ({$fields})" : "CREATE TABLE IF NOT EXISTS {$table} ({$fields})";
+		     $sql       = $temp ? "CREATE TEMPORARY TABLE IF NOT EXISTS {$table} ({$fields})" : "CREATE TABLE IF NOT EXISTS {$table} ({$fields})";
 		     $statement = $pdo->prepare($sql);
 			 $response  = $statement->execute(null);
 

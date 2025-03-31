@@ -191,22 +191,6 @@ class ContextManager implements IMigrationManager{
          $template .= "\t\t$"."meta->unique_fields   = ['".$pmodel_name."', '".$fmodel_name."'];\n";
          $template .= "\t\t$"."meta->unique_together = true;\n";
          $template .= "\t}\n\n";
-         /**
-          * Define get related models function
-          * */
-         $template .= "\tpublic static function get_related_models() : array{\n";
-         $template .= "\t\treturn [\n";
-         $template .= "\t\t\t".$o_pmodel_name."::class,\n";
-         $template .= "\t\t\t".$o_fmodel_name."::class,\n";
-         $template .= "\t\t];\n";
-         $template .= "\t}\n\n";
-         /**
-          * Define get include field function.
-          * */
-         /*$template .= "\tpublic static function get_include_field(string $"."model){\n";
-         $template .= "\t\tAssert::keyExists(self::$"."include_fields, $"."model);\n";
-         $template .= "\t\treturn self::$"."include_fields[$"."schema];\n";
-         $template .= "\t}\n";*/
 
          $template .= "}\n";
 
@@ -431,7 +415,7 @@ class ContextManager implements IMigrationManager{
              $ctxname  = end($ctxparts);
 
              //Acquire models registered with db context
-             $models   = new $ctx()->get_models(); 
+             $models   = new $ctx()->get_permanent_models();
 
              //Acquire model fields for models registered with db context.
              $model_fields = $this->extract_model_fields($models, $project_root);
@@ -530,7 +514,7 @@ class ContextManager implements IMigrationManager{
      public function make_collections(string $project_root, $app_name = null, $db_context = null){
          $context_classes = $this->get_context_classes($db_context);
          foreach($context_classes as $ctx){
-             $models   = new $ctx()->get_models(); 
+             $models   = new $ctx()->get_permanent_models(); 
              foreach($models as $table_name => $table_schema){
                  
              }
@@ -540,7 +524,7 @@ class ContextManager implements IMigrationManager{
      public function make_models(string $project_root, $app_name = null, $db_context = null){
          $context_classes = $this->get_context_classes($db_context);
          foreach($context_classes as $ctx){
-             $models   = new $ctx()->get_models(); 
+             $models   = new $ctx()->get_permanent_models(); 
              foreach($models as $table_name => $table_schema){
                  
              }
@@ -575,7 +559,7 @@ class ContextManager implements IMigrationManager{
          $manytomany_throughs = [];
          
          foreach($context_classes as $ctx){
-             $models = new $ctx()->get_models();
+             $models = new $ctx()->get_permanent_models();
              $this->extract_through_models($models, $project_root, $manytomany_throughs);
          }
      }

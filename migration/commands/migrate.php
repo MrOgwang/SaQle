@@ -167,11 +167,10 @@ class Migrate{
              return;
          }
         
-         $defined_context['ctx'] = $ctx;
          $databasename = DB_CONTEXT_CLASSES[$ctx]['name'];
          echo "Context: {$ctx} found! Pinging database: {$databasename} for existance!\n";
 
-         $dbmanager = (new DbManagerFactory(...$defined_context))->manager();
+         $dbmanager = (new DbManagerFactory(dbclass: $ctx))->manager();
          $isdbnew = false;
          if(!$dbmanager->check_database_exists($ctx)){
              echo "Database {$databasename} not found. Attempting to create database {$databasename}\n";
