@@ -2,8 +2,8 @@
 namespace SaQle\Auth\Services;
 
 use SaQle\Http\Request\Request;
-use SaQle\Observable\{Observable, ConcreteObservable};
-use SaQle\FeedBack\FeedBack;
+use SaQle\Core\Observable\{Observable, ConcreteObservable};
+use SaQle\Core\FeedBack\FeedBack;
 use SaQle\Auth\Models\Login;
 use SaQle\Auth\Services\Jwt;
 
@@ -17,7 +17,7 @@ abstract class AuthService implements Observable{
 		 $this->__coConstruct();
 	 }
      abstract public function update_online_status(string | int $user_id, bool $is_online = true) : void;
-     abstract public function authenticate(...$kwargs) : array;
+     abstract public function authenticate(...$kwargs) : FeedBack;
 	 public function record_signin(string | int $user_id){
 		 $count = Login::get()->where('user_id__eq', $user_id)->total();
 		 Login::new([
@@ -40,9 +40,11 @@ abstract class AuthService implements Observable{
 	 	 //session_start();
 	 	 session_unset();
          session_destroy();
-         $this->feedback->set(FeedBack::SUCCESS, $this->request->user, action: 'signout');
+
+         $this->feedback->set(FeedBack::OK, $this->request->user, action: 'signout');
 		 $this->notify();
-		 return $this->feedback->get_feedback();
+
+		 return $this->feedback;
 	 }
 
 	 /**

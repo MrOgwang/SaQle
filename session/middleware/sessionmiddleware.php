@@ -26,9 +26,9 @@ namespace SaQle\Session\Middleware;
 use SaQle\Middleware\IMiddleware;
 use SaQle\Middleware\MiddlewareRequestInterface;
 use SaQle\Auth\Observers\SigninObserver;
-use SaQle\FeedBack\FeedBack;
+use SaQle\Core\FeedBack\FeedBack;
 use SaQle\Log\FileLogger;
-use SaQle\FeedBack\ExceptionFeedBack;
+use SaQle\Core\FeedBack\ExceptionFeedBack;
 
 class SessionMiddleware extends IMiddleware{
       public function handle(MiddlewareRequestInterface &$request){
@@ -62,16 +62,20 @@ class SessionMiddleware extends IMiddleware{
                 $auth_backend_class = AUTH_BACKEND_CLASS;
                 $service = new $auth_backend_class('jwt');
                 new SigninObserver($service);
-                $feedback = $service->authenticate();
-                if($feedback['status'] === FeedBack::SUCCESS && $feedback['feedback']){
-                     $request->user = $feedback['feedback']['user'];
+                $fb = $service->authenticate();
+                if($fb->code === FeedBack::OK && $fb->data){
+                     $request->user = $fb->data['user'];
                 }
            }
 
            //create a feedback exception object from previous request
            if(isset($_SESSION['FeedbackException'])){
-                $feedback = ExceptionFeedBack::init();
-                $feedback->set($_SESSION['FeedbackException']->code, $_SESSION['FeedbackException']->data, $_SESSION['FeedbackException']->message);
+                $efb = ExceptionFeedBack::init();
+                $efb->set(
+                     $_SESSION['FeedbackException']->code, 
+                     $_SESSION['FeedbackException']->data, 
+                     $_SESSION['FeedbackException']->message
+                );
                 unset($_SESSION['FeedbackException']);
            }
      	 parent::handle($request);

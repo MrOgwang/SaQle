@@ -40,8 +40,8 @@ use Closure;
 
 class LayoutRoute implements IRoute{
      //the parent route
-     public protected(set) null | Closure | Route $parent = null {
-         set(null | Closure | Route $value){
+     public protected(set) ?Route $parent = null {
+         set(?Route $value){
              $this->parent = $value;
          }
 
@@ -60,25 +60,20 @@ class LayoutRoute implements IRoute{
      }
 
      //create a new layout route object
-	 public function __construct(Closure | Route $parent, array $children){
+	 public function __construct(Route $parent, array $children){
          $this->parent = $parent;
          $this->children = $children;
 	 }
 
      public function matches() : array {
-         $parent = $this->parent;
-         if(is_callable($parent)){
-             $parent = $parent();
-         }
-
-         $parent_matches = $parent->matches();
+         $parent_matches = $this->parent->matches();
          if($parent_matches[0] === true)
-             return [true, [$parent_matches[0], $parent_matches[1], $this->children[0]], $parent];
+             return [true, [$parent_matches[0], $parent_matches[1], $this->children[0]], $this->parent];
 
          foreach($this->children as $child){
              $child_matches = $child->matches();
              if($child_matches[0] === true){
-                 return [true, $child_matches, $parent];
+                 return [true, $child_matches, $this->parent];
              }
          }
 

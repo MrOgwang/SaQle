@@ -1,8 +1,8 @@
 <?php
 namespace SaQle\Auth\Services;
 
-use SaQle\Observable\{Observable, ConcreteObservable};
-use SaQle\FeedBack\FeedBack;
+use SaQle\Core\Observable\{Observable, ConcreteObservable};
+use SaQle\Core\FeedBack\FeedBack;
 use SaQle\Commons\StringUtils;
 use SaQle\Auth\Models\{Vercode, Contact};
 
@@ -56,8 +56,12 @@ abstract class AccountsService implements Observable{
 		 	"code_type"    => "verification", 
 		 	"code"         => $generated_code
 		 ])->save();
-		 return $code ? $this->feedback->get(status: FeedBack::SUCCESS, feedback: $code) : 
-		 $this->feedback->get(status: FeedBack::GENERAL_ERROR, message: 'Verification code creation failed! Please try again.');
+
+		 if(!$code)
+		 	 internal_server_error_exception('Verification code creation failed! Please try again.');
+
+		 //return ok(data: $code);
+		 return ok();
 	 }
 
 	 /**
@@ -100,26 +104,25 @@ abstract class AccountsService implements Observable{
 	 public function generate_verification_code($type, $contact, $password, $confirm_password){
 	 	 //Check that the provided contact does not already exists
 		 if($this->contact_exists($contact, $type))
-		 	 return $this->feedback->get(status: FeedBack::INVALID_INPUT, message: "The ".$type." you provided is already existing on our systems!");
+		 	 bad_request_exception("The ".$type." you provided is already existing on our systems!");
 
 		 //Check that the passwords provided match
 		 if($password != $confirm_password)
-		 	 return $this->feedback->get(status: FeedBack::INVALID_INPUT, message: "The passwords provided do not match");
+		 	 bad_request_exception("The passwords provided do not match");
 
 		 //Generate and save code to the database
-		 $feedback = $this->save_verification_code($contact);
-		 $feedback['feedback'] = null;
-
+		 $this->feedback = $this->save_verification_code($contact);
+		 
 		 $this->notify();
 		 
-		 return $feedback;
+		 return $this->feedback;
 	 }
 
 	 public function confirm_verification_code($contact, $code){
 	 	 $saved_code = Vercode::get()->where('contact__eq', $contact)->last_or_default();
 		 if(!$saved_code || ($saved_code && $saved_code->code != $code))
-		 	 return $this->feedback->get(status: FeedBack::INVALID_INPUT, message: "Invalid code provided!");
+		 	 bad_request_exception("Invalid code provided!");
 
-		 return $this->feedback->get(status: FeedBack::SUCCESS, message: "Codes match!");
+		 return ok();
 	 }
 }

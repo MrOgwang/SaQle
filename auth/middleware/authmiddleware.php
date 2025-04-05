@@ -18,33 +18,22 @@ namespace SaQle\Auth\Middleware;
 
 use SaQle\Middleware\IMiddleware;
 use SaQle\Middleware\MiddlewareRequestInterface;
-use SaQle\Auth\Observers\SigninObserver;
 use SaQle\Auth\Services\Jwt;
-use SaQle\Http\Response\{HttpMessage, StatusCode};
+use SaQle\Http\Response\HttpMessage;
 use SaQle\Http\Request\Processors\ApiRequestProcessor;
 use SaQle\Orm\Entities\Model\Exceptions\NullObjectException;
-use SaQle\FeedBack\FeedBack;
+use SaQle\Core\FeedBack\FeedBack;
 
 class AuthMiddleware extends IMiddleware{
-      private function report_exception(StatusCode $c, string $m){
-           (new ApiRequestProcessor())->process(new HttpMessage(code: $c, message: $m));
-      }
-
       public function handle(MiddlewareRequestInterface &$request){
            $this->authenticate_jwt_token($request);
      	 parent::handle($request);
       }
 
-      public function authenticate_jwt_token(MiddlewareRequestInterface $request): bool{
-           $auth_backend_class = AUTH_BACKEND_CLASS;
-           $service = new $auth_backend_class('jwt');
-           new SigninObserver($service);
-           $feedback = $service->authenticate();
-           if($feedback['status'] !== FeedBack::SUCCESS)
-                (new ApiRequestProcessor())->process(HttpMessage::from_feedback($feedback));
-
-           if($feedback['status'] === FeedBack::SUCCESS && $feedback['feedback'])
-                $request->user = $feedback['feedback']['user'];
+      public function authenticate_jwt_token(MiddlewareRequestInterface $request): bool {
+           $service = resolve(AUTH_BACKEND_CLASS, ['jwt']);
+           $fb = $service->authenticate();
+           $request->user = $fb->data;
 
            return true;
       }

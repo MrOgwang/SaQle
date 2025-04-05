@@ -2,31 +2,8 @@
 namespace SaQle\Orm\Entities\Field\Types\Base;
 
 abstract class Scalar extends RealField{
-	 private function is_explicit_associative_array($array){
-	     if(!is_array($array)){
-	         return false;
-	     }
-
-	     foreach ($array as $key => $value) {
-	         //Check if the key is a string or if it's a numeric string (explicitly defined)
-	         if(is_string($key) || (string)(int)$key === (string)$key && $key !== (int)$key){
-	             return true;
-	         }
-	     }
-
-	     return false;
-	 }
-
-	 private function format_choices(array $choices, bool $use_keys = false) : array{
-	 	 if(!$this->is_explicit_associative_array($choices)){
- 	 	 	 $new_values = [];
- 	 	 	 foreach($choices as $i => $v){
- 	 	 	 	 $new_values[$v] = !$use_keys ? $v : $i;
- 	 	 	 }
- 	 	 	 return $new_values;
- 	 	 }else{
- 	 	 	 return $choices;
- 	 	 }
+	 private function format_choices(array $choices, bool $use_keys = false) : array {
+ 	 	 return $use_keys ? array_keys($choices) : array_values($choices);
 	 }
 
 	 //an array of choices from which the value must exists

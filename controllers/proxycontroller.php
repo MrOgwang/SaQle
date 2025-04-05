@@ -20,6 +20,8 @@ abstract class ProxyController extends BaseController{
 
 	 abstract protected function destination() : BaseController;
 
+	 abstract public function get_actions() : null | array;
+
 	 public function __call($method, $args){
 	 	 if(!method_exists($this->controller, $method)){
          	 throw new Exception('The method '.$method.' was not found on the controller! '.$this->controller::class);

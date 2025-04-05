@@ -58,38 +58,16 @@ class Many2Many extends BaseRelation{
      }
 
 	 public function get_through_model(){
-	 	 if($this->through)
-	 		 return $this->through;
+	 	 $pmodelname = $this->get_class_name($this->pmodel); 
+         $fmodelname = $this->get_class_name($this->fmodel); 
 
-	 	 /**
-	 	 * Now go through the complicated process of finding a through model.
-	 	 * */
-	 	 $trackerfile = DOCUMENT_ROOT."/migrations/migrationstracker.bin";
-         $tracker = $this->unserialize_from_file($trackerfile);
-         if(!$tracker){
-             $tracker = new MigrationTracker();
-         }
-         $last_throughs = $tracker->get_through_models();
-         $pmodel_name = $this->get_class_name($this->pmodel); 
-         $fmodel_name = $this->get_class_name($this->fmodel); 
+         if(!$this->through)
+         	 throw new \Exception("No through model was defined for this many to many relationship between: {$pmodelname} and {$fmodelname}");
 
-         $first_pointer = strtolower($pmodel_name.$fmodel_name);
-         $other_pointer = strtolower($fmodel_name.$pmodel_name);
-
-         foreach($last_throughs as $ctx => $throughs){
-         	 foreach($throughs as $pointer => $model){
-         	 	if($pointer === $first_pointer || $pointer === $other_pointer){
-         	 		if($pointer === $first_pointer){
-         	 			$table_name = $first_pointer;
-         	 		}else{
-         	 			$table_name = $other_pointer;
-         	 		}
-         	 		return [$table_name, $model, $ctx, strtolower($pmodel_name)."_id", strtolower($fmodel_name)."_id"];
-         	 	}
-         	 }
-         }
-
-         throw new \Exception("No through model was defined for this many to many relationship between: {$pmodel_name} and {$fmodel_name}");
+         $modelclass  = $this->through;
+	 	 [$dbclass, $table] = $modelclass::get_table_n_dbcontext();
+	 	 
+	 	 return [$table, $modelclass, $dbclass, strtolower($pmodelname)."_id", strtolower($fmodelname)."_id"];
 	 }
 }
 ?>

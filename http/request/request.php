@@ -20,6 +20,7 @@ use SaQle\Http\Request\Data\Data;
 use SaQle\Middleware\MiddlewareRequestInterface;
 use SaQle\Routes\Route;
 use SaQle\Auth\Models\BaseUser;
+use Closure;
 
 class Request implements MiddlewareRequestInterface{
      //only one instance of a request will be available
@@ -32,6 +33,14 @@ class Request implements MiddlewareRequestInterface{
          }
 
          get => $this->data;
+     }
+
+     public ?Data $context = null {
+         set(?Data $value){
+             $this->context = $value;
+         }
+
+         get => $this->context;
      }
 
      //a wrapper around request headers
@@ -93,6 +102,7 @@ class Request implements MiddlewareRequestInterface{
          $this->data    = new Data();
          $this->headers = new Data();
          $this->cookies = new Data();
+         $this->context = new Data();
      }
 
      //prevent cloning and serialization of request object
@@ -162,6 +172,10 @@ class Request implements MiddlewareRequestInterface{
 
      public function is_web_request() : bool{
          return !$this->is_api_request() && !$this->is_ajax_request() && !$this->is_sse_request();
+     }
+
+     public function add_context(string $name, mixed $value, bool $session = false){
+         $this->context->set($name, $value);
      }
 }
 ?>

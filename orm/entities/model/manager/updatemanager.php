@@ -10,11 +10,18 @@ use SaQle\Orm\Connection\Connection;
 use SaQle\Image\Image;
 use SaQle\Orm\Database\Trackers\DbContextTracker;
 use SaQle\Orm\Query\Helpers\FilterManager;
+use SaQle\Core\Observable\{Observable, ConcreteObservable};
+use SaQle\Core\FeedBack\FeedBack;
+use SaQle\Orm\Entities\Model\Observer\ModelObserver;
 use Exception;
 
-class UpdateManager{
+class UpdateManager implements Observable{
 	 use FilterManager{
 		 FilterManager::__construct as private __filterConstruct;
+	 }
+
+	 use ConcreteObservable {
+		 ConcreteObservable::__construct as private __coConstruct;
 	 }
 
 	 private ?string $table = null {
@@ -93,6 +100,7 @@ class UpdateManager{
 		 );
 
 		 $this->__filterConstruct();
+		 $this->__coConstruct();
 	 }
 
 	 private function commit_file_todisk($folder_path, $file_name, $tmp_name, $crop_dimensions = null, $resize_dimensions = null){
@@ -152,22 +160,61 @@ class UpdateManager{
 	 	 	 $table      = $this->table;
      	     [$clean_data, $file_data] = $model->get_update_data($this->container->data, resolve('request'), $this->datastate);
      	     $this->container->files = [$file_data];
+     	     $sql_info  = $this->get_update_sql_info($clean_data);
      	     $operation = new UpdateOperation(
-		 	 	 where_clause:  $this->wbuilder->get_where_clause($this->ctxtracker, $this->get_configurations()),
-		 	 	 table_name:    $this->table,
-		 	 	 database_name: DB_CONTEXT_CLASSES[$this->dbclass]['name'],
-		 	 	 fields:        array_keys($clean_data),
-	 	 	     values:        array_values($clean_data)
+		 	 	 sql:   $sql_info['sql'],
+		 	 	 table: $this->table,
+		 	 	 data:  $sql_info['data']
 		 	 );
+
+		 	 //send a pre update signal to observers
+		 	 $preobservers = ModelObserver::get_observers('before', 'update', $this->modelclass);
+	 	     $this->quick_notify(
+	 	     	 code: FeedBack::OK, 
+	 	     	 data: [
+	 	     	 	 'data'          => $clean_data, 
+	 	     	 	 'files'         => $file_data,
+	 	     	 	 'table'         => $this->table, 
+	 	     	 	 'sql'           => $sql_info['sql'], 
+	 	     	 	 'prepared_data' => $sql_info['data'],
+	 	     	 	 'dbclass'       => $this->dbclass,
+	 	     	 	 'db'            => DB_CONTEXT_CLASSES[$this->dbclass]['name'],
+	 	     	 	 'timestamp'     => time(),
+	 	     	 	 'model'         => $this->modelclass
+	 	     	 ],
+	 	     	 observers: $preobservers
+	 	     );
+	 	     //update data
 		 	 $response = $operation->update($pdo);
 		 	 //response will have a row count of 0 if no rows have been affected
 		 	 if($response->row_count > 0){
 		 	 	 $this->auto_save_files();
 		 	 	 $updateddata = $modelclass::get()->set_raw_filters($this->get_raw_filters())->all();
-		 	     return $multiple ? $updateddata : ($updateddata[0] ?? null);
+		 	     $result = $multiple ? $updateddata : ($updateddata[0] ?? null);
+		 	 }else{
+		 	 	$result = false;
 		 	 }
 
-	 	     return false;
+		 	 //send a post update signal to observers
+		 	 $postobservers = ModelObserver::get_observers('after', 'update', $this->modelclass);
+	 	     $this->quick_notify(
+	 	     	 code: FeedBack::OK, 
+	 	     	 data: [
+	 	     	 	 'data'          => $clean_data, 
+	 	     	 	 'files'         => $file_data,
+	 	     	 	 'table'         => $this->table, 
+	 	     	 	 'sql'           => $sql_info['sql'], 
+	 	     	 	 'prepared_data' => $sql_info['data'],
+	 	     	 	 'dbclass'       => $this->dbclass,
+	 	     	 	 'db'            => DB_CONTEXT_CLASSES[$this->dbclass]['name'],
+	 	     	 	 'timestamp'     => time(),
+	 	     	 	 'model'         => $this->modelclass,
+	 	     	 	 'result'        => $result
+	 	     	 ],
+	 	     	 observers: $postobservers
+	 	     );
+
+	 	     return $result;
      	 }catch(Exception $ex){
      	 	 throw $ex;
      	 }
@@ -218,5 +265,19 @@ class UpdateManager{
 	 		 'ftqm' => 'F-QUALIFY'
 	 	  ];
 	 }
+
+	 private function get_update_sql_info($clean_data){
+	 	 $where_clause = $this->wbuilder->get_where_clause($this->ctxtracker, $this->get_configurations());
+	 	 $data = $where_clause->data ? array_merge(array_values($clean_data), $where_clause->data) : array_values($clean_data);
+	 	 $database = DB_CONTEXT_CLASSES[$this->dbclass]['name'];
+	 	 $table = $this->table;
+	 	 $fields = array_keys($clean_data);
+	 	 $clause   = $where_clause->clause;
+		 $fieldstring = implode(" = ?, ", $fields)." = ?";
+			 
+		 $sql = "UPDATE {$database}.{$table} SET {$fieldstring}{$clause}";
+
+         return ['sql' => $sql, 'data' => $data];
+     }
 }
 ?>

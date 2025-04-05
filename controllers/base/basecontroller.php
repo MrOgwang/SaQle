@@ -1,13 +1,11 @@
 <?php
 namespace SaQle\Controllers\Base;
 
-use SaQle\Http\Response\{HttpMessage, StatusCode};
-use SaQle\Controllers\Helpers\DefaultHttpHandlers;
+use SaQle\Http\Response\HttpMessage;
+
 use SaQle\Controllers\Refs\ControllerRef;
 
 abstract class BaseController{
-	 use DefaultHttpHandlers;
-	 
 	 protected $request;
 
 	 /**
@@ -48,11 +46,6 @@ abstract class BaseController{
 	 	 $this->pcontext = ['keys' => $keys, 'type' => $type];
 	 }
 
-	 public function current_url(){
-	 	 $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? 'https://' : 'http://';
-	 	 return $protocol.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
-	 }
-
 	 public function reload($url = null){
 	 	   if($url){
 	 	   	  header('Location: '.$url);
@@ -62,9 +55,13 @@ abstract class BaseController{
            exit;
 	 }
 
-	  public function expose_controller(string $name, string $class){
-	 	 $refs = ControllerRef::init();
-	 	 $refs::register([$name => $class]);
+	 public function __call($method, $args){
+	 	 $allowed_methods = ['post', 'get', 'put', 'patch'];
+	 	 if(!in_array($method, $allowed_methods)){
+         	 throw new Exception('The method '.$method.' is invalid for controller: '.$this::class);
+         }
+
+         return new HttpMessage(HttpMessage::OK);
 	 }
 }
 ?>

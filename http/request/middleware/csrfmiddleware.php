@@ -12,6 +12,7 @@ class CsrfMiddleware extends IMiddleware{
              session_start();
          }
 
+         
          //Generate CSRF token if not set
          $token_key      = CsrfMiddleware::get_token_key();
          $except_methods = CsrfMiddleware::get_except_methods();
@@ -21,6 +22,7 @@ class CsrfMiddleware extends IMiddleware{
 
          //skip CSRF check for safe HTTP methods
          if(in_array($_SERVER['REQUEST_METHOD'], $except_methods)){
+             parent::handle($request);
              return;
          }
 

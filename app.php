@@ -1,13 +1,10 @@
 <?php
 namespace SaQle;
 
-use SaQle\Autoloader;
 use SaQle\Http\Request\{Request, RequestManager};
-use SaQle\Templates\Static\AppStatic;
 use SaQle\Config\AppConfig;
 use SaQle\Middleware\AppMiddleware;
 use SaQle\Templates\Context\AppContext;
-use SaQle\Templates\Meta\AppMeta;
 use SaQle\Controllers\Refs\ControllerRef;
 use SaQle\Http\Cors\AppCors;
 use SaQle\Core\Services\Container\AppContainer;
@@ -17,25 +14,19 @@ use SaQle\Services\DefaultServiceLocator;
 class App{
      private static ?self $instance = null;
 
-     private static Autoloader    $_autoloader;
-     private static AppStatic     $_appstatic;
      private static string        $_environment;
      private static AppConfig     $_appconfig;
      private static AppMiddleware $_appmiddleware;
      private static AppContext    $_appcontext;
-     private static AppMeta       $_appmeta;
      private static ControllerRef $_appcontrollers;
      private static AppCors       $_appcors;
      private static AppContainer  $_locators;
      private static AppProvider   $_providers;
 
      private function __construct(){
-         self::$_autoloader     = Autoloader::init();
          self::$_appconfig      = AppConfig::init();
-         self::$_appstatic      = AppStatic::init();
          self::$_appmiddleware  = AppMiddleware::init();
          self::$_appcontext     = AppContext::init();
-         self::$_appmeta        = AppMeta::init();
          self::$_appcontrollers = ControllerRef::init();
          self::$_appcors        = AppCors::init();
          self::$_locators       = AppContainer::init();
@@ -51,18 +42,6 @@ class App{
 
      private function __clone(){}
      public function __wakeup(){}
-
-     public static function autoloader(){
-         return self::$_autoloader;
-     }
-
-     public static function static(){
-         return self::$_appstatic;
-     }
-
-     public static function meta(){
-         return self::$_appmeta;
-     }
 
      public static function context(){
          return self::$_appcontext;
@@ -118,7 +97,7 @@ class App{
          self::$_locators::load();
 
          //register and load providers
-         self::$_providers::register([AUTHORIZATION_PROVIDER]);
+         self::$_providers::register([]);
          self::$_providers::load(); 
      }
 }

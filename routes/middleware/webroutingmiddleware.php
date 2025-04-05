@@ -38,7 +38,12 @@ class WebRoutingMiddleware extends BaseRoutingMiddleware{
                  throw new MethodNotAllowedException(url: $_SERVER['REQUEST_URI'], method: $_SERVER['REQUEST_METHOD'], methods: $matches[2]->methods);
              }
 
-             $request->route = $matches[2];
+             //set the appropriate action for the matching route
+             $match = $matches[2];
+             $match->action = $match->actions[strtolower($match->method)] ?? strtolower($match->method);
+             $trail[count($trail) - 1]->action = $match->action;
+
+             $request->route = $match;
          }
 
          return $trail;

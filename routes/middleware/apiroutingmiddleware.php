@@ -21,7 +21,7 @@ namespace SaQle\Routes\Middleware;
 
 use SaQle\Middleware\MiddlewareRequestInterface;
 use SaQle\Routes\Middleware\Base\BaseRoutingMiddleware;
-use SaQle\Http\Response\{HttpMessage, StatusCode};
+use SaQle\Http\Response\HttpMessage;
 use SaQle\Http\Request\Processors\ApiRequestProcessor;
 use SaQle\Routes\Exceptions\{RouteNotFoundException, MethodNotAllowedException};
 
@@ -38,7 +38,7 @@ class ApiRoutingMiddleware extends BaseRoutingMiddleware{
          return [];
      }
 
-     public function find_and_assign_route(MiddlewareRequestInterface &$request, array $routes) : void{
+     public function find_and_assign_route(MiddlewareRequestInterface &$request, array $routes) : void {
          //get a matching route
          $match = null;
          $matches = [false, false];
@@ -58,11 +58,8 @@ class ApiRoutingMiddleware extends BaseRoutingMiddleware{
              throw new MethodNotAllowedException(url: $_SERVER['REQUEST_URI'], method: $_SERVER['REQUEST_METHOD'], methods: $match->methods);
          }
 
-         //resolve target for matching route
-         $target = $match->target;
-         if(is_callable($target)){
-             $match->target = $target($match->params);
-         }
+         //set the appropriate action for the matching route
+         $match->action = $match->actions[strtolower($match->method)] ?? strtolower($match->method);
 
          $request->route = $match;
      }
@@ -89,17 +86,11 @@ class ApiRoutingMiddleware extends BaseRoutingMiddleware{
                  $request->enforce_permissions = true;
              }
          }catch(RouteNotFoundException $e){
-             (new ApiRequestProcessor())->process(
-                new HttpMessage(code: StatusCode::NOT_FOUND, message: $e->get_message())
-             );
+             not_found_exception($e->get_message());
          }catch(MethodNotAllowedException $e){
-             (new ApiRequestProcessor())->process(
-                new HttpMessage(code: StatusCode::METHOD_NOT_ALLOWED, message: $e->get_message())
-             );
+             method_not_allowed_exception($e->get_message());
          }catch(\Exception $e){
-             (new ApiRequestProcessor())->process(
-                new HttpMessage(code: StatusCode::INTERNAL_SERVER_ERROR, message: $e->getMessage())
-             );
+             internal_server_error_exception($e->getMessage());
          }
      }
 }

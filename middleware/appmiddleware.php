@@ -17,5 +17,9 @@ class AppMiddleware{
      public static function register(array $middlewares) : void{
          self::$middlewares = array_merge(self::$middlewares, $middlewares);
      }
+
+     public static function get(){
+         return self::$middlewares;
+     }
 }
 ?>

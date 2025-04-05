@@ -151,7 +151,7 @@ class VcSetupMiddleware extends IMiddleware{
          }
 
          $controllers['page'] = Page::class;
-         $views['page']       = self::get_template_file(Page::class);
+         $views['page']       = DOCUMENT_ROOT."/templates/page.html";
          $app::controllers()::register($controllers);
          $app::controllers()::register($views, 'views');
      }

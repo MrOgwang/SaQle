@@ -60,7 +60,7 @@ class Route implements IRoute{
      }
 
      //the actual http request action
-     public protected(set) string $action = '' {
+     public string $action = '' {
          set(string $value){
              $this->action = $value;
          }
@@ -71,10 +71,9 @@ class Route implements IRoute{
      /**
       * the name of the view to return 
       * or the controller class name where the action method is defined
-      * or a callback function to execute to get response.
       * */
-     public string | Closure $target = '' {
-         set(string | Closure $value){
+     public string $target = '' {
+         set(string $value){
              $this->target = $value;
          }
 
@@ -96,50 +95,45 @@ class Route implements IRoute{
      }
 
      //create a new route object
-	 public function __construct(array | string $methods, string $url, string | Closure $target, null | array | string $actions = null){
+	 public function __construct(string $url, string $target, ?array $actions = null){
          $this->params  = new Data();
          $this->queries = new Data();
 		 $this->url     = $url;
          $this->target  = $target;
          if(is_a($target, ProxyController::class, true)){
-             $target_controller = new $target()->controller;
-             $this->target = $target_controller::class;
+             $proxy = new $target();
+             $this->target = $proxy->controller::class;
+             $actions = $proxy->get_actions();
          }
-         $this->method  = $_SERVER['REQUEST_METHOD'];
+         $this->method = $_SERVER['REQUEST_METHOD'];
 
-         $tmpmethods    = [];
-         $methods       = !is_array($methods) ? [$methods] : $methods;
-         //ensure the methods array is an array of strings with valid http methods
-         foreach($methods as $m){
-             Assert::inArray(strtoupper($m), ['POST', 'PUT', 'GET', 'PATCH', 'OPTIONS'], $m.' is not a valid http method. Defined in route '.$this->url);
-             $tmpmethods[] = strtoupper($m);
-         }
-
-         $this->methods = $methods;
-
-         //if actions is not provided, fill in with default handlers that correspond with http names
+         /**
+          * if actions is not provided, fill in with default handlers that correspond with http names
+          * */
          if(is_null($actions)){
-             $actions = [];
-             foreach($this->methods as $m){
-                $actions[] = strtolower($m);
+             $this->methods = ['POST', 'PUT', 'GET', 'PATCH'];
+             $this->actions = ['post' => 'post', 'get' => 'get', 'put' => 'put', 'patch' => 'patch'];
+         }else{
+             //ensure the methods array is an array of strings with valid http methods
+             $methods = [];
+             $tmpactions = [];
+             foreach($actions as $m => $a){
+                 Assert::inArray(strtoupper($m), ['POST', 'PUT', 'GET', 'PATCH'], $m.' is not a valid http method. Defined in route '.$this->url);
+                 $methods[] = strtoupper($m);
+                 $tmpactions[strtolower($m)] = $a;
              }
-         }elseif(is_string($actions)){
-             $actions = [$actions];
+
+             $this->methods = $methods;
+             $this->actions = $tmpactions;
          }
 
-         //ensure every http method corresponds to a controller method
-         if(count($actions) !== count($this->methods)){
-             throw new \Exception('Every http method must correspond with a specific controller method in '.$this->url);
-         }
-
-         $this->actions = $actions;
-
-         $method_index = array_search($this->method, $this->methods);
-         if($method_index !== false){
-             $this->action = $this->actions[$method_index] ?? '';
-         }
+         /**
+          * The default action on all controllers is the action associated to the get method. 
+          * When the matching route is determined, its action will be set to the appropriate http method
+          * */
+         $this->action = $this->actions['get'] ?? 'get';
 	 }
-     
+
      /**
       * determine whether a route matches the current request or not
       * a match is done for both the route and the http method.

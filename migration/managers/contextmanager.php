@@ -540,16 +540,13 @@ class ContextManager implements IMigrationManager{
              $seeder = DB_SEEDER;
              $seeds = $seeder::get_seeds();
              foreach($seeds as $c => $seed){
-                if($c === 0){
-                    $model = $seed['model'];
-                    $file  = $path.DIRECTORY_SEPARATOR.$seed['file'];
+                 $model = $seed['model'];
+                 $file  = $path.DIRECTORY_SEPARATOR.$seed['file'];
 
-                    echo "Now seeding for model: {$model}\n";
-                    $data = require_once $file;
-                    $seeded_data = $model::new($data)->save();
-                    print_r($seeded_data);
-                    echo "Model: {$model} seeded!\n\n";
-                }
+                 echo "Now seeding for model: {$model}\n";
+                 $data = require_once $file;
+                 $seeded_data = $model::new($data)->save();
+                 echo "Model: {$model} seeded!\n\n";
              }
           }
      }

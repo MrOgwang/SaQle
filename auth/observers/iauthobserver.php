@@ -1,7 +1,7 @@
 <?php
 namespace SaQle\Auth\Observers;
 
-use SaQle\Observable\{Observer, Observable};
+use SaQle\Core\Observable\{Observer, Observable};
 use SaQle\Auth\Services\AuthService;
 
 abstract class IAuthObserver implements Observer{

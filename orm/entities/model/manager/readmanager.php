@@ -13,10 +13,20 @@
  use SaQle\Orm\Entities\Model\Manager\Modes\FetchMode;
  use SaQle\Orm\Entities\Model\TempId;
  use SaQle\Orm\Connection\Connection;
+ use SaQle\Core\Observable\{Observable, ConcreteObservable};
+ use SaQle\Core\FeedBack\FeedBack;
+ use SaQle\Orm\Entities\Model\Observer\ModelObserver;
  use Exception;
 
-class ReadManager extends IReadManager{
-	 use DateUtils, UrlUtils, StringUtils;
+class ReadManager extends IReadManager implements Observable {
+	 use DateUtils, UrlUtils, StringUtils, ConcreteObservable {
+		 ConcreteObservable::__construct as private __coConstruct;
+	 }
+
+	 public function __construct(){
+	 	 parent::__construct();
+	 	 $this->__coConstruct();
+	 }
 
 	 private function eager_load(){
 	 	 return $this->get(tracker_active: true);
@@ -158,8 +168,6 @@ class ReadManager extends IReadManager{
 	 	 $outer_manager_query = $outer_manager->get_select_sql_info();
 
 	 	 $finalsql = "WITH {$query_table_name} AS ({$cte_manager_query['sql']}) {$outer_manager_query['sql']}";
-	 	 if($through)
-	 	 	 $finalsql .= " GROUP BY {$foreign_key}";
 
 	 	 $finalmanager = $foreign_model::get()->sqlndata($finalsql, $testfilters->data ? $testfilters->data : null);
 	 	 if($with){
@@ -394,6 +402,23 @@ class ReadManager extends IReadManager{
 	 	 }
 	 	 $pdo = resolve(Connection::class, DB_CONTEXT_CLASSES[$this->dbclass]);
 	 	 $operation = new SelectOperation(sql: $sql_info['sql'], data: $sql_info['data']);
+
+	 	 //send pre select signal to observers
+	 	 $preobservers = ModelObserver::get_observers('before', 'select', $model_instance::class);
+ 	     $this->quick_notify(
+ 	     	 code: FeedBack::OK, 
+ 	     	 data: [
+ 	     	 	 'table'         => $table_name, 
+ 	     	 	 'sql'           => $sql_info['sql'], 
+ 	     	 	 'prepared_data' => $sql_info['data'],
+ 	     	 	 'dbclass'       => $this->dbclass,
+ 	     	 	 'db'            => DB_CONTEXT_CLASSES[$this->dbclass]['name'],
+ 	     	 	 'timestamp'     => time(),
+ 	     	 	 'model'         => $model_instance::class
+ 	     	 ],
+ 	     	 observers: $preobservers
+ 	     );
+ 	     //get rows
 	 	 $rows = $operation->select($pdo);
 
          $data_formatted = false;
@@ -402,8 +427,28 @@ class ReadManager extends IReadManager{
 	 	 	 $data_formatted = true;
 	 	 }
 
-	 	 #process includes and return
-	 	 return $this->process_includes($model_instance, $rows, $tracker_active, $data_formatted);
+	 	 //process includes and return
+	 	 $result = $this->process_includes($model_instance, $rows, $tracker_active, $data_formatted);
+
+	 	 //send post select signal to observers
+	 	 $postobservers = ModelObserver::get_observers('after', 'select', $model_instance::class);
+ 	     $this->quick_notify(
+ 	     	 code: FeedBack::OK, 
+ 	     	 data: [
+ 	     	 	 'table'         => $table_name, 
+ 	     	 	 'sql'           => $sql_info['sql'], 
+ 	     	 	 'prepared_data' => $sql_info['data'],
+ 	     	 	 'dbclass'       => $this->dbclass,
+ 	     	 	 'db'            => DB_CONTEXT_CLASSES[$this->dbclass]['name'],
+ 	     	 	 'timestamp'     => time(),
+ 	     	 	 'model'         => $model_instance::class,
+ 	     	 	 'rows'          => $rows,
+ 	     	 	 'result'        => $result,
+ 	     	 ],
+ 	     	 observers: $postobservers
+ 	     );
+
+ 	     return $result;
 	 }
 
 	 public function total(){

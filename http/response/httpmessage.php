@@ -18,161 +18,51 @@
 
 namespace SaQle\Http\Response;
 
-use SaQle\FeedBack\FeedBack;
+use SaQle\Core\FeedBack\FeedBack;
 
-class HttpMessage{
-	/**
-	 * Http method (POST, GET, PUT etc)
-	 * 
-	 * @var string
-	 * */
-	private string $method = "";
+class HttpMessage extends FeedBack {
 
-	/**
-	 * Http response code
-	 * 
-	 * @var int
-	 * */
-	private int    $code;
-
-	/**
+	 /**
 	 * Http response code description
 	 * 
 	 * @var string
 	 * */
-	private string $status_message = "";
+	 public protected(set) string $status_message = "" {
+	 	 set(string $value){
+	 	 	 $this->status_message = $value;
+	 	 }
 
-	/**
-	 * Custom message from application
-	 * 
-	 * @var string
-	 * */
-	private string $message        = "";
+	 	 get => $this->status_message;
+	 }
 
-	/**
-	 * Http message data
-	 * 
-	 * @var mixed
-	 * */
-	private        $response = [];
-
-    /**
+     /**
      * Create a new http message instance
      * 
-     * @param StatusCode $code
+     * @param int        $code
      * @param mixed      $response
      * @param string     $message
      * */
-	public function __construct(StatusCode $code, $response = [], string $message = ""){
-		$this->code     = $code->value;
-		$this->response = $response;
-		$this->set_status_message();
-		$this->message  = $message ? $message : $this->status_message;
-	}
+	 public function __construct(int $code, array $response = [], string $message = ""){
+		 $this->set($code, $response, $message);
+		 $this->status_message = $this->get_message($this->code);
+	 }
 
-    /**
-     * Get http message method
-     * 
-     * @return string
-     * */
-	public function get_method() : string{
-		return $this->method;
-	}
-
-    /**
-     * Get http message code
-     * 
-     * @return int
-     * */
-	public function get_code() : int{
-		return $this->code;
-	}
-
-    /**
-     * Get http message description
-     * 
-     * @return string
-     * */
-	public function get_status_message() : string{
-		return $this->status_message;
-	}
-
-    /**
-     * Get custom http message description
-     * 
-     * @return string
-     * */
-	public function get_message() : string{
-		return $this->message;
-	}
-
-    /**
-     * Get http message data
-     * 
-     * @return mixed
-     * */
-	public function get_response(){
-		return $this->response;
-	}
-
-	/**
+	 /**
      * Set http message data
      * 
      * @return mixed
      * */
-	public function set_response(array $response){
-		 $this->response = $response;
-	}
-
-
-
-	private function set_status_message(){
-		 $http_status_code = [
-		 	102 => 'Processing',
-	        200 => 'Success',
-	        201 => 'Created successfully',
-	        204 => 'No content',
-	        206 => 'Partial content',
-	        301 => 'Moved permanently',
-	        302 => 'Found',
-	        400 => 'Bad Request',
-	        401 => 'Unauthorized',
-	        402 => 'Payment required',
-	        403 => 'Forbidden',
-	        404 => 'Not Found',
-	        405 => 'Method Not Allowed',
-	        406 => 'Not Acceptable – You requested a format that isn’t json',
-	        408 => 'Request timeout',
-	        409 => 'Conflict',
-	        429 => 'Too Many Requests – You’re requesting too many kittens! Slow down!',
-	        500 => 'Internal Server Error – We had a problem with our server. Try again later.',
-	        503 => 'Service Unavailable – We’re temporarily offline for maintenance. Please try again later.'
-	     ];
-	     $this->status_message = $http_status_code[$this->code];
-	}
-
-    /**
-     * Convert a feebback status to the equivalent http status code
-     * */
-	private static function feedbackstatus_to_statuscode($status){
-		 return match($status){
-             FeedBack::INVALID_INPUT, FeedBack::GENERAL_ERROR => StatusCode::BAD_REQUEST,
-             FeedBack::DB_ERROR                               => StatusCode::NOT_FOUND,
-             FeedBack::SUCCESS                                => StatusCode::OK,
-             default                                          => StatusCode::INTERNAL_SERVER_ERROR
-         };
+	 public function set_data(array $data){
+		 $this->data = $data;
 	 }
 
-    /**
+     /**
      * Construct a http message object from a feedback object
      * 
      * @param array $feedback
      * */
-	public static function from_feedback(array $feedback){
-		 $http_status_code = self::feedbackstatus_to_statuscode($feedback['status']);
-		 $message = $feedback['message'] ?? "";
-		 $response = $feedback['feedback'];
-		 return new self($http_status_code, $response, $message);
-	}
+	 public static function from_feedback(FeedBack $fb){
+		 return new self($fb->code, $fb->data, $fb->message);
+	 }
 }
 ?>

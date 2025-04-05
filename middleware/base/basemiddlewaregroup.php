@@ -10,8 +10,8 @@ class BaseMiddlewareGroup{
              $next_middleware_instance = new $next_middleware();
              $middleware->next($next_middleware_instance);
              $this->assign_middlewares($next_middleware_instance, $middlewares, $index + 1);
+             //print_r($middleware);
          }
-
      }
 }
 ?>

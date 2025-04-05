@@ -4,15 +4,15 @@ namespace SaQle\Auth\Observers;
 use SaQle\Observable\{Observer, Observable};
 use SaQle\Auth\Services\AuthService;
 use SaQle\Http\Request\Request;
-use SaQle\FeedBack\FeedBack;
+use SaQle\Core\FeedBack\FeedBack;
 
 class SigninObserver extends IAuthObserver{
 	
 	 public function do_update(AuthService $auth_service){
-		 $feedback = $auth_service->status();
-		 if($feedback['status'] == FeedBack::SUCCESS && $feedback['feedback'] && $feedback['action'] === 'signin'){
+		 $fb = $auth_service->status();
+		 if($fb->code == FeedBack::OK && $fb->data && $fb->action === 'signin'){
 
-		 	 $user = $feedback['feedback'];
+		 	 $user = $fb->data;
 
 		 	 $request = Request::init();
 		 	 //set request user
@@ -31,7 +31,7 @@ class SigninObserver extends IAuthObserver{
 			 	 $this->redirect_to = $request->data->get('redirect_to', $request->route->queries->get('next', ''));
 
 			 	 //regenerate session id and set session data
-			 	 $tenant = null; //array_key_exists("tenant", $feedback['feedback']) ? $feedback['feedback']['tenant'] : null;
+			 	 $tenant = null;
 			 	 session_regenerate_id();
 			 	 $_SESSION['is_user_authenticated'] = true;
 			     $_SESSION['user']                  = $user;

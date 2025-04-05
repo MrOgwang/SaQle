@@ -4,8 +4,9 @@ namespace SaQle\Http\Request\Processors;
 use SaQle\Http\Response\HttpMessage;
 use SaQle\Http\Request\Data\Sources\{From, FromPath, FromForm, FromDb};
 use SaQle\Http\Request\Data\Sources\Managers\HttpDataSourceManager;
-use SaQle\Controllers\Helpers\{RespondWith, Exceptions, ExceptionHandler};
+use SaQle\Controllers\Helpers\{RespondWith, Exceptions, ExceptionHandler, OnErrorResponse};
 use SaQle\Auth\Models\Attributes\AuthUser;
+use SaQle\Auth\Permissions\AccessControl;
 use ReflectionMethod;
 use ReflectionParameter;
 use Throwable;
@@ -65,21 +66,30 @@ class RequestProcessor{
 
 	 private function call_target_method($target_instance, $method){
 	 	 try{
-	 	 	 $reflection_method = new ReflectionMethod($target_instance::class, $method);
-	         $parameters        = $reflection_method->getParameters();
-	         $args              = [];
+	 	 	 //echo $target_instance::class." ".$method."\n\n";
+	 	 	 if(!method_exists($target_instance, $method)){
+	 	 	 	 return ok();
+             }
 
-	         //extract exceptions from the method's attribute
+	 	 	 $reflection_method = new ReflectionMethod($target_instance::class, $method);
+
+	 	 	 //extract exceptions from the method's attribute
 	         $exceptions_attr   = $reflection_method->getAttributes(Exceptions::class);
 	         $custom_exceptions = $exceptions_attr ? $exceptions_attr[0]->newInstance()->exceptions : [];
 
-	         //merge with default exceptions
-             $handled_exceptions = array_merge(ExceptionHandler::get_default_exceptions(), $custom_exceptions);
+	 	 	 //extract access control guards
+             $access_attr       = $reflection_method->getAttributes(AccessControl::class);
+             $access_control    = $access_attr ? $access_attr[0]->newInstance() : null;
+             if($access_control){
+             	 $access_control->enforce();
+             }
 
              //extract response types if any
              $responds_attr     = $reflection_method->getAttributes(RespondWith::class);
              $custom_response   = $responds_attr ? $responds_attr[0]->newInstance() : null;
 
+             $parameters        = $reflection_method->getParameters();
+	         $args              = [];
 		     foreach ($parameters as $param){
 		     	 $param_name   = $param->getName();
 		         $param_type   = $param->getType();
@@ -96,6 +106,7 @@ class RequestProcessor{
 			     	 	 $args[] = $this->request->user;
 			     	 }
 			     }elseif($param_type && class_exists($param_type)){
+			     	 echo "$param_type\n";
                      $args[] = resolve($param_type);
                  }else{
                  	 //check route params, then query, then data
@@ -114,14 +125,17 @@ class RequestProcessor{
 
 		     //override the context with custom response if any.
 		     if($custom_response){
-		     	 $http_message->set_response($custom_response->get_context());
+		     	 $http_message->set_data($custom_response->get_context());
 		     }
 
 		     return $http_message;
 
 	 	 }catch(Throwable $e){
-	 	 	 print_r($e);
-	 	 	 return ExceptionHandler::handle($e, $handled_exceptions, $this->request->is_web_request());
+	 	 	 //print_r($e);
+	 	 	 //extract any error responses set on the method
+	         $errresponse_attr = $reflection_method->getAttributes(OnErrorResponse::class);
+	         $errresponse      = $errresponse_attr ? $errresponse_attr[0]->newInstance() : null;
+	 	 	 return ExceptionHandler::handle($e, $custom_exceptions, $this->request->is_web_request(), $errresponse);
 	 	 }  
      }
 }

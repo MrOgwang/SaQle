@@ -21,5 +21,29 @@ class Guard {
          
          return $callback(...$params);
      }
+
+     static public function allow(string $name, array $params = []){
+         $callback = self::$rules[$name] ?? null;
+
+         if(!$callback){
+             return false;
+         }
+
+         array_unshift($params, resolve('request')->user);
+         
+         return $callback(...$params);
+     }
+
+     static public function authorize(string $name, array $params = []){
+         $callback = self::$rules[$name] ?? null;
+
+         if(!$callback){
+             return false;
+         }
+
+         array_unshift($params, resolve('request')->user);
+         
+         return $callback(...$params);
+     }
 }
 ?>

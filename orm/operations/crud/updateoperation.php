@@ -8,13 +8,9 @@ class UpdateOperation extends IOperation{
 
 	 public function update(&$pdo){ 
 	 	 try{
-	 	 	 $data     = $this->settings['where_clause']->data ? array_merge($this->settings['values'], $this->settings['where_clause']->data) 
-		 	             : $this->settings['values'];
-			 $database = $this->settings['database_name'];
-			 $table    = $this->settings['table_name'];
-			 $clause   = $this->settings['where_clause']->clause;
-			 $fieldstring = implode(" = ?, ", $this->settings['fields'])." = ?";
-			 $sql = "UPDATE {$database}.{$table} SET {$fieldstring}{$clause}";
+			 $sql       = $this->settings['sql'];
+			 $data      = $this->settings['data'];
+			 $table     = $this->settings['table'];
 			 $statement = $pdo->prepare($sql);
 			 $response  = $statement->execute($data);
 

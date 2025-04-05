@@ -4,13 +4,12 @@ namespace SaQle\Http\Request\Processors;
 use SaQle\Controllers\Page;
 use ReflectionClass;
 use SaQle\Views\View;
-use SaQle\Templates\Static\AppStatic;
-use SaQle\Templates\Meta\AppMeta;
 use SaQle\Controllers\Refs\ControllerRef;
-use SaQle\Templates\Context\AppContext;
 use SaQle\Commons\StringUtils;
 use SaQle\Http\Request\Middleware\CsrfMiddleware;
 use SaQle\Controllers\Interfaces\WebController;
+use SaQle\Core\FeedBack\ExceptionFeedBack;
+use SaQle\Templates\Template;
 
 class WebRequestProcessor extends RequestProcessor{
 	 use StringUtils;
@@ -24,7 +23,7 @@ class WebRequestProcessor extends RequestProcessor{
      	 parent::__construct();
      }
 
-     private function process_trail(array $trail){
+     private function process_trail(array $trail, array $feedback_context){
      	 $all_css   = [];
          $all_js    = [];
          $all_meta  = [];
@@ -33,7 +32,7 @@ class WebRequestProcessor extends RequestProcessor{
 
          $parent_context = [];
          for($t = 0; $t < count($trail); $t++){
-         	 [$css, $js, $meta, $title, $html, $default, $target_context] = $this->process_target($trail[$t]->target, $trail[$t]->action, $parent_context);
+         	 [$css, $js, $meta, $title, $html, $default, $target_context] = $this->process_target($trail[$t]->target, $trail[$t]->action, $parent_context, $feedback_context);
          	 $parent_context = array_merge($parent_context, $target_context);
 
 	 	 	 $all_css   = array_merge($all_css, $css);
@@ -61,14 +60,10 @@ class WebRequestProcessor extends RequestProcessor{
 	 public function process(){
 	 	 $trail = $this->request->trail;
 
-	 	 [$all_css, $all_js, $all_meta, $all_title, $all_html] = $this->process_trail($trail);
+         $efb = ExceptionFeedBack::init();
+	 	 $feedback_context = $efb->acquire_context();
 
-	 	 $appstatic = AppStatic::init();
-	 	 $all_css   = array_merge($appstatic::get_css_links(), $all_css);
-	 	 $all_js    = array_merge($appstatic::get_js_links(), $all_js);
-
-	 	 $appmeta   = AppMeta::init();
-	 	 $all_meta  = array_merge($appmeta::get_meta_tags(), $all_meta);
+	 	 [$all_css, $all_js, $all_meta, $all_title, $all_html] = $this->process_trail($trail, $feedback_context);
 
          $pagetemplate = $this->templaterefs['page'];
 	 	 $page = new View($pagetemplate);
@@ -82,9 +77,9 @@ class WebRequestProcessor extends RequestProcessor{
 	 	 echo $page->view();
 	 }
 
-	 private function process_target($target, $action, $parent_context = []){
+	 private function process_target($target, $action, $parent_context = [], $feedback_context = []){
          //inject global context data
-         $global_context = AppContext::init()::get_context();
+         $global_context = Template::init()::get_context();
 
          //inject csrf token input here
          $token_key = CsrfMiddleware::get_token_key();
@@ -98,10 +93,14 @@ class WebRequestProcessor extends RequestProcessor{
 	 	 	 $response       = array_merge($global_context, $parent_context);
 	 	 }else{ //this is a controller
 	 	 	 $template_file = $this->templaterefs[array_flip($this->controllerrefs)[$target]] ?? '';
-	 	 	 [$target_classname, $target_method] = $this->get_target_method($target, $action);
-	 	     [$http_message, $context_from_parent] = $this->get_target_response($target_classname, $target_method, $parent_context);
-	 	     $target_context = $http_message->get_response();
-	 	     $response = array_merge($target_context, $global_context, $context_from_parent);
+	 	 	 //[$target_classname, $target_method] = $this->get_target_method($target, $action);
+	 	     //[$http_message, $context_from_parent] = $this->get_target_response($target_classname, $target_method, $parent_context);
+	 	     [$http_message, $context_from_parent] = $this->get_target_response($target, $action, $parent_context);
+
+	 	     $target_context = $http_message->data;
+	 	     $target_context['http_response_code'] = $http_message->code;
+	 	     $target_context['http_response_message'] = $http_message->message;
+	 	     $response = array_merge($global_context, $context_from_parent, $target_context, $feedback_context);
 	 	 }
 
 	 	 $view = new View($template_file);
@@ -117,8 +116,8 @@ class WebRequestProcessor extends RequestProcessor{
          	 $response[$b] = "";
          	 $block_target = $this->controllerrefs[$b] ?? ( array_key_exists($b, $this->templaterefs) ? $b : '');
          	 if($block_target){
-         	 	  $trail = [(Object)['url' => '', 'target' => $block_target, 'action' => strtolower($this->request->route->method)]];
-         	 	  [$block_css, $block_js, $block_meta, $block_title, $block_html] = $this->process_trail($trail);
+         	 	  $trail = [(Object)['url' => '', 'target' => $block_target, 'action' => 'get']];
+         	 	  [$block_css, $block_js, $block_meta, $block_title, $block_html] = $this->process_trail($trail, $feedback_context);
          	 	  $css  = array_merge($css, $block_css);
          	 	  $js   = array_merge($js, $block_js);
          	 	  $response[$b] = $block_html;

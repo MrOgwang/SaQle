@@ -8,9 +8,16 @@ use SaQle\Orm\Operations\Crud\InsertOperation;
 use SaQle\Core\Assert\Assert;
 use SaQle\Orm\Connection\Connection;
 use SaQle\Image\Image;
+use SaQle\Core\Observable\{Observable, ConcreteObservable};
+use SaQle\Core\FeedBack\FeedBack;
+use SaQle\Orm\Entities\Model\Observer\ModelObserver;
 use Exception;
 
-class CreateManager{
+class CreateManager implements Observable {
+
+	 use ConcreteObservable{
+		 ConcreteObservable::__construct as private __coConstruct;
+	 }
 
 	 private ?string $table = null {
 	 	 set(?string $value){
@@ -58,6 +65,7 @@ class CreateManager{
 	 	 $this->modelclass = $modelclass;
 	 	 $this->container  = new DataContainer();
 	 	 $this->set_data($data);
+	 	 $this->__coConstruct();
 	 }
 
      private function extract_row(array $row, int $index = 0){
@@ -161,26 +169,59 @@ class CreateManager{
 		 	 	 sql:        $sql_info['sql'],
 		 	 	 data:       $sql_info['data']
 		 	 );
+
+		 	 //send a pre insert signal to observers
+		 	 $preobservers = ModelObserver::get_observers('before', 'insert', $this->modelclass);
+	 	     $this->quick_notify(
+	 	     	 code: FeedBack::OK, 
+	 	     	 data: [
+	 	     	 	 'data'          => $this->container->data, 
+	 	     	 	 'files'         => $this->container->files,
+	 	     	 	 'table'         => $this->table, 
+	 	     	 	 'sql'           => $sql_info['sql'], 
+	 	     	 	 'prepared_data' => $sql_info['data'],
+	 	     	 	 'dbclass'       => $this->dbclass,
+	 	     	 	 'db'            => DB_CONTEXT_CLASSES[$this->dbclass]['name'],
+	 	     	 	 'timestamp'     => time(),
+	 	     	 	 'model'         => $this->modelclass
+	 	     	 ],
+	 	     	 observers: $preobservers
+	 	     );
+             //insert data
 		 	 $response = $operation->insert($pdo);
              //save files if any
 		 	 $this->auto_save_files();
-
+		 	 //get inserted data
 		 	 $created_rows = $this->get_created_rows($response->last_insert_id, $response->row_count, $modelmeta);
 
 		 	 if(!$created_rows)
      	 	     throw new Exception("Could not create rows!");
 
-     	 	 if($this->container->multiple === true)
-     	 	 	return $created_rows;
+     	 	 $result = $this->container->multiple === true ? $created_rows : $created_rows[0];
 
-     	     return $created_rows[0];
+             //send a post insert signal to observers
+     	 	 $postobservers = ModelObserver::get_observers('after', 'insert', $this->modelclass);
+     	 	 $this->quick_notify(
+	 	     	 code: FeedBack::OK, 
+	 	     	 data: [
+	 	     	 	 'data'          => $this->container->data, 
+	 	     	 	 'files'         => $this->container->files,
+	 	     	 	 'table'         => $this->table, 
+	 	     	 	 'sql'           => $sql_info['sql'], 
+	 	     	 	 'prepared_data' => $sql_info['data'],
+	 	     	 	 'dbclass'       => $this->dbclass,
+	 	     	 	 'db'            => DB_CONTEXT_CLASSES[$this->dbclass]['name'],
+	 	     	 	 'timestamp'     => time(),
+	 	     	 	 'result'        => $result,
+	 	     	 	 'model'         => $this->modelclass
+	 	     	 ],
+	 	     	 observers: $postobservers
+	 	     );
+
+     	     return $result;
      	 }catch(Exception $ex){
      	 	 throw $ex;
      	 }
-	 }
-
-	 public function transaction_save(){
-
 	 }
 
 	 private function get_insert_sql_info($modelmeta){

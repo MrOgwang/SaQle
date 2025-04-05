@@ -7,11 +7,18 @@ use SaQle\Orm\Query\Helpers\FilterManager;
 use SaQle\Orm\Operations\Crud\{UpdateOperation, DeleteOperation};
 use SaQle\Orm\Connection\Connection;
 use SaQle\Orm\Database\Trackers\DbContextTracker;
+use SaQle\Core\Observable\{Observable, ConcreteObservable};
+use SaQle\Core\FeedBack\FeedBack;
+use SaQle\Orm\Entities\Model\Observer\ModelObserver;
 use Exception;
 
-class DeleteManager{
-	 use FilterManager{
+class DeleteManager implements Observable {
+	 use FilterManager {
 		 FilterManager::__construct as private __filterConstruct;
+	 }
+
+	 use ConcreteObservable {
+		 ConcreteObservable::__construct as private __coConstruct;
 	 }
 
 	 private bool $permanently = false {
@@ -64,8 +71,6 @@ class DeleteManager{
 	 	 $this->dbclass    = $dbclass;
 	 	 $this->modelclass = $modelclass;
 
-	 	 $this->__filterConstruct();
-
          $meta = $modelclass::state()->meta;
 	 	 $this->setup_ctxtracker(
 		 	 table_name:    $this->table,
@@ -75,6 +80,9 @@ class DeleteManager{
 		 	 ff_settings:   $meta->file_required_fields,
 		 	 table_ref:     ''
 		 );
+
+         $this->__filterConstruct();
+		 $this->__coConstruct();
 	 }
 
 	 public function now(){
@@ -92,24 +100,96 @@ class DeleteManager{
 	 }
 
 	 private function soft_delete($pdo){
+	 	 $sql_info = $this->get_update_sql_info();
 	 	 $operation = new UpdateOperation(
-	 	 	 where_clause:  $this->wbuilder->get_where_clause($this->ctxtracker, $this->get_configurations()),
-	 	 	 table_name:    $this->table,
-	 	 	 database_name: DB_CONTEXT_CLASSES[$this->dbclass]['name'],
-	 	 	 fields:        ["deleted"],
-	 	 	 values:        [1]
+	 	 	 sql:   $sql_info['sql'],
+	 	 	 data:  $sql_info['data'],
+	 	 	 table: $this->table
 	 	 );
+
+	 	 //send a pre delete signal to observers
+	 	 $preobservers = ModelObserver::get_observers('before', 'delete', $this->modelclass);
+ 	     $this->quick_notify(
+ 	     	 code: FeedBack::OK, 
+ 	     	 data: [
+ 	     	 	 'table'         => $this->table, 
+ 	     	 	 'sql'           => $sql_info['sql'], 
+ 	     	 	 'prepared_data' => $sql_info['data'],
+ 	     	 	 'dbclass'       => $this->dbclass,
+ 	     	 	 'db'            => DB_CONTEXT_CLASSES[$this->dbclass]['name'],
+ 	     	 	 'timestamp'     => time(),
+ 	     	 	 'model'         => $this->modelclass
+ 	     	 ],
+ 	     	 observers: $preobservers
+ 	     );
+
 	 	 $response = $operation->update($pdo);
-	 	 return $response->row_count > 0 ? true : false;
+	 	 $result = $response->row_count > 0 ? true : false;
+
+	 	 //send a post delete signal to observers
+	 	 $postobservers = ModelObserver::get_observers('after', 'delete', $this->modelclass);
+ 	     $this->quick_notify(
+ 	     	 code: FeedBack::OK, 
+ 	     	 data: [
+ 	     	 	 'table'         => $this->table, 
+ 	     	 	 'sql'           => $sql_info['sql'], 
+ 	     	 	 'prepared_data' => $sql_info['data'],
+ 	     	 	 'dbclass'       => $this->dbclass,
+ 	     	 	 'db'            => DB_CONTEXT_CLASSES[$this->dbclass]['name'],
+ 	     	 	 'timestamp'     => time(),
+ 	     	 	 'model'         => $this->modelclass,
+ 	     	 	 'result'        => $result
+ 	     	 ],
+ 	     	 observers: $postobservers
+ 	     );
+
+	 	 return $result;
      }
 
      private function hard_delete($pdo){
+     	 $sql_info = $this->get_delete_sql_info();
 	 	 $operation = new DeleteOperation(
-	 	 	 where_clause:  $this->wbuilder->get_where_clause($this->ctxtracker, $this->get_configurations()),
-	 	 	 table_name:    $this->table,
-	 	 	 database_name: DB_CONTEXT_CLASSES[$this->dbclass]['name']
+	 	 	 sql:   $sql_info['sql'],
+	 	 	 data:  $sql_info['data'],
+	 	 	 table: $this->table
 	 	 );
-	 	 return $operation->delete($pdo);
+
+	 	 //send a pre delete signal to observers
+	 	 $preobservers = ModelObserver::get_observers('before', 'delete', $this->modelclass);
+ 	     $this->quick_notify(
+ 	     	 code: FeedBack::OK, 
+ 	     	 data: [
+ 	     	 	 'table'         => $this->table, 
+ 	     	 	 'sql'           => $sql_info['sql'], 
+ 	     	 	 'prepared_data' => $sql_info['data'],
+ 	     	 	 'dbclass'       => $this->dbclass,
+ 	     	 	 'db'            => DB_CONTEXT_CLASSES[$this->dbclass]['name'],
+ 	     	 	 'timestamp'     => time(),
+ 	     	 	 'model'         => $this->modelclass
+ 	     	 ],
+ 	     	 observers: $preobservers
+ 	     );
+
+	 	 $result = $operation->delete($pdo);
+
+	 	 //send a post delete signal to observers
+	 	 $postobservers = ModelObserver::get_observers('after', 'delete', $this->modelclass);
+ 	     $this->quick_notify(
+ 	     	 code: FeedBack::OK, 
+ 	     	 data: [
+ 	     	 	 'table'         => $this->table, 
+ 	     	 	 'sql'           => $sql_info['sql'], 
+ 	     	 	 'prepared_data' => $sql_info['data'],
+ 	     	 	 'dbclass'       => $this->dbclass,
+ 	     	 	 'db'            => DB_CONTEXT_CLASSES[$this->dbclass]['name'],
+ 	     	 	 'timestamp'     => time(),
+ 	     	 	 'model'         => $this->modelclass,
+ 	     	 	 'result'        => $result
+ 	     	 ],
+ 	     	 observers: $postobservers
+ 	     );
+
+	 	 return $result;
      }
 
      private function setup_ctxtracker(string $table_name, string $table_aliase, string $database_name, array $field_list, array $ff_settings, ?string $table_ref = null){
@@ -148,6 +228,31 @@ class DeleteManager{
 	 		 'ftqm' => 'F-QUALIFY'
 	 	  ];
 	 }
+
+	 private function get_update_sql_info(){
+	 	 $where_clause = $this->wbuilder->get_where_clause($this->ctxtracker, $this->get_configurations());
+	 	 $data = $where_clause->data ? array_merge([1], $where_clause->data) : [1];
+	 	 $database = DB_CONTEXT_CLASSES[$this->dbclass]['name'];
+	 	 $table = $this->table;
+	 	 $fields = ['deleted'];
+	 	 $clause   = $where_clause->clause;
+		 $fieldstring = implode(" = ?, ", $fields)." = ?";
+			 
+		 $sql = "UPDATE {$database}.{$table} SET {$fieldstring}{$clause}";
+
+         return ['sql' => $sql, 'data' => $data];
+     }
+
+     private function get_delete_sql_info(){
+	 	 $where_clause = $this->wbuilder->get_where_clause($this->ctxtracker, $this->get_configurations());
+	 	 $data         = $where_clause->data ?? null;
+	 	 $database     = DB_CONTEXT_CLASSES[$this->dbclass]['name'];
+	 	 $table        = $this->table;
+	 	 $clause       = $where_clause->clause;
+		 $sql          = "DELETE FROM {$database}.{$table}{$clause}";
+
+         return ['sql' => $sql, 'data' => $data];
+     }
 }
 
 ?>

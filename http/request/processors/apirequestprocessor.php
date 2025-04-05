@@ -30,18 +30,19 @@ class ApiRequestProcessor extends RequestProcessor{
 	 public function process(?HttpMessage $http_message = null){
 		 $this->send_json_headers();
 		 if(is_null($http_message)){
-		 	 [$target_classname, $target_method]   = $this->get_target_method($this->request->route->target, $this->request->route->action);
-	 	     [$http_message, $context_from_parent] = $this->get_target_response($target_classname, $target_method);
+		 	 //[$target_classname, $target_method]   = $this->get_target_method($this->request->route->target, $this->request->route->action);
+	 	     //[$http_message, $context_from_parent] = $this->get_target_response($target_classname, $target_method);
+	 	     [$http_message, $context_from_parent] = $this->get_target_response($this->request->route->target, $this->request->route->action);
 		 }
-         $response_data    = $http_message->get_response();
-         $http_status_code = (int)$http_message->get_code();
+         $response_data    = $http_message->data;
+         $http_status_code = (int)$http_message->code;
          http_response_code($http_status_code);
          if($http_status_code != 200){
              $response = [
-                'HttpVerb'          => $http_message->get_method(),
-                'HttpStatusCode'    => $http_message->get_code(),
-                'HttpStatusMessage' => $http_message->get_status_message(),
-                'Message'           => $http_message->get_message(),
+                //'HttpVerb'          => $http_message->get_method(),
+                'HttpStatusCode'    => $http_message->code,
+                'HttpStatusMessage' => $http_message->status_message,
+                'Message'           => $http_message->message,
                 'Response'          => $response_data,
              ];
          }else{

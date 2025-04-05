@@ -25,9 +25,6 @@ class Config{
 	 use StringUtils;
 
 	 public function __construct(...$settings){
-	 	//authorization provider
-	 	define('AUTHORIZATION_PROVIDER', $settings['authorization_provider'] ?? AuthorizationProvider::class);
-	 	
 	 	/**
 	 	 * Enable role based accesscontrol with the following flags.
 	 	 * */
