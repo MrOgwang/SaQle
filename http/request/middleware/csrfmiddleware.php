@@ -16,8 +16,9 @@ class CsrfMiddleware extends IMiddleware{
          //Generate CSRF token if not set
          $token_key      = CsrfMiddleware::get_token_key();
          $except_methods = CsrfMiddleware::get_except_methods();
-         if(empty($_SESSION[$token_key])){
-             $_SESSION[$token_key] = bin2hex(random_bytes(32));
+         $token          = $request->context->get($token_key);
+         if(!$token){
+             $request->context->set($token_key, bin2hex(random_bytes(32)), true);
          }
 
          //skip CSRF check for safe HTTP methods
@@ -29,10 +30,8 @@ class CsrfMiddleware extends IMiddleware{
          //validate CSRF token for state-changing requests
          $submitted_token = $request->data->get($token_key, $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '');
 
-         if(!$submitted_token || $submitted_token !== $_SESSION[$token_key]){
-             http_response_code(403);
-             echo json_encode(['error' => 'CSRF token validation failed']);
-             exit;
+         if(!$submitted_token || $submitted_token !== $token){
+             unauthorized_exception('CSRF token validation failed');
          }
          
      	 parent::handle($request);
@@ -47,11 +46,12 @@ class CsrfMiddleware extends IMiddleware{
      }
 
      public static function get_token(): string {
+         $request = resolve('request');
          $token_key = CsrfMiddleware::get_token_key();
          if(session_status() == PHP_SESSION_NONE){
              session_start();
          }
-         return $_SESSION[$token_key] ?? '';
+         return $request->context->get($token_key, '');
      }
 }
 ?>

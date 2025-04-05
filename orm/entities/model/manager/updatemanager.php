@@ -13,9 +13,10 @@ use SaQle\Orm\Query\Helpers\FilterManager;
 use SaQle\Core\Observable\{Observable, ConcreteObservable};
 use SaQle\Core\FeedBack\FeedBack;
 use SaQle\Orm\Entities\Model\Observer\ModelObserver;
+use SaQle\Orm\Entities\Model\Interfaces\IOperationManager;
 use Exception;
 
-class UpdateManager implements Observable{
+class UpdateManager implements Observable, IOperationManager{
 	 use FilterManager{
 		 FilterManager::__construct as private __filterConstruct;
 	 }
@@ -168,8 +169,12 @@ class UpdateManager implements Observable{
 		 	 );
 
 		 	 //send a pre update signal to observers
-		 	 $preobservers = ModelObserver::get_observers('before', 'update', $this->modelclass);
+		 	 $preobservers = array_merge(
+		 	 	 ModelObserver::get_model_observers('before', 'update', $this->modelclass), 
+		 	 	 ModelObserver::get_shared_observers('before', 'update')
+		 	 );
 	 	     $this->quick_notify(
+	 	     	 observers: $preobservers,
 	 	     	 code: FeedBack::OK, 
 	 	     	 data: [
 	 	     	 	 'data'          => $clean_data, 
@@ -181,8 +186,7 @@ class UpdateManager implements Observable{
 	 	     	 	 'db'            => DB_CONTEXT_CLASSES[$this->dbclass]['name'],
 	 	     	 	 'timestamp'     => time(),
 	 	     	 	 'model'         => $this->modelclass
-	 	     	 ],
-	 	     	 observers: $preobservers
+	 	     	 ]
 	 	     );
 	 	     //update data
 		 	 $response = $operation->update($pdo);
@@ -196,8 +200,12 @@ class UpdateManager implements Observable{
 		 	 }
 
 		 	 //send a post update signal to observers
-		 	 $postobservers = ModelObserver::get_observers('after', 'update', $this->modelclass);
+		 	 $postobservers = array_merge(
+		 	 	 ModelObserver::get_model_observers('after', 'update', $this->modelclass), 
+		 	 	 ModelObserver::get_shared_observers('after', 'update')
+		 	 );
 	 	     $this->quick_notify(
+	 	     	 observers: $postobservers,
 	 	     	 code: FeedBack::OK, 
 	 	     	 data: [
 	 	     	 	 'data'          => $clean_data, 
@@ -210,8 +218,7 @@ class UpdateManager implements Observable{
 	 	     	 	 'timestamp'     => time(),
 	 	     	 	 'model'         => $this->modelclass,
 	 	     	 	 'result'        => $result
-	 	     	 ],
-	 	     	 observers: $postobservers
+	 	     	 ]
 	 	     );
 
 	 	     return $result;

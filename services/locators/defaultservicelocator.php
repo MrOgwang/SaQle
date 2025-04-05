@@ -1,5 +1,5 @@
 <?php
-namespace SaQle\Services;
+namespace SaQle\Services\Locators;
 
 use SaQle\Core\Services\Container\ServiceLocator;
 use SaQle\Core\Services\Container\Container;

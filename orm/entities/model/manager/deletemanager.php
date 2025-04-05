@@ -10,9 +10,10 @@ use SaQle\Orm\Database\Trackers\DbContextTracker;
 use SaQle\Core\Observable\{Observable, ConcreteObservable};
 use SaQle\Core\FeedBack\FeedBack;
 use SaQle\Orm\Entities\Model\Observer\ModelObserver;
+use SaQle\Orm\Entities\Model\Interfaces\IOperationManager;
 use Exception;
 
-class DeleteManager implements Observable {
+class DeleteManager implements Observable, IOperationManager {
 	 use FilterManager {
 		 FilterManager::__construct as private __filterConstruct;
 	 }
@@ -108,8 +109,12 @@ class DeleteManager implements Observable {
 	 	 );
 
 	 	 //send a pre delete signal to observers
-	 	 $preobservers = ModelObserver::get_observers('before', 'delete', $this->modelclass);
+	 	 $preobservers = array_merge(
+	 	 	 ModelObserver::get_model_observers('before', 'delete', $this->modelclass), 
+	 	 	 ModelObserver::get_shared_observers('before', 'delete')
+	 	 );
  	     $this->quick_notify(
+ 	     	 observers: $preobservers,
  	     	 code: FeedBack::OK, 
  	     	 data: [
  	     	 	 'table'         => $this->table, 
@@ -119,16 +124,19 @@ class DeleteManager implements Observable {
  	     	 	 'db'            => DB_CONTEXT_CLASSES[$this->dbclass]['name'],
  	     	 	 'timestamp'     => time(),
  	     	 	 'model'         => $this->modelclass
- 	     	 ],
- 	     	 observers: $preobservers
+ 	     	 ]
  	     );
 
 	 	 $response = $operation->update($pdo);
 	 	 $result = $response->row_count > 0 ? true : false;
 
 	 	 //send a post delete signal to observers
-	 	 $postobservers = ModelObserver::get_observers('after', 'delete', $this->modelclass);
+	 	 $postobservers = array_merge(
+	 	 	 ModelObserver::get_model_observers('after', 'delete', $this->modelclass), 
+	 	 	 ModelObserver::get_shared_observers('after', 'delete')
+	 	 );
  	     $this->quick_notify(
+ 	     	 observers: $postobservers,
  	     	 code: FeedBack::OK, 
  	     	 data: [
  	     	 	 'table'         => $this->table, 
@@ -139,8 +147,7 @@ class DeleteManager implements Observable {
  	     	 	 'timestamp'     => time(),
  	     	 	 'model'         => $this->modelclass,
  	     	 	 'result'        => $result
- 	     	 ],
- 	     	 observers: $postobservers
+ 	     	 ]
  	     );
 
 	 	 return $result;
@@ -155,8 +162,12 @@ class DeleteManager implements Observable {
 	 	 );
 
 	 	 //send a pre delete signal to observers
-	 	 $preobservers = ModelObserver::get_observers('before', 'delete', $this->modelclass);
+	 	 $preobservers = array_merge(
+	 	 	 ModelObserver::get_model_observers('before', 'delete', $this->modelclass), 
+	 	 	 ModelObserver::get_shared_observers('before', 'delete')
+	 	 );
  	     $this->quick_notify(
+ 	     	 observers: $preobservers,
  	     	 code: FeedBack::OK, 
  	     	 data: [
  	     	 	 'table'         => $this->table, 
@@ -166,15 +177,18 @@ class DeleteManager implements Observable {
  	     	 	 'db'            => DB_CONTEXT_CLASSES[$this->dbclass]['name'],
  	     	 	 'timestamp'     => time(),
  	     	 	 'model'         => $this->modelclass
- 	     	 ],
- 	     	 observers: $preobservers
+ 	     	 ]
  	     );
 
 	 	 $result = $operation->delete($pdo);
 
 	 	 //send a post delete signal to observers
-	 	 $postobservers = ModelObserver::get_observers('after', 'delete', $this->modelclass);
+	 	 $postobservers = array_merge(
+	 	 	 ModelObserver::get_model_observers('after', 'delete', $this->modelclass), 
+	 	 	 ModelObserver::get_shared_observers('after', 'delete')
+	 	 );
  	     $this->quick_notify(
+ 	     	 observers: $postobservers,
  	     	 code: FeedBack::OK, 
  	     	 data: [
  	     	 	 'table'         => $this->table, 
@@ -185,8 +199,7 @@ class DeleteManager implements Observable {
  	     	 	 'timestamp'     => time(),
  	     	 	 'model'         => $this->modelclass,
  	     	 	 'result'        => $result
- 	     	 ],
- 	     	 observers: $postobservers
+ 	     	 ]
  	     );
 
 	 	 return $result;

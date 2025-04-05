@@ -6,6 +6,7 @@ use SaQle\Orm\Entities\Field\Exceptions\FieldValidationException;
 use SaQle\Http\Response\HttpMessage;
 use SaQle\Core\Exceptions\Base\FeedbackException;
 use SaQle\Auth\Permissions\Exceptions\{AccessDeniedException, UnauthorizedAccessException};
+use SaQle\Http\Request\Request;
 use Throwable;
 
 class ExceptionHandler{
@@ -28,11 +29,12 @@ class ExceptionHandler{
                          return new HttpMessage(code: $status_code, message: $e->getMessage(), response: $response);
                      }
 
-                     $_SESSION['FeedbackException'] = (Object)[
+                     $request = Request::init();
+                     $request->context->set('FeedbackException', (Object)[
                          'message' => $e->getMessage(),
                          'code'    => $e->getCode(),
                          'data'    => array_merge($e->getData(), $errresponse ? $errresponse->get_context() : [])
-                     ];
+                     ], true);
 
                      return redirect(url: $redirect);
                  }

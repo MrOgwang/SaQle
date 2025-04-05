@@ -4,10 +4,18 @@ namespace SaQle\Http\Request\Data;
 use SaQle\Http\Request\Data\Exceptions\KeyNotFoundException;
 
 class Data{
-	 private array $data;
+	 protected array $data;
 
 	 public function __construct(){
 		 $this->data = [];
+	 }
+
+	 public function remove($key){
+	 	 if(array_key_exists($key, $this->data)){
+	 	 	 unset($this->data[$key]);
+	 	 }
+
+	 	 return true;
 	 }
 
 	 public function set(string $key, $value){

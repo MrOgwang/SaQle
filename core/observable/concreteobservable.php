@@ -35,7 +35,7 @@ trait ConcreteObservable {
 	 public function status(){
 		 return $this->feedback;
 	 }
-	 public function quick_notify(int $code, mixed $data = null, string $message = '', string $action = '', array $observers){
+	 public function quick_notify(array $observers, int $code, mixed $data = null, string $message = '', string $action = ''){
 	 	 $this->attach_all($observers);
 	 	 $this->feedback->set($code, $data, $message, $action);
 	 	 $this->notify();

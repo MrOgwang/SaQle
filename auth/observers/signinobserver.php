@@ -3,7 +3,6 @@ namespace SaQle\Auth\Observers;
 
 use SaQle\Observable\{Observer, Observable};
 use SaQle\Auth\Services\AuthService;
-use SaQle\Http\Request\Request;
 use SaQle\Core\FeedBack\FeedBack;
 
 class SigninObserver extends IAuthObserver{
@@ -14,7 +13,7 @@ class SigninObserver extends IAuthObserver{
 
 		 	 $user = $fb->data;
 
-		 	 $request = Request::init();
+		 	 $request = resolve('request');
 		 	 //set request user
 		 	 $request->user = $user;
 
@@ -33,13 +32,11 @@ class SigninObserver extends IAuthObserver{
 			 	 //regenerate session id and set session data
 			 	 $tenant = null;
 			 	 session_regenerate_id();
-			 	 $_SESSION['is_user_authenticated'] = true;
-			     $_SESSION['user']                  = $user;
-			     $_SESSION['user_has_tenant']       = $tenant ? true : false;
-			     if($_SESSION['user_has_tenant']){
-			 	     $_SESSION['tenant']            = $tenant;
-			     }
-			     $_SESSION['LAST_ACTIVITY']         = $_SERVER['REQUEST_TIME'];
+			 	 $request->context->set('is_user_authenticated', true, true);
+			 	 $request->context->set('user', $user, true);
+			 	 $request->context->set('user_has_tenant', $tenant ? true : false, true);
+			 	 $request->context->set('tenant', $tenant, true);
+			 	 $request->context->set('LAST_ACTIVITY', $_SERVER['REQUEST_TIME'], true);
 
 			     //redirect user to relevant location
 			     if($this->redirect_to !== ''){

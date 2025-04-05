@@ -16,9 +16,10 @@
  use SaQle\Core\Observable\{Observable, ConcreteObservable};
  use SaQle\Core\FeedBack\FeedBack;
  use SaQle\Orm\Entities\Model\Observer\ModelObserver;
+ use SaQle\Orm\Entities\Model\Interfaces\IOperationManager;
  use Exception;
 
-class ReadManager extends IReadManager implements Observable {
+class ReadManager extends IReadManager implements Observable, IOperationManager {
 	 use DateUtils, UrlUtils, StringUtils, ConcreteObservable {
 		 ConcreteObservable::__construct as private __coConstruct;
 	 }
@@ -404,8 +405,12 @@ class ReadManager extends IReadManager implements Observable {
 	 	 $operation = new SelectOperation(sql: $sql_info['sql'], data: $sql_info['data']);
 
 	 	 //send pre select signal to observers
-	 	 $preobservers = ModelObserver::get_observers('before', 'select', $model_instance::class);
+	 	 $preobservers = array_merge(
+	 	 	 ModelObserver::get_model_observers('before', 'select', $model_instance::class), 
+	 	 	 ModelObserver::get_shared_observers('before', 'select')
+	 	 );
  	     $this->quick_notify(
+ 	     	 observers: $preobservers,
  	     	 code: FeedBack::OK, 
  	     	 data: [
  	     	 	 'table'         => $table_name, 
@@ -415,8 +420,7 @@ class ReadManager extends IReadManager implements Observable {
  	     	 	 'db'            => DB_CONTEXT_CLASSES[$this->dbclass]['name'],
  	     	 	 'timestamp'     => time(),
  	     	 	 'model'         => $model_instance::class
- 	     	 ],
- 	     	 observers: $preobservers
+ 	     	 ]
  	     );
  	     //get rows
 	 	 $rows = $operation->select($pdo);
@@ -431,8 +435,12 @@ class ReadManager extends IReadManager implements Observable {
 	 	 $result = $this->process_includes($model_instance, $rows, $tracker_active, $data_formatted);
 
 	 	 //send post select signal to observers
-	 	 $postobservers = ModelObserver::get_observers('after', 'select', $model_instance::class);
+	 	 $postobservers = array_merge(
+	 	 	 ModelObserver::get_model_observers('after', 'select', $model_instance::class), 
+	 	 	 ModelObserver::get_shared_observers('after', 'select')
+	 	 );
  	     $this->quick_notify(
+ 	     	 observers: $postobservers,
  	     	 code: FeedBack::OK, 
  	     	 data: [
  	     	 	 'table'         => $table_name, 
@@ -444,8 +452,7 @@ class ReadManager extends IReadManager implements Observable {
  	     	 	 'model'         => $model_instance::class,
  	     	 	 'rows'          => $rows,
  	     	 	 'result'        => $result,
- 	     	 ],
- 	     	 observers: $postobservers
+ 	     	 ]
  	     );
 
  	     return $result;

@@ -16,7 +16,7 @@
  * */
 namespace SaQle\Http\Request;
 
-use SaQle\Http\Request\Data\Data;
+use SaQle\Http\Request\Data\{RequestContext, Data};
 use SaQle\Middleware\MiddlewareRequestInterface;
 use SaQle\Routes\Route;
 use SaQle\Auth\Models\BaseUser;
@@ -35,8 +35,8 @@ class Request implements MiddlewareRequestInterface{
          get => $this->data;
      }
 
-     public ?Data $context = null {
-         set(?Data $value){
+     public ?RequestContext $context = null {
+         set(?RequestContext $value){
              $this->context = $value;
          }
 
@@ -62,12 +62,10 @@ class Request implements MiddlewareRequestInterface{
      }
 
      //the user who is currently logged in
-     public ?BaseUser $user = null {
-         set(?BaseUser $value){
-             $this->user = $value;
+     public ?BaseUser $user {
+         get {
+            return $this->context->get('user', null);
          }
-
-         get => $this->user;
      }
 
      //the selected route object
@@ -102,7 +100,7 @@ class Request implements MiddlewareRequestInterface{
          $this->data    = new Data();
          $this->headers = new Data();
          $this->cookies = new Data();
-         $this->context = new Data();
+         $this->context = new RequestContext();
      }
 
      //prevent cloning and serialization of request object

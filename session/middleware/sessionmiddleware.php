@@ -53,31 +53,25 @@ class SessionMiddleware extends IMiddleware{
            $logger = new FileLogger(DOCUMENT_ROOT."/logs/log.txt", "w+");
            $logger->log_to_file(json_encode($_SERVER));
 
-           //assign the session user to the request
-           if(isset($_SESSION['user'])){
-               $request->user = $_SESSION['user'];
-           }elseif(isset($_SERVER['HTTP_REQUIRES_AUTH'])){
+           if(!$request->user && isset($_SERVER['HTTP_REQUIRES_AUTH'])){
                 $request->enforce_permissions = true;
-                
                 $auth_backend_class = AUTH_BACKEND_CLASS;
                 $service = new $auth_backend_class('jwt');
                 new SigninObserver($service);
                 $fb = $service->authenticate();
                 if($fb->code === FeedBack::OK && $fb->data){
-                     $request->user = $fb->data['user'];
+                     $request->context->set('user', $fb->data['user'], true);
                 }
            }
 
            //create a feedback exception object from previous request
-           if(isset($_SESSION['FeedbackException'])){
+           $fbex = $request->context->get('FeedbackException', null);
+           if($fbex){
                 $efb = ExceptionFeedBack::init();
-                $efb->set(
-                     $_SESSION['FeedbackException']->code, 
-                     $_SESSION['FeedbackException']->data, 
-                     $_SESSION['FeedbackException']->message
-                );
-                unset($_SESSION['FeedbackException']);
+                $efb->set($fbex->code, $fbex->data, $fbex->message);
+                $request->context->remove('FeedbackException');
            }
+           
      	 parent::handle($request);
      }
 }

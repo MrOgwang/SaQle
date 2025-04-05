@@ -11,9 +11,10 @@ use SaQle\Image\Image;
 use SaQle\Core\Observable\{Observable, ConcreteObservable};
 use SaQle\Core\FeedBack\FeedBack;
 use SaQle\Orm\Entities\Model\Observer\ModelObserver;
+use SaQle\Orm\Entities\Model\Interfaces\IOperationManager;
 use Exception;
 
-class CreateManager implements Observable {
+class CreateManager implements Observable, IOperationManager {
 
 	 use ConcreteObservable{
 		 ConcreteObservable::__construct as private __coConstruct;
@@ -171,8 +172,12 @@ class CreateManager implements Observable {
 		 	 );
 
 		 	 //send a pre insert signal to observers
-		 	 $preobservers = ModelObserver::get_observers('before', 'insert', $this->modelclass);
+		 	 $preobservers = array_merge(
+		 	 	 ModelObserver::get_model_observers('before', 'insert', $this->modelclass),
+		 	 	 ModelObserver::get_shared_observers('before', 'insert')
+		 	 );
 	 	     $this->quick_notify(
+	 	     	 observers: $preobservers,
 	 	     	 code: FeedBack::OK, 
 	 	     	 data: [
 	 	     	 	 'data'          => $this->container->data, 
@@ -184,11 +189,11 @@ class CreateManager implements Observable {
 	 	     	 	 'db'            => DB_CONTEXT_CLASSES[$this->dbclass]['name'],
 	 	     	 	 'timestamp'     => time(),
 	 	     	 	 'model'         => $this->modelclass
-	 	     	 ],
-	 	     	 observers: $preobservers
+	 	     	 ]
 	 	     );
              //insert data
 		 	 $response = $operation->insert($pdo);
+		 	 print_r($response);
              //save files if any
 		 	 $this->auto_save_files();
 		 	 //get inserted data
@@ -200,8 +205,12 @@ class CreateManager implements Observable {
      	 	 $result = $this->container->multiple === true ? $created_rows : $created_rows[0];
 
              //send a post insert signal to observers
-     	 	 $postobservers = ModelObserver::get_observers('after', 'insert', $this->modelclass);
+     	 	 $postobservers = array_merge(
+     	 	 	 ModelObserver::get_model_observers('after', 'insert', $this->modelclass), 
+     	 	 	 ModelObserver::get_shared_observers('after', 'insert')
+     	 	 );
      	 	 $this->quick_notify(
+     	 	 	 observers: $postobservers,
 	 	     	 code: FeedBack::OK, 
 	 	     	 data: [
 	 	     	 	 'data'          => $this->container->data, 
@@ -214,8 +223,7 @@ class CreateManager implements Observable {
 	 	     	 	 'timestamp'     => time(),
 	 	     	 	 'result'        => $result,
 	 	     	 	 'model'         => $this->modelclass
-	 	     	 ],
-	 	     	 observers: $postobservers
+	 	     	 ]
 	 	     );
 
      	     return $result;
