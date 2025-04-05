@@ -266,9 +266,8 @@ if(!function_exists('service_unavailable_exception')){
 
 
 
-
 if(!function_exists('redirect')){
-     function redirect(?string $url = null, int $status = HttpMessage::FOUND->value, mixed $data = null, ?string $message = null){
+     function redirect(?string $url = null, int $status = HttpMessage::FOUND, mixed $data = null, ?string $message = null){
          return new RedirectResponse(url: $url, status: $status)->send();
      }
 }

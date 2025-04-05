@@ -24,6 +24,7 @@ use SaQle\Routes\Middleware\Base\BaseRoutingMiddleware;
 use SaQle\Http\Response\HttpMessage;
 use SaQle\Http\Request\Processors\ApiRequestProcessor;
 use SaQle\Routes\Exceptions\{RouteNotFoundException, MethodNotAllowedException};
+use SaQle\Core\Assert\Assert;
 
 class ApiRoutingMiddleware extends BaseRoutingMiddleware{
 
@@ -38,7 +39,7 @@ class ApiRoutingMiddleware extends BaseRoutingMiddleware{
          return [];
      }
 
-     public function find_and_assign_route(MiddlewareRequestInterface &$request, array $routes) : void {
+     public function find_and_assign_route(MiddlewareRequestInterface &$request, mixed $routes) : void {
          //get a matching route
          $match = null;
          $matches = [false, false];

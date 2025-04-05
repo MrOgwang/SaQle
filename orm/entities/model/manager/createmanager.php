@@ -193,7 +193,6 @@ class CreateManager implements Observable, IOperationManager {
 	 	     );
              //insert data
 		 	 $response = $operation->insert($pdo);
-		 	 print_r($response);
              //save files if any
 		 	 $this->auto_save_files();
 		 	 //get inserted data
@@ -287,7 +286,6 @@ class CreateManager implements Observable, IOperationManager {
 				     $pkvalues[] = $last_insert_id + $i;
 				 }
 		 	 }
-
 		 	 return $modelclass::get()->where($modelmeta->pk_name."__in", $pkvalues)->all();
      	 }
      }

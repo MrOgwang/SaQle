@@ -801,10 +801,10 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 
 	 public function get_insert_data($request){
 	 	 $fields_to_save = $this->meta->actual_column_names;
-	 	 $data_to_save   = array_intersect_key($this->data, array_flip($fields_to_save));
-
+	 	 //$data_to_save   = array_intersect_key($this->data, array_flip($fields_to_save));
+	 	 $data_to_save   = array_intersect_key($this->data, $fields_to_save);
 	 	 $data_to_save   = $this->swap_properties_with_columns($data_to_save);
-
+         
 	 	 //Inject creator and modifier fields, created and modified date time fields and deleted fields
 	 	 if($this->meta->auto_cm){
 	 	 	 $data_to_save[$this->meta->created_by_field] = $request->user->user_id ?? 0; #Id of current user
@@ -837,7 +837,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 
          //strip the primary key field, navigtaional and virtual fields, and the deleted field
 	 	 unset($data[$this->meta->deleted_field]);
-	 	 unset($data[$this->meta->pk_name]);
+	 	 //unset($data[$this->meta->pk_name]);
 	 	 $actual_fields = array_keys($this->meta->actual_column_names);
 
          $clean_data = [];

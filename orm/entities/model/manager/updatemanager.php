@@ -190,14 +190,9 @@ class UpdateManager implements Observable, IOperationManager{
 	 	     );
 	 	     //update data
 		 	 $response = $operation->update($pdo);
-		 	 //response will have a row count of 0 if no rows have been affected
-		 	 if($response->row_count > 0){
-		 	 	 $this->auto_save_files();
-		 	 	 $updateddata = $modelclass::get()->set_raw_filters($this->get_raw_filters())->all();
-		 	     $result = $multiple ? $updateddata : ($updateddata[0] ?? null);
-		 	 }else{
-		 	 	$result = false;
-		 	 }
+		 	 $this->auto_save_files();
+		 	 $updateddata = $modelclass::get()->set_raw_filters($this->get_raw_filters())->all();
+		 	 $result = $multiple ? $updateddata : ($updateddata[0] ?? false);
 
 		 	 //send a post update signal to observers
 		 	 $postobservers = array_merge(

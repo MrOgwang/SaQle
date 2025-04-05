@@ -15,7 +15,7 @@ class SigninObserver extends IAuthObserver{
 
 		 	 $request = resolve('request');
 		 	 //set request user
-		 	 $request->user = $user;
+		 	 $request->context->set('user', $user, true);
 
 	         //record user login
 			 $auth_service->record_signin($user->user_id);
@@ -33,7 +33,6 @@ class SigninObserver extends IAuthObserver{
 			 	 $tenant = null;
 			 	 session_regenerate_id();
 			 	 $request->context->set('is_user_authenticated', true, true);
-			 	 $request->context->set('user', $user, true);
 			 	 $request->context->set('user_has_tenant', $tenant ? true : false, true);
 			 	 $request->context->set('tenant', $tenant, true);
 			 	 $request->context->set('LAST_ACTIVITY', $_SERVER['REQUEST_TIME'], true);
