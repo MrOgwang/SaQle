@@ -55,7 +55,7 @@ class WebRequestProcessor extends RequestProcessor{
 	 	 	 	 }
 	 	 	 }*/
          }
-         return [$all_css, $all_js, $all_meta, $all_title, $all_html];
+         return [$all_css, $all_js, $all_meta, $all_title, $all_html, $parent_context];
      }
 
 	 public function process(){
@@ -64,7 +64,7 @@ class WebRequestProcessor extends RequestProcessor{
          $efb = ExceptionFeedBack::init();
 	 	 $feedback_context = $efb->acquire_context();
 
-	 	 [$all_css, $all_js, $all_meta, $all_title, $all_html] = $this->process_trail($trail, $feedback_context);
+	 	 [$all_css, $all_js, $all_meta, $all_title, $all_html, $trail_context] = $this->process_trail($trail, $feedback_context);
 
          $pagetemplate = $this->templaterefs['page'];
 	 	 $page = new View($pagetemplate, $this->request->user ?? new GuestUser());
@@ -118,10 +118,11 @@ class WebRequestProcessor extends RequestProcessor{
          	 $block_target = $this->controllerrefs[$b] ?? ( array_key_exists($b, $this->templaterefs) ? $b : '');
          	 if($block_target){
          	 	  $trail = [(Object)['url' => '', 'target' => $block_target, 'action' => 'get']];
-         	 	  [$block_css, $block_js, $block_meta, $block_title, $block_html] = $this->process_trail($trail, $feedback_context);
+         	 	  [$block_css, $block_js, $block_meta, $block_title, $block_html, $trail_context] = $this->process_trail($trail, $feedback_context);
          	 	  $css  = array_merge($css, $block_css);
          	 	  $js   = array_merge($js, $block_js);
          	 	  $response[$b] = $block_html;
+         	 	  $response     = array_merge($response, $trail_context);
          	 }
          }
 	 	 $view->set_context($response);

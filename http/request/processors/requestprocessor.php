@@ -134,7 +134,7 @@ class RequestProcessor{
 		     return $http_message;
 
 	 	 }catch(Throwable $e){
-	 	 	 //print_r($e);
+	 	 	 print_r($e);
 	 	 	 //extract any error responses set on the method
 	         $errresponse_attr = $reflection_method->getAttributes(OnErrorResponse::class);
 	         $errresponse      = $errresponse_attr ? $errresponse_attr[0]->newInstance() : null;

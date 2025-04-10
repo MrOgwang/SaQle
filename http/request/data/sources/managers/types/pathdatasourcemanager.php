@@ -10,7 +10,8 @@ class PathDataSourceManager extends DataSourceManager{
 
 	 public function get_value() : mixed {
 	 	 $this->is_valid();
-	 	 return $this->optional ? $this->request->route->params->get($this->name) : $this->request->route->params->get_or_fail($this->name);
+	 	 $refkey = $this->from->refkey ?? $this->name;
+	 	 return $this->optional ? $this->request->route->params->get($refkey) : $this->request->route->params->get_or_fail($refkey);
 	 }
 }
 ?>

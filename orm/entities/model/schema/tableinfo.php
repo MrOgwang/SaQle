@@ -425,6 +425,29 @@ class TableInfo{
  	 	 get => $this->file_required_fields;
  	 }
 
+     /**
+      * this is a property used to override the auto added fields from auto_cm, auto_cmdt and soft_delete settings.
+      * Instead of the default field types provided, provide a field name with a different field type
+      * to override the default ones.
+      *
+      * */
+     public array $auto_fields = [] {
+         set(array $value){
+             $this->auto_fields = $value;
+             $clean_auto_fields = [];
+             //change the auto fields types here.
+             foreach($this->auto_fields as $afk => $afv){
+                 if(array_key_exists($afk, $this->fields) && in_array($afk, $this->non_defined_field_names)) {
+                     $clean_auto_fields[$afk] = $afv;
+                 }
+             }
+             $this->remove_fields = false;
+             $this->fields = $clean_auto_fields;
+         }
+
+         get => $this->auto_fields;
+     }
+
      //add or remove the tenant field depending on the multitenancy setting
      private function toggle_tenant_field(bool $switch = true, string $signal_type = 'pre') : void{
          $auto_fields = [];
