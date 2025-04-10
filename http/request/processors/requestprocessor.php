@@ -7,6 +7,7 @@ use SaQle\Http\Request\Data\Sources\Managers\HttpDataSourceManager;
 use SaQle\Controllers\Helpers\{RespondWith, Exceptions, ExceptionHandler, OnErrorResponse};
 use SaQle\Auth\Models\Attributes\AuthUser;
 use SaQle\Auth\Permissions\AccessControl;
+use SaQle\Core\Services\Helpers\ObservedService;
 use ReflectionMethod;
 use ReflectionParameter;
 use Throwable;
@@ -104,6 +105,9 @@ class RequestProcessor{
 			     	 	 $args[] = new HttpDataSourceManager($attrinstance, ...['name' => $param_name, 'type' => $param_type, 'default' => $default_val, 'optional' => $optional])->get_value();
 			     	 }elseif($attrinstance instanceof AuthUser){
 			     	 	 $args[] = $this->request->user;
+			     	 }elseif($attrinstance instanceof ObservedService){
+			     	 	 $actual_service = resolve($attrinstance->service);
+			     	 	 $args[] = $actual_service;
 			     	 }
 			     }elseif($param_type && class_exists($param_type)){
                      $args[] = resolve($param_type);
@@ -130,7 +134,7 @@ class RequestProcessor{
 		     return $http_message;
 
 	 	 }catch(Throwable $e){
-	 	 	 print_r($e);
+	 	 	 //print_r($e);
 	 	 	 //extract any error responses set on the method
 	         $errresponse_attr = $reflection_method->getAttributes(OnErrorResponse::class);
 	         $errresponse      = $errresponse_attr ? $errresponse_attr[0]->newInstance() : null;

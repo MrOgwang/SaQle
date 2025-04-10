@@ -10,6 +10,7 @@ use SaQle\Http\Request\Middleware\CsrfMiddleware;
 use SaQle\Controllers\Interfaces\WebController;
 use SaQle\Core\FeedBack\ExceptionFeedBack;
 use SaQle\Templates\Template;
+use SaQle\Auth\Models\GuestUser;
 
 class WebRequestProcessor extends RequestProcessor{
 	 use StringUtils;
@@ -66,7 +67,7 @@ class WebRequestProcessor extends RequestProcessor{
 	 	 [$all_css, $all_js, $all_meta, $all_title, $all_html] = $this->process_trail($trail, $feedback_context);
 
          $pagetemplate = $this->templaterefs['page'];
-	 	 $page = new View($pagetemplate);
+	 	 $page = new View($pagetemplate, $this->request->user ?? new GuestUser());
 	 	 $page->set_context([
 	 	 	 'content' => $all_html, 
 	 	 	 'title' => $all_title, 
@@ -102,8 +103,8 @@ class WebRequestProcessor extends RequestProcessor{
 	 	     $target_context['http_response_message'] = $http_message->message;
 	 	     $response = array_merge($global_context, $context_from_parent, $target_context, $feedback_context);
 	 	 }
-
-	 	 $view = new View($template_file);
+	 	 
+	 	 $view = new View($template_file, $this->request->user ?? new GuestUser());
 
 	 	 $css     = $view->get_css();
 	 	 $js      = $view->get_js();

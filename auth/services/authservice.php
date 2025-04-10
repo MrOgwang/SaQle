@@ -2,31 +2,26 @@
 namespace SaQle\Auth\Services;
 
 use SaQle\Http\Request\Request;
-use SaQle\Core\Observable\{Observable, ConcreteObservable};
-use SaQle\Core\FeedBack\FeedBack;
 use SaQle\Auth\Models\Login;
 use SaQle\Auth\Services\Jwt;
+use SaQle\Core\Services\IService;
 
-abstract class AuthService implements Observable{
-	 use ConcreteObservable{
-		 ConcreteObservable::__construct as private __coConstruct;
-	 }
+abstract class AuthService implements IService{
 	 protected $request;
 	 public function __construct(){
 	 	 $this->request = Request::init();
-		 $this->__coConstruct();
 	 }
      abstract public function update_online_status(string | int $user_id, bool $is_online = true) : void;
-     abstract public function authenticate(...$kwargs) : FeedBack;
+     abstract public function authenticate(...$kwargs);
 	 public function record_signin(string | int $user_id){
-		 $count = Login::get()->where('user_id__eq', $user_id)->total();
+		 /*$count = Login::get()->where('user_id__eq', $user_id)->total();
 		 Login::new([
 		 	'login_count' => $count + 1, 
 		 	'login_datetime' => time(), 
 		 	'user_id' => $user_id,
 		 	'logout_datetime' => 1,
 		 	'login_span' => 1
-		 ])->save();
+		 ])->save();*/
 	 }
 	 public function record_signout(string | int $user_id) : void{
 		 $last_login = Login::get()->where('user_id__eq', $user_id)->order(["login_id"], "DESC")->limit(1, 1)->first_or_default();
@@ -36,15 +31,12 @@ abstract class AuthService implements Observable{
 			 Login::set(['logout_datetime' => time(), 'login_span' => $login_span])->where('login_id__eq', $last_login->login_id)->update();
 		 }
 	 }
-	 public function signout() : array{
-	 	 //session_start();
+	 public function signout(){
+	 	 $user = $this->request->user;
 	 	 session_unset();
          session_destroy();
 
-         $this->feedback->set(FeedBack::OK, $this->request->user, action: 'signout');
-		 $this->notify();
-
-		 return $this->feedback;
+         return $user;
 	 }
 
 	 /**

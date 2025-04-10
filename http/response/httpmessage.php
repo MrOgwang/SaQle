@@ -42,7 +42,7 @@ class HttpMessage extends FeedBack {
      * @param mixed      $response
      * @param string     $message
      * */
-	 public function __construct(int $code, array $response = [], string $message = ""){
+	 public function __construct(int $code, mixed $response = null, string $message = ""){
 		 $this->set($code, $response, $message);
 		 $this->status_message = $this->get_message($this->code);
 	 }

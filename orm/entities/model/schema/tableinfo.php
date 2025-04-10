@@ -496,7 +496,8 @@ class TableInfo{
                 'DATE'         => new DateField(required: false, strict: false),
                 'DATETIME'     => new DateTimeField(required: false, strict: false),
                 'TIME'         => new TimeField(required: false, strict: false),
-                'TIMESTAMP'    => new TimestampField(required: false, strict: false)
+                'TIMESTAMP'    => new TimestampField(required: false, strict: false),
+                //'TIMEDIFF'     => new TimeDifferenceField(required: false, strict: false)
              };
              $this->update_field_names($auto_fields, 'add', 'delete');
              return;

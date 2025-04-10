@@ -1,27 +1,29 @@
 <?php
 namespace SaQle\Auth\Observers;
 
-use SaQle\Observable\{Observer, Observable};
-use SaQle\Auth\Services\AuthService;
+use SaQle\Core\Services\Observer\AppServiceObserver;
+use SaQle\Core\Services\IService;
 use SaQle\Core\FeedBack\FeedBack;
 
-class SigninObserver extends IAuthObserver{
-	
-	 public function do_update(AuthService $auth_service){
-		 $fb = $auth_service->status();
-		 if($fb->code == FeedBack::OK && $fb->data && $fb->action === 'signin'){
+class SigninObserver extends AppServiceObserver{
+	 public function handle(IService $service){
+	 	 //print_r($service);
+	 	 $status = $service->status();
+		 if($status->code == FeedBack::OK && $status->data){
 
-		 	 $user = $fb->data;
+		 	 //print_r($status->data['result']);
+
+		 	 $user = $status->data['result'];
 
 		 	 $request = resolve('request');
 		 	 //set request user
 		 	 $request->context->set('user', $user, true);
 
 	         //record user login
-			 $auth_service->record_signin($user->user_id);
+			 $service->record_signin($user->user_id);
 			 
 			 //Set user online status to true
-			 $auth_service->update_online_status($user->user_id, true);
+			 $service->update_online_status($user->user_id, true);
 
              //if this is not an api request
 			 if(!$request->is_api_request()){
@@ -45,7 +47,7 @@ class SigninObserver extends IAuthObserver{
 				 }
 			 }
 		 }
-     }
+	 }
 }
 
 ?>

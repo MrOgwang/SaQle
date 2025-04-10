@@ -147,7 +147,7 @@ if(!function_exists('service_unavailable')){
  * The following are shortcuts to http exceptions
  * */
 function create_exception(string $eclass, string $message = '', string $redirect = '', mixed $data = null){
-     return new $eclass($message, $data, $redirect);
+     return new $eclass($message, is_null($data) ? [] : (!is_array($data) ? [$data] : $data), $redirect);
 }
 
 if(!function_exists('ok_exception')){

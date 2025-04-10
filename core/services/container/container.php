@@ -6,6 +6,8 @@ use ReflectionClass;
 use ReflectionMethod;
 use Exception;
 use ReflectionFunctionAbstract;
+use SaQle\Core\Services\IService;
+use SaQle\Core\Services\Proxy\ServiceProxy;
 
 class Container {
      private static ?Container $instance = null;
@@ -47,6 +49,10 @@ class Container {
              $this->instances[$abstract] = $object;
          }
 
+         //wrap the object in a service proxy if its a service
+         if($object instanceof IService){
+             $object = new ServiceProxy($object);
+         }
          return $object;
      }
 
@@ -86,7 +92,7 @@ class Container {
          return $dependencies;
      }
 
-     //rsolve and call a method with dependencies
+     //rseolve and call a method with dependencies
      public function call_method(object|string $class, string $method, array $parameters = []){
          $object = is_object($class) ? $class : $this->resolve($class);
          $reflectionMethod = new ReflectionMethod($object, $method);

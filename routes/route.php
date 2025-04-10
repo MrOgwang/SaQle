@@ -33,7 +33,7 @@ class Route implements IRoute{
      }
 
      //the path parameters extracted from route
-     public protected(set) Data $params {
+     public Data $params {
          set(Data $value){
              $this->params = $value;
          }
@@ -42,7 +42,7 @@ class Route implements IRoute{
      }
 
      //the query parameters extracted from the route
-     public protected(set) Data $queries {
+     public Data $queries {
          set(Data $value){
              $this->queries = $value;
          }
@@ -153,7 +153,7 @@ class Route implements IRoute{
 
              if(array_key_exists('query', $url_parts)){
                  parse_str($url_parts['query'], $queries);
-                 foreach($params as $q => $qv){
+                 foreach($queries as $q => $qv){
                      $this->queries->set($q, $qv);
                  }
              }

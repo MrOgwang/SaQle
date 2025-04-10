@@ -1,19 +1,12 @@
 <?php
 namespace SaQle\Auth\Services;
 
-use SaQle\Core\Observable\{Observable, ConcreteObservable};
-use SaQle\Core\FeedBack\FeedBack;
 use SaQle\Commons\StringUtils;
 use SaQle\Auth\Models\{Vercode, Contact};
+use SaQle\Core\Services\IService;
 
-abstract class AccountsService implements Observable{
-	 use StringUtils, ConcreteObservable{
-		 ConcreteObservable::__construct as private __coConstruct;
-	 }
-	
-	 public function __construct(){
-		 $this->__coConstruct();
-	 }
+abstract class AccountsService implements IService{
+	 use StringUtils;
 
 	 /**
 	  * Check whether a verification code exists and return it else return false
@@ -60,7 +53,6 @@ abstract class AccountsService implements Observable{
 		 if(!$code)
 		 	 internal_server_error_exception('Verification code creation failed! Please try again.');
 
-		 //return ok(data: $code);
 		 return ok();
 	 }
 
@@ -111,17 +103,22 @@ abstract class AccountsService implements Observable{
 		 	 bad_request_exception("The passwords provided do not match");
 
 		 //Generate and save code to the database
-		 $this->feedback = $this->save_verification_code($contact);
-		 
-		 $this->notify();
-		 
-		 return $this->feedback;
+		 return $this->save_verification_code($contact);
 	 }
 
 	 public function confirm_verification_code($contact, $code){
 	 	 $saved_code = Vercode::get()->where('contact__eq', $contact)->last_or_default();
 		 if(!$saved_code || ($saved_code && $saved_code->code != $code))
 		 	 bad_request_exception("Invalid code provided!");
+
+		 return ok();
+	 }
+
+	 public function confirm_username($username){
+	 	 $usermodel = AUTH_MODEL_CLASS;
+	 	 $user = $usermodel::get()->where('username__eq', $username)->first_or_default();
+		 if($user)
+		 	 bad_request_exception("This user name is taken!");
 
 		 return ok();
 	 }

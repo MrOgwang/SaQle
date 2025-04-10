@@ -43,7 +43,10 @@ class ExceptionHandler{
              }
          }
 
-         return new HttpMessage(code: HttpMessage::INTERNAL_SERVER_ERROR);
+         return new HttpMessage(
+             code: $e instanceof FeedbackException ? $e->getCode() : HttpMessage::INTERNAL_SERVER_ERROR, 
+             message: $e->getMessage()
+         );
      }
 
      public static function get_default_exceptions(){

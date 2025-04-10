@@ -25,22 +25,30 @@ use SaQle\Controllers\Refs\ControllerRef;
 
 class WebRoutingMiddleware extends BaseRoutingMiddleware{
 
-     private function extract_trail(&$request, array $matches, array $trail = []){
+     private function extract_trail(&$request, array $matches, array $trail = [], array $params = [], array $queries = []){
          if(isset($matches[2])){
              $route   = $matches[2];
              $trail[] = (Object)['url' => $route->url, 'target' => $route->target, 'action' => $route->action];
+             $params  = array_merge($params, $route->params->get_all());
+             $queries = array_merge($queries, $route->queries->get_all());
          }
 
          if(is_array($matches[1])){
-             $trail = $this->extract_trail($request, $matches[1], $trail);
+             $trail = $this->extract_trail($request, $matches[1], $trail, $params, $queries);
          }else{
              if(!$matches[1]){ //a match was found with the wrong method
                  throw new MethodNotAllowedException(url: $_SERVER['REQUEST_URI'], method: $_SERVER['REQUEST_METHOD'], methods: $matches[2]->methods);
              }
 
              //set the appropriate action for the matching route
-             $match = $matches[2];
-             $match->action = $match->actions[strtolower($match->method)] ?? strtolower($match->method);
+             $match          = $matches[2];
+             $match->action  = $match->actions[strtolower($match->method)] ?? strtolower($match->method);
+             foreach($queries as $q => $qv){
+                 $match->queries->set($q, $qv);
+             }
+             foreach($params as $p => $pv){
+                 $match->params->set($p, $pv);
+             }
              $trail[count($trail) - 1]->action = $match->action;
 
              $request->route = $match;

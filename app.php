@@ -10,7 +10,7 @@ use SaQle\Http\Cors\AppCors;
 use SaQle\Core\Services\Container\AppContainer;
 use SaQle\Core\Services\Providers\AppProvider;
 use SaQle\Services\Locators\DefaultServiceLocator;
-use SaQle\Services\Providers\RequestContextModelObserversProvider;
+use SaQle\Services\Providers\{DefaultServiceObserverProvider, RequestContextModelObserversProvider};
 
 class App{
      private static ?self $instance = null;
@@ -98,7 +98,10 @@ class App{
          self::$_locators::load();
 
          //register and load providers
-         self::$_providers::register([RequestContextModelObserversProvider::class]);
+         self::$_providers::register([
+             DefaultServiceObserverProvider::class,
+             RequestContextModelObserversProvider::class
+         ]);
          self::$_providers::load(); 
      }
 }

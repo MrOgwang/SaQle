@@ -17,7 +17,7 @@ class RequestContext extends Data {
 
 	 public function get(string $key, $default = null){
 
-	 	 if(array_key_exists($key, $_SESSION)){
+	 	 if($_SESSION && array_key_exists($key, $_SESSION)){
 	 	 	 return $_SESSION[$key];
 	 	 }
 
@@ -25,27 +25,27 @@ class RequestContext extends Data {
      }
 
      public function get_or_fail(string $key) : mixed {
-     	 if(!array_key_exists($key, $_SESSION) && !array_key_exists($key, $this->data)){
+     	 if(($_SESSION && !array_key_exists($key, $_SESSION)) && !array_key_exists($key, $this->data)){
 	 	 	 throw new KeyNotFoundException($key);
 	 	 }
 
 	 	 $session = $this->pointers[$key];
 	 	 if($session){
-	 	 	 return $_SESSION[$key];
+	 	 	 return $_SESSION ? $_SESSION[$key] : '';
 	 	 }
 
 	 	 return $this->data[$key];
      }
 
      public function exists(string $key){
-     	 if(array_key_exists($key, $_SESSION))
+     	 if($_SESSION && array_key_exists($key, $_SESSION))
      	 	 return true;
 
      	 return parent::exists($key);
      }
 
      public function remove($key){
-	 	 if(array_key_exists($key, $_SESSION)){
+	 	 if($_SESSION && array_key_exists($key, $_SESSION)){
 	 	 	 unset($_SESSION[$key]);
 
 	 	 	 return true;

@@ -12,8 +12,6 @@ use SaQle\Orm\Entities\Model\Manager\{CreateManager, UpdateManager, DeleteManage
 use SaQle\Orm\Entities\Model\Interfaces\{IModel, ITableSchema};
 use SaQle\Orm\Entities\Model\Collection\ModelCollection;
 use SaQle\Core\Exceptions\Model\{UndefinedFieldException, MissingRequiredFieldsException};
-use SaQle\Orm\Database\Db;
-use SaQle\Orm\Database\Attributes\TransactionOutput;
 use Exception;
 
 use JsonSerializable;
@@ -33,12 +31,6 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 	  * Models instantiated via the static method do not need data passed to the constructor.
 	  * */
 	 private static bool $from_static_method = false;
-
-	 /**
-	  * Mark a model as having received data from db
-	  * When data is received from db, no validation is run on the data.
-	  * */
-	 private static bool $from_database = false;
 
      /**
       * A key => value array of raw model data: keys are field names.
@@ -73,11 +65,10 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 	 protected static array $instances = [];
 	 
 	 public function __construct(...$kwargs){
-	 	 if(!self::$from_static_method && !self::$from_database){
+	 	 if(!self::$from_static_method){
 	 	 	 if(empty($kwargs))
 	 	 	 	 throw new \Exception("Please provide data for: ".$this::class." when creating a new model instant!");
 
-             //print_r($kwargs);
 	 	 	 //convert any values coming in with column names to field names
 	 	 	 $kwargs = $this->format_data($kwargs);
 	 	 	 //print_r($kwargs);
@@ -93,6 +84,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 
              //run validation on the data
              $this->run_data_validation($kwargs);
+             //print_r($kwargs);
          }
 
 	 	 $this->data = $kwargs;
@@ -132,15 +124,6 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
          }
 
          return self::$instances[$called_class];
-     }
-
-     final public static function from_db(...$data){
-     	 self::$from_database = true;
-
-         $called_class = get_called_class();
-         $model = new $called_class(...$data);
-         self::$from_database = false;
-         return $model;
      }
 
 	 public static function get_table_n_dbcontext(?string $dbclass = null){
@@ -391,7 +374,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 	 	 return $this->meta->fields[$field_name]->render($this->format_data($this->data, 'columns'));
      }
 
-     public function get_field(string $field_name) : IField {
+     public function get_field(string $field_name) : IField{
      	 $field_name     = $this->assert_field_defined($field_name, true);
      	 $field          = $this->meta->fields[$field_name];
      	 $field->content = $this->format_data($this->data, 'columns');
@@ -403,7 +386,9 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
              throw new \Exception("This is a read only model. You cannot modify the values!");
          }
 
-         $this->assert_field_defined($name, true);
+         if(!array_key_exists($name, $this->data)){
+             throw new \Exception("Property '$name' does not exist! on the model: ".$this::class);
+         }
 
          //save the data state so we can track changes from now on
          if(!$this->data_state){
@@ -518,43 +503,30 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
       * that are savable.
       * */
 	 public function get_savable_values(){
-	 	 $regular_fields      = [];
-	 	 $manytomany_fields   = [];
-	 	 $manytomany_throughs = [];
-	 	 //acquire field classification
+	 	 $savable_simple = [];
+	 	 $savable_fk = [];
+	 	 $savable_nk = [];
+
 	 	 [$defined_field_names, $simple_fields, $fk_fields, $nk_fields] = $this->classify_fields();
 
 	     foreach($defined_field_names as $field){
 	     	 /**
-	     	  * At this point the data has gone through the constructor, so we are confident the model
-	     	  * has all the fields required to be saved.
+              * Only take fields with values
+              * - validation mechanism will determine whether all the properties required for a successful save are there or not, so don't worry about it here.
+              * Also take only those properties that wer explicitly defined on the schema associated with this model.
               * */
 			 $val = $this->$field;
-
+			 
 		     if(in_array($field, $simple_fields)){
-		     	 $regular_fields[$field] = $val;
+	     	 	 $savable_simple[$field] = [$val, false];
 	     	 }elseif(in_array($field, $nk_fields)){
-	     	 	 $nk_field_vals  = [];
-	     	 	 $relation       = $this->is_relation_field($field);
-	     	 	 $through        = $relation->get_through_model();
-	     	 	 $fmodel         = $relation->fmodel;
-	     	 	 $fmodel_pk_name = $fmodel::state()->meta->pk_name;
-	     	 	 foreach($val as $v){
-	     	 	 	 $nk_field_vals[] = is_object($v) ? $v->$fmodel_pk_name : $v;
-	     	 	 }
-
-	     	 	 $manytomany_fields[$field]   = $nk_field_vals;
-	     	 	 $manytomany_throughs[$field] = $through;
+                 $savable_nk[$field] = [$val, $this->is_relation_field($field)];
 	     	 }elseif(in_array($field, $fk_fields)){
-	     	 	 //will do later
-	     	 	 $relation = $this->is_relation_field($field);
-	     	 	 $fmodel         = $relation->fmodel;
-	     	 	 $fmodel_pk_name = $fmodel::state()->meta->pk_name;
-	     	 	 $regular_fields[$field] = is_object($val) ? $val->$fmodel_pk_name : $val;
+                 $savable_fk[$field] = [$val, $this->is_relation_field($field)];
 	     	 }
 	     }
 
-	     return [$regular_fields, $manytomany_fields, $manytomany_throughs];
+	     return [$savable_simple, $savable_nk, $savable_fk, $this->meta->pk_name];
 	 }
 
 	 /**
@@ -565,39 +537,114 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 	  * 3. Values for properties that were not explicitly defined i.e values generated by auto_cm_fields, auto_cmdt_fields, soft_delete and enable_multitenancy flags will be filled in automatically. If there are values assigned for these properties here, they will be ignored.
 	  * */
 	 public function save(?array $update_optional = null){
-	 	 [$regular_fields, $manytomany_fields, $manytomany_throughs] = $this->get_savable_values();
-	 	 $object_pk_name  = $this->meta->pk_name;
-         $result = new Db($this->meta->db_class)->transaction([
-	 	 	 /**
-		 	  * Save the current object. 
-		 	  * 
-		 	  * This object may as well be already existing, but the models action_on_duplicate setting
-		 	  * should take care of it.
-		 	  * */
-	 	 	 #[TransactionOutput('object1')]
-	 	 	 function() use ($regular_fields){
-	 	 	 	 return self::new($regular_fields)->save();
-	 	     }, 
+	 	 $current_data_state = $this->get_data_state();
 
-             //Save many to many objects
-             #[TransactionOutput('object2')]
-	 	     function($object1) use ($manytomany_fields, $manytomany_throughs, $object_pk_name){
-	 	     	 if($manytomany_fields){
-			 	 	 $object_pk_value = $object1->$object_pk_name;
-			 	 	 foreach($manytomany_fields as $field_name => $field_values){
-			 	 	 	 $through = $manytomany_throughs[$field_name];
-			 	 	 	 $toadd = [];
-			 	 	 	 foreach($field_values as $id){
-			 	 	 	 	 $toadd[] = [$through[3] => $object_pk_value, $through[4] => $id];
-			 	 	 	 }
-			 	 	 	 $object1->$field_name = $through[1]::new($toadd)->save();
-			 	 	 }
-			 	 }
-	 	     	 return $object1;
-	 	     }
-	 	 ]);
+	 	 print_r($current_data_state);
+	     
+	 	 [$savable_simple, $savable_nk, $savable_fk, $pk_name] = $this->get_savable_values();
 
-	 	 return $result['object1'];
+	 	 print_r($savable_simple);
+	 	 print_r($savable_nk);
+	 	 print_r($savable_fk);
+
+	 	 $with_fields = [];
+
+	 	 #If there are foreign relations, save them first. FK relations are one to one, so the save is expected to return a single object.
+	 	 $saved_fk_ids = [];
+	 	 foreach($savable_fk as $fk_key => $fk_value){
+	 	 	 if(isset($fk_value[0])){
+	 	 	 	$with_fields[] = $fk_key;
+		 	 	 $s = $fk_value[0]->save();
+		 	 	 if($s){
+		 	 	 	 $fk_name = $fk_value[1]->fk;
+		 	 	 	 $saved_fk_ids[$fk_key] = $s->$fk_name;
+		 	 	 }
+	 	 	 }
+	 	 }
+
+	 	 #Save the current object next.
+	 	 $object = null;
+	 	 $object_data = array_combine(array_keys($savable_simple), array_column(array_values($savable_simple), 0));
+	 	 if(isset($savable_simple[$pk_name][0])){ //this object has a value for primary key field.
+	 	 	 
+	 	 	 #acquire the object
+	 	 	 $object = self::db()->with(array_merge(array_keys($savable_nk), array_keys($savable_fk)))
+	 	 	 ->where($pk_name, $savable_simple[$pk_name][0])->first_or_default();
+
+	 	 	 if($object){
+
+	 	 	 	 #get the changes made
+	 	 	 	 [$simple_changed, $fk_changed, $nk_changed] = $this->get_state_change($current_data_state, $update_optional);
+	 	 	 	 $simple_changes = array_merge($simple_changed, $fk_changed);
+	 	 	 	 if($simple_changes){
+	 	 	 	 	 #attempt an update
+		 	 	 	 self::db()->set_data_state($current_data_state)->where($pk_name, $savable_simple[$pk_name][0])
+		 	 	 	 ->set($simple_changes)->update();
+	 	 	 	 }
+                 
+	 	 	 	 #remove any many to many bondings that are no longer existing.
+	 	 	 	 foreach($nk_changed as $nkf => $nkv){
+	 	 	 	 	 if($nkv['removed']){
+	 	 	 	 	 	 $tm = $nkv['model']; //table model
+                 	     $tm::db2($nkv['table'], $tm, $nkv['context'])->where($nkv['key']."__in", $nkv['removed'])->delete(permanently: true);
+	 	 	 	 	 }
+                 }
+	 	 	 }
+	 	 }
+         
+         #save object in db if its null upto this point
+	 	 if(!$object)
+	 	 	 $object = self::new(array_merge($object_data, $saved_fk_ids))->set_data_state($current_data_state)->save();
+
+	 	 #abort save operation if object its still null at this point.
+	 	 if(!$object)
+	 	  	 throw new \Exception("Save operation aborted! This object could not be saved.");
+	 	 
+	 	 #save navigation key data
+	 	 $saved_nk_ids = [];
+	 	 foreach($savable_nk as $nk_key => $nk_value){
+	 	 	 if(!is_null($nk_value[0])){
+	 	 	 	 $with_fields[] = $nk_key;
+		 	 	 $nk_pk_name = $nk_value[1]->pk;
+		 	 	 $nk_fk_name = $nk_value[1]->fk;
+		 	 	 $nk_pk_value = $object->$nk_pk_name;
+
+		 	 	 if(is_array($nk_value[0]) && count($nk_value[0]) > 0){
+		 	 	 	 $colection = new ModelCollection(type: $nk_value[0][0]::class, elements: $nk_value[0]);
+		 	 	 	 $s = $colection->save();
+	 	 	 	 	 $saved_nk_ids[$nk_key] = [$nk_pk_value, $s->$nk_fk_name, $nk_value[1]->get_through_model(), $nk_pk_name, $nk_fk_name];
+	 	 	 	 	 //print_r($saved_nk_ids);
+	 	 	 	 }else{
+	 	 	 	 	 $nk_fk_name = $nk_value[1]->fk;
+	 	 	 	 	 $nk_value[0]->$nk_fk_name = $nk_pk_value;
+	 	 	 	 	 $s = $nk_value[0]->save();
+	 	 	 	 }
+	 	 	 }
+	 	 }
+
+	 	 #tie the navigation key data to object via through model
+	 	 foreach($saved_nk_ids as $_nk => $_ids){
+	 	 	 if(count($_ids[1]) > 0){
+		 	 	 $through_model_schema = $_ids[2];
+		 	 	 $through_model = $through_model_schema[1];
+		 	 	 $data = [];
+		 	 	 $pk_col_name = $through_model_schema[3];
+		 	 	 $fk_col_name = $through_model_schema[4];
+		 	 	 $pk_col_val = $_ids[0];
+		 	 	 foreach($_ids[1] as $fk_col_val){
+		 	 	 	 $data[] = [$pk_col_name => $pk_col_val, $fk_col_name => $fk_col_val];
+		 	 	 }
+		 	 	 $connected = $through_model::db2($through_model_schema[0], $through_model_schema[1], $through_model_schema[2])
+		 	 	 ->add_multiple($data)->save();
+		 	 }
+	 	 }
+
+	 	 $getmana = self::db()->set_data_state($current_data_state)->where($pk_name, $object->$pk_name);
+	 	 if($with_fields){
+	 	 	$getmana->with($with_fields);
+	 	 }
+
+	 	 return $getmana->first_or_default();
 	 }
 
 	 public function jsonSerialize() : mixed{
@@ -659,7 +706,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
      	 	 	  * 
      	 	 	  * For integer primary keys, just assign 1. The database will assign the right pk value
      	 	 	  * */
-     	 	 	 if($f instanceof Pk && (!array_key_exists($f->field_name, $data) || (array_key_exists($f->field_name, $data) && !$data[$f->field_name]))){
+     	 	 	 if($f instanceof Pk && !array_key_exists($f->field_name, $data)){
      	 	 	 	 $data[$f->field_name] = $this->meta->pk_type === 'GUID' ? $this->guid() : 1;
      	 	 	 }
 

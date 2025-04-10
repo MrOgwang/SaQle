@@ -44,11 +44,11 @@ use Attribute;
 #[Attribute(Attribute::TARGET_METHOD)]
 class RespondWith {
      protected string $model;
-     protected bool   $from_feeback;
+     protected bool   $from_feedback;
 
-     public function __construct(string $model, bool $from_feeback) {
+     public function __construct(string $model, bool $from_feedback) {
          $this->model = $model;
-         $this->from_feeback = $from_feeback;
+         $this->from_feedback = $from_feedback;
      }
 
      public function get_context() : array {
