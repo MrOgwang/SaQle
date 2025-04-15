@@ -11,7 +11,7 @@ abstract class Binary extends RealField{
 	 public mixed $file_path {
 	 	 get {
 	 	 	 $field_name = $this->field_name;
-	 	 	 $data       = !is_null($this->content) ? (object)$this->content : null;
+	 	 	 $data       = !is_null($this->context) ? (object)$this->context : null;
 	 	 	 $file_value = $data->$field_name ?? null;
 	 	 	 if(!$file_value)
 	 	 	 	 return $this->multiple ? [] : null;
@@ -33,7 +33,7 @@ abstract class Binary extends RealField{
 	 public mixed $file_name {
 	 	 get {
 	 	 	 $field_name = $this->field_name;
-	 	 	 $data       = !is_null($this->content) ? (object)$this->content : null;
+	 	 	 $data       = !is_null($this->context) ? (object)$this->context : null;
 	 	 	 $file_value = $data->$field_name ?? null;
 	 	 	 if(!$file_value)
 	 	 	 	 return $this->multiple ? [] : null;

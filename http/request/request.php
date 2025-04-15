@@ -173,7 +173,7 @@ class Request implements MiddlewareRequestInterface{
      }
 
      public function add_context(string $name, mixed $value, bool $session = false){
-         $this->context->set($name, $value);
+         $this->context->set($name, $value, $session);
      }
 }
 ?>

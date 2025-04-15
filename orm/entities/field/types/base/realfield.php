@@ -51,13 +51,31 @@ abstract class RealField extends Simple{
 	 	 get => $this->validation_type;
 	 }
 
-	 //The actual, unmodified content of this field
-	 public mixed $content = null {
-	 	 set(mixed $value){
-	 	 	 $this->content = $value;
+	 //The actual, unmodified value of this field
+	 public mixed $value = null {
+	 	 set(mixed $val){
+	 	 	 $this->value = $val;
 	 	 }
 
-	 	 get => $this->content;
+	 	 get => $this->value;
+	 }
+
+	 /**
+	  * When calling the render method of a field, a data object/array containing
+	  * all the fields in a model and their corresponding values is passed to the render method.
+	  * 
+	  * This is because the render method may need values of other model fields
+	  * to construct its own value
+	  * 
+	  * This data object/array is stored in context
+	  * 
+	  * */
+	 public mixed $context = null {
+	 	 set(mixed $value){
+	 	 	 $this->context = $value;
+	 	 }
+
+	 	 get => $this->context;
 	 }
 
 	 //Whether to allow null content, works for text, numbers and files.
@@ -156,7 +174,7 @@ abstract class RealField extends Simple{
 
      //get a string represtation of this field
 	 public function __toString(){
-	 	 return $this->content ? (string)$this->content : "";
+	 	 return $this->value ? (string)$this->value : "";
 	 }
 
 	 //get validation key word arguemnts
@@ -180,7 +198,7 @@ abstract class RealField extends Simple{
 	 	 return [
 	 	 	 'column_type',
 	 	 	 'column_name',
-	 	 	 'content'
+	 	 	 'value'
 	 	 ];
 	 }
 

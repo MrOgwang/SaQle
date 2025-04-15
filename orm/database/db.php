@@ -20,7 +20,9 @@ class Db{
          	 Assert::allIsCallable($callbacks);
 
 		 	 $pdo = resolve(Connection::class, DB_CONTEXT_CLASSES[$this->dbclass]);
-		 	 $pdo->beginTransaction();
+             if($pdo && !$pdo->inTransaction()){
+                 $pdo->beginTransaction();
+             }
 
 		 	 //array to hold the results of each callback, indexed by parameter names
 	         $results = [];
@@ -48,10 +50,14 @@ class Db{
                  }
              }
 
-             $pdo->commit();
+             if($pdo && $pdo->inTransaction()){
+                 $pdo->commit();
+             }
              return $results;
          }catch(Exception $e){
-             $pdo->rollBack();
+             if($pdo && $pdo->inTransaction()){
+                 $pdo->rollback();
+             }
              throw $e;
          }
 	 }

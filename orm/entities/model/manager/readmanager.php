@@ -127,7 +127,13 @@ class ReadManager extends IReadManager implements Observable, IOperationManager 
 	 	 	 $selected_fields = $tuning_manager->get_selected_fields();
 	 	 }
 
+         $through_columns = [];
          if($through){
+         	 if(!$selected_fields){
+         	 	 $through_model   = $through[1];
+         	     $through_columns = array_values($through_model::state()->meta->actual_column_names);
+         	 }
+
          	 $throughtablename = $through[0];
 		 	 $cte_manager = $foreign_model::get()->config(fnqm: 'H-QUALIFY', ftnm: 'N-ONLY', ftqm: 'N-QUALIFY');
 	         $cte_manager->select(null, function($fields) use ($foreign_key, $order_clause){
@@ -148,7 +154,8 @@ class ReadManager extends IReadManager implements Observable, IOperationManager 
          $query_table_name = 'ranked_rows';
          $outer_manager = $foreign_model::get(tablealiase: $query_table_name)
          ->config(fnqm: 'N-QUALIFY', ftnm: 'A-ONLY')
-         ->select($selected_fields, function($fields) use ($foreign_key, $field_name){
+         ->select($selected_fields, function($fields) use ($foreign_key, $field_name, $through_columns){
+         	 $fields = array_merge($fields, $through_columns);
  	 	     $json_string = "";
 			 foreach ($fields as $_i => $f){
 		         $keyparts = explode(".", $f);

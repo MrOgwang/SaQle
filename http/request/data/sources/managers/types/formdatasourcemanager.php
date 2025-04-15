@@ -38,18 +38,9 @@ class FormDataSourceManager extends DataSourceManager{
  	 	  * */
 
  	 	 //get all the defined fields for this model.
- 	 	 $model_fields = $paramtype::state()->meta->defined_field_names;
-
- 	 	 /**
- 	 	  * if the fields property of from object is specified, make sure all the fields listed are defined,
- 	 	  * otherwise throw an exception
- 	 	  * */
- 	 	 if($this->from->fields){
- 	 	 	 $non_existing_fields = array_diff($this->from->fields, $model_fields);
- 	 	 	 if($non_existing_fields){
- 	 	 	 	 throw new \Exception('The fields '.implode(',', $non_existing_fields).' do not exist on the model: '.$paramtype);
- 	 	 	 }
- 	 	 }
+ 	 	 $model_fields          = $paramtype::state()->meta->defined_field_names;
+ 	 	 $model_columns         = $paramtype::state()->meta->column_names;
+ 	 	 $flipped_model_columns = array_flip($model_columns);
 
          //the model is embedded in form data
  	 	 if($this->from->embedded){
@@ -63,11 +54,24 @@ class FormDataSourceManager extends DataSourceManager{
  	 	 }
 
  	 	 //hustle the object values from the form data
+ 	 	 $fields_to_take = $this->from->fields ? $this->from->fields : $model_fields;
  	 	 $object       = [];
- 	 	 foreach($model_fields as $f){
- 	 	 	 $pv = $this->request->data->get($f);
- 	 	 	 if($pv){
- 	 	 	 	 $object[$f] = $pv;
+ 	 	 foreach($fields_to_take as $f){
+ 	 	 	 $field_name  = '';
+ 	 	 	 $column_name = '';
+ 	 	 	 if(array_key_exists($f, $model_columns)){
+ 	 	 	 	 $field_name  = $f;
+ 	 	 	     $column_name = $model_columns[$f];
+ 	 	 	 }elseif(array_key_exists($f, $flipped_model_columns)){
+ 	 	 	 	 $field_name  = $flipped_model_columns[$f];
+ 	 	 	     $column_name = $f;
+ 	 	 	 }
+
+ 	 	 	 if($field_name && $column_name){
+ 	 	 	     $pv = $this->request->data->get($field_name, $this->request->data->get($column_name));
+	 	 	 	 if($pv){
+	 	 	 	 	 $object[$f] = $pv;
+	 	 	 	 }
  	 	 	 }
  	 	 }
 

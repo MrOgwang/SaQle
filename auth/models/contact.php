@@ -9,10 +9,19 @@ class Contact extends Model{
       protected function model_setup(TableInfo $meta) : void{
       	 $meta->fields = [
       	 	 'contact_id'    => new Pk(),
-		     'contact_type'  => new TinyTextField(required: true, strict: true, length: 20, choices: ['email', 'phone']),
-		     'contact_class' => new TinyTextField(required: true, strict: true, length: 20, choices: ['primary', 'secondary']),
+		     'contact_type'  => new TinyTextField(required: true, strict: true, length: 20, choices: [
+		     	 'email' => 'Email Address', 
+		     	 'phone' => 'Phone Number'
+		      ]),
+		     'contact_class' => new TinyTextField(required: true, strict: true, length: 20, choices: [
+		     	 'primary'   => 'Primary contact', 
+		     	 'secondary' => 'Secondary contact'
+		      ]),
 		     'contact'       => new TinyTextField(required: true, length: 200),
-		     'owner_type'    => new TinyTextField(required: true, strict: true, length: 20, choices: ['tenant', 'user']),
+		     'owner_type'    => new TinyTextField(required: true, strict: true, length: 20, choices: [
+		     	 'tenant' => 'Organizationn owns contact', 
+		     	 'user'   => 'User owns contact'
+		      ]),
 		     'owner_id'      => new TinyTextField(required: true, length: 100)
       	 ];
       	 $meta->name_property = 'contact';

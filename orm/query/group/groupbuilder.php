@@ -27,12 +27,12 @@ class GroupBuilder{
 	 	$fieldrefs = $ctx->fieldrefs;
 	 	
 	 	$tmp_fields = $this->fields;
- 		$this->fields = [];
+	 	$group_by_fields = [];
  		foreach($tmp_fields as $cn){
  			 //is the column name a fully qualified name?
  			 $cn_parts = explode(".", $cn);
  			 if(count($cn_parts) === 3){
- 			 	 $this->fields[] = $cn;
+ 			 	 $group_by_fields[] = $cn;
  			 	 continue;
  			 }
 
@@ -41,7 +41,7 @@ class GroupBuilder{
  			 	 $table_name = $cn_parts[0];
  			 	 $table_index = array_search($table_name, $tables);
  			 	 if($table_index !== false){
- 			 	 	 $this->fields[] = $databases[$table_index].".".$cn;
+ 			 	 	 $group_by_fields[] = $databases[$table_index].".".$cn;
  			 	 }
  			 	 continue;
  			 }
@@ -57,9 +57,11 @@ class GroupBuilder{
  		     }
 
  		     if($cg_index !== -1){
- 		     	 $this->fields[] = $aliases[$cg_index] ? $databases[$cg_index].".".$aliases[$cg_index].".".$cn : $databases[$cg_index].".".$tables[$cg_index].".".$cn;
+ 		     	 $group_by_fields[] = $aliases[$cg_index] ? $databases[$cg_index].".".$aliases[$cg_index].".".$cn : $databases[$cg_index].".".$tables[$cg_index].".".$cn;
  		     }
  		}
+
+ 		$this->fields = $group_by_fields;
 
 	 	return $this->fields;
 	 }

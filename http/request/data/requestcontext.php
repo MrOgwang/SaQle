@@ -29,12 +29,11 @@ class RequestContext extends Data {
 	 	 	 throw new KeyNotFoundException($key);
 	 	 }
 
-	 	 $session = $this->pointers[$key];
-	 	 if($session){
-	 	 	 return $_SESSION ? $_SESSION[$key] : '';
+	 	 if($_SESSION && array_key_exists($key, $_SESSION)){
+	 	 	 return $_SESSION[$key];
+	 	 }else{
+	 	 	return $this->data[$key];
 	 	 }
-
-	 	 return $this->data[$key];
      }
 
      public function exists(string $key){

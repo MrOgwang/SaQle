@@ -2,10 +2,6 @@
 namespace SaQle\Orm\Entities\Field\Types\Base;
 
 abstract class Scalar extends RealField{
-	 private function format_choices(array $choices, bool $use_keys = false) : array {
- 	 	 return $use_keys ? array_keys($choices) : array_values($choices);
-	 }
-
 	 //an array of choices from which the value must exists
 	 public ?array $choices = null {
 	 	 set(?array $value){
@@ -15,12 +11,22 @@ abstract class Scalar extends RealField{
 	 	 get => $this->choices;
 	 }
 
+	 /**
+	  * When choices are provided as a key => value array, 
+	  * the keys are what is actually stored in the databased and returned when render method is called.
+	  * 
+	  * The description property returns the use friendly value for a given choice. The description
+	  * is a virtual property and cannot be set.
+	  * */
+	 public mixed $description {
+	 	 get {
+	 	 	return $this->choices[$this->value] ?? $this->value;
+	 	 }
+	 }
+
 	 protected bool $use_keys = false;
  
 	 public function __construct(...$kwargs){
-	 	 if(array_key_exists('choices', $kwargs) && is_array($kwargs['choices'])){
-	 	 	 $kwargs['choices'] = $this->format_choices($kwargs['choices'], $kwargs['use_keys'] ?? false);
-	 	 }
 		 parent::__construct(...$kwargs);
 	 }
 

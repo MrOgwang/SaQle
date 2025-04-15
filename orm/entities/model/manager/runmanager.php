@@ -6,7 +6,7 @@ namespace SaQle\Orm\Entities\Model\Manager;
 use SaQle\Orm\Operations\Crud\RunOperation;
 
 class RunManager{
-	 private string $sql = {
+	 private string $sql = '' {
 	 	 set(string $value){
 	 	 	 $this->sql = $value;
 	 	 }

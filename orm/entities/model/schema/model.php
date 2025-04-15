@@ -392,9 +392,11 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
      }
 
      public function get_field(string $field_name) : IField {
+     	 $context        = $this->format_data($this->data, 'columns');
      	 $field_name     = $this->assert_field_defined($field_name, true);
      	 $field          = $this->meta->fields[$field_name];
-     	 $field->content = $this->format_data($this->data, 'columns');
+     	 $field->context = $context;
+     	 $field->value   = $context[$field->column_name] ?? null;
      	 return $field;
      }
 
