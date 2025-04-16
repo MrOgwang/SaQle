@@ -392,8 +392,8 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
      }
 
      public function get_field(string $field_name) : IField {
-     	 $context        = $this->format_data($this->data, 'columns');
      	 $field_name     = $this->assert_field_defined($field_name, true);
+     	 $context        = $this->format_data($this->data, 'columns');
      	 $field          = $this->meta->fields[$field_name];
      	 $field->context = $context;
      	 $field->value   = $context[$field->column_name] ?? null;
@@ -413,6 +413,16 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
          }
 
          $this->data = array_merge($this->data, [$name => $value]);
+     }
+
+     public function __call(string $method, array $args){
+     	 return $this->get_field($method);
+     }
+
+     public static function __callStatic(string $method, array $args){
+     	 $modelclass = get_called_class();
+     	 $model      = $modelclass::state();
+     	 return $model->get_field($method);
      }
 
      /**

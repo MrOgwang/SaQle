@@ -47,7 +47,12 @@ abstract class Simple implements IField{
 	 public function render(mixed $data) : mixed{
 	 	 $field_name  = $this->field_name;
 	 	 $column_name = $this->column_name;
-	 	 return is_array($data) ? ($data[$field_name] ?? ($data[$column_name] ?? null)) : ($data->$field_name ?? ($data->$column_name ?? null));
+	 	 $field_value = is_array($data) ? ($data[$field_name] ?? ($data[$column_name] ?? null)) : ($data->$field_name ?? ($data->$column_name ?? null));
+
+	 	 if(!is_null($field_value))
+	 	 	 return $field_value;
+
+	 	 return $this->default;
 	 }
 }
 ?>

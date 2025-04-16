@@ -24,7 +24,7 @@ class Contact extends Model{
 		      ]),
 		     'owner_id'      => new TinyTextField(required: true, length: 100)
       	 ];
-      	 $meta->name_property = 'contact';
+      	 $meta->name_property   = 'contact';
       }
 }
 ?>
