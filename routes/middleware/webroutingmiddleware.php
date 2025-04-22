@@ -70,7 +70,17 @@ class WebRoutingMiddleware extends BaseRoutingMiddleware{
          if(!$matches[0]){
              throw new RouteNotFoundException(url: $_SERVER['REQUEST_URI']);
          }
-         $request->trail = $this->extract_trail($request, $matches, []);
+         $trail_targets = [];
+         $clean_trail   = [];
+         $trail = $this->extract_trail($request, $matches, []);
+         for($t = 0; $t < count($trail); $t++){
+             $trail_component = $trail[$t];
+             if(!in_array($trail_component->target, $trail_targets)){
+                 $clean_trail[] = $trail_component;
+             }
+             $trail_targets[] = $trail_component->target;
+         }
+         $request->trail = $clean_trail;
 
          $controllers = ControllerRef::init()::get_controllers();
          $targets = array_column($request->trail, 'target');

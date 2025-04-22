@@ -42,7 +42,7 @@ class WebRequestProcessor extends RequestProcessor{
 	 	 	 $all_title = $title ? $title : $all_title;
 	 	 	 $all_html  = $t === 0 ? $html : preg_replace('/@content(.*?)@endcontent/', $html, $all_html);
 	 	 	 
-	 	 	 /*if($t === count($trail) - 1 && $default){
+	 	 	 if($t === count($trail) - 1 && $default){
 	 	 	 	 $ctrl = $trail[$t]->target;
 	 	 	 	 $ctrlinstance = new $ctrl();
 	 	 	 	 if( in_array($trail[$t]->target, $this->controllerrefs) && $ctrlinstance instanceof WebController ){
@@ -51,9 +51,9 @@ class WebRequestProcessor extends RequestProcessor{
 
 	 	 	 	 $default_controller = $this->controllerrefs[$default] ?? '';
 	 	 	 	 if($default_controller){
-	 	 	 	     $trail[] = (Object)['url' => '', 'target' => $default_controller, 'action' => strtolower($this->request->route->method)]; //this must be checked, likely to be a problem
+	 	 	 	     $trail[] = (Object)['url' => '', 'target' => $default_controller, 'action' => 'get']; //this must be checked, likely to be a problem
 	 	 	 	 }
-	 	 	 }*/
+	 	 	 }
          }
          return [$all_css, $all_js, $all_meta, $all_title, $all_html, $parent_context];
      }
