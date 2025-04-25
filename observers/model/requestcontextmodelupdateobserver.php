@@ -17,7 +17,8 @@ class RequestContextModelUpdateObserver extends ModelOperationObserver {
              }) : ($result->user_id === $request->user->user_id ? $result : null);
 
              if($object){
-                 $request->context->set('user', $object, true);
+                 $user = $model::get()->with(['country'])->where('user_id', $object->user_id)->first();
+                 $request->context->set('user', $user, true);
              }
          }
      }

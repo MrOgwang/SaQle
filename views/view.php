@@ -15,32 +15,6 @@ class View{
          $this->content = $isfile ? $this->prune_template(file_get_contents($template)) : $this->prune_template($template);
      }
 
-     /*private function prune_template($template){
-         $user = $this->user;
-         $pattern = '/@(can|cannot|is|isnot)\((.*?)\)(.*?)@end\1/s';
-
-         while(preg_match_all($pattern, $template, $matches, PREG_OFFSET_CAPTURE)) {
-             foreach (array_reverse($matches[0]) as $index => [$full_match, $full_offset]) {
-                 $directive = $matches[1][$index][0]; // 'can' or 'is'
-                 $arg = trim($matches[2][$index][0], '\'"');
-                 $content = $matches[3][$index][0];
-
-                 $allowed = match ($directive) {
-                     'can'    => method_exists($user, 'can') && $user->can($arg),
-                     'cannot' => method_exists($user, 'cannot') && $user->cannot($arg),
-                     'is'     => method_exists($user, 'is') && $user->is($arg),
-                     'isnot'  => method_exists($user, 'isnot') && $user->isnot($arg),
-                     default  => false,
-                 };
-
-                 $replacement = $allowed ? $content : '';
-                 $template = substr_replace($template, $replacement, $full_offset, strlen($full_match));
-             }
-         }
-
-         return $template;
-     }*/
-
      private function prune_template($template){
          $user = $this->user;
          $pattern = '/@(can|cannot|is|isnot)\((.*?)\)(.*?)@end\1/s';
