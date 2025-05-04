@@ -2,6 +2,7 @@
 SaQle is a rapid web app development MVC framework for PHP Developers. This is a fan personal project and by no means meant to compete Laravel or CakePhp and the likes. However, for developers looking to rapidly deploy small to medium scale web apps and/or prototypes, this framework will get you started quickly and get your idea out to the world.
 
 Some Features
+
 1. Integrated CRUD for database interaction
 2. MVC architecture
 3. Request dispatcher with clean, custom URLs and routes
@@ -16,11 +17,17 @@ Some Features
 12. Image and video uploads resizing and cropping
 
 Installation
-1. Download the source code as zip
-2. The saqle folder sits outside your project root directory but on the same level as your root directory as follows:
-- your_project_root
-- saqle
-3. While the framework does not impose any particular folder structure for your project, it relies on a set of configurations that must be defined and loaded in index file.
+
+composer require mrogwang/saqle:dev-main
+
+Full Docs: [View Documentation](docs/index.md)
+
+## Contact
+
+For questions, feedback, or contributions:
+
+- Email: [wycliffomondiotieno@gmail.com](mailto:wycliffomondiotieno@gmail.com)
+- GitHub: [@MrOgwang](https://github.com/MrOgwang)
 
     
 
