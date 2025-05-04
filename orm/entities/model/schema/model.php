@@ -8,7 +8,7 @@ use SaQle\Orm\Entities\Field\Exceptions\FieldValidationException;
 use SaQle\Security\Models\ModelValidator;
 use SaQle\Commons\StringUtils;
 use SaQle\Orm\Entities\Field\Types\Base\{Relation, RealField};
-use SaQle\Orm\Entities\Model\Manager\{CreateManager, UpdateManager, DeleteManager, ReadManager, RunManager};
+use SaQle\Orm\Entities\Model\Manager\{CreateManager, UpdateManager, DeleteManager, TruncateManager, ReadManager, RunManager};
 use SaQle\Orm\Entities\Model\Interfaces\{IModel, ITableSchema};
 use SaQle\Orm\Entities\Model\Collection\ModelCollection;
 use SaQle\Core\Exceptions\Model\{UndefinedFieldException, MissingRequiredFieldsException};
@@ -849,6 +849,11 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 	 //delete one or more rows
 	 public static function del(){
 	 	 return new DeleteManager(get_called_class());
+	 }
+
+	 //empty the entire table
+	 public static function empty(){
+	 	 return new TruncateManager(get_called_class());
 	 }
 
 	 //get one or more rows

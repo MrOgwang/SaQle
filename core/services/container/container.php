@@ -49,7 +49,10 @@ class Container {
              $this->instances[$abstract] = $object;
          }
 
-         //wrap the object in a service proxy if its a service
+         /**
+          * wrap the object in a service proxy if its a service
+          * this is done so that observers can be attached to the service methods
+          * */
          if($object instanceof IService){
              $object = new ServiceProxy($object);
          }

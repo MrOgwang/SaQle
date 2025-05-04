@@ -551,6 +551,19 @@ class ContextManager implements IMigrationManager{
           }
      }
 
+     public function reset_database($project_root){
+         foreach(DB_CONTEXT_CLASSES as $classname => $params){
+             $classinstance = new $classname();
+             $models = $classinstance->get_models();
+             foreach($models as $table_name => $modelclass){
+                 if($table_name !== 'model_temp_ids'){
+                     $modelclass::empty()->now();
+                 }
+             }
+         }
+         $this->seed_database($project_root);
+     }
+
      public function make_throughs(string $project_root, $app_name = null, $db_context = null){
          $context_classes = $this->get_context_classes($db_context);
          $manytomany_throughs = [];

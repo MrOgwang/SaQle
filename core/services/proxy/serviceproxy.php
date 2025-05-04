@@ -15,22 +15,12 @@ class ServiceProxy implements Observable, IService{
          $this->__coConstruct();
      }
 
-     /*public function record_signin(string $user_id){
-         echo "Recording sign in for user: $user_id\n";
-         //send post signal to observers
-         $postobservers = array_merge(
-             ServiceObserver::get_service_observers('before', $this->service::class, 'record_signin'), 
-             ServiceObserver::get_shared_observers('before')
-         );
-         
-         print_r($postobservers);
-     }*/
-
      public function __call(string $method, array $args){
 
          //send pre signal to observers
          $preobservers = array_merge(
              ServiceObserver::get_service_observers('before', $this->service::class, $method), 
+             ServiceObserver::get_service_observers('before', $this->service::class, '__'), 
              ServiceObserver::get_shared_observers('before')
          );
 
@@ -48,26 +38,28 @@ class ServiceProxy implements Observable, IService{
 
          $result = call_user_func_array([$this->service, $method], $args);
 
-         //send post signal to observers
-         $postobservers = array_merge(
-             ServiceObserver::get_service_observers('after', $this->service::class, $method), 
-             ServiceObserver::get_shared_observers('after')
-         );
-
-         if($postobservers){
-             $this->quick_notify(
-                 observers: $postobservers,
-                 code: FeedBack::OK, 
-                 data: [
-                     'service' => $this->service::class, 
-                     'method'  => $method, 
-                     'args'    => $args,
-                     'result'  => $result
-                 ]
+         if(!is_null($result)){
+             //send post signal to observers
+             $postobservers = array_merge(
+                 ServiceObserver::get_service_observers('after', $this->service::class, $method), 
+                 ServiceObserver::get_service_observers('after', $this->service::class, '__'),
+                 ServiceObserver::get_shared_observers('after')
              );
+
+             if($postobservers){
+                 $this->quick_notify(
+                     observers: $postobservers,
+                     code: FeedBack::OK, 
+                     data: [
+                         'service' => $this->service::class, 
+                         'method'  => $method, 
+                         'args'    => $args,
+                         'result'  => $result
+                     ]
+                 );
+             }
          }
          
-
          /*$ref = new ReflectionMethod($this->service, $method);
          foreach ($ref->getAttributes() as $attribute) {
              $attrInstance = $attribute->newInstance();

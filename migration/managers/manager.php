@@ -30,6 +30,10 @@ class Manager implements IMigrationManager{
         return $this->context_manager->seed_database(...$options);
      }
 
+     public function reset_database(...$options){
+        return $this->context_manager->reset_database(...$options);
+     }
+
      public function make_superuser(...$options){
         return $this->context_manager->make_superuser(...$options);
      }

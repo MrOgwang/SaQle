@@ -1,7 +1,7 @@
 <?php
 namespace SaQle\Manage;
 
-use SaQle\Migration\Commands\{MakeMigrations, Migrate, MakeCollections, MakeModels, MakeThroughs, SeedDatabase, MakeSuperuser, StartProject, StartApps};
+use SaQle\Migration\Commands\{MakeMigrations, Migrate, MakeCollections, MakeModels, MakeThroughs, SeedDatabase, ResetDatabase, MakeSuperuser, StartProject, StartApps};
 
 class Manage{
 	 private string $command      = '';
@@ -17,6 +17,7 @@ class Manage{
 	 	 	'make:throughs'    => $this->extract_makemodels_args($args),
 	 	 	'make:superuser'   => $this->extract_makesuperuser_args($args),
 	 	 	'db:seed'          => [],
+	 	 	'db:reset'         => [],
 	 	 	'start:project'    => $this->extract_startproject_args($args),
 	 	 	'start:apps'       => $this->extract_startapps_args($args),
 	 	 	default            => throw new \Exception("Unknown command!")
@@ -110,6 +111,9 @@ class Manage{
 			 break;
 			 case 'db:seed':
 			     resolve(SeedDatabase::class)->execute($this->project_root);
+			 break;
+			 case 'db:reset':
+			     resolve(ResetDatabase::class)->execute($this->project_root);
 			 break;
 			 case 'start:project':
 			     $name = $this->arguments['name'] ?? null;
