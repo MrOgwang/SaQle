@@ -15,8 +15,18 @@ could support rapid protoyping. PhP being my first language, it was a go to choi
 
 So this is fun personal project that, more than anything else, has made me learn a lot of good software engineering techniques I can always transfer from project to project.
 
+## Convention over Configuration
+
+The framework relies heavily on convention rather than configuration to get your idea working as fast as possible. The conventions applicable will be pointed out alongside other recommended practices to get the best out of this framework.
+
+## How To Contribute
+
+There is so much that is needed to be done to make the framework stand alongside Laravel and other established PHP frameworks.
+If contributing to open source excites you, or you just want to learn, reach out using the email address above and let's talk.
+
 ## Contents
 
+- [Getting Started](getstarted.md)
 - [Routing](routing.md)
 - [Controllers](controllers.md)
 - [Views](views.md)

@@ -31,29 +31,47 @@ class ServiceObserver {
       * 2. If the serviceclass is provided but the methodname is not, the observers will be applied to all
       *    the methods defined on a service
       * */
-     static public function before(array | string $observerclass, ?string $serviceclass = null, ?string $methodname = null){
+     static public function before(array | string $observerclass, ?string $serviceclass = null, null|array|string $methodname = null){
          $observerclass = is_array($observerclass) ? $observerclass : [$observerclass];
          
          if(!$serviceclass){
              self::$_before_all = array_merge(self::$_before_all, $observerclass);
          }else{
-             $methodname = $methodname ?? '__';
              self::$_before[$serviceclass] = self::$_before[$serviceclass] ?? [];
-             self::$_before[$serviceclass][$methodname] = self::$_before[$serviceclass][$methodname] ?? [];
-             self::$_before[$serviceclass][$methodname] = array_merge(self::$_before[$serviceclass][$methodname], $observerclass);
+             if(is_null($methodname)){
+                 $methodname = ['__'];
+             }elseif(is_string($methodname)){
+                 $methodname = [$methodname];
+             }
+
+             //assert array of strings here
+
+             foreach($methodname as $name){
+                 self::$_before[$serviceclass][$name] = self::$_before[$serviceclass][$name] ?? [];
+                 self::$_before[$serviceclass][$name] = array_merge(self::$_before[$serviceclass][$name], $observerclass);
+             }
          }
      }
 
-     static public function after(array | string $observerclass, ?string $serviceclass = null, ?string $methodname = null){
+     static public function after(array | string $observerclass, ?string $serviceclass = null, null|array|string $methodname = null){
          $observerclass = is_array($observerclass) ? $observerclass : [$observerclass];
          
          if(!$serviceclass){
              self::$_after_all = array_merge(self::$_after_all, $observerclass);
          }else{
-             $methodname = $methodname ?? '__';
              self::$_after[$serviceclass] = self::$_after[$serviceclass] ?? [];
-             self::$_after[$serviceclass][$methodname] = self::$_after[$serviceclass][$methodname] ?? [];
-             self::$_after[$serviceclass][$methodname] = array_merge(self::$_after[$serviceclass][$methodname], $observerclass);
+             if(is_null($methodname)){
+                 $methodname = ['__'];
+             }elseif(is_string($methodname)){
+                 $methodname = [$methodname];
+             }
+
+             //assert array of strings here
+
+             foreach($methodname as $name){
+                 self::$_after[$serviceclass][$name] = self::$_after[$serviceclass][$name] ?? [];
+                 self::$_after[$serviceclass][$name] = array_merge(self::$_after[$serviceclass][$name], $observerclass);
+             }
          }
      }
 
