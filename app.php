@@ -11,6 +11,7 @@ use SaQle\Core\Services\Container\AppContainer;
 use SaQle\Core\Services\Providers\AppProvider;
 use SaQle\Services\Locators\DefaultServiceLocator;
 use SaQle\Services\Providers\{DefaultServiceObserverProvider, RequestContextModelObserversProvider};
+use Closure;
 
 class App{
      private static ?self $instance = null;
@@ -60,8 +61,11 @@ class App{
          return self::$_appcontrollers;
      }
 
-     public static function environment(string $env){
+     public static function environment(string $env, ?Closure $config_callback = null){
          self::$_environment = $env;
+         if($config_callback){
+             $config_callback(self::$_environment);
+         }
      }
 
      public static function getenvironment(){

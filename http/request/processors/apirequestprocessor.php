@@ -2,8 +2,15 @@
 namespace SaQle\Http\Request\Processors;
 
 use SaQle\Http\Response\HttpMessage;
+use SaQle\Http\Response\Types\{JsonResponse, HtmlResponse};
 
-class ApiRequestProcessor extends RequestProcessor{
+class ApiRequestProcessor extends RequestProcessor {
+
+	 private string $accept;
+
+	 public function __construct(){
+	 	 $this->accept = $_SERVER['HTTP_ACCEPT'] ?? 'application/json';
+	 }
 
 	 private function send_json_headers(){
 		 header("Expires: 0");
@@ -49,6 +56,17 @@ class ApiRequestProcessor extends RequestProcessor{
              $response = $response_data;
          }
          print json_encode($response);
+
+          
+         if(strpos($this->accept, 'text/html') !== false){
+         	 //return pre formatted html
+             echo renderHtml($data);
+         }else{
+             //Default to JSON
+    header('Content-Type: application/json');
+    echo json_encode($data);
+}
+
          exit;
 	 }
 }

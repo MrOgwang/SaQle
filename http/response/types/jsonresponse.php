@@ -1,4 +1,6 @@
 <?php
+namespace SaQle\Http\Response\Types;
+
 class JsonResponse{
      protected $data;
      protected $status;
