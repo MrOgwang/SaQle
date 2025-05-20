@@ -9,4 +9,3 @@ class PartialContentException extends FeedbackException {
      	 parent::__construct($message, FeedBack::PARTIAL_CONTENT, $data, $redirect);
      }
 }
-?>

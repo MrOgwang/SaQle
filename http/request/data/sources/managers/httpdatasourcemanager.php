@@ -30,4 +30,3 @@ class HttpDataSourceManager implements IHttpDataSourceManager{
 	 	 return $this->manager->is_valid();
 	 }
 }
-?>

@@ -21,4 +21,3 @@ enum FetchMode : int {
       * */
 	 case DELETED = 2;
 }
-?>

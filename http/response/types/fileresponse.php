@@ -21,4 +21,3 @@ class FileResponse{
          readfile($this->filePath);
      }
 }
-?>

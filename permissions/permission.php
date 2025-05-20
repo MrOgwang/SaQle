@@ -26,4 +26,3 @@ abstract class Permission{
 	 	return $this->request_url;
 	 }
 }
-?>

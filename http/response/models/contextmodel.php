@@ -23,4 +23,3 @@ namespace SaQle\Http\Response\Models;
 class ContextModel{
 	
 }
-?>

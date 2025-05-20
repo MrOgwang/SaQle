@@ -20,4 +20,3 @@ class LimitBuilder {
 		 return $limit_clause;
 	 }
 }
-?>

@@ -84,4 +84,4 @@ class ServiceProxy implements Observable, IService{
          $this->service->$name = $value;
      }
 }
-?>
+

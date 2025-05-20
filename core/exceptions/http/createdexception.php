@@ -9,4 +9,3 @@ class CreatedException extends FeedbackException {
      	 parent::__construct($message, FeedBack::CREATED, $data, $redirect);
      }
 }
-?>

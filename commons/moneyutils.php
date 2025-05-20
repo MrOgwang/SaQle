@@ -28,4 +28,3 @@ trait MoneyUtils{
          return $amount < 0 ? "({$formatted})" : "{$formatted}";
      }
 }
-?>

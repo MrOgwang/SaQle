@@ -28,5 +28,5 @@ class ModelValidator{
 		return ['status' => $status, 'clean' => $clean, 'dirty' => $dirty];
 	}
 }
-?>
+
 

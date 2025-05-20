@@ -12,4 +12,3 @@ abstract class IMiddleware implements MiddlewareInterface{
      	 }
      }
 }
-?>

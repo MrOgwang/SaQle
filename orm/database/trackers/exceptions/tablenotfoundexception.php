@@ -14,4 +14,3 @@ class TableNotFoundException extends \Exception{
 		 return $this->__toString();
 	 }
 }
-?>

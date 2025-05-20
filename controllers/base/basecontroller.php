@@ -2,8 +2,8 @@
 namespace SaQle\Controllers\Base;
 
 use SaQle\Http\Response\HttpMessage;
-
 use SaQle\Controllers\Refs\ControllerRef;
+use Exception;
 
 abstract class BaseController{
 	 protected $request;
@@ -63,5 +63,12 @@ abstract class BaseController{
 
          return new HttpMessage(HttpMessage::OK);
 	 }
+
+	 /**
+     * This method is called before controller method execution.
+     * Override in child controllers to modify request input as needed.
+     */
+     public function on_method_start(array $input, string $method): array {
+         return $input;
+     }
 }
-?>

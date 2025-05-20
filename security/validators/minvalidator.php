@@ -57,4 +57,3 @@ class MinValidator extends ValidatorDecorator{
 		 ];
 	 }
 }
-?>

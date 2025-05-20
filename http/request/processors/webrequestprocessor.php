@@ -59,24 +59,36 @@ class WebRequestProcessor extends RequestProcessor{
      }
 
 	 public function process(){
-	 	 $trail = $this->request->trail;
+	 	 if(str_starts_with($_SERVER['REQUEST_URI'], MEDIA_URL)){
+             //serve media file
+	 	 	 $tc = count($this->request->trail);
+	 	 	 $this->serve_media($this->request->trail[$tc - 1]->target, $this->request->trail[$tc - 1]->action);
+         }else{
+         	 //serve regular requests
+         	 $trail = $this->request->trail;
 
-         $efb = ExceptionFeedBack::init();
-	 	 $feedback_context = $efb->acquire_context();
+	         $efb = ExceptionFeedBack::init();
+		 	 $feedback_context = $efb->acquire_context();
 
-	 	 [$all_css, $all_js, $all_meta, $all_title, $all_html, $trail_context] = $this->process_trail($trail, $feedback_context);
+		 	 [$all_css, $all_js, $all_meta, $all_title, $all_html, $trail_context] = $this->process_trail($trail, $feedback_context);
 
-         $pagetemplate = $this->templaterefs['page'];
-	 	 $page = new View($pagetemplate, $this->request->user ?? new GuestUser());
-	 	 $page->set_context([
-	 	 	 'content' => $all_html, 
-	 	 	 'title' => $all_title, 
-	 	 	 'css' => implode("\n", array_unique($all_css)), 
-	 	 	 'js' => implode("\n", array_unique($all_js)), 
-	 	 	 'meta' => implode("\n", array_unique($all_meta))
-	 	 ]);
-	 	 echo $page->view();
+	         $pagetemplate = $this->templaterefs['page'];
+		 	 $page = new View($pagetemplate, $this->request->user ?? new GuestUser());
+		 	 $page->set_context([
+		 	 	 'content' => $all_html, 
+		 	 	 'title' => $all_title, 
+		 	 	 'css' => implode("\n", array_unique($all_css)), 
+		 	 	 'js' => implode("\n", array_unique($all_js)), 
+		 	 	 'meta' => implode("\n", array_unique($all_meta))
+		 	 ]);
+		 	 
+		 	 echo $page->view();
+         }
 	 }
+
+     private function serve_media($target, $action){
+     	 [$http_message, $context_from_parent] = $this->get_target_response($target, $action, []);
+     }
 
 	 private function process_target($target, $action, $parent_context = [], $feedback_context = []){
          //inject global context data
@@ -131,4 +143,3 @@ class WebRequestProcessor extends RequestProcessor{
 	 	 return [$css, $js, $meta, $title, $html, $default, $target_context];
 	 }
 }
-?>

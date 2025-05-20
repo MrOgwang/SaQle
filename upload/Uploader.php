@@ -1,5 +1,5 @@
 <?php
-namespace SaQle\Uploads;
+namespace SaQle\Upload;
 class Uploader{
 	 private $check_type = true;
 	 private $file_name;
@@ -160,4 +160,3 @@ class Uploader{
 		 return number_format($this->max/1024, 1). ' KB';
 	 }
 }
-?>

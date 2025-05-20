@@ -33,4 +33,3 @@ abstract class BaseRoutingMiddleware extends IMiddleware implements IRoutingMidd
          Assert::allIsInstanceOf($routes, Route::class, 'One or more items in routes is not a route object!');
      }
 }
-?>

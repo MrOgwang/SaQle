@@ -1,11 +1,13 @@
 <?php
 namespace SaQle\Orm\Entities\Field\Exceptions;
 
-class FieldValidationException extends \Exception{
+use SaQle\Core\Exceptions\Base\ErrorException;
+
+class FieldValidationException extends ErrorException{
      protected $details;
      public function __construct($details){
          $this->details = $details;
-         parent::__construct();
+         parent::__construct($this->__toString());
      }
      public function __toString(){
 		 $message = "Model: ".$this->details['model'].", Operation: ".$this->details['operation'].", Error: One or more fields failed field validation as follows: \n";
@@ -20,4 +22,3 @@ class FieldValidationException extends \Exception{
 		 return $this->__toString();
 	 }
 }
-?>

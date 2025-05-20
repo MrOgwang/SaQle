@@ -24,4 +24,3 @@ class Order{
 		 $this->direction = $direction;
 	 }
 }
-?>

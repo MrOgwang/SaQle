@@ -9,4 +9,3 @@ class BadRequestException extends FeedbackException {
      	 parent::__construct($message, FeedBack::BAD_REQUEST, $data, $redirect);
      }
 }
-?>

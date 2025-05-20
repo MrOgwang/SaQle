@@ -35,4 +35,3 @@ class ChoicesValidator extends ValidatorDecorator{
 		 ];
 	 }
 }
-?>

@@ -65,4 +65,3 @@ class Data{
      	 return $this->data;
      }
 }
-?>

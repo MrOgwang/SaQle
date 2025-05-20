@@ -7,4 +7,3 @@ class CapitalizeDataFormatter extends IDataFormatter{
 	 	 return ucwords($value);
 	 }
 }
-?>

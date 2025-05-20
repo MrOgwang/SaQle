@@ -9,4 +9,3 @@ class MethodNotAllowedException extends FeedbackException {
      	 parent::__construct($message, FeedBack::METHOD_NOT_ALLOWED, $data, $redirect);
      }
 }
-?>

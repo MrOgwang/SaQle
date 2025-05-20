@@ -66,4 +66,3 @@ trait UrlUtils{
          return $params[$param_name] ?? $default;
 	 }
 }
-?>

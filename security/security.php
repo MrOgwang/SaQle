@@ -693,4 +693,3 @@ class ChoicesValidator extends ValidatorDecorator{
 		 ];
 	 }
 }
-?>

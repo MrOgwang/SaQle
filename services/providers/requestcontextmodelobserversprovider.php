@@ -10,4 +10,4 @@ class RequestContextModelObserversProvider extends ServiceProvider {
          ModelObserver::after_update(RequestContextModelUpdateObserver::class);
      }
 }
-?>
+

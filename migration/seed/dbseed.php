@@ -6,4 +6,3 @@ abstract class DbSeed{
 	abstract public static function get_seeds() : array;
 }
 
-?>

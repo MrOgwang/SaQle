@@ -14,4 +14,3 @@ class UpdateOperationFailedException extends \Exception{
 		 return $this->__toString();
 	 }
 }
-?>

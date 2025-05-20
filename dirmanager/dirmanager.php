@@ -15,10 +15,10 @@ class DirManager{
 	 const TEMPORARY = "{{ tenant_folder }}/tmp/";
 
 	 private function get_media_folder(){
-	 	return HIDDEN_MEDIA_FOLDER ? dirname($_SERVER['DOCUMENT_ROOT']).'/'.MEDIA_FOLDER.'/' : DOCUMENT_ROOT.'/'.MEDIA_FOLDER.'/';
+	 	 return HIDDEN_MEDIA_FOLDER ? dirname($_SERVER['DOCUMENT_ROOT']).'/'.MEDIA_FOLDER.'/' : DOCUMENT_ROOT.'/'.MEDIA_FOLDER.'/';
 	 }
 
-	 protected function create_dir($dir, $root = null){
+	 protected function create_dir($dir = '', $root = null){
 		 $abs_path = $root ? $root.$dir : $this->get_media_folder().$dir;
 		 if(!file_exists($abs_path)){
 		 	 $oldumask = umask(0);
@@ -61,4 +61,3 @@ class DirManager{
 		 return $file_path;
 	 }
 }
-?>

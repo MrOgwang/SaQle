@@ -74,4 +74,3 @@ trait Relationship{
 	 	 get => $this->eager;
 	 }
 }
-?>

@@ -15,8 +15,9 @@ use SaQle\Core\Exceptions\Model\{UndefinedFieldException, MissingRequiredFieldsE
 use SaQle\Orm\Database\Db;
 use SaQle\Orm\Database\Attributes\TransactionOutput;
 use Exception;
-
 use JsonSerializable;
+
+use Booibo\Apps\Account\Models\IndustriesLabel;
 
 abstract class Model implements ITableSchema, IModel, JsonSerializable{
 	 use StringUtils;
@@ -75,24 +76,28 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 	 public function __construct(...$kwargs){
 	 	 if(!self::$from_static_method && !self::$from_database){
 	 	 	 if(empty($kwargs))
-	 	 	 	 throw new \Exception("Please provide data for: ".$this::class." when creating a new model instant!");
+	 	 	 	 throw new \Exception("Please provide data for: ".$this::class." when creating a new model instance!");
 
-             //print_r($kwargs);
+	 	 	 $this->on_model_input($kwargs);
+
+	 	 	 $this->on_assign_relations($kwargs);
+
 	 	 	 //convert any values coming in with column names to field names
 	 	 	 $kwargs = $this->format_data($kwargs);
-	 	 	 //print_r($kwargs);
 
-             //ensure all the data keys are column names or fields defined on model
+	         //ensure all the data keys are column names or fields defined on model
 	 	 	 $this->assert_correct_fields($kwargs);
 
-	 	 	 //fill in defaults for all the non required fields that haven't been provided
-             $kwargs = $this->fill_defaults($kwargs);
+	 	 	 //fill in defaults for all the fields that haven't been provided
+	         $kwargs = $this->fill_defaults($kwargs);
 
-	 	 	 //make sure data is provided for all the required fields
-             $kwargs = $this->assert_required_fields($kwargs);
+	         //make sure data is provided for all the required fields
+	         $kwargs = $this->assert_required_fields($kwargs);
 
-             //run validation on the data
-             $this->run_data_validation($kwargs);
+	         //run validation on the data
+	         $this->run_data_validation($kwargs);
+
+	 	 	 $this->on_model_validate($kwargs);
          }
 
 	 	 $this->data = $kwargs;
@@ -249,14 +254,14 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 	 	if(is_array($clean_data[$file_key]['name'])){
              foreach($clean_data[$file_key]['name'] as $n_index => $n){
                  $clean_data[$file_key]['name'][$n_index] = $field->rename(
-                 	$data_state ? (Object)$data_state : (Object)$original_clean_data, 
+                 	$data_state ? $data_state : $original_clean_data, 
                  	$clean_data[$file_key]['name'][$n_index], 
                  	$n_index
                  );
              }
          }else{
              $clean_data[$file_key]['name'] = $field->rename(
-             	$data_state ? (Object)$data_state : (Object)$original_clean_data, 
+             	$data_state ? $data_state : $original_clean_data, 
              	$clean_data[$file_key]['name']
              );
          }
@@ -283,7 +288,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 	 	 		 $this->rename_uploaded_files($this->meta->fields[$ffn], $clean_data, $db_col, $data_state);
 
 	 	 		 //get the file path
-	 	 		 $file_config['path'] = $this->meta->fields[$ffn]->path($data_state ? (Object)$data_state : (Object)$clean_data);
+	 	 		 $file_config['path'] = $this->meta->fields[$ffn]->path($data_state ? $data_state : $clean_data);
 	 			 $file_data[$db_col] = (Object)['file' => $clean_data[$db_col], 'config' => $file_config];
 
 	 			 //reset the file value in clean data to file names only.
@@ -382,22 +387,33 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 	 	 return $field_name;
      }
 
+     public function get_field(string $field_name) : IField {
+     	 $field_name     = $this->assert_field_defined($field_name, true);
+     	 return $this->assign_field_context_and_value($field_name);
+     }
+
+     private function assign_field_context_and_value(string $field_name){
+     	 $context           = $this->format_data($this->data, 'columns');
+     	 $field             = $this->meta->fields[$field_name];
+     	 $field->context    = $context;
+     	 $field->value      = $context[$field->column_name] ?? null;
+     	 $field->model_info = [
+     	     'model' => $this->meta->model_class,
+     	     'pk_name' => $this->meta->pk_name,
+     	     'pk_value' => $this->data[$this->meta->pk_name] ?? '',
+     	     'field_name' => $field_name
+     	 ];
+     	 return $field;
+     }
+
 	 public function __get($name){
 	 	 $field_name = $this->assert_field_defined($name);
 	 	 if(!$field_name){
 	 	 	 return $this->data[$name] ?? null;
 	 	 }
 
-	 	 return $this->meta->fields[$field_name]->render($this->format_data($this->data, 'columns'));
-     }
-
-     public function get_field(string $field_name) : IField {
-     	 $field_name     = $this->assert_field_defined($field_name, true);
-     	 $context        = $this->format_data($this->data, 'columns');
-     	 $field          = $this->meta->fields[$field_name];
-     	 $field->context = $context;
-     	 $field->value   = $context[$field->column_name] ?? null;
-     	 return $field;
+	 	 $field = $this->assign_field_context_and_value($field_name);
+     	 return $field->render();
      }
 
      public function __set($name, $value){
@@ -874,5 +890,29 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 	 public static function run(string $sql, string $operation, ?array $data = null, bool $multiple = true){
 	 	 return new RunManager($sql, $operation, $data, $multiple);
 	 }
+
+     /**
+      * In cases where the data is coming from the user, this method will be run before anything else happens.
+      * 
+      * Here is where the data is normalized or transformed into a format
+      * acceptibe for the model
+      * 
+      * This client can override during the model definition, but must not
+      * fail to call the parent's method.
+      * */
+	 protected function on_model_input(array &$kwargs){
+
+	 }
+
+     /**
+      * During the construction of a model, especially one accepting data from
+      * user, override this method to specify how relation fields may obtain their values
+      * */
+     protected function on_assign_relations(array &$kwargs){
+     	 
+     }
+
+     protected function on_model_validate(array &$kwargs){
+     	 
+     }
 }
-?>

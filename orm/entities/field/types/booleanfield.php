@@ -14,4 +14,3 @@ class BooleanField extends NumberType implements IField{
 		 parent::__construct(...$kwargs);
 	 }
 }
-?>

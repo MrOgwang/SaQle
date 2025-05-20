@@ -103,4 +103,3 @@ class Join{
 	 	 $this->ref      = $this->ref;
 	 }
 }
-?>

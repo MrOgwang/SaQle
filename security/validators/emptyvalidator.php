@@ -41,4 +41,3 @@ class EmptyValidator extends ValidatorDecorator{
 		 ]; 
 	 }
 }
-?>

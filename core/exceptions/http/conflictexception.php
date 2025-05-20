@@ -9,4 +9,3 @@ class ConflictException extends FeedbackException {
      	 parent::__construct($message, FeedBack::CONFLICT, $data, $redirect);
      }
 }
-?>

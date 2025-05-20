@@ -176,4 +176,3 @@ class Request implements MiddlewareRequestInterface{
          $this->context->set($name, $value, $session);
      }
 }
-?>

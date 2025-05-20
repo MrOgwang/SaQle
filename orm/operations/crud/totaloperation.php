@@ -34,4 +34,3 @@ class TotalOperation extends IOperation{
 	 	 }
 	 }
 }
-?>

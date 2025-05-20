@@ -9,4 +9,3 @@ class UnauthorizedException extends FeedbackException {
      	 parent::__construct($message, FeedBack::UNAUTHORIZED, $data, $redirect);
      }
 }
-?>

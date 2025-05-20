@@ -7,4 +7,3 @@ class AllowAny extends Permission{
 	 }
 }
 
-?>

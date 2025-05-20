@@ -7,4 +7,3 @@ enum FormatterOptions{
     case CAPITALIZE;
     case ENCRYPT;
 }
-?>

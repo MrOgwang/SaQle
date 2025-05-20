@@ -6,4 +6,3 @@ namespace SaQle\Orm\Database\Attributes;
 abstract class IDbContextOptions{
 
 }
-?>

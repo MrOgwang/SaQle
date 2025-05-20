@@ -21,4 +21,3 @@ class Login extends Model{
 	 	 ];
 	 }
 }
-?>

@@ -101,4 +101,3 @@ class WhereBuilder{
 		 return (Object)["clause" => $clause, "data" => $data];
 	 }
 }
-?>

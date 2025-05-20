@@ -82,4 +82,3 @@ class FilterGroup extends BaseFilter{
 	 	 $this->filters = $filters;
 	 }
 }
-?>

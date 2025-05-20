@@ -102,15 +102,15 @@ class RequestProcessor{
 
 			     if($attrinstance){
 			     	 if($attrinstance instanceof From){
-			     	 	 $args[] = new HttpDataSourceManager($attrinstance, ...['name' => $param_name, 'type' => $param_type, 'default' => $default_val, 'optional' => $optional])->get_value();
+			     	 	 $args[$param_name] = new HttpDataSourceManager($attrinstance, ...['name' => $param_name, 'type' => $param_type, 'default' => $default_val, 'optional' => $optional])->get_value();
 			     	 }elseif($attrinstance instanceof AuthUser){
-			     	 	 $args[] = $this->request->user;
+			     	 	 $args[$param_name] = $this->request->user;
 			     	 }elseif($attrinstance instanceof ObservedService){
 			     	 	 $actual_service = resolve($attrinstance->service);
-			     	 	 $args[] = $actual_service;
+			     	 	 $args[$param_name] = $actual_service;
 			     	 }
 			     }elseif($param_type && class_exists($param_type)){
-                     $args[] = resolve($param_type);
+                     $args[$param_name] = resolve($param_type);
                  }else{
                  	 //check route params, then query, then data
                  	 $value = $this->request->route->params->get($param_name);
@@ -120,11 +120,15 @@ class RequestProcessor{
                  	 	 	 $value = $optional ? $this->request->data->get($param_name, $default_val) : $this->request->data->get_or_fail($param_name);
                  	 	 }
                  	 }
-
-                     $args[] = $value;
+                     $args[$param_name] = $value;
                  }
 		     }
-		     $http_message = $reflection_method->invokeArgs($target_instance, $args);
+
+		     if(method_exists($target_instance, 'on_method_start')){
+                 $args = $target_instance->on_method_start($args, $method);
+             }
+
+		     $http_message = $reflection_method->invokeArgs($target_instance, array_values($args));
 
 		     //override the context with custom response if any.
 		     if($custom_response){
@@ -134,7 +138,7 @@ class RequestProcessor{
 		     return $http_message;
 
 	 	 }catch(Throwable $e){
-	 	 	 //print_r($e);
+	 	 	 print_r($e);
 	 	 	 //extract any error responses set on the method
 	         $errresponse_attr = $reflection_method->getAttributes(OnErrorResponse::class);
 	         $errresponse      = $errresponse_attr ? $errresponse_attr[0]->newInstance() : null;
@@ -142,4 +146,3 @@ class RequestProcessor{
 	 	 }  
      }
 }
-?>

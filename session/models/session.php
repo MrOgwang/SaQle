@@ -17,4 +17,3 @@ class Session extends Model{
 	 	 $meta->auto_cmdt   = false;
 	 }
 }
-?>

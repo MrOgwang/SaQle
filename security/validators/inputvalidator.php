@@ -25,4 +25,3 @@ class InputValidator extends IValidator{
 		 ];
 	 }
 }
-?>

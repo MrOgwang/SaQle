@@ -6,4 +6,3 @@ use SaQle\Controllers\Base\BaseController;
 class Page extends BaseController{
 	 
 }
-?>

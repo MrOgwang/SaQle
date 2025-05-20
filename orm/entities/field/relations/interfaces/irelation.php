@@ -11,4 +11,3 @@ interface IRelation{
 	 public protected(set) bool   $multiple   { set; get; }
 	 public protected(set) bool   $eager      { set; get; }
 }
-?>

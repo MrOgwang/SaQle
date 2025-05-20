@@ -38,7 +38,7 @@ class DataConsolidatorMiddleware extends IMiddleware{
                     $tmp_fval['size']      = $fval['size'];
                 }
             }
-            $request->data->set($fkey, $tmp_fval ? $tmp_fval : '');
+            $request->data->set($fkey, $tmp_fval ? $tmp_fval : null);
          }
          parse_str(file_get_contents('php://input'), $_PATCH);
          if(is_array($_PATCH)){
@@ -49,4 +49,3 @@ class DataConsolidatorMiddleware extends IMiddleware{
      	 parent::handle($request);
      }
 }
-?>

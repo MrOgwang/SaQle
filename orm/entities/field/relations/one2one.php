@@ -37,4 +37,4 @@ class One2One extends BaseRelation{
 	 	parent::__construct($pmodel, $fmodel, $field, $pk, $fk, $navigation, false, $eager);
 	 } 
 }
-?>
+

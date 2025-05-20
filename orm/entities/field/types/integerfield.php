@@ -13,4 +13,3 @@ class IntegerField extends NumberType implements IField{
 		 parent::__construct(...$kwargs);
 	 }
 }
-?>

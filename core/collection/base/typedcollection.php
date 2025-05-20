@@ -19,4 +19,3 @@ abstract class TypedCollection extends ICollection{
         parent::add($element);
     }
 }
-?>

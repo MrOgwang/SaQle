@@ -75,4 +75,3 @@ class SessionMiddleware extends IMiddleware{
      	 parent::handle($request);
      }
 }
-?>

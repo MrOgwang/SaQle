@@ -18,4 +18,3 @@ abstract class ValidatorDecorator extends IValidator{
 		 return ucwords(str_replace("_", " ", $name));
 	 }
 }
-?>

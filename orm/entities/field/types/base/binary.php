@@ -2,22 +2,23 @@
 namespace SaQle\Orm\Entities\Field\Types\Base;
 
 use SaQle\Core\Assert\Assert;
+use SaQle\Commons\{UrlUtils, StringUtils};
+use SaQle\DirManager\DirManager;
 
 abstract class Binary extends RealField{
+	 use UrlUtils, StringUtils;
+
 	 /**
 	  * This is a virtual property to enable the client get the full disk path
 	  * of a file or an array of disk paths depending on whether the multiple setting is on or off.
 	  * */
 	 public mixed $file_path {
 	 	 get {
-	 	 	 $field_name = $this->field_name;
-	 	 	 $data       = !is_null($this->context) ? (object)$this->context : null;
-	 	 	 $file_value = $data->$field_name ?? null;
-	 	 	 if(!$file_value)
+	 	 	 if(!$this->value)
 	 	 	 	 return $this->multiple ? [] : null;
 
-	 	 	 $path  = $this->path($data);
-	 	     $files = explode("~", $file_value);
+	 	 	 $path  = $this->path($this->context);
+	 	     $files = explode("~", $this->value);
 	 	     $paths = [];
 	 	     foreach($files as $file_name){
 		 	     $paths[] = $path.$file_name;
@@ -32,13 +33,10 @@ abstract class Binary extends RealField{
 	  * */
 	 public mixed $file_name {
 	 	 get {
-	 	 	 $field_name = $this->field_name;
-	 	 	 $data       = !is_null($this->context) ? (object)$this->context : null;
-	 	 	 $file_value = $data->$field_name ?? null;
-	 	 	 if(!$file_value)
+	 	 	 if(!$this->value)
 	 	 	 	 return $this->multiple ? [] : null;
 
-	 	     $files = explode("~", $file_value);
+	 	     $files = explode("~", $this->value);
 	 	     return $this->multiple ? $files : $files[0];
 	 	 }
 	 }
@@ -46,7 +44,7 @@ abstract class Binary extends RealField{
 	 /**
 	  * Whether to allow multiple files for this field or not
 	  * */
-	 public protected(set) bool $multiple = true {
+	 public protected(set) bool $multiple = false {
 	 	 set(bool $value){
 	 	 	 $this->multiple = $value;
 	 	 }
@@ -81,8 +79,8 @@ abstract class Binary extends RealField{
 	 }
 
 	 /**
-	  * These fields must be included in the select staement because they are needed 
-	  * for path, rename, url and default_url callbacks
+	  * These fields must be included in the select statement because they are needed 
+	  * for path, rename and default_path callbacks
 	  * */
 	 public protected(set) array $required_fields = [] {
 	 	 set(array $value){
@@ -108,28 +106,83 @@ abstract class Binary extends RealField{
      /**
       * Get the directory where uploaded file(s) are saved inside the root media folder
       * 
-      * @param mixed $model - this is the current object to be saved or updated
+      * All files will be saved to the media root folder as specified with MEDIA_FOLDER setting by default
+      * 
+      * Override to provide custom path
+      * 
+      * @param array $context - this is the current data to be saved or updated
       * */
-	 public function path(mixed $model) : string{
-	 	 return "";
+	 public function path(array $context) : string {
+	 	 return new DirManager()->create_dir();
 	 }
 
      /**
       * Call this function to rename the files before they are saved
       * 
-      * @param mixed  $model      - this is the current object to be saved or updated
+      * @param array  $context    - this is the current data to be saved or updated
       * @param string $file_name  - this is the uploaded file name
       * @param int    $file_index - if multiple files are uploaded, this is the zero based index of the file
       * */
-	 public function rename(mixed $model, string $file_name, int $file_index = 0) : string{
+	 public function rename(array $context, string $file_name, int $file_index = 0) : string {
 	 	 return $file_name;
 	 }
 
      /**
-      * Where there were no files uploaded, but there is a default file that can be shown, return it with default url
+      * Where there were no files uploaded, but there is a default file that can be shown, return its path
+      * 
+      * This is particularly useful for images and videos
+      * 
+      * Override with own implementation to return a default path
       * */
-	 public function default_url(mixed $model) : string | array{
+	 public function default_file_path(array $context) : string | array {
 	 	 return "";
+	 }
+
+	 private function is_url(string $value){
+	 	 return filter_var($value, FILTER_VALIDATE_URL) !== false;
+	 }
+
+     /**
+      * Return the url/urls of a file/files
+      * */
+	 public function render() : mixed {
+         //A raw file, file that has already been processed by render or a valid url
+	 	 if(is_array($this->value) || (is_string($this->value) && $this->is_url((string)$this->value))) 
+	 	 	 return $this->value;
+
+         $path  = $this->path($this->context);
+         $files = is_string($this->value) && !empty(trim($this->value)) ? explode("~", $this->value) : [];
+	 	 if(is_null($this->value) || empty(trim($this->value))){
+	 	 	 $default_path = $this->default_file_path($this->context);
+	 	 	 $path = dirname($default_path);
+	 	 	 $files = [basename($default_path)];
+	 	 }
+
+         $file_data = [];
+         $urls = [];
+         $sizes = $this->resize_dimensions ? $this->resize_dimensions : ($this->crop_dimensions ? $this->crop_dimensions : []);
+         $prefer = $this->resize_dimensions ? 'resized' : ($this->crop_dimensions ? 'cropped' : 'original');
+         if($sizes){
+         	 $file_data['size'] = max($sizes);
+         }
+         $file_data['prefer'] = $prefer;
+         //include required fields
+     	 foreach($this->required_fields as $rf){
+     	 	 if(isset($this->context[$rf])){
+     	 	 	 $file_data[$rf] = $this->context[$rf];
+     	 	 }
+     	 }
+     	 //include model info
+     	 $file_data = array_merge($file_data, $this->model_info);
+
+         foreach($files as $file_name){
+         	 $file_data['path'] = $path;
+         	 $file_data['file_name'] = $file_name;
+         	 $url_token = $this->encrypt(json_encode($file_data), MEDIA_KEY, 'media-url-salt');
+	 		 $urls[] = $this->add_url_parameter(rtrim(ROOT_DOMAIN, '/').MEDIA_URL, 'token', $url_token);
+	 	 }
+
+	 	 return $this->multiple ? $urls : $urls[0];
 	 }
 
      //Create a new binary field object
@@ -146,4 +199,3 @@ abstract class Binary extends RealField{
 		 return array_merge(parent::get_validation_kwargs(), ['accept']);
 	 }
 }
-?>

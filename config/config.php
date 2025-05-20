@@ -104,6 +104,16 @@ class Config{
 		 define("MEDIA_FOLDER", $settings['media_folder'] ?? 'media');
 
 		 /**
+		  * the url prefix for media
+		  * */
+		 define("MEDIA_URL", $settings['media_url'] ?? '/media/');
+
+		 /**
+		  * the media url encryption key for secure file access
+		  * */
+		 define("MEDIA_KEY", $settings['media_key'] ?? '');
+
+		 /**
           * Set whether the media folder should live outside the webroot or in the webroot.
           * */
 		 define("HIDDEN_MEDIA_FOLDER", $settings['hidden_media_folder'] ?? false);
@@ -252,4 +262,3 @@ class Config{
 		 }
 	 }
 }
-?>

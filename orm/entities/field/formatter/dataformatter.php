@@ -6,4 +6,3 @@ class DataFormatter extends IDataFormatter{
 	 	 return $value;
 	 }
 }
-?>

@@ -7,4 +7,3 @@ use Attribute;
 class FromCookie extends From{
 	 
 }
-?>

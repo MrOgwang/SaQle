@@ -30,4 +30,3 @@ class FromBody extends From{
 	 	 $this->embedded = $embedded;
 	 }
 }
-?>

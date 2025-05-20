@@ -18,4 +18,3 @@ function compress_output($p_output){
 	 return ($p_output);
 }
 ob_start('compress_output');
-?>

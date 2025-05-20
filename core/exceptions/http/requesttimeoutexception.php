@@ -9,4 +9,3 @@ class RequestTimeoutException extends FeedbackException {
      	 parent::__construct($message, FeedBack::REQUEST_TIMEOUT, $data, $redirect);
      }
 }
-?>

@@ -45,4 +45,3 @@ class DbDataSourceManager extends DataSourceManager{
 	 }
 
 }
-?>

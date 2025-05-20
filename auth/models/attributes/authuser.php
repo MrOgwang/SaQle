@@ -41,4 +41,3 @@ use Attribute;
 class AuthUser{
 	
 }
-?>

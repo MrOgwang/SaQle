@@ -54,4 +54,3 @@ class CsrfMiddleware extends IMiddleware{
          return $request->context->get($token_key, '');
      }
 }
-?>

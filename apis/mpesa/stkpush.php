@@ -146,4 +146,3 @@ class StkPush{
          return json_decode($curl_response);
 	 }
 }
-?>

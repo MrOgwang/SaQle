@@ -75,4 +75,3 @@ class SpecialValidator extends ValidatorDecorator{
 		 ];  
 	 }
 }
-?>

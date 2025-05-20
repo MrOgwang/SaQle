@@ -34,4 +34,3 @@ class AppConfig{
          return self::$directory;
      }
 }
-?>

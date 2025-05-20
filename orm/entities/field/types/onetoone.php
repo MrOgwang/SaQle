@@ -10,4 +10,3 @@ class OneToOne extends Relation implements IField{
 		 parent::__construct(...$kwargs);
 	 }
 }
-?>

@@ -39,4 +39,3 @@ class Limit{
 		 $this->offset = ($this->page - 1) * $this->records;
 	 }
 }
-?>

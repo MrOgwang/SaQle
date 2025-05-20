@@ -26,4 +26,3 @@ abstract class EmailSetup extends INotificationSetup{
 		 ];
 	 }
 }
-?>

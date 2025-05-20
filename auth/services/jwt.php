@@ -46,4 +46,3 @@ class Jwt{
          return base64_decode(str_replace(["-", "_"], ["+", "/"], $text));
      }
 }
-?>

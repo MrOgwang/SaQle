@@ -28,4 +28,3 @@ class PermissionsMiddleware extends IMiddleware{
      	 parent::handle($request);
      }
 }
-?>

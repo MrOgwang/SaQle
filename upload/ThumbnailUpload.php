@@ -1,5 +1,5 @@
 <?php
-namespace SaQle\Uploads;
+namespace SaQle\Upload;
 require_once "fileuploaderclass.php";
 require_once "thumbnailimageclass.php";
 class ThumbnailUpload extends Uploader{
@@ -80,4 +80,3 @@ class ThumbnailUpload extends Uploader{
 		 }
 	 }
 }
-?>

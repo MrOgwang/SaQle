@@ -57,4 +57,3 @@ class CorsMiddleware extends IMiddleware{
      	 parent::handle($request);
       }
 }
-?>

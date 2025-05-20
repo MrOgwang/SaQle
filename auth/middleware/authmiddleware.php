@@ -38,4 +38,3 @@ class AuthMiddleware extends IMiddleware{
            return true;
       }
 }
-?>

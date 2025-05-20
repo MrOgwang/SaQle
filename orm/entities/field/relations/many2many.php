@@ -70,4 +70,4 @@ class Many2Many extends BaseRelation{
 	 	 return [$table, $modelclass, $dbclass, strtolower($pmodelname)."_id", strtolower($fmodelname)."_id"];
 	 }
 }
-?>
+

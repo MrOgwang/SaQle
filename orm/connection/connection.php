@@ -75,4 +75,3 @@ class Connection implements IConnection{
 	 }
 
 }
-?>

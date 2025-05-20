@@ -7,4 +7,3 @@ use Attribute;
 class FromContext extends From{
 	 
 }
-?>

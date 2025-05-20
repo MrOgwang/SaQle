@@ -36,4 +36,3 @@ trait LimitManager{
          return $limit ? $limit->records : 0;     
      }
 }
-?>

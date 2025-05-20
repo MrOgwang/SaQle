@@ -35,4 +35,3 @@ class ZeroValidator extends ValidatorDecorator{
 		 ];
 	 }
 }
-?>

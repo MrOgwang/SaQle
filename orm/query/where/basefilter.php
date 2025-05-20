@@ -32,4 +32,3 @@ abstract class BaseFilter{
 	 	 get => $this->grouped;
 	 }
 }
-?>

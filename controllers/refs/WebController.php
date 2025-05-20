@@ -36,4 +36,3 @@ class ControllerRef{
          return self::$targets;
      }
 }
-?>

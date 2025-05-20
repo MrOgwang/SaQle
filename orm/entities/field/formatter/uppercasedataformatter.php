@@ -7,4 +7,3 @@ class UppercaseDataFormatter extends IDataFormatter{
 	 	 return strtoupper($value);
 	 }
 }
-?>

@@ -9,4 +9,3 @@ class FoundException extends FeedbackException {
      	 parent::__construct($message, FeedBack::FOUND, $data, $redirect);
      }
 }
-?>

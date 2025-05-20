@@ -22,4 +22,3 @@ namespace SaQle\Routes\Interfaces;
 interface IRoute{
 	 public function matches() : array;
 }
-?>

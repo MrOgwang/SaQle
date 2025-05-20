@@ -22,4 +22,3 @@ class AppContext{
          return self::$context;
      }
 }
-?>

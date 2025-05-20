@@ -15,4 +15,3 @@ class ContextDataSourceManager extends DataSourceManager{
 	 	 return $this->optional ? $this->request->context->get($refkey) : $this->request->context->get_or_fail($refkey);
 	 }
 }
-?>

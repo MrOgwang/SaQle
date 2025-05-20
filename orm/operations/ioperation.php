@@ -11,4 +11,3 @@ abstract class IOperation{
 	 	 $this->settings = $settings;
 	 }
 }
-?>

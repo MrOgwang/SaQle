@@ -16,4 +16,3 @@ class HtmlResponse{
          echo $this->content;
      }
 }
-?>

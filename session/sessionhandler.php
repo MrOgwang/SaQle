@@ -32,4 +32,3 @@ abstract class SessionHandler implements SessionHandlerInterface{
 		 return true;
      }
 }
-?>

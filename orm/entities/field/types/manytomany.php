@@ -24,4 +24,3 @@ class ManyToMany extends Relation implements IField{
 		 return array_merge(parent::get_relation_kwargs(), ['through']);
 	 }
 }
-?>

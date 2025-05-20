@@ -13,4 +13,3 @@ class TinyIntegerField extends NumberType implements IField{
 		 parent::__construct(...$kwargs);
 	 }
 }
-?>

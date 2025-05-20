@@ -23,8 +23,6 @@ abstract class Scalar extends RealField{
 	 	 	return $this->choices[$this->value] ?? $this->value;
 	 	 }
 	 }
-
-	 protected bool $use_keys = false;
  
 	 public function __construct(...$kwargs){
 		 parent::__construct(...$kwargs);
@@ -38,4 +36,3 @@ abstract class Scalar extends RealField{
 		 return array_merge(parent::get_db_kwargs(), ['default']);
 	 }
 }
-?>

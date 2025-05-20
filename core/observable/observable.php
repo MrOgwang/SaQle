@@ -7,4 +7,3 @@ interface Observable{
      public function notify();
 	 public function status();
 }
-?>

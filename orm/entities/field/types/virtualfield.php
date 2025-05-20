@@ -12,4 +12,3 @@ class VirtualField extends Simple{
 	 	 return null;
 	 }
 }
-?>

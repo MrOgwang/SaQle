@@ -9,4 +9,3 @@ class ForbiddenException extends FeedbackException {
      	 parent::__construct($message, FeedBack::FORBIDDEN, $data, $redirect);
      }
 }
-?>

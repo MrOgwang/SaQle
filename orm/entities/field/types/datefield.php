@@ -11,4 +11,3 @@ class DateField extends TextType implements IField{
 		 parent::__construct(...$kwargs);
 	 }
 }
-?>

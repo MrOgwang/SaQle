@@ -11,4 +11,3 @@ class FormControlCollection{
 	 	return $this->controls;
 	 }
 }
-?>

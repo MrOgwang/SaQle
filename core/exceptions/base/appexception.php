@@ -23,4 +23,3 @@ abstract class AppException extends Exception{
          return $this->redirect;
      }
 }
-?>

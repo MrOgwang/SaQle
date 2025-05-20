@@ -7,4 +7,3 @@ namespace SaQle\Communication\Notifications;
 interface INotification{
 	 public function notify();
 }
-?>

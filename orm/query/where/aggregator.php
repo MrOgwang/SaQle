@@ -96,4 +96,3 @@ class Aggregator{
 	 	 return;
 	 }
 }
-?>

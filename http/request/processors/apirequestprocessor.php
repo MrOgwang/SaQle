@@ -10,6 +10,7 @@ class ApiRequestProcessor extends RequestProcessor {
 
 	 public function __construct(){
 	 	 $this->accept = $_SERVER['HTTP_ACCEPT'] ?? 'application/json';
+	 	  parent::__construct();
 	 }
 
 	 private function send_json_headers(){
@@ -58,16 +59,15 @@ class ApiRequestProcessor extends RequestProcessor {
          print json_encode($response);
 
           
-         if(strpos($this->accept, 'text/html') !== false){
+         /*if(strpos($this->accept, 'text/html') !== false){
          	 //return pre formatted html
              echo renderHtml($data);
          }else{
              //Default to JSON
-    header('Content-Type: application/json');
-    echo json_encode($data);
-}
+             header('Content-Type: application/json');
+             echo json_encode($data);
+         }*/
 
          exit;
 	 }
 }
-?>

@@ -14,4 +14,3 @@ class PathDataSourceManager extends DataSourceManager{
 	 	 return $this->optional ? $this->request->route->params->get($refkey) : $this->request->route->params->get_or_fail($refkey);
 	 }
 }
-?>

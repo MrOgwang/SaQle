@@ -5,4 +5,3 @@ interface ITempModel{
 	 public static function drop() : bool;
 	 public static function create() : bool;
 }
-?>

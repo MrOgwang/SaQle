@@ -11,4 +11,3 @@ abstract class ModelOperationObserver implements Observer{
 
      public abstract function handle(IOperationManager $manager);
 }
-?>

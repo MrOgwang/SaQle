@@ -6,4 +6,3 @@ use SaQle\Core\Exceptions\Base\FeedbackException;
 class AccessDeniedException extends FeedbackException{
      
 }
-?>

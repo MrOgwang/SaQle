@@ -14,4 +14,3 @@ class BodyDataSourceManager extends DataSourceManager{
 	 	 return $this->optional ? $this->request->data->get($this->name) : $this->request->data->get_or_fail($this->name);
 	 }
 }
-?>

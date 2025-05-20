@@ -5,4 +5,3 @@ class InvalidArgumentException extends \InvalidArgumentException{
 	
 }
 
-?>

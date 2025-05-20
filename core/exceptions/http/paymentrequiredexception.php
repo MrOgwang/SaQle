@@ -9,4 +9,3 @@ class PaymentRequiredException extends FeedbackException {
      	 parent::__construct($message, FeedBack::PAYMENT_REQUIRED, $data, $redirect);
      }
 }
-?>

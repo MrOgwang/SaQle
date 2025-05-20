@@ -6,4 +6,3 @@ use SaQle\Core\Exceptions\Base\ErrorException;
 class MissingRequiredFieldsException extends ErrorException{
      
 }
-?>

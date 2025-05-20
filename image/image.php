@@ -68,6 +68,7 @@ class Image{
 			 }
 		 }
 	 }
+	 
 	 public function crop_image($file, $max_resolution, $destination_folder = null, $min_resolution = null){
 		 if(file_exists($file)){
 			 $original_image = $this->create_original_image_resource($file);
@@ -103,4 +104,3 @@ class Image{
 		 }
 	 }
 }
-?>

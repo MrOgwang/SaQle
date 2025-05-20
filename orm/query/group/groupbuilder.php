@@ -66,4 +66,3 @@ class GroupBuilder{
 	 	return $this->fields;
 	 }
 }
-?>

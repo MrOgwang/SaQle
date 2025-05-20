@@ -34,4 +34,3 @@ class ModelCollection extends TypedCollection implements IModel{
          return $field_values;
     }
 }
-?>

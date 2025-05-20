@@ -11,4 +11,3 @@ class TinyTextField extends TextType implements IField{
 		 parent::__construct(...$kwargs);
 	 }
 }
-?>

@@ -9,4 +9,3 @@ class ServiceUnavailableException extends FeedbackException {
      	 parent::__construct($message, FeedBack::SERVICE_UNAVAILABLE, $data, $redirect);
      }
 }
-?>

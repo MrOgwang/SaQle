@@ -9,4 +9,3 @@ class NoContentException extends FeedbackException {
      	 parent::__construct($message, FeedBack::NO_CONTENT, $data, $redirect);
      }
 }
-?>

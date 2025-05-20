@@ -56,4 +56,3 @@ class AppCors{
          return self::$allow_credentials;
      }
 }
-?>

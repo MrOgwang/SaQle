@@ -17,4 +17,4 @@ class XmlResponse{
          echo $xml->asXML();
      }
 }
-?>
+

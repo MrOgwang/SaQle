@@ -1,5 +1,5 @@
 <?php
-namespace SaQle\Uploads;
+namespace SaQle\Upload;
 class ThumbNail{
 	 protected $original;
 	 protected $originalwidth; //original width of image:
@@ -142,4 +142,3 @@ class ThumbNail{
 		 imagedestroy($thumb);
 	 }
 }
-?>

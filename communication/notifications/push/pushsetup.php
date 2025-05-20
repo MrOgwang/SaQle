@@ -28,4 +28,3 @@ abstract class PushSetup extends INotificationSetup{
 	 public abstract function get_recipients() : array;
 }
 
-?>

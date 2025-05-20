@@ -32,4 +32,3 @@ abstract class TempModel extends Model implements ITempModel{
  	 	 return $dbmanager->create_table($table, $modelclass, true);
 	 }
 }
-?>

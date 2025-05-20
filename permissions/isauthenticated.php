@@ -14,4 +14,3 @@ class IsAuthenticated extends Permission{
 	 }
 }
 
-?>

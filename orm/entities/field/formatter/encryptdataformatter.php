@@ -7,4 +7,3 @@ class EncryptDataFormatter extends IDataFormatter{
 	 	 return MD5($value);
 	 }
 }
-?>

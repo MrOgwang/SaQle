@@ -445,6 +445,34 @@ trait FileUtils{
 	     }  
 	 }
 
+	 public static function scandir(string $path, ?array $exts = []): array {
+
+	    /* Fail if the directory can't be opened */
+	    if (!(is_dir($path) && $dir = opendir($path))) {
+	        return [];
+	    }
+
+	    /* An array to hold the results */
+	    $files = [];
+
+	    while (($file = readdir($dir)) !== false) {
+	        /* Skip anything that's not a regular file */
+	        if (filetype($path . '/' . $file) !== 'file') {
+	            continue;
+	        }
+	        /* If extensions were provided and this file doesn't match, skip it */
+	        if (!empty($exts) && !in_array(pathinfo($path . '/' . $file,
+	                                PATHINFO_EXTENSION), $exts)) {
+	            continue;
+	        }
+	        /* Add this file to the array */
+	        $files[] = $file;
+	    }
+	    closedir($dir);
+	    
+	    return $files;
+	 }
+
 	 /**
 	 * Return an array of file paths representing the contents of the target
 	 * directory, ordered by date instead of by filename.
@@ -530,4 +558,3 @@ trait FileUtils{
          return file_put_contents($filename, $ser);
 	 }
 }
-?>

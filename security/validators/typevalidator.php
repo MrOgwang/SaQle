@@ -77,4 +77,3 @@ class TypeValidator extends ValidatorDecorator{
 		 ]; 
 	 }
 }
-?>

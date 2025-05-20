@@ -30,4 +30,3 @@ class FromForm extends From{
 	 	 $this->embedded = $embedded;
 	 }
 }
-?>

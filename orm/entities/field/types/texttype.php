@@ -34,4 +34,3 @@ class TextType extends Scalar implements IField{
 		 return array_merge(parent::get_validation_kwargs(), ['strict', 'empty']);
 	 }
 }
-?>

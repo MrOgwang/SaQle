@@ -9,4 +9,3 @@ class InternalServerErrorException extends FeedbackException {
      	 parent::__construct($message, FeedBack::INTERNAL_SERVER_ERROR, $data, $redirect);
      }
 }
-?>

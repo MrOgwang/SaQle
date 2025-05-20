@@ -49,11 +49,11 @@ class LayoutRoute implements IRoute{
      }
 
      //an array of the children routes
-     public protected(set) array $children = [] {
+     public array $children = [] {
          set(array $value){
              //asset array of route objects
              Assert::allIsInstanceOf($value, IRoute::class, 'One or more items in children is not a route object!');
-             $this->children = $value;
+             $this->children = $this->children ? array_merge($this->children, $value) : $value;
          }
 
          get => $this->children;
@@ -80,4 +80,3 @@ class LayoutRoute implements IRoute{
          return [false, false, null];
      }
 }
-?>

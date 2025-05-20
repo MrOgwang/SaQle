@@ -725,6 +725,4 @@ class StartProject{
 
            return $content;
      }
-
-
 }

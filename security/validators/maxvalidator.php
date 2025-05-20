@@ -57,4 +57,3 @@ class MaxValidator extends ValidatorDecorator{
 		 ];
 	 }
 }
-?>

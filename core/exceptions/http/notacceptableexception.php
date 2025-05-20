@@ -9,4 +9,3 @@ class NotAcceptableException extends FeedbackException {
      	 parent::__construct($message, FeedBack::NOT_ACCEPTABLE, $data, $redirect);
      }
 }
-?>

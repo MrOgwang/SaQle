@@ -5,4 +5,3 @@ interface WebController{
 	public function get_default() : string;
 	public function get_block(): string;
 }
-?>

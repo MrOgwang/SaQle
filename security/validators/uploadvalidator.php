@@ -30,4 +30,3 @@ class UploadValidator extends ValidatorDecorator{
 		 return $fb;
 	 }
 }
-?>

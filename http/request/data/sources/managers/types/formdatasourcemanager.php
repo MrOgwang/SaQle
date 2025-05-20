@@ -26,7 +26,7 @@ class FormDataSourceManager extends DataSourceManager{
  	 	 }
 
  	 	 /**
- 	 	  * This is a model type:
+ 	 	  * This is a model or array type:
  	 	  * 
  	 	  * 1. if embedded is set to true, the whole model will simply be extracted from a key whose name is pointed by the ref key and json decoded into
  	 	  * an associative array. This array will be used to instantiate the model object and returned.
@@ -78,4 +78,3 @@ class FormDataSourceManager extends DataSourceManager{
  	 	 return new $paramtype(...$object);
 	 }
 }
-?>

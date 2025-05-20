@@ -9,4 +9,3 @@ interface IHttpMethods{
 	 public function patch()  : HttpMessage;
 	 public function delete() : HttpMessage;
 }
-?>

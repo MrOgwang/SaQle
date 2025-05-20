@@ -9,4 +9,3 @@ class FileField extends Binary implements IField{
 		 parent::__construct(...$kwargs);
 	 }
 }
-?>

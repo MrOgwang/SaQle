@@ -9,4 +9,3 @@ class TooManyRequestsException extends FeedbackException {
      	 parent::__construct($message, FeedBack::TOO_MANY_REQUESTS, $data, $redirect);
      }
 }
-?>

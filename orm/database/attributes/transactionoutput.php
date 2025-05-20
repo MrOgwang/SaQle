@@ -10,4 +10,3 @@ class TransactionOutput {
     public function __construct(public string $name) {}
 }
 
-?>

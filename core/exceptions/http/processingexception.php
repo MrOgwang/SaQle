@@ -9,4 +9,3 @@ class ProcessingException extends FeedbackException {
      	 parent::__construct($message, FeedBack::PROCESSING, $data, $redirect);
      }
 }
-?>

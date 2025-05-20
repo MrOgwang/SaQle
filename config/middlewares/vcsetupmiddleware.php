@@ -111,7 +111,7 @@ class VcSetupMiddleware extends IMiddleware{
 
              return {$exported_array};
 
-             ?>
+             
          PHP;
 
          //write to the cache file
@@ -130,7 +130,7 @@ class VcSetupMiddleware extends IMiddleware{
 
          $controllers = [];
          $views       = [];
-         if($app::getenvironment() === 'development'){
+         if($app::getenvironment() === 'development' || $app::getenvironment() === 'production'){
              foreach(INSTALLED_APPS as $f){
                  $controllers_folder = DOCUMENT_ROOT."/apps/".$f."/controllers";
                  $views_folder       = DOCUMENT_ROOT."/apps/".$f."/templates";
@@ -157,4 +157,3 @@ class VcSetupMiddleware extends IMiddleware{
      }
 
 }
-?>

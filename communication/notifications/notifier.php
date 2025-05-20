@@ -19,4 +19,3 @@ class Notifier implements INotification{
 		 return $notifier->notify();
 	 }
 }
-?>

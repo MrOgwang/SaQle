@@ -53,4 +53,3 @@ trait SelectManager{
          return $this->sbuilder->get_selected($this->ctxtracker, ...$this->configurations);
      }
 }
-?>

@@ -5,4 +5,3 @@ interface IHttpDataSourceManager{
 	 public function get_value() : mixed;
 	 public function is_valid() : bool;
 }
-?>

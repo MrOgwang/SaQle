@@ -23,4 +23,3 @@ class RequestContextModelUpdateObserver extends ModelOperationObserver {
          }
      }
 }
-?>

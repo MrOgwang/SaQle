@@ -10,4 +10,3 @@ abstract class FormatterDecorator extends IDataFormatter{
 	 	 return $this->_formatter->format();
 	 }
 }
-?>

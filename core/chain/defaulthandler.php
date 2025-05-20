@@ -13,4 +13,3 @@ class DefaultHandler extends BaseHandler{
      }
 }
 
-?>

@@ -14,4 +14,3 @@ class DeleteOperationFailedException extends \Exception{
 		 return $this->__toString();
 	 }
 }
-?>

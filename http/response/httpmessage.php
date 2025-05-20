@@ -65,4 +65,3 @@ class HttpMessage extends FeedBack {
 		 return new self($fb->code, $fb->data, $fb->message);
 	 }
 }
-?>

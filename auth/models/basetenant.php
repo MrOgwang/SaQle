@@ -14,4 +14,3 @@ class BaseTenant extends Model{
 		];
 	}
 }
-?>

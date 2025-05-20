@@ -207,4 +207,3 @@
 		 return ['sql' => $sql, 'data' => $data];
      }
 }
-?>

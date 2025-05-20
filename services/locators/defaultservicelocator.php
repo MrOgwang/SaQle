@@ -74,4 +74,4 @@ class DefaultServiceLocator extends ServiceLocator {
          });
      }
 }
-?>
+

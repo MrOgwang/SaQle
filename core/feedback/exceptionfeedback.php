@@ -39,4 +39,3 @@ class ExceptionFeedBack extends FeedBack {
      	 return $context;
      }
 }
-?>

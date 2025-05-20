@@ -123,4 +123,3 @@ class TruncateManager implements Observable, IOperationManager {
          return ['sql' => $sql, 'data' => null];
      }
 }
-?>

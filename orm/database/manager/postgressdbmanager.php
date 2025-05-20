@@ -9,4 +9,3 @@ class PostgressDbManager extends DbManager{
 	 }
 }
 
-?>

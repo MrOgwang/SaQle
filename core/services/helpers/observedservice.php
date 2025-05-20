@@ -58,4 +58,3 @@ class ObservedService {
 	 	 $this->service = $service;
 	 }
 }
-?>

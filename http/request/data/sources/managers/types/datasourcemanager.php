@@ -27,4 +27,3 @@ abstract class DataSourceManager implements IHttpDataSourceManager{
 	 	 return true;
 	 }
 }
-?>

@@ -132,4 +132,3 @@ abstract class ICollection implements IteratorAggregate, ArrayAccess, Countable{
         unset($this->elements[$offset]);
     }
 }
-?>

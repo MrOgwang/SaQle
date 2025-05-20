@@ -19,4 +19,3 @@ class Migration extends Model{
 		 $meta->soft_delete = false;
 	 }
 }
-?>

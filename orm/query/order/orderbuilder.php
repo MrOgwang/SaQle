@@ -23,4 +23,3 @@ class OrderBuilder{
 		 return $order_clause;
 	 }
 }
-?>

@@ -160,4 +160,3 @@ trait JoinManager{
 	 }
 
 }
-?>

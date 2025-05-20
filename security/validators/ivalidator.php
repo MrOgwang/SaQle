@@ -18,4 +18,3 @@ namespace SaQle\Security\Validators;
 abstract class IValidator{
 
 }
-?>

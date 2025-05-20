@@ -71,4 +71,3 @@ abstract class AuthService implements IService{
          return $token;
 	 }
 }
-?>

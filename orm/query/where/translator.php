@@ -271,4 +271,3 @@ class Translator{
 		 return $new_filter;
 	 }
 }
-?>

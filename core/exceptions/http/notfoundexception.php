@@ -9,4 +9,3 @@ class NotFoundException extends FeedbackException {
      	 parent::__construct($message, FeedBack::NOT_FOUND, $data, $redirect);
      }
 }
-?>

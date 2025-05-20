@@ -44,4 +44,3 @@ class NullValidator extends ValidatorDecorator{
 		 ];
 	 }
 }
-?>

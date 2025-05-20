@@ -31,4 +31,3 @@ class GuestUser implements IUser {
 	 	 return true;
 	 }
 }
-?>

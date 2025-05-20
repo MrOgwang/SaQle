@@ -13,4 +13,3 @@ class BigIntegerField extends NumberType implements IField{
 		 parent::__construct(...$kwargs);
 	 }
 }
-?>

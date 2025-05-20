@@ -58,4 +58,3 @@ trait PermissionUtils{
          return [self::all_passed($has_permissions), $redirect_url];
      }
 }
-?>

@@ -3,4 +3,3 @@ namespace SaQle\Middleware;
 interface MiddlewareRequestInterface{
 	
 }
-?>

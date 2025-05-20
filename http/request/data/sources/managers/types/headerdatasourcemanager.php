@@ -13,4 +13,3 @@ class HeaderDataSourceManager extends DataSourceManager{
 	 	 return $this->optional ? $this->request->headers->get($this->name) : $this->request->headers->get_or_fail($this->name);
 	 }
 }
-?>

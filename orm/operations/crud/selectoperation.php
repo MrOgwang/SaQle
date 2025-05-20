@@ -25,4 +25,3 @@ class SelectOperation extends IOperation{
 	 }
 
 }
-?>

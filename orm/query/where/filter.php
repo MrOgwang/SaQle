@@ -75,4 +75,3 @@ class Filter extends BaseFilter{
 		 $this->grouped  = false;
 	 }
 }
-?>

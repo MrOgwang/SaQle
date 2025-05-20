@@ -15,4 +15,3 @@ class SignoutObserver extends AppServiceObserver{
 		 }
      }
 }
-?>

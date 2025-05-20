@@ -35,4 +35,3 @@ class AbsoluteValidator extends ValidatorDecorator{
 		 ];
 	 }
 }
-?>

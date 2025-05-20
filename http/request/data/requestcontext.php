@@ -53,4 +53,3 @@ class RequestContext extends Data {
 	 	 return parent::remove($key);
 	 }
 }
-?>

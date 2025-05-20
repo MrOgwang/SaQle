@@ -22,6 +22,8 @@ use SaQle\Middleware\MiddlewareRequestInterface;
 use SaQle\Routes\Middleware\Base\BaseRoutingMiddleware;
 use SaQle\Routes\Exceptions\{RouteNotFoundException, MethodNotAllowedException};
 use SaQle\Controllers\Refs\ControllerRef;
+use SaQle\Routes\Route;
+use SaQle\Controllers\MediaController;
 
 class WebRoutingMiddleware extends BaseRoutingMiddleware{
 
@@ -99,6 +101,8 @@ class WebRoutingMiddleware extends BaseRoutingMiddleware{
          try{
              //Acquire project level routes.
              $layoutroute = $this->get_routes_from_file(DOCUMENT_ROOT.'/routes/web.php', true);
+             //add media route
+             $layoutroute->children = [new Route(MEDIA_URL, MediaController::class)];
              $this->find_and_assign_route($request, $layoutroute);
          }catch(RouteNotFoundException $e){
              throw $e;
@@ -109,4 +113,3 @@ class WebRoutingMiddleware extends BaseRoutingMiddleware{
          }
      }
 }
-?>

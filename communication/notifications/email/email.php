@@ -205,4 +205,3 @@ class Email implements INotification{
 		 return !$mail->send() ? $mail->ErrorInfo : true;
 	 }
 }
-?>

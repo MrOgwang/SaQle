@@ -6,6 +6,7 @@ use SaQle\Orm\Database\Manager\DbManagerFactory;
 use SaQle\Commons\FileUtils;
 use SaQle\Migration\Models\Migration;
 use SaQle\Migration\Tracker\MigrationTracker;
+use SaQle\App;
 
 class Migrate{
      use FileUtils;
@@ -191,7 +192,13 @@ class Migrate{
 
          //record this migration in db
          $fn_parts = explode("_", $file_name);
-         $recorded = Migration::new(['migration_name' => $migration_name, 'migration_timestamp' => $fn_parts[1], 'is_migrated' => 0])->save();
+         $recorded = Migration::get()->where('migration_name__eq', $migration_name)->where('migration_timestamp__eq', $fn_parts[1])->first_or_default();
+         if(!$recorded){
+             $recorded = Migration::new(['migration_name' => $migration_name, 'migration_timestamp' => $fn_parts[1], 'is_migrated' => 0])->save();
+         }
+
+         if($recorded->is_migrated === 1)
+            return;
 
          #Get and execute the up operations.
          $ctx_up_operations = $up_operations[$ctx];
@@ -203,19 +210,39 @@ class Migrate{
 
          return;
      }
+
+     private function order_migration_filenames(array $file_names, bool $reverse = false){
+         $files = [];
+         foreach($file_names as $name){
+             $name_parts = explode("_", $name);
+             $files[$name_parts[1]] = $name;
+         }
+
+         /* Sort and return the array */
+         $fn = $reverse ? 'krsort' : 'ksort';
+         $fn($files);
+         return $files;
+     }
      
      public function execute(string $project_root){
+         $app = App::init();
+
          $migrations_folder      = $project_root."/migrations";
          $migration_tracker_file = $project_root."/migrations/migrationstracker.bin";
          $tracker                = $this->unserialize_from_file($migration_tracker_file);
-         $files                  = $tracker ? $tracker->get_migration_files() : [];
+         $files                  = [];
+         if($app::getenvironment() === 'development'){
+             $files              = $tracker ? $tracker->get_migration_files() : [];
+         }
+
          if($files){
              $migration_files = array_filter($files, function($f){
                  return !$f->is_migrated;
              });
              $migration_file_names = array_column($migration_files, 'file');
          }else{
-             $files = $this->scandir_chrono(path: $migrations_folder, reverse: false, exts: ['php']);
+             $files = $this->scandir(path: $migrations_folder, exts: ['php']);
+             $files = $this->order_migration_filenames($files);
              $migration_file_names = array_values($files);
          }
 

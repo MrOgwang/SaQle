@@ -64,4 +64,3 @@ abstract class Relation extends RealField implements IRelation{
 		 	 return new Many2Many($this->pmodel, $this->fmodel, $this->field, $this->pk, $this->fk, $this->navigation, $this->multiple, $this->eager, $this->through ?? null);
 	 }
 }
-?>

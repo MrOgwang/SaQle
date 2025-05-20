@@ -46,4 +46,3 @@ trait PolygonUtils{
         return ["x" => (float)$coordinates[0], "y" => (float)$coordinates[1]];
      }
 }
-?>

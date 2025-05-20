@@ -47,4 +47,3 @@ class StrictValidator extends ValidatorDecorator{
 		 ]; 
 	 }
 }
-?>

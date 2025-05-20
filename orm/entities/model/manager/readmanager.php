@@ -544,4 +544,3 @@ class ReadManager extends IReadManager implements Observable, IOperationManager 
 	 	 return $this;
 	 }
 }
-?>

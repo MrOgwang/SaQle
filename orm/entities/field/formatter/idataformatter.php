@@ -13,4 +13,3 @@ abstract class IDataFormatter{
 		 return $value;
 	 }
 }
-?>

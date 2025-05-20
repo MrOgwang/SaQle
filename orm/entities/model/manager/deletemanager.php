@@ -268,4 +268,3 @@ class DeleteManager implements Observable, IOperationManager {
      }
 }
 
-?>

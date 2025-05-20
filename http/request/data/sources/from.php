@@ -1,7 +1,7 @@
 <?php
 namespace SaQle\Http\Request\Data\Sources;
 
-abstract class From{
+abstract class From {
 	 
 	 public protected(set) ?string $type = null {
 	 	 set(?string $value){
@@ -38,4 +38,3 @@ abstract class From{
 	 	 	 $this->refkey = $refkey;
 	 }
 }
-?>

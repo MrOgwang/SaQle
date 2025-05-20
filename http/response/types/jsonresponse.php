@@ -16,4 +16,3 @@ class JsonResponse{
          echo json_encode($this->data);
      }
 }
-?>

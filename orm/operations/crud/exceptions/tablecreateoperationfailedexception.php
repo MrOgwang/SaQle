@@ -14,4 +14,3 @@ class TableCreateOperationFailedException extends \Exception{
 		 return $this->__toString();
 	 }
 }
-?>

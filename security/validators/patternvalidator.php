@@ -41,4 +41,3 @@ class PatternValidator extends ValidatorDecorator{
 		 ];
 	 }
 }
-?>

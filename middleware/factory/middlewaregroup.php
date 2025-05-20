@@ -32,4 +32,3 @@ class MiddlewareGroup extends BaseMiddlewareGroup implements IMiddlewareGroup{
 	 	 }
 	 }
 }
-?>

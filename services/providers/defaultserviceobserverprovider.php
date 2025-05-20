@@ -14,4 +14,4 @@ class DefaultServiceObserverProvider extends ServiceProvider {
          ServiceObserver::after([SignoutObserver::class], AUTH_BACKEND_CLASS, 'signout');
      }
 }
-?>
+

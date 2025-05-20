@@ -51,33 +51,6 @@ abstract class RealField extends Simple{
 	 	 get => $this->validation_type;
 	 }
 
-	 //The actual, unmodified value of this field
-	 public mixed $value = null {
-	 	 set(mixed $val){
-	 	 	 $this->value = $val;
-	 	 }
-
-	 	 get => $this->value;
-	 }
-
-	 /**
-	  * When calling the render method of a field, a data object/array containing
-	  * all the fields in a model and their corresponding values is passed to the render method.
-	  * 
-	  * This is because the render method may need values of other model fields
-	  * to construct its own value
-	  * 
-	  * This data object/array is stored in context
-	  * 
-	  * */
-	 public mixed $context = null {
-	 	 set(mixed $value){
-	 	 	 $this->context = $value;
-	 	 }
-
-	 	 get => $this->context;
-	 }
-
 	 //Whether to allow null content, works for text, numbers and files.
 	 public bool $null = true {
 	 	 set(bool $value){
@@ -172,11 +145,6 @@ abstract class RealField extends Simple{
 	 	 parent::__construct(...$kwargs);
 	 }
 
-     //get a string represtation of this field
-	 public function __toString(){
-	 	 return $this->value ? (string)$this->value : "";
-	 }
-
 	 //get validation key word arguemnts
 	 protected function get_validation_kwargs() : array{
 	 	 return [
@@ -250,4 +218,3 @@ abstract class RealField extends Simple{
 	 	 return [];
 	 }
 }
-?>

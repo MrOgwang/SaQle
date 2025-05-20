@@ -9,4 +9,3 @@ class MovedPermanentlyException extends FeedbackException {
      	 parent::__construct($message, FeedBack::MOVED_PERMANENTLY, $data, $redirect);
      }
 }
-?>

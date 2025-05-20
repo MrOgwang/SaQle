@@ -42,4 +42,3 @@ class FromDb extends From{
 	 	     $this->model = $model;
 	 }
 }
-?>

@@ -26,4 +26,3 @@ abstract class BaseHandler implements Handler{
 }
 
 
-?>

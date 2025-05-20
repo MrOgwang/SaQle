@@ -210,17 +210,17 @@ trait StringUtils{
 		 }
 		 return $template;
 	 }
-     public function encrypt($plain_text, $key){
-        $secret_key = md5($key);
-        $iv = substr(hash('sha256', "aaaabbbbcccccddddeweee"), 0, 16);
-        $encrypted_text = openssl_encrypt($plain_text, 'AES-128-CBC', $secret_key, OPENSSL_RAW_DATA, $iv);
-        return base64_encode($encrypted_text);
+     public function encrypt($plain_text, $key = '', $salt = ''){
+         $secret_key = hash_pbkdf2("sha256", $key, $salt, 10000, 32, true); // 32 bytes for AES-256
+         $iv = openssl_random_pseudo_bytes(16); // 128-bit IV
+         $encrypted = openssl_encrypt($plain_text, 'AES-128-CBC', $secret_key, OPENSSL_RAW_DATA, $iv);
+         return base64_encode($iv.$encrypted);
      }
-     public function decrypt($encrypted_text, $key){
-        $key = md5($key);
-        $iv = substr(hash('sha256', "aaaabbbbcccccddddeweee" ), 0, 16);
-        $decrypted_text = openssl_decrypt(base64_decode($encrypted_text), 'AES-128-CBC', $key, OPENSSL_RAW_DATA, $iv);
-        return $decrypted_text;
+     public function decrypt($encrypted_text, $key = '', $salt = ''){
+         $secret_key = hash_pbkdf2("sha256", $key, $salt, 10000, 32, true); // 32 bytes for AES-256
+     	 $decoded = base64_decode($encrypted_text);
+         $iv = substr($decoded, 0, 16);
+         $ciphertext = substr($decoded, 16);
+         return openssl_decrypt($ciphertext, 'AES-128-CBC', $secret_key, OPENSSL_RAW_DATA, $iv);
      }
 }
-?>

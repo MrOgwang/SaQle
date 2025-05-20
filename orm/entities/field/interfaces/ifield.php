@@ -6,4 +6,3 @@ namespace SaQle\Orm\Entities\Field\Interfaces;
 interface IField{
       
 }
-?>

@@ -35,4 +35,3 @@ trait GroupManager{
          return $fields ? ' GROUP BY '.implode(", ", $fields) : "";
      }
 }
-?>

@@ -14,4 +14,3 @@ class CookieDataSourceManager extends DataSourceManager{
 	 	 return $this->optional ? $this->request->cookies->get($this->name) : $this->request->cookies->get_or_fail($this->name);
 	 }
 }
-?>

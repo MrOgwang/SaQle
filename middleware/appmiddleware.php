@@ -22,4 +22,3 @@ class AppMiddleware{
          return self::$middlewares;
      }
 }
-?>

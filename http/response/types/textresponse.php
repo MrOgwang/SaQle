@@ -14,4 +14,4 @@ class TextResponse{
          echo $this->text;
      }
 }
-?>
+

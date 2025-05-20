@@ -14,4 +14,3 @@ AppConfig::init()::load();
 
 $argv[] = dirname(__FILE__);
 (new Manage($argv))();
-?>

@@ -7,4 +7,3 @@ class LowercaseDataFormatter extends IDataFormatter{
 	 	 return strtolower($value);
 	 }
 }
-?>

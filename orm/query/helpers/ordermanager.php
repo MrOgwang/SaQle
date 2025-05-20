@@ -35,4 +35,3 @@ trait OrderManager{
          return $this->obuilder->construct_order_clause();
      }
 }
-?>

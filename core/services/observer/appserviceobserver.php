@@ -11,4 +11,3 @@ abstract class AppServiceObserver implements Observer {
 
      public abstract function handle(IService $service);
 }
-?>

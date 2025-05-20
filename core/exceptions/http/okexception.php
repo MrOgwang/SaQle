@@ -9,4 +9,3 @@ class OkException extends FeedbackException {
      	 parent::__construct($message, FeedBack::OK, $data, $redirect);
      }
 }
-?>

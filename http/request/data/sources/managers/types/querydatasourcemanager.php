@@ -14,4 +14,3 @@ class QueryDataSourceManager extends DataSourceManager{
 	 	 return $this->optional ? $this->request->route->queries->get($this->name) : $this->request->route->queries->get_or_fail($this->name);
 	 }
 }
-?>

@@ -415,7 +415,7 @@ class TableInfo{
 
  	 /**
  	  * an array of all the field names that must be included in select clause 
- 	  * to support file fields callback path, rename, url and default_url functions
+ 	  * to support file fields callback path, rename, url and default_path functions
  	  * */
  	 public private(set) array $file_required_fields = [] {
  	 	 set(array $value){
@@ -558,4 +558,3 @@ class TableInfo{
          $this->toggle_delete_fields(switch: MODEL_SOFT_DELETE);
      }
 }
-?>

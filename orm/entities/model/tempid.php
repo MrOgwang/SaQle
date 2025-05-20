@@ -19,4 +19,3 @@ class TempId extends TempModel {
 		 $meta->temporary   = true;
 	 }
 }
-?>

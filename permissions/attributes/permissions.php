@@ -15,4 +15,3 @@ class Permissions{
 	 	return $this->permissions;
 	 }
 }
-?>

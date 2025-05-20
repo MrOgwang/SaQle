@@ -73,4 +73,3 @@ trait FilterManager{
 	 	 return $this;
 	 }
 }
-?>

@@ -42,4 +42,3 @@ trait ConcreteObservable {
 	 	 $this->detach_all();
 	 }
 }
-?>

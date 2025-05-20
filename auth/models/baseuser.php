@@ -53,4 +53,3 @@ class BaseUser extends Model implements IUser {
 	 	 return false;
 	 }
 }
-?>

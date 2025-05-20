@@ -57,4 +57,3 @@ class FileLogger implements ReadWriteModes{
 		 return $file_contents;
 	 }
 }
-?>

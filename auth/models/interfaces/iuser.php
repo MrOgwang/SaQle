@@ -18,4 +18,3 @@ interface IUser {
 	 public function is_guest() : bool;
 }
 
-?>

@@ -26,4 +26,3 @@ class ApiMiddlewareGroup implements IMiddlewareGroup {
 	 	 ];
 	 }
 }
-?>

@@ -50,4 +50,3 @@ abstract class DbManager{
 	 abstract public function create_database();
 }
 
-?>

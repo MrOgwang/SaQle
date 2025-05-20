@@ -27,4 +27,3 @@ class Contact extends Model{
       	 $meta->name_property   = 'contact';
       }
 }
-?>

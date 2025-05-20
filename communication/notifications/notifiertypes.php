@@ -8,4 +8,3 @@ enum NotifierTypes : string {
     case EMAIL = "email";
 	case PUSH  = "push";
 }
-?>

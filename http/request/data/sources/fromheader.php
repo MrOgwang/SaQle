@@ -7,4 +7,3 @@ use Attribute;
 class FromHeader extends From{
 	 
 }
-?>

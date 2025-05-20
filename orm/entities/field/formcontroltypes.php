@@ -23,4 +23,3 @@ enum FormControlTypes : string {
 	 case WEEK          = "week";
 	 case COLOR         = "color";
 }
-?>
