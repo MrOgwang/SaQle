@@ -31,3 +31,4 @@ If contributing to open source excites you, or you just want to learn, reach out
 - [Controllers](controllers.md)
 - [Views](views.md)
 - [Databases](databases.md)
+- [Models](models.md).
