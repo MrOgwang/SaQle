@@ -59,7 +59,7 @@ class WebRequestProcessor extends RequestProcessor{
      }
 
 	 public function process(){
-	 	 if(str_starts_with($_SERVER['REQUEST_URI'], MEDIA_URL)){
+	 	 if(str_starts_with($_SERVER['REQUEST_URI'], MEDIA_URL) || str_starts_with($_SERVER['REQUEST_URI'], CRON_URL)){
              //serve media file
 	 	 	 $tc = count($this->request->trail);
 	 	 	 $this->serve_media($this->request->trail[$tc - 1]->target, $this->request->trail[$tc - 1]->action);
@@ -137,6 +137,7 @@ class WebRequestProcessor extends RequestProcessor{
          	 	  $response     = array_merge($response, $trail_context);
          	 }
          }
+
 	 	 $view->set_context($response);
 	 	 $html    = $view->view();
 	 	 

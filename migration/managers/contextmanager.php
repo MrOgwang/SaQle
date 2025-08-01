@@ -4,7 +4,6 @@ namespace SaQle\Migration\Managers;
 use SaQle\Migration\Managers\Interfaces\IMigrationManager;
 use SaQle\Migration\Models\Migration;
 use SaQle\Commons\FileUtils;
-use SaQle\Migration\Tracker\MigrationTracker;
 use SaQle\Orm\Entities\Field\Types\{TextType, NumberType, FileField, OneToOne, ManyToMany, OneToMany, Pk};
 use SaQle\Orm\Entities\Field\Types\Base\Relation;
 use SaQle\Orm\Entities\Model\Interfaces\IThroughModel;

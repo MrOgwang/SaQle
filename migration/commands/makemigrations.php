@@ -103,7 +103,7 @@ class MakeMigrations{
          $class_name = 'Migration_' . $timestamp . '_' . $migration_name;
          $migrations_folder = $project_root."/migrations";
          $migration_filename = $migrations_folder."/".$class_name.".php";
-         $migration_tracker_filename = $migrations_folder."/migrationstracker.bin";
+         $migration_tracker_filename = $project_root."/migrationstracker.bin";
 
          $tracker = $this->unserialize_from_file($migration_tracker_filename);
          if(!$tracker){

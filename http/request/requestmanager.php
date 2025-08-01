@@ -3,6 +3,7 @@ namespace SaQle\Http\Request;
 
 use SaQle\Http\Request\Processors\{ApiRequestProcessor, SseRequestProcessor, WebRequestProcessor};
 use SaQle\Middleware\Factory\MiddlewareGroup;
+use SaQle\Log\FileLogger;
 
 class RequestManager{
 	 public function __construct(private Request $request){}
@@ -22,7 +23,10 @@ class RequestManager{
                  $processor->process();
              }
          }catch(\Exception $e){
-             //print_r($e);
+             $logger = new FileLogger(DOCUMENT_ROOT."/logs/errors.txt");
+             $timestamp = time();
+             $time = date("g:i A", $timestamp);
+             $logger->log_to_file($time." -- ".$e."\n\n");
          }
      }
 }

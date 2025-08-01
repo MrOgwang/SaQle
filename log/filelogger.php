@@ -11,12 +11,13 @@ interface ReadWriteModes{
 	 const INSTANCE_WRITE_ONLY = "x";
 	 const INSTANCE_READ_WRITE = "x+";
 }
+
 class FileLogger implements ReadWriteModes{
 	 private $file_path;
 	 private $file_mode;
-	 public function __construct($file_path, $file_mode){
+	 public function __construct($file_path, $file_mode = null){
 		 $this->file_path = $file_path;
-		 $this->file_mode = $file_mode;
+		 $this->file_mode = $file_mode ?? self::APPEND_READ_WRITE;
 	 }
 	 public function log_to_file($file_contents){
 		 if($this->file_mode !== self::START_READ_ONLY){

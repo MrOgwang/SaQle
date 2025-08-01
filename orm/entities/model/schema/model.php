@@ -628,7 +628,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 	 	 return $result['object1'];
 	 }
 
-	 public function jsonSerialize() : mixed{
+	 public function jsonSerialize() : mixed {
 	 	 $formatted_data = [];
 	 	 foreach($this->data as $key => $val){
 	 	 	 $formatted_data[$key] = $this->$key;

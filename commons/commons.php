@@ -1,11 +1,6 @@
 <?php
 namespace SaQle\Commons;
-require_once "dateutils.php";
-require_once "fileutils.php";
-require_once "moneyutils.php";
-require_once "polygonutils.php";
-require_once "stringutils.php";
-require_once "urlutils.php";
+
 trait Commons{
 	 use DateUtils, FileUtils, MoneyUtils, PolygonUtils, StringUtils, UrlUtils;
 	 public static function obj2array(&$instance){

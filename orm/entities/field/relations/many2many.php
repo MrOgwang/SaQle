@@ -22,12 +22,9 @@ declare(strict_types = 1);
 namespace SaQle\Orm\Entities\Field\Relations;
 
 use SaQle\Orm\Entities\Field\Relations\Base\BaseRelation;
-use SaQle\Migration\Tracker\MigrationTracker;
-use SaQle\Commons\FileUtils;
 
 class Many2Many extends BaseRelation{
-	 use FileUtils;
-
+	
 	 //the class name of the through model
 	 public protected(set) ?string $through = null {
 	 	 set(?string $value){

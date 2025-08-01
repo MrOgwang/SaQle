@@ -11,7 +11,6 @@ class Login extends Model{
 	 	 	 'login_id'        => new Pk(),
 			 'login_count'     => new IntegerField(required: true, absolute: true, zero: false),
 			 'login_datetime'  => new BigIntegerField(required: true, absolute: true, zero: false),
-			 'login_datetime'  => new BigIntegerField(required: false, absolute: true, zero: false),
 			 'logout_datetime' => new BigIntegerField(required: false, absolute: true, zero: false),
 			 'login_span'      => new IntegerField(required: false, absolute: true, zero: false),
 			 'login_location'  => new TinyTextField(required: false, length: 200),

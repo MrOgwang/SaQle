@@ -5,7 +5,6 @@ use SaQle\Migration\Managers\Interfaces\IMigrationManager;
 use SaQle\Orm\Database\Manager\DbManagerFactory;
 use SaQle\Commons\FileUtils;
 use SaQle\Migration\Models\Migration;
-use SaQle\Migration\Tracker\MigrationTracker;
 use SaQle\App;
 
 class Migrate{
@@ -228,7 +227,7 @@ class Migrate{
          $app = App::init();
 
          $migrations_folder      = $project_root."/migrations";
-         $migration_tracker_file = $project_root."/migrations/migrationstracker.bin";
+         $migration_tracker_file = $project_root."/migrationstracker.bin";
          $tracker                = $this->unserialize_from_file($migration_tracker_file);
          $files                  = [];
          if($app::getenvironment() === 'development'){

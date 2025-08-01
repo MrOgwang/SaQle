@@ -8,6 +8,7 @@ use SaQle\Controllers\Helpers\{RespondWith, Exceptions, ExceptionHandler, OnErro
 use SaQle\Auth\Models\Attributes\AuthUser;
 use SaQle\Auth\Permissions\AccessControl;
 use SaQle\Core\Services\Helpers\ObservedService;
+use SaQle\Log\FileLogger;
 use ReflectionMethod;
 use ReflectionParameter;
 use Throwable;
@@ -138,7 +139,12 @@ class RequestProcessor{
 		     return $http_message;
 
 	 	 }catch(Throwable $e){
-	 	 	 print_r($e);
+	 	 	 //log exception
+	 	 	 $logger = new FileLogger(DOCUMENT_ROOT."/logs/errors.txt");
+             $timestamp = time();
+             $time = date("g:i A", $timestamp);
+             $logger->log_to_file($time." -- ".$e."\n\n");
+
 	 	 	 //extract any error responses set on the method
 	         $errresponse_attr = $reflection_method->getAttributes(OnErrorResponse::class);
 	         $errresponse      = $errresponse_attr ? $errresponse_attr[0]->newInstance() : null;

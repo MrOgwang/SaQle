@@ -109,6 +109,11 @@ class Config{
 		 define("MEDIA_URL", $settings['media_url'] ?? '/media/');
 
 		 /**
+		  * the url prefix for cron jobs
+		  * */
+		 define("CRON_URL", $settings['cron_url'] ?? '/cron/');
+
+		 /**
 		  * the media url encryption key for secure file access
 		  * */
 		 define("MEDIA_KEY", $settings['media_key'] ?? '');
