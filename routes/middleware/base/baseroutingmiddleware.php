@@ -24,12 +24,52 @@ use SaQle\Routes\Route;
 use SaQle\Routes\Exceptions\{RouteNotFoundException, MethodNotAllowedException};
 
 abstract class BaseRoutingMiddleware extends IMiddleware implements IRoutingMiddleware{
-     abstract public function get_routes_from_file(string $path) : mixed;
 
      abstract public function find_and_assign_route(MiddlewareRequestInterface &$request, mixed $routes) : void;
+     
+     public function load_routes(string $type = 'web') : mixed {
+         //load project level routes.
+         $project_path = DOCUMENT_ROOT.'/routes/'.$type.'.php';
+         if(file_exists($project_path)){
+             require_once $project_path;
+         }
+    
+         //load routes for all installed apps.
+         foreach(INSTALLED_APPS as $app){
+             $path = DOCUMENT_ROOT.'/apps/'.$app.'/routes/'.$type.'.php';
+             if(file_exists($path)){
+                 require $path;
+             }
+         }
+
+         return null;
+     }
 
      protected function assert_all_routes(array $routes) : void{
          //asset array of route objects
          Assert::allIsInstanceOf($routes, Route::class, 'One or more items in routes is not a route object!');
+     }
+
+     protected function find_matching_route(array $routes){
+         //get a matching route
+         $match = null;
+         $matches = [false, false];
+         foreach($routes as $r){
+             $matches = $r->matches();
+             if($matches[0] === true){
+                 $match = $r;
+                 break;
+             }
+         }
+
+         if(!$match){ //a match wasn't found
+             throw new RouteNotFoundException(url: $_SERVER['REQUEST_URI']);
+         }
+
+         if(!$matches[1]){ //a match was found with the wrong method
+             throw new MethodNotAllowedException(url: $_SERVER['REQUEST_URI'], method: $_SERVER['REQUEST_METHOD'], methods: $match->methods);
+         }
+
+         return $match;
      }
 }

@@ -22,67 +22,17 @@ use SaQle\Middleware\MiddlewareRequestInterface;
 use SaQle\Routes\Middleware\Base\BaseRoutingMiddleware;
 use SaQle\Routes\Exceptions\{RouteNotFoundException, MethodNotAllowedException};
 use SaQle\Controllers\Refs\ControllerRef;
-use SaQle\Routes\Route;
+use SaQle\Routes\{Router, Route};
 use SaQle\Controllers\MediaController;
 
 class WebRoutingMiddleware extends BaseRoutingMiddleware{
 
-     private function extract_trail(&$request, array $matches, array $trail = [], array $params = [], array $queries = []){
-         if(isset($matches[2])){
-             $route   = $matches[2];
-             $trail[] = (Object)['url' => $route->url, 'target' => $route->target, 'action' => $route->action];
-             $params  = array_merge($params, $route->params->get_all());
-             $queries = array_merge($queries, $route->queries->get_all());
-         }
-
-         if(is_array($matches[1])){
-             $trail = $this->extract_trail($request, $matches[1], $trail, $params, $queries);
-         }else{
-             if(!$matches[1]){ //a match was found with the wrong method
-                 throw new MethodNotAllowedException(url: $_SERVER['REQUEST_URI'], method: $_SERVER['REQUEST_METHOD'], methods: $matches[2]->methods);
-             }
-
-             //set the appropriate action for the matching route
-             $match          = $matches[2];
-             $match->action  = $match->actions[strtolower($match->method)] ?? strtolower($match->method);
-             foreach($queries as $q => $qv){
-                 $match->queries->set($q, $qv);
-             }
-             foreach($params as $p => $pv){
-                 $match->params->set($p, $pv);
-             }
-             $trail[count($trail) - 1]->action = $match->action;
-
-             $request->route = $match;
-         }
-
-         return $trail;
-     }
-
-     public function get_routes_from_file(string $path) : mixed {
-         if(file_exists($path)){
-             return require $path;
-         }
-
-         return null;
-     }
-
      public function find_and_assign_route(MiddlewareRequestInterface &$request, mixed $routes) : void{
-         $matches = $routes->matches();
-         if(!$matches[0]){
-             throw new RouteNotFoundException(url: $_SERVER['REQUEST_URI']);
-         }
-         $trail_targets = [];
-         $clean_trail   = [];
-         $trail = $this->extract_trail($request, $matches, []);
-         for($t = 0; $t < count($trail); $t++){
-             $trail_component = $trail[$t];
-             if(!in_array($trail_component->target, $trail_targets)){
-                 $clean_trail[] = $trail_component;
-             }
-             $trail_targets[] = $trail_component->target;
-         }
-         $request->trail = $clean_trail;
+         $match = $this->find_matching_route($routes);
+
+         $request->route = $match;
+         $request->trail = $match->get_trail();
+         $request->enforce_permissions = false;
 
          $controllers = ControllerRef::init()::get_controllers();
          $targets = array_column($request->trail, 'target');
@@ -99,11 +49,16 @@ class WebRoutingMiddleware extends BaseRoutingMiddleware{
 
      public function handle(MiddlewareRequestInterface &$request){
          try{
-             //Acquire project level routes.
-             $layoutroute = $this->get_routes_from_file(DOCUMENT_ROOT.'/routes/web.php', true);
+             //load routes
+             $this->load_routes();
+
+             //get all routes.
+             $routes = Router::all();
+
              //add media route
-             $layoutroute->children = [new Route(MEDIA_URL, MediaController::class)];
-             $this->find_and_assign_route($request, $layoutroute);
+             $routes[] = new Route(MEDIA_URL, MediaController::class);
+
+             $this->find_and_assign_route($request, $routes);
          }catch(RouteNotFoundException $e){
              throw $e;
          }catch(MethodNotAllowedException $e){

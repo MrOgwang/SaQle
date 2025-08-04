@@ -7,6 +7,7 @@ use SaQle\Http\Response\Types\RedirectResponse;
 use SaQle\FeedBack\ExceptionFeedBack;
 use SaQle\Core\Exceptions\Http\{ProcessingException, OkException, CreatedException, NoContentException, BadRequestException, PartialContentException, MovedPermanentlyException, FoundException, UnauthorizedException, PaymentRequiredException, ForbiddenException, NotFoundException, MethodNotAllowedException, NotAcceptableException, RequestTimeoutException, ConflictException, TooManyRequestsException, InternalServerErrorException, ServiceUnavailableException};
 use SaQle\Core\FeedBack\FeedBack;
+use SaQle\Http\Request\Request;
 
 if(!function_exists('resolve')){
      function resolve(string $abstract, array $parameters = []){
@@ -280,6 +281,25 @@ if(!function_exists('import_routes')){
          }
 
          return [];
+     }
+}
+
+if(!function_exists('to_context')){
+     function to_context(string $key, Closure $data_source, bool $session = false){
+         $data = $data_source();
+         $request = Request::init();
+         $request->context->set($key, $data, $session);
+         return $data;
+     }
+}
+
+if(!function_exists('from_context')){
+     function from_context(string $key, ?Closure $data_source = null, bool $latest = false){
+         $request = Request::init();
+         if(!$request->context->exists($key) || $latest)
+             return $data_source ? $data_source() : null;
+
+         return $request->context->get_or_fail($key);
      }
 }
 

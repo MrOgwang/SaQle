@@ -80,6 +80,14 @@ class Route implements IRoute{
          get => $this->target;
      }
 
+     public ?string $default = null {
+         set(?string $value){
+             $this->default = $value;
+         }
+
+         get => $this->default;
+     }
+
 	 /**
       * if the target is a controller class name,
       * this is an array of action methods that will be executed to get response.
@@ -92,6 +100,22 @@ class Route implements IRoute{
          }
 
          get => $this->actions;
+     }
+
+     public protected(set) ?array $parents = null {
+         set(?array $value){
+             $this->parents = $value;
+         }
+
+         get => $this->parents;
+     }
+
+     public protected(set) ?array $permissions = null {
+         set(?array $value){
+             $this->permissions = $value;
+         }
+
+         get => $this->permissions;
      }
 
      //create a new route object
@@ -111,7 +135,7 @@ class Route implements IRoute{
           * if actions is not provided, fill in with default handlers that correspond with http names
           * */
          if(is_null($actions)){
-             $this->methods = ['POST', 'PUT', 'GET', 'PATCH'];
+             $this->methods = ['POST', 'PUT', 'GET', 'PATCH', 'DELETE'];
              $this->actions = ['post' => 'post', 'get' => 'get', 'put' => 'put', 'patch' => 'patch'];
          }else{
              //ensure the methods array is an array of strings with valid http methods
@@ -127,11 +151,8 @@ class Route implements IRoute{
              $this->actions = $tmpactions;
          }
 
-         /**
-          * The default action on all controllers is the action associated to the get method. 
-          * When the matching route is determined, its action will be set to the appropriate http method
-          * */
-         $this->action = $this->actions['get'] ?? 'get';
+         //set the appropriate action for the route
+         $this->action = $this->actions[strtolower($this->method)] ?? strtolower($this->method);
 	 }
 
      /**
@@ -161,5 +182,48 @@ class Route implements IRoute{
          }
 
          return [false, false];
+     }
+
+     public function with_parents(array $parents) : void {
+         $this->parents = $parents;
+     }
+
+     public function with_default(string $controller) : void {
+         if(is_a($controller, ProxyController::class, true)){
+             $proxy = new $controller();
+             $this->default = $proxy->controller::class;
+
+             return;
+         }
+
+         $this->default = $controller;
+     }
+
+     public function with_permissions(array $permissions) : void {
+         $this->permissions = $permissions;
+     }
+
+     public function get_trail(){
+         $trail = []; 
+         $parents = $this->parents ?? [];
+         foreach($parents as $k => $v){
+             if(is_numeric($k)){
+                 $target = $v;
+                 $action = 'get';
+             }else{
+                 $target = $k;
+                 $action = $v;
+             }
+
+             if(is_a($target, ProxyController::class, true)){
+                 $proxy = new $target();
+                 $target = $proxy->controller::class;
+             }
+
+             $trail[] = (Object)['target' => $target, 'action' => $action];
+         }
+
+         $trail[] = (Object)['target' => $this->target, 'action' => $this->action];
+         return $trail;
      }
 }

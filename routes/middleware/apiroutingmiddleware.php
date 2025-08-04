@@ -25,55 +25,19 @@ use SaQle\Http\Response\HttpMessage;
 use SaQle\Http\Request\Processors\ApiRequestProcessor;
 use SaQle\Routes\Exceptions\{RouteNotFoundException, MethodNotAllowedException};
 use SaQle\Core\Assert\Assert;
+use SaQle\Routes\{Router, Route};
 
 class ApiRoutingMiddleware extends BaseRoutingMiddleware{
 
-     public function get_routes_from_file(string $path) : mixed {
-         if(file_exists($path)){
-             $routes = require $path;
-             //assert indexed array
-             Assert::isList($routes, 'The file at: '.$path.' does not return an indexed array!');
-             return $routes;
-         }
-
-         return [];
-     }
-
      public function find_and_assign_route(MiddlewareRequestInterface &$request, mixed $routes) : void {
-         //get a matching route
-         $match = null;
-         $matches = [false, false];
-         foreach($routes as $r){
-             $matches = $r->matches();
-             if($matches[0] === true){
-                 $match = $r;
-                 break;
-             }
-         }
-
-         if(!$match){ //a match wasn't found
-             throw new RouteNotFoundException(url: $_SERVER['REQUEST_URI']);
-         }
-
-         if(!$matches[1]){ //a match was found with the wrong method
-             throw new MethodNotAllowedException(url: $_SERVER['REQUEST_URI'], method: $_SERVER['REQUEST_METHOD'], methods: $match->methods);
-         }
-
-         //set the appropriate action for the matching route
-         $match->action = $match->actions[strtolower($match->method)] ?? strtolower($match->method);
-
+         $match = $this->find_matching_route($routes);
          $request->route = $match;
      }
 
      public function handle(MiddlewareRequestInterface &$request){
          try{
-             //Acquire project level routes.
-             $routes = $this->get_routes_from_file(DOCUMENT_ROOT.'/routes/api.php', true);
-        
-             //Acquire routes for all installed apps.
-             foreach(INSTALLED_APPS as $app){
-                 $routes = array_merge($routes, $this->get_routes_from_file(DOCUMENT_ROOT.'/apps/'.$app.'/routes/api.php', true));
-             }
+             //load routes
+             $this->load_routes(type: 'api');
 
              $this->assert_all_routes($routes);
 

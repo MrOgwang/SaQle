@@ -5,7 +5,7 @@ use SaQle\Http\Request\Data\Sources\Managers\Interfaces\IHttpDataSourceManager;
 use SaQle\Http\Request\Data\Sources\{From, FromDb, FromContext, FromCookie, FromBody, FromForm, FromHeader, FromPath, FromQuery};
 use SaQle\Http\Request\Data\Sources\Managers\Types\{BodyDataSourceManager, CookieDataSourceManager, DbDataSourceManager, FormDataSourceManager, HeaderDataSourceManager, PathDataSourceManager, QueryDataSourceManager, ContextDataSourceManager};
 
-class HttpDataSourceManager implements IHttpDataSourceManager{
+class HttpDataSourceManager implements IHttpDataSourceManager {
 
 	 private IHttpDataSourceManager $manager;
 
