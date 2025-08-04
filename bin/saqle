@@ -2,7 +2,18 @@
 
 <?php
 
-require __DIR__ . '/../vendor/autoload.php';
+// Try to locate the Composer autoloader from the project root
+$autoloadFiles = [
+    __DIR__ . '/../../../autoload.php', // Installed via vendor/mrogwang/saqle/bin/saqle
+    __DIR__ . '/../vendor/autoload.php' // Local dev within repo
+];
+
+foreach ($autoloadFiles as $file) {
+     if (file_exists($file)) {
+         require $file;
+         break;
+     }
+}
 
 use SaQle\Manage\Manage;
 use SaQle\Config\AppConfig;
