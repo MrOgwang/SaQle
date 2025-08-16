@@ -30,23 +30,33 @@ class BaseUser extends Model implements IUser {
 	 }
 
      //check if a user can perform an action
-	 public function can(string $action) : bool {
-	 	 return Guard::allow($action);
+	 public function can(string $action, ...$args) : bool {
+	 	 return Guard::allow($action, $this, ...$args);
 	 }
 
      //check if a user cannot perform an action
-	 public function cannot(string $action) : bool {
-	 	 return !Guard::allow($action);
+	 public function cannot(string $action, ...$args) : bool {
+	 	 return !Guard::allow($action, $this, ...$args);
 	 }
 
-	 //check if a user is of a certain role
-	 public function is(string $role) : bool {
-	 	 return Guard::check($role);
+	 //check if a user has a certain role
+	 public function has(string $role, ...$args) : bool {
+	 	 return Guard::check($role, $this, ...$args);
 	 }
 
-     //check if a user is not of a certain role
-	 public function isnot(string $role) : bool {
-	 	 return !Guard::check($role);
+     //check if a user doesn't have a certain role
+	 public function hasnot(string $role, ...$args) : bool {
+	 	 return !Guard::check($role, $this, ...$args);
+	 }
+
+	 //check if a user is of certain attribute
+	 public function is(string $attr, ...$args) : bool {
+	 	 return Guard::is($attr, $this, ...$args);
+	 }
+
+     //check if a user is not of a certain attribute
+	 public function isnot(string $attr, ...$args) : bool {
+	 	 return !Guard::is($attr, $this, ...$args);
 	 }
 
 	 public function is_guest() : bool {

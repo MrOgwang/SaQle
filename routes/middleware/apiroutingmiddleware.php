@@ -30,7 +30,7 @@ use SaQle\Routes\{Router, Route};
 class ApiRoutingMiddleware extends BaseRoutingMiddleware{
 
      public function find_and_assign_route(MiddlewareRequestInterface &$request, mixed $routes) : void {
-         $match = $this->find_matching_route($routes);
+         $match = $this->find_matching_route($routes, $request);
          $request->route = $match;
      }
 
@@ -38,6 +38,9 @@ class ApiRoutingMiddleware extends BaseRoutingMiddleware{
          try{
              //load routes
              $this->load_routes(type: 'api');
+
+             //get all routes.
+             $routes = Router::all();
 
              $this->assert_all_routes($routes);
 

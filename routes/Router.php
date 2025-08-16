@@ -56,7 +56,7 @@ class Router {
       *     - Where this is not provided for a controller, the $target_method defaults the name of the http method in all lowercase.
       * */
      static public function post(string $url, string | array $target, ?string $target_method = null) : Route {
-         return self::register_route(['post' => $target_method ?? 'get'], $url, $target, $target_method);
+         return self::register_route(['post' => $target_method ?? 'post'], $url, $target, $target_method);
      }
 
      /**
@@ -75,7 +75,7 @@ class Router {
       *     - Where this is not provided for a controller, the $target_method defaults the name of the http method in all lowercase.
       * */
      static public function patch(string $url, string | array $target, ?string $target_method = null) : Route {
-         return self::register_route(['patch' => $target_method ?? 'get'], $url, $target, $target_method);
+         return self::register_route(['patch' => $target_method ?? 'patch'], $url, $target, $target_method);
      }
 
      /**
@@ -94,7 +94,7 @@ class Router {
       *     - Where this is not provided for a controller, the $target_method defaults the name of the http method in all lowercase.
       * */
      static public function put(string $url, string | array $target, ?string $target_method = null) : Route {
-         return self::register_route(['put' => $target_method ?? 'get'], $url, $target, $target_method);
+         return self::register_route(['put' => $target_method ?? 'put'], $url, $target, $target_method);
      }
 
      /**
@@ -113,7 +113,7 @@ class Router {
       *     - Where this is not provided for a controller, the $target_method defaults the name of the http method in all lowercase.
       * */
      static public function delete(string $url, string | array $target, ?string $target_method = null) : Route {
-         return self::register_route(['delete' => $target_method ?? 'get'], $url, $target, $target_method);
+         return self::register_route(['delete' => $target_method ?? 'delete'], $url, $target, $target_method);
      }
 
      /**
@@ -134,7 +134,14 @@ class Router {
       * 
       * */
      static public function match(array $methods, string $url, string | array $target) : Route {
-         return self::register_route($methods, $url, $target);
+         $clean_methods = [];
+         foreach($methods as $k => $v){
+             $m = is_numeric($k) ? $v : $k;
+             $t = is_numeric($k) ? strtolower($v) : $v;
+
+             $clean_methods[$m] = $t;
+         }
+         return self::register_route($clean_methods, $url, $target);
      }
 
      static public function from_parents(array $parents, array $routes){
@@ -146,8 +153,19 @@ class Router {
      /**
       * Register a given route 
       * */
-     static private function register_route(array $methods, string $url, string | array $target, ?string $target_method = null) : Route {
+     static private function register_route(array $methods, string $url, null | string | array $target, ?string $target_method = null) : Route {
          $route = new Route($url, $target, $methods);
+         self::$routes[] = $route;
+         return $route;
+     }
+
+     /**
+      * Register a given redirect route 
+      * */
+     static private function register_redirect_route(array $methods, string $from_url, string $to_url) : Route {
+         $route = new Route($from_url, '', $methods);
+         $route->redirect = true;
+         $route->redirect_url = $to_url;
          self::$routes[] = $route;
          return $route;
      }
@@ -158,5 +176,9 @@ class Router {
 
      public static function clear(): void {
          self::$routes = [];
+     }
+
+     public static function redirect(string $from_url, string $to_url){
+         return self::register_redirect_route(['get' => 'get'], $from_url, $to_url);
      }
 }

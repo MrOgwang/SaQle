@@ -18,6 +18,7 @@
  use SaQle\Orm\Entities\Model\Observer\ModelObserver;
  use SaQle\Orm\Entities\Model\Interfaces\IOperationManager;
  use Exception;
+ use Closure;
 
 class ReadManager extends IReadManager implements Observable, IOperationManager {
 	 use DateUtils, UrlUtils, StringUtils, ConcreteObservable {

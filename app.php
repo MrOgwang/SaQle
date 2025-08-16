@@ -108,4 +108,16 @@ class App{
          ]);
          self::$_providers::load(); 
      }
+
+     public static function cli_bootstrap(){
+         //load config
+         self::$_appconfig::load();
+
+         //bootstrap helpers
+         require_once __DIR__.'/shortcuts/helpers.php';
+
+         //register and load locators
+         self::$_locators::register([DefaultServiceLocator::class]);
+         self::$_locators::load();
+     }
 }

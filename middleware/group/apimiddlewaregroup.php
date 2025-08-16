@@ -17,8 +17,8 @@ class ApiMiddlewareGroup implements IMiddlewareGroup {
 	 	 return [
 	 	 	 CorsMiddleware::class,
 	 	 	 VcSetupMiddleware::class,
-	 	 	 RoutingMiddleware::class,
 	 	 	 AuthMiddleware::class,
+	 	 	 RoutingMiddleware::class,
 	 	 	 DataConsolidatorMiddleware::class,
 	 	 	 CsrfMiddleware::class,
 	 	 	 PermissionsMiddleware::class,

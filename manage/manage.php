@@ -8,7 +8,6 @@ class Manage{
 	 private array  $arguments    = [];
 	 private string $project_root = '';
 	 public function __construct($args){
-	 	 print_r($args);
 	 	 $this->command = $args[1] ?? null;
 	 	 $this->arguments = match($this->command){
 	 	 	'make:migrations'  => $this->extract_makemigrations_args($args),

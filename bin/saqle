@@ -8,20 +8,14 @@ $autoloadFiles = [
     __DIR__ . '/../vendor/autoload.php' // Local dev within repo
 ];
 
-foreach ($autoloadFiles as $file) {
+foreach ($autoloadFiles as $file){
      if (file_exists($file)) {
          require $file;
          break;
      }
 }
 
-require_once __DIR__.'/../shortcuts/helpers.php';
+use SaQle\Manage\Cli;
 
-use SaQle\Manage\Manage;
-use SaQle\Config\AppConfig;
-
-AppConfig::init()::load();
-
-$argv[] = dirname(__FILE__);
-(new Manage($argv))();
+(new Cli($argv))();
 

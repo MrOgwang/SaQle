@@ -368,27 +368,28 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
      	 	 	 $defs[] = $fd;
      	 	 }
      	 }
+     	 
      	 return $defs;
 	 }
 
-     private function assert_field_defined(string $field_name, bool $throw_error = false) : string | null{
+     private function assert_field_defined(string $field_name, bool $throw_error = false) : array {
      	 //ensure field is defined in model meta
-	 	 if(!array_key_exists($field_name, $this->meta->fields) && !array_key_exists($field_name, $this->meta->column_names)){
-	 	 	 $flipped_column_names = array_flip($this->meta->column_names);
-	 	 	 $field_name = $flipped_column_names[$field_name] ?? null;
-	 	 	 if(!$field_name){
-	 	 	 	 if($throw_error){
-	 	 	 	 	 throw new \Exception("The field ".$name." is not defined on the model ".$this::class);
-	 	 	 	 }
-	 	 	 	 return null;
-	 	 	 }
-	 	 }
+     	 if(array_key_exists($field_name, $this->meta->fields) || array_key_exists($field_name, $this->meta->column_names))
+     	 	 return [$field_name, true];
 
-	 	 return $field_name;
+     	 if($throw_error)
+     	 	 throw new \Exception("The field ".$field_name." is not defined on the model ".$this::class);
+
+
+     	 if(array_key_exists($field_name, $this->data)){
+     	 	 return [$field_name, false];
+     	 }
+
+     	 throw new \Exception("There is no field or column named: ".$field_name." on the model ".$this::class);
      }
 
      public function get_field(string $field_name) : IField {
-     	 $field_name     = $this->assert_field_defined($field_name, true);
+     	 [$field_name, $is_field] = $this->assert_field_defined($field_name, true);
      	 return $this->assign_field_context_and_value($field_name);
      }
 
@@ -407,10 +408,9 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
      }
 
 	 public function __get($name){
-	 	 $field_name = $this->assert_field_defined($name);
-	 	 if(!$field_name){
-	 	 	 return $this->data[$name] ?? null;
-	 	 }
+	 	 [$field_name, $is_field] = $this->assert_field_defined($name);
+	 	 if(!$is_field)
+	 	 	 return $this->data[$field_name];
 
 	 	 $field = $this->assign_field_context_and_value($field_name);
      	 return $field->render();

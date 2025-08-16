@@ -7,11 +7,10 @@ declare(strict_types = 1);
 namespace SaQle\Routes;
 
 use Closure;
-use SaQle\Permissions\IsAuthorized;
 use SaQle\Core\Assert\Assert;
 use SaQle\Http\Request\Data\Data;
 use SaQle\Routes\Interfaces\IRoute;
-use SaQle\Controllers\ProxyController;
+use SaQle\Controllers\Base\BaseController;
 
 class Route implements IRoute{
      //the http methods that the route will handle
@@ -30,6 +29,24 @@ class Route implements IRoute{
          }
 
          get => $this->url;
+     }
+
+     //whether this is a redirect route
+     public bool $redirect = false {
+         set(bool $value){
+             $this->redirect = $value;
+         }
+
+         get => $this->redirect;
+     }
+
+     //the url to redirect to if this is a redirect
+     public string $redirect_url = ROOT_DOMAIN {
+         set(string $value){
+             $this->redirect_url = $value;
+         }
+
+         get => $this->redirect_url;
      }
 
      //the path parameters extracted from route
@@ -80,14 +97,6 @@ class Route implements IRoute{
          get => $this->target;
      }
 
-     public ?string $default = null {
-         set(?string $value){
-             $this->default = $value;
-         }
-
-         get => $this->default;
-     }
-
 	 /**
       * if the target is a controller class name,
       * this is an array of action methods that will be executed to get response.
@@ -110,16 +119,16 @@ class Route implements IRoute{
          get => $this->parents;
      }
 
-     public protected(set) ?array $permissions = null {
-         set(?array $value){
-             $this->permissions = $value;
+     public protected(set) ?Closure $perm = null {
+         set(?Closure $value){
+             $this->perm = $value;
          }
 
-         get => $this->permissions;
+         get => $this->perm;
      }
 
      //create a new route object
-	 public function __construct(string $url, string $target, ?array $actions = null){
+	 public function __construct(string $url, string $target = '', ?array $actions = null){
          $this->params  = new Data();
          $this->queries = new Data();
 		 $this->url     = $url;
@@ -188,42 +197,32 @@ class Route implements IRoute{
          $this->parents = $parents;
      }
 
-     public function with_default(string $controller) : void {
-         if(is_a($controller, ProxyController::class, true)){
-             $proxy = new $controller();
-             $this->default = $proxy->controller::class;
-
-             return;
-         }
-
-         $this->default = $controller;
+     public function where(Closure $callback){
+         $this->perm = $callback;
+         return $this;
      }
 
-     public function with_permissions(array $permissions) : void {
-         $this->permissions = $permissions;
-     }
-
-     public function get_trail(){
+     /**
+      * A trail is a list of all the targets and actions that a web request
+      * requires to provide a complete response to the caller
+      * 
+      * @return array
+      * */
+     public function get_trail() : array {
          $trail = []; 
+
+         //extract parent trail
          $parents = $this->parents ?? [];
-         foreach($parents as $k => $v){
-             if(is_numeric($k)){
-                 $target = $v;
-                 $action = 'get';
-             }else{
-                 $target = $k;
-                 $action = $v;
-             }
-
-             if(is_a($target, ProxyController::class, true)){
-                 $proxy = new $target();
-                 $target = $proxy->controller::class;
-             }
-
-             $trail[] = (Object)['target' => $target, 'action' => $action];
+         foreach($parents as $p){
+             $trail[] = (Object)[
+                 'target' => $p,
+                 'action' => is_a($p, BaseController::class, true) ? new $p()->get_index() : ''
+             ];
          }
 
+         //add current target to trail
          $trail[] = (Object)['target' => $this->target, 'action' => $this->action];
+
          return $trail;
      }
 }

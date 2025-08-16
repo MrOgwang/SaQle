@@ -38,8 +38,30 @@ abstract class BaseController{
 	 	get => $this->permissions;
 	 }
 
+	 /**
+	  * The controller method that should be called by default
+	  * if no target method has not been specified by a route
+	  * 
+	  * This is used by web routes to call the views for parent and default
+	  * controllers
+	  * 
+	  * Defaults to get method
+	  * 
+	  * @var string
+	  * */
+	 protected string $index = 'get'; 
+
 	 public function __construct(){
 	 	 $this->request = resolve('request');
+	 }
+
+     /**
+      * Get the name of the index method
+      * 
+      * @return string
+      * */
+	 public function get_index() : string {
+	 	 return $this->index;
 	 }
 
 	 public function context_from_parent(array $keys, string $type = 'web'){
@@ -56,7 +78,7 @@ abstract class BaseController{
 	 }
 
 	 public function __call($method, $args){
-	 	 $allowed_methods = ['post', 'get', 'put', 'patch'];
+	 	 $allowed_methods = ['post', 'get', 'put', 'patch', 'delete', 'options'];
 	 	 if(!in_array($method, $allowed_methods)){
          	 throw new Exception('The method '.$method.' is invalid for controller: '.$this::class);
          }

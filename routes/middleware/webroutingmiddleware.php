@@ -25,12 +25,17 @@ use SaQle\Controllers\Refs\ControllerRef;
 use SaQle\Routes\{Router, Route};
 use SaQle\Controllers\MediaController;
 
-class WebRoutingMiddleware extends BaseRoutingMiddleware{
+class WebRoutingMiddleware extends BaseRoutingMiddleware {
 
      public function find_and_assign_route(MiddlewareRequestInterface &$request, mixed $routes) : void{
-         $match = $this->find_matching_route($routes);
+         $match = $this->find_matching_route($routes, $request);
+
+         if($match->redirect === true){
+             redirect($match->redirect_url);
+         }
 
          $request->route = $match;
+         //print_r($request->route);
          $request->trail = $match->get_trail();
          $request->enforce_permissions = false;
 
