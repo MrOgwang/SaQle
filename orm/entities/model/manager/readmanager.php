@@ -105,7 +105,7 @@ class ReadManager extends IReadManager implements Observable, IOperationManager 
          /**
           * Fine tune how the results from the foreign model table should be by injecting:
           * 
-          * Order clause  : as deined in the with callback
+          * Order clause  : as defined in the with callback
           * Limit clause  : as defined in the with callback
           * Filter clause : as defined in the with callback
           * Select clause : as defined in the with callback
@@ -344,7 +344,7 @@ class ReadManager extends IReadManager implements Observable, IOperationManager 
      }
 
      private function has_get_data_been_formatted($data){
-     	 if(count($data) === 0)
+     	 if(!$data)
      	 	 return true;
 
 		 $allHaveProperty = true;

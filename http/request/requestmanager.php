@@ -17,7 +17,8 @@ class RequestManager{
                  $processor = new ApiRequestProcessor();
                  $processor->process();
              }elseif($this->request->is_sse_request()){
-                 
+                 $processor = new SseRequestProcessor();
+                 $processor->process();
              }else{
                  $processor = new WebRequestProcessor();
                  $processor->process();

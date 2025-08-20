@@ -12,6 +12,7 @@ class SelectOperation extends IOperation{
 	 	 try{
 	 	 	 $data      = $this->settings['data'];
 		     $sql       = $this->settings['sql'];
+
 		     $statement = $pdo->prepare($sql);
 		     $response  = $statement->execute($data);
 

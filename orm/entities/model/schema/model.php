@@ -2,6 +2,7 @@
 namespace SaQle\Orm\Entities\Model\Schema;
 
 use SaQle\Orm\Entities\Field\Relations\Interfaces\IRelation;
+use SaQle\Orm\Entities\Field\Relations\{Many2Many};
 use SaQle\Orm\Entities\Field\Interfaces\IField;
 use SaQle\Orm\Entities\Field\Types\{Pk, TextField, OneToOne, OneToMany, FloatField, IntegerField, BigIntegerField, PhpTimestampField, ManyToMany, FileField, TinyTextField, DateField, TimeField, DateTimeField, TimestampField, BooleanField, VirtualField};
 use SaQle\Orm\Entities\Field\Exceptions\FieldValidationException;
@@ -557,22 +558,25 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 	     	  * At this point the data has gone through the constructor, so we are confident the model
 	     	  * has all the fields required to be saved.
               * */
-			 $val = $this->$field;
+			 $val = $this->data[$field];
 
 		     if(in_array($field, $simple_fields)){
 		     	 $regular_fields[$field] = $val;
 	     	 }elseif(in_array($field, $nk_fields)){
 	     	 	 $nk_field_vals  = [];
-	     	 	 $relation       = $this->is_relation_field($field);
-	     	 	 $through        = $relation->get_through_model();
-	     	 	 $fmodel         = $relation->fmodel;
-	     	 	 $fmodel_pk_name = $fmodel::state()->meta->pk_name;
-	     	 	 foreach($val as $v){
-	     	 	 	 $nk_field_vals[] = is_object($v) ? $v->$fmodel_pk_name : $v;
+	     	 	 if($val){
+	     	 	 	 $relation       = $this->is_relation_field($field);
+		     	 	 $fmodel         = $relation->fmodel;
+		     	 	 $fmodel_pk_name = $fmodel::state()->meta->pk_name;
+		     	 	 foreach($val as $v){
+		     	 	 	 $nk_field_vals[] = is_object($v) ? $v->$fmodel_pk_name : $v;
+		     	 	 }
+		     	 	 $manytomany_fields[$field]   = $nk_field_vals;
+		     	 	 if(is_a($relation, Many2Many::class, true)){
+		     	 	 	 $through = $relation->get_through_model();
+		     	 	 	 $manytomany_throughs[$field] = $through;
+		     	 	 }
 	     	 	 }
-
-	     	 	 $manytomany_fields[$field]   = $nk_field_vals;
-	     	 	 $manytomany_throughs[$field] = $through;
 	     	 }elseif(in_array($field, $fk_fields)){
 	     	 	 //will do later
 	     	 	 $relation = $this->is_relation_field($field);

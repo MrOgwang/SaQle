@@ -35,14 +35,19 @@ class JoinBuilder {
 	 }
 
 	 public function construct_join_clause(DbContextTracker $ctx){
+
 		 $join_string = "";
 		 if($this->joins){
 			 $join_pieces = [];
 			 for($j = 0; $j < count($this->joins); $j++){
+			 	 $base_table = $ctx->find_table_name(0);
+		         $base_table_aliase = $ctx->aliases[0];
+		         $base_database     = $ctx->databases[0];
+
 				 $join     = $this->joins[$j];
 				 $aliase   = $join->aliase;
 				 $tblref   = $join->ref;
-				 $database = $join->database;
+				 $database = $join->database ? $join->database : $base_database;
 				 $table    = $join->table;
 				 $field_a  = $join->from;
 				 $field_b  = $join->to;
@@ -53,10 +58,6 @@ class JoinBuilder {
 		         $joining_table_qualified_name = $aliase ? $realtbl." AS ".$aliase : $realtbl;
 
 		         $joining_field_qualified_name = $aliase ? $aliase.".".$field_b : $database.".".$table.".".$field_b;
-
-		         $base_table = $ctx->find_table_name(0);
-		         $base_table_aliase = $ctx->aliases[0];
-		         $base_database     = $ctx->databases[0];
 
 		         $base_field_qualified_name = $base_table_aliase ? $base_table_aliase.".".$field_a 
 		         : $base_database.".".$base_table.".".$field_a;
