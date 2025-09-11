@@ -13,7 +13,7 @@ class AppConfig{
      }
 
      public static function load(){
-         $files = ['app', 'auth', 'database', 'email', 'model', 'tenant'];
+         $files = ['app', 'auth', 'database', 'email', 'model', 'tenant', 'session'];
          $configurations = [];
          foreach($files as $f){
              $path = self::$directory.'/'.$f.'.config.php';

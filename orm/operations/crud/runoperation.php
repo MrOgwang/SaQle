@@ -3,10 +3,11 @@ namespace SaQle\Orm\Operations\Crud;
 
 use SaQle\Orm\Operations\IOperation;
 use Exception;
+use PDO;
 
 class RunOperation extends IOperation{
 
-	 public function run(){
+	 public function run(&$pdo){
 	 	 try{
 	 	 	 $data      = $this->settings['data'];
 		     $sql       = $this->settings['sql'];

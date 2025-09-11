@@ -58,8 +58,8 @@ class AccessControl {
      //the guard to consider
      protected string $guard;
 
-     //the action to take on the guard
-     protected string $action = 'allow';
+     //the guard type
+     protected string $gtype = 'attr'; //attr, perm, role
 
      //the code if fail
      protected int $code = HttpMessage::UNAUTHORIZED;
@@ -70,26 +70,22 @@ class AccessControl {
      //the url to redirect to if failed, especially for web requests
      protected string $redirect = '';
 
-     public function __construct(string $guard, ?string $action = null, ?string $code = null, ?string $message = null, ?string $redirect = null){
+     public function __construct(string $guard, string $gtype = 'attr', ?string $code = null, ?string $message = null, ?string $redirect = null){
          $this->guard    = $guard;
-         $this->action   = !is_null($action) ? $action : $this->action;
+         $this->gtype    = $gtype;
          $this->code     = !is_null($code) ? $code : $this->code;
          $this->message  = !is_null($message) ? $message : $this->message;
          $this->redirect = !is_null($redirect) ? $redirect : $this->redirect;
-
-         if(!in_array($this->action, ['allow', 'authorize'])){
-             throw new Exception('Invalid access control action: Valid actions are [allow, authorize]');
-         }
      }
-
      public function enforce(){
-         $result = $this->action === 'allow' ? Guard::allow($this->guard) : Guard::authorize($this->guard);
-
-         if(!$result && $this->action === 'allow')
+         $result = match($this->gtype){
+             'attr' => Guard::is($this->guard),
+             'perm' => Guard::allow($this->guard),
+             'role' => Guard::check($this->guard)
+         };
+         
+         if(!$result)
              throw new AccessDeniedException(code: $this->code, message: $this->message, redirect: $this->redirect);
-
-         if(!$result && $this->action === 'authorize')
-             throw new UnauthorizedAccessException(code: $this->code, message: $this->message, redirect: $this->redirect);
 
          return true;
      }

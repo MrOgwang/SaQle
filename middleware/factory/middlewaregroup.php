@@ -16,9 +16,8 @@ class MiddlewareGroup extends BaseMiddlewareGroup implements IMiddlewareGroup{
 
 	 public function get_middlewares() : array{
 	 	 return match($this->request_type){
-	 	 	 'web'  => (new WebMiddlewareGroup())->get_middlewares(),
-	 	 	 'api'  => (new ApiMiddlewareGroup())->get_middlewares(),
-	 	 	 'ajax' => (new AjaxMiddlewareGroup())->get_middlewares(),
+	 	 	 'web', 'ajax' => (new WebMiddlewareGroup())->get_middlewares(),
+	 	 	 'api'  => (new ApiMiddlewareGroup())->get_middlewares()
 	 	 };
 	 }
 

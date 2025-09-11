@@ -10,13 +10,12 @@ use SaQle\Orm\Connection\Connection;
 use SaQle\Image\Image;
 use SaQle\Core\Observable\{Observable, ConcreteObservable};
 use SaQle\Core\FeedBack\FeedBack;
-use SaQle\Orm\Entities\Model\Observer\ModelObserver;
 use SaQle\Orm\Entities\Model\Interfaces\IOperationManager;
-use SaQle\Orm\Entities\Model\Manager\Utils\ImageUtils;
+use SaQle\Orm\Entities\Model\Manager\Utils\{ObserverUtils, ImageUtils};
 use Exception;
 
 class CreateManager implements Observable, IOperationManager {
-	 use ImageUtils;
+	 use ImageUtils, ObserverUtils;
 
 	 use ConcreteObservable{
 		 ConcreteObservable::__construct as private __coConstruct;
@@ -125,26 +124,12 @@ class CreateManager implements Observable, IOperationManager {
 		 	 	 data:       $sql_info['data']
 		 	 );
 
+
+
 		 	 //send a pre insert signal to observers
-		 	 $preobservers = array_merge(
-		 	 	 ModelObserver::get_model_observers('before', 'insert', $this->modelclass),
-		 	 	 ModelObserver::get_shared_observers('before', 'insert')
-		 	 );
-	 	     $this->quick_notify(
-	 	     	 observers: $preobservers,
-	 	     	 code: FeedBack::OK, 
-	 	     	 data: [
-	 	     	 	 'data'          => $this->container->data, 
-	 	     	 	 'files'         => $this->container->files,
-	 	     	 	 'table'         => $this->table, 
-	 	     	 	 'sql'           => $sql_info['sql'], 
-	 	     	 	 'prepared_data' => $sql_info['data'],
-	 	     	 	 'dbclass'       => $this->dbclass,
-	 	     	 	 'db'            => DB_CONTEXT_CLASSES[$this->dbclass]['name'],
-	 	     	 	 'timestamp'     => time(),
-	 	     	 	 'model'         => $this->modelclass
-	 	     	 ]
-	 	     );
+		 	 $named_args = $this->get_named_args('insert', $sql_info, null, null, $this->container->data, $this->container->files);
+		 	 $this->notify_observers('before', 'insert', $named_args);
+
              //insert data
 		 	 $response = $operation->insert($pdo);
              //save files if any
@@ -158,26 +143,8 @@ class CreateManager implements Observable, IOperationManager {
      	 	 $result = $this->container->multiple === true ? $created_rows : $created_rows[0];
 
              //send a post insert signal to observers
-     	 	 $postobservers = array_merge(
-     	 	 	 ModelObserver::get_model_observers('after', 'insert', $this->modelclass), 
-     	 	 	 ModelObserver::get_shared_observers('after', 'insert')
-     	 	 );
-     	 	 $this->quick_notify(
-     	 	 	 observers: $postobservers,
-	 	     	 code: FeedBack::OK, 
-	 	     	 data: [
-	 	     	 	 'data'          => $this->container->data, 
-	 	     	 	 'files'         => $this->container->files,
-	 	     	 	 'table'         => $this->table, 
-	 	     	 	 'sql'           => $sql_info['sql'], 
-	 	     	 	 'prepared_data' => $sql_info['data'],
-	 	     	 	 'dbclass'       => $this->dbclass,
-	 	     	 	 'db'            => DB_CONTEXT_CLASSES[$this->dbclass]['name'],
-	 	     	 	 'timestamp'     => time(),
-	 	     	 	 'result'        => $result,
-	 	     	 	 'model'         => $this->modelclass
-	 	     	 ]
-	 	     );
+             $named_args['result'] = $result;
+             $this->notify_observers('after', 'insert', $named_args);
 
      	     return $result;
      	 }catch(Exception $ex){

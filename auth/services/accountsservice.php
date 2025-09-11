@@ -10,7 +10,7 @@ abstract class AccountsService implements IService{
 
 	 /**
 	  * Check whether a verification code exists and return it else return false
-	  * @param string $code: The code for which to checj existance
+	  * @param string $code: The code for which to check existance
 	  * */
 	 protected function code_exists(string $code){
 	 	 return Vercode::get()->where('code__eq', $code)->first_or_default() ?? false;

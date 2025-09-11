@@ -10,10 +10,11 @@ use SaQle\Core\Observable\{Observable, ConcreteObservable};
 use SaQle\Core\FeedBack\FeedBack;
 use SaQle\Orm\Entities\Model\Observer\ModelObserver;
 use SaQle\Orm\Entities\Model\Interfaces\IOperationManager;
+use SaQle\Orm\Entities\Model\Manager\Utils\ObserverUtils;
 use Exception;
 
 class TruncateManager implements Observable, IOperationManager {
-	 use ConcreteObservable {
+	 use ObserverUtils, ConcreteObservable {
 		 ConcreteObservable::__construct as private __coConstruct;
 	 }
 
@@ -72,45 +73,14 @@ class TruncateManager implements Observable, IOperationManager {
 	 	 );
 
 	 	 //send a pre truncate signal to observers
-	 	 $preobservers = array_merge(
-	 	 	 ModelObserver::get_model_observers('before', 'truncate', $this->modelclass), 
-	 	 	 ModelObserver::get_shared_observers('before', 'truncate')
-	 	 );
- 	     $this->quick_notify(
- 	     	 observers: $preobservers,
- 	     	 code: FeedBack::OK, 
- 	     	 data: [
- 	     	 	 'table'         => $this->table, 
- 	     	 	 'sql'           => $sql_info['sql'], 
- 	     	 	 'prepared_data' => $sql_info['data'],
- 	     	 	 'dbclass'       => $this->dbclass,
- 	     	 	 'db'            => DB_CONTEXT_CLASSES[$this->dbclass]['name'],
- 	     	 	 'timestamp'     => time(),
- 	     	 	 'model'         => $this->modelclass
- 	     	 ]
- 	     );
+	 	 $named_args = $this->get_named_args('truncate', $sql_info);
+		 $this->notify_observers('before', 'truncate', $named_args);
 
 	 	 $result = $operation->delete($pdo);
 
 	 	 //send a post delete signal to observers
-	 	 $postobservers = array_merge(
-	 	 	 ModelObserver::get_model_observers('after', 'truncate', $this->modelclass), 
-	 	 	 ModelObserver::get_shared_observers('after', 'truncate')
-	 	 );
- 	     $this->quick_notify(
- 	     	 observers: $postobservers,
- 	     	 code: FeedBack::OK, 
- 	     	 data: [
- 	     	 	 'table'         => $this->table, 
- 	     	 	 'sql'           => $sql_info['sql'], 
- 	     	 	 'prepared_data' => $sql_info['data'],
- 	     	 	 'dbclass'       => $this->dbclass,
- 	     	 	 'db'            => DB_CONTEXT_CLASSES[$this->dbclass]['name'],
- 	     	 	 'timestamp'     => time(),
- 	     	 	 'model'         => $this->modelclass,
- 	     	 	 'result'        => $result
- 	     	 ]
- 	     );
+	 	 $named_args['result'] = $result;
+	 	 $this->notify_observers('after', 'truncate', $named_args);
 
 	 	 return $result;
      }

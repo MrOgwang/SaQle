@@ -152,6 +152,7 @@ abstract class Binary extends RealField{
 
          $path  = $this->path($this->context);
          $files = is_string($this->value) && !empty(trim($this->value)) ? explode("~", $this->value) : [];
+
 	 	 if(is_null($this->value) || empty(trim($this->value))){
 	 	 	 $default_path = $this->default_file_path($this->context);
 	 	 	 if(empty(trim($default_path)))

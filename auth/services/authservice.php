@@ -1,73 +1,62 @@
 <?php
+/**
+ * This file is part of SaQle framework.
+ * 
+ * (c) 2018 SaQle
+ * 
+ * For the full copyright and license information, please view the LICENSE file
+ * that was ditributed with the source code
+ * */
+
+/**
+ * The auth service is used to login and logout the user
+ * 
+ * @pacakge SaQle
+ * @author  Wycliffe Omondi Otieno <wycliffomondiotieno@gmail.com>
+ * */
 namespace SaQle\Auth\Services;
 
-use SaQle\Http\Request\Request;
-use SaQle\Auth\Models\Login;
-use SaQle\Auth\Services\Jwt;
+use SaQle\Auth\Utils\{AuthManager, AuthResult};
+use SaQle\Core\Assert\Exceptions\InvalidArgumentException;
+use SaQle\Auth\Models\Interfaces\IUser;
 use SaQle\Core\Services\IService;
+use SaQle\Core\Services\Attr\ResultName;
 
-abstract class AuthService implements IService{
-	 protected $request;
-	 public function __construct(){
-	 	 $this->request = Request::init();
-	 }
-     abstract public function update_online_status(string | int $user_id, bool $is_online = true) : void;
-     abstract public function authenticate(...$kwargs);
-	 public function record_signin(string | int $user_id){
-		 /*$count = Login::get()->where('user_id__eq', $user_id)->total();
-		 Login::new([
-		 	'login_count' => $count + 1, 
-		 	'login_datetime' => time(), 
-		 	'user_id' => $user_id,
-		 	'logout_datetime' => 1,
-		 	'login_span' => 1
-		 ])->save();*/
-	 }
-	 public function record_signout(string | int $user_id) : void{
-		 $last_login = Login::get()->where('user_id__eq', $user_id)->order(["login_id"], "DESC")->limit(1, 1)->first_or_default();
-		 if($last_login){
-		 	 $logout_datetime = time();
-		 	 $login_span = $logout_datetime - $last_login->login_datetime;
-			 Login::set(['logout_datetime' => time(), 'login_span' => $login_span])->where('login_id__eq', $last_login->login_id)->update();
-		 }
-	 }
-	 public function signout(){
-	 	 $user = $this->request->user;
-	 	 session_unset();
-         session_destroy();
+class AuthService implements IService {
+     /**
+     * Main login entry point.
+     * $strategy_name = which login method (password, google, magic, etc.)
+     */
+     #[ResultName(name: 'auth_result')]
+     public function login(string $strategy_name, array $credentials): AuthResult {
+         $strategy = AuthManager::get_strategy($strategy_name);
 
-         return $user;
-	 }
+         if(!$strategy) throw new InvalidArgumentException("Unknown login strategy: $strategy_name!");
 
-	 /**
-	  * Generate a new jwt auth token
-	  * 
-	  * @param int    $issued_at:  the time issued in secends
-	  * @param string $issuer:     the domain issuing the token
-	  * @param int    $not_before: the time in seconds before which token is not valid
-	  * @param int    $expiry:        the time in minutes after which token is not valid
-	  * @param array  $extra_info:    a key=>value array of extra information to pass as payload
-	  * 
-	  * @return string
-	  * */
-	 public function generate_jwt_token(
-	 	 ?int    $issued_at  = null, 
-	 	 ?string $issuer     = null, 
-	 	 ?int    $not_before = null, 
-	 	 int     $expiry     = 5, 
-	 	 array   $extra_info  = []
-	 ) : string {
-	     $issuer = $issuer ?? ROOT_DOMAIN;
-	     $issued_at = $issued_at ?? time();
-	     $not_before = $not_before ?? time();
-	 	 $payload = [
-             'iat'       => $issued_at,
-             'iss'       => $issuer,
-             'nbf'       => $not_before,
-             'exp'       => $issued_at + ($expiry * 60),
-         ];
-         $payload = array_merge($payload, $extra_info);
-         $token = (new Jwt(JWT_KEY))->encode($payload);
-         return $token;
-	 }
+         $user = $strategy->authenticate($credentials);
+
+         if(!$user) return new AuthResult(false, null, null, "Invalid credentials");
+
+         $provider_resolver = AuthManager::get_session_provider_resolver();
+         $provider = $provider_resolver();
+
+         //issue credentials
+         $session_key = $provider->create_session($user);
+
+         return new AuthResult(true, $user, $session_key, "Login successful");
+     }
+
+     public function get_current_user() : ?IUser {
+         $provider_resolver = AuthManager::get_session_provider_resolver();
+         $provider = $provider_resolver();
+
+         $id = $provider->get_user_id();
+         if(!$id) return null;
+
+         $user_provider = AuthManager::get_user_provider();
+
+         if(!$user_provider) throw new \RuntimeException("No UserProvider registered.");
+
+         return $user_provider($id);
+     }
 }

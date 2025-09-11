@@ -4,8 +4,17 @@ declare(strict_types = 1);
 namespace SaQle\Orm\Entities\Model\Manager;
 
 use SaQle\Orm\Operations\Crud\RunOperation;
+use SaQle\Orm\Connection\Connection;
 
 class RunManager{
+	 private string $dbclass = '' {
+	 	 set(string $value){
+	 	 	 $this->dbclass = $value;
+	 	 }
+
+	 	 get => $this->dbclass;
+	 }
+
 	 private string $sql = '' {
 	 	 set(string $value){
 	 	 	 $this->sql = $value;
@@ -38,21 +47,22 @@ class RunManager{
 	 	 get => $this->multiple;
 	 }
 
-	 public function __construct(string $sql, string $operation, ?array $data = null, bool $multiple = true){
+	 public function __construct(string $dbclass, string $sql, string $operation, ?array $data = null, bool $multiple = true){
 	 	 $this->sql = $sql;
 	 	 $this->operation = $operation;
 	 	 $this->data = $data;
 	 	 $this->multiple = $multiple;
+	 	 $this->dbclass = $dbclass;
 	 }
 
 	 public function now(){
 	 	 try{
 	 	 	 $pdo = resolve(Connection::class, DB_CONTEXT_CLASSES[$this->dbclass]);
 	 	 	 $operation = new RunOperation(
-		 	 	 sql:       $sql,
-		 	 	 operation: $operation,
-		 	 	 data:      $data,
-		 	 	 multiple: $multiple
+		 	 	 sql:       $this->sql,
+		 	 	 operation: $this->operation,
+		 	 	 data:      $this->data,
+		 	 	 multiple:  $this->multiple
 		 	 );
 		 	 return $operation->run($pdo);
 	 	 }catch(Exception $ex){

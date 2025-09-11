@@ -4,7 +4,7 @@ namespace SaQle\Core\Services\Proxy;
 use SaQle\Core\Services\IService;
 use SaQle\Core\Services\Observer\ServiceObserver;
 use SaQle\Core\Observable\{Observable, ConcreteObservable};
-use SaQle\Core\FeedBack\FeedBack;
+use SaQle\Core\Services\Attr\ResultName;
 
 class ServiceProxy implements Observable, IService{
      use ConcreteObservable {
@@ -16,62 +16,47 @@ class ServiceProxy implements Observable, IService{
      }
 
      public function __call(string $method, array $args){
+         $ref_method = new \ReflectionMethod($this->service, $method);
+         $parameters = $ref_method->getParameters();
+
+         $arg_meta = [];
+         foreach($parameters as $index => $param){
+             $type = $param->getType();
+             $arg_meta[] = [
+                 'name'   => $param->getName(),
+                 'type'   => $type ? $type->getName() : null,
+                 'value'  => $args[$index] ?? null,
+             ];
+         }
+
 
          //send pre signal to observers
-         $preobservers = array_merge(
-             ServiceObserver::get_service_observers('before', $this->service::class, $method), 
-             ServiceObserver::get_service_observers('before', $this->service::class, '__'), 
-             ServiceObserver::get_shared_observers('before')
-         );
+         $preobservers = ServiceObserver::get_service_observers('before', $this->service::class, $method);
 
          if($preobservers){
-             $this->quick_notify(
-                 observers: $preobservers,
-                 code: FeedBack::OK, 
-                 data: [
-                     'service' => $this->service::class, 
-                     'method'  => $method, 
-                     'args'    => $args
-                 ]
-             );
+             $this->quick_notify(observers: $preobservers, args: $args, args_meta: $arg_meta);
          }
 
          $result = call_user_func_array([$this->service, $method], $args);
 
-         if(!is_null($result)){
-             //send post signal to observers
-             $postobservers = array_merge(
-                 ServiceObserver::get_service_observers('after', $this->service::class, $method), 
-                 ServiceObserver::get_service_observers('after', $this->service::class, '__'),
-                 ServiceObserver::get_shared_observers('after')
-             );
+         //send post signal to observers
+         $postobservers = ServiceObserver::get_service_observers('after', $this->service::class, $method);
 
-             if($postobservers){
-                 $this->quick_notify(
-                     observers: $postobservers,
-                     code: FeedBack::OK, 
-                     data: [
-                         'service' => $this->service::class, 
-                         'method'  => $method, 
-                         'args'    => $args,
-                         'result'  => $result
-                     ]
-                 );
-             }
-         }
-         
-         /*$ref = new ReflectionMethod($this->service, $method);
-         foreach ($ref->getAttributes() as $attribute) {
-             $attrInstance = $attribute->newInstance();
-
-             if ($attrInstance instanceof Loggable) {
-                 echo "[LOG]: {$attrInstance->message}\n";
+         if($postobservers){
+             //check for ResultName attribute
+             $result_name = 'result';
+             foreach ($ref_method->getAttributes(ResultName::class) as $attr){
+                 $result_name = $attr->newInstance()->name;
              }
 
-            // Add other decorators here
+             $arg_meta[] = [
+                'name'  => $result_name,
+                'type'  => is_object($result) ? get_class($result) : gettype($result),
+                'value' => $result,
+             ];
+            
+            $this->quick_notify(observers: $postobservers, args: array_merge($args, [$result]), args_meta: $arg_meta);
          }
-
-         return $ref->invokeArgs($this->service, $args);*/
 
          return $result;
      }

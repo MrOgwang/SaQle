@@ -147,7 +147,7 @@ class Config{
 		 /**
 		  * Session settings
 		  * */
-		 define("SESSION_DOMAIN",  $settings['session_domain'] ?? ($_SERVER['HTTP_HOST'] ?? ''));
+		 define("COOKIE_DOMAIN",  $settings['cookie_domain']);
 		 define("SESSION_HANDLER", $settings['session_handler'] ?? '');
 
 		 /**

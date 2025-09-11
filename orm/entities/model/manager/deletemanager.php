@@ -11,6 +11,7 @@ use SaQle\Core\Observable\{Observable, ConcreteObservable};
 use SaQle\Core\FeedBack\FeedBack;
 use SaQle\Orm\Entities\Model\Observer\ModelObserver;
 use SaQle\Orm\Entities\Model\Interfaces\IOperationManager;
+use SaQle\Orm\Entities\Model\Manager\Utils\ObserverUtils;
 use Exception;
 
 class DeleteManager implements Observable, IOperationManager {
@@ -21,6 +22,8 @@ class DeleteManager implements Observable, IOperationManager {
 	 use ConcreteObservable {
 		 ConcreteObservable::__construct as private __coConstruct;
 	 }
+
+	 use ObserverUtils;
 
 	 private bool $permanently = false {
 	 	 set(bool $value){
@@ -109,46 +112,15 @@ class DeleteManager implements Observable, IOperationManager {
 	 	 );
 
 	 	 //send a pre delete signal to observers
-	 	 $preobservers = array_merge(
-	 	 	 ModelObserver::get_model_observers('before', 'delete', $this->modelclass), 
-	 	 	 ModelObserver::get_shared_observers('before', 'delete')
-	 	 );
- 	     $this->quick_notify(
- 	     	 observers: $preobservers,
- 	     	 code: FeedBack::OK, 
- 	     	 data: [
- 	     	 	 'table'         => $this->table, 
- 	     	 	 'sql'           => $sql_info['sql'], 
- 	     	 	 'prepared_data' => $sql_info['data'],
- 	     	 	 'dbclass'       => $this->dbclass,
- 	     	 	 'db'            => DB_CONTEXT_CLASSES[$this->dbclass]['name'],
- 	     	 	 'timestamp'     => time(),
- 	     	 	 'model'         => $this->modelclass
- 	     	 ]
- 	     );
+	 	 $named_args = $this->get_named_args('delete', $sql_info);
+		 $this->notify_observers('before', 'delete', $named_args);
 
 	 	 $response = $operation->update($pdo);
 	 	 $result = $response->row_count > 0 ? true : false;
 
 	 	 //send a post delete signal to observers
-	 	 $postobservers = array_merge(
-	 	 	 ModelObserver::get_model_observers('after', 'delete', $this->modelclass), 
-	 	 	 ModelObserver::get_shared_observers('after', 'delete')
-	 	 );
- 	     $this->quick_notify(
- 	     	 observers: $postobservers,
- 	     	 code: FeedBack::OK, 
- 	     	 data: [
- 	     	 	 'table'         => $this->table, 
- 	     	 	 'sql'           => $sql_info['sql'], 
- 	     	 	 'prepared_data' => $sql_info['data'],
- 	     	 	 'dbclass'       => $this->dbclass,
- 	     	 	 'db'            => DB_CONTEXT_CLASSES[$this->dbclass]['name'],
- 	     	 	 'timestamp'     => time(),
- 	     	 	 'model'         => $this->modelclass,
- 	     	 	 'result'        => $result
- 	     	 ]
- 	     );
+	 	 $named_args['result'] = $result;
+	 	 $this->notify_observers('after', 'delete', $named_args);
 
 	 	 return $result;
      }
@@ -162,45 +134,14 @@ class DeleteManager implements Observable, IOperationManager {
 	 	 );
 
 	 	 //send a pre delete signal to observers
-	 	 $preobservers = array_merge(
-	 	 	 ModelObserver::get_model_observers('before', 'delete', $this->modelclass), 
-	 	 	 ModelObserver::get_shared_observers('before', 'delete')
-	 	 );
- 	     $this->quick_notify(
- 	     	 observers: $preobservers,
- 	     	 code: FeedBack::OK, 
- 	     	 data: [
- 	     	 	 'table'         => $this->table, 
- 	     	 	 'sql'           => $sql_info['sql'], 
- 	     	 	 'prepared_data' => $sql_info['data'],
- 	     	 	 'dbclass'       => $this->dbclass,
- 	     	 	 'db'            => DB_CONTEXT_CLASSES[$this->dbclass]['name'],
- 	     	 	 'timestamp'     => time(),
- 	     	 	 'model'         => $this->modelclass
- 	     	 ]
- 	     );
+	 	 $named_args = $this->get_named_args('delete', $sql_info);
+		 $this->notify_observers('before', 'delete', $named_args);
 
 	 	 $result = $operation->delete($pdo);
 
 	 	 //send a post delete signal to observers
-	 	 $postobservers = array_merge(
-	 	 	 ModelObserver::get_model_observers('after', 'delete', $this->modelclass), 
-	 	 	 ModelObserver::get_shared_observers('after', 'delete')
-	 	 );
- 	     $this->quick_notify(
- 	     	 observers: $postobservers,
- 	     	 code: FeedBack::OK, 
- 	     	 data: [
- 	     	 	 'table'         => $this->table, 
- 	     	 	 'sql'           => $sql_info['sql'], 
- 	     	 	 'prepared_data' => $sql_info['data'],
- 	     	 	 'dbclass'       => $this->dbclass,
- 	     	 	 'db'            => DB_CONTEXT_CLASSES[$this->dbclass]['name'],
- 	     	 	 'timestamp'     => time(),
- 	     	 	 'model'         => $this->modelclass,
- 	     	 	 'result'        => $result
- 	     	 ]
- 	     );
+	 	 $named_args['result'] = $result;
+	 	 $this->notify_observers('after', 'delete', $named_args);
 
 	 	 return $result;
      }

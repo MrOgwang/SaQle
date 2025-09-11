@@ -3,6 +3,7 @@ namespace SaQle\Middleware\Group;
 
 use SaQle\Middleware\Interface\IMiddlewareGroup;
 use SaQle\Session\Middleware\SessionMiddleware;
+use SaQle\Auth\Middleware\AuthMiddleware;
 use SaQle\Routes\Middleware\RoutingMiddleware;
 use SaQle\Http\Request\Middleware\{DataConsolidatorMiddleware, CsrfMiddleware};
 use SaQle\Permissions\Middleware\PermissionsMiddleware;
@@ -18,6 +19,7 @@ class WebMiddlewareGroup implements IMiddlewareGroup {
 	 	 	 CorsMiddleware::class,
 	 	 	 VcSetupMiddleware::class,
 	 	 	 SessionMiddleware::class,
+	 	 	 AuthMiddleware::class,
 	 	 	 RoutingMiddleware::class,
              DataConsolidatorMiddleware::class,
              CsrfMiddleware::class,

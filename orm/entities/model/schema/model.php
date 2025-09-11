@@ -891,8 +891,8 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 	 }
 
 	 //run custom sql and data
-	 public static function run(string $sql, string $operation, ?array $data = null, bool $multiple = true){
-	 	 return new RunManager($sql, $operation, $data, $multiple);
+	 public static function run(string $db, string $sql, string $operation, ?array $data = null, bool $multiple = true){
+	 	 return new RunManager($db, $sql, $operation, $data, $multiple);
 	 }
 
      /**

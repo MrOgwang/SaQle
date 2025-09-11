@@ -10,7 +10,7 @@ use SaQle\Http\Cors\AppCors;
 use SaQle\Core\Services\Container\AppContainer;
 use SaQle\Core\Services\Providers\AppProvider;
 use SaQle\Services\Locators\DefaultServiceLocator;
-use SaQle\Services\Providers\{DefaultServiceObserverProvider, RequestContextModelObserversProvider};
+use SaQle\Services\Providers\{RequestContextModelObserversProvider, DefaultAuthenticationProvider};
 use Closure;
 
 class App{
@@ -39,6 +39,8 @@ class App{
          if(self::$instance === null) {
              self::$instance = new self();
          }
+         //bootstrap helpers
+         require_once __DIR__.'/shortcuts/helpers.php';
          return self::$instance;
      }
 
@@ -94,17 +96,14 @@ class App{
      }
 
      public static function bootstrap(){
-         //bootstrap helpers
-         require_once __DIR__.'/shortcuts/helpers.php';
-
          //register and load locators
          self::$_locators::register([DefaultServiceLocator::class]);
          self::$_locators::load();
 
          //register and load providers
          self::$_providers::register([
-             DefaultServiceObserverProvider::class,
-             RequestContextModelObserversProvider::class
+             RequestContextModelObserversProvider::class,
+             DefaultAuthenticationProvider::class
          ]);
          self::$_providers::load(); 
      }

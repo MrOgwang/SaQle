@@ -139,7 +139,9 @@ class View{
          //run the permissions and roles first
 
          //replace template syntax with php syntax
-         $this->content = preg_replace('/{{\s+(.+?)\s+}}/', '<?php echo $1; ?>', $this->content);
+         /*$this->content = preg_replace("/{{\s*(.+?)\s*}}/", "<?php echo htmlspecialchars($1, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8', false); ?>", $this->content);*/
+         $this->content = preg_replace("/{{\s*(.+?)\s*}}/", "<?php echo $1; ?>", $this->content);
+         $this->content = preg_replace('/{!!\s*(.+?)\s*!!}/', '<?php echo $1; ?>', $this->content);
          $this->content = preg_replace('/@if\(\s*(.+?)\s*\)/', '<?php if($1): ?>', $this->content);
          $this->content = preg_replace('/@elseif\(\s*(.+?)\s*\)/', '<?php elseif($1): ?>', $this->content);
          $this->content = str_replace('@else', '<?php else: ?>', $this->content);

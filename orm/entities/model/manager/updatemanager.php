@@ -14,11 +14,11 @@ use SaQle\Core\Observable\{Observable, ConcreteObservable};
 use SaQle\Core\FeedBack\FeedBack;
 use SaQle\Orm\Entities\Model\Observer\ModelObserver;
 use SaQle\Orm\Entities\Model\Interfaces\IOperationManager;
-use SaQle\Orm\Entities\Model\Manager\Utils\ImageUtils;
+use SaQle\Orm\Entities\Model\Manager\Utils\{ObserverUtils, ImageUtils};
 use Exception;
 
 class UpdateManager implements Observable, IOperationManager{
-	 use ImageUtils;
+	 use ImageUtils, ObserverUtils;
 	 
 	 use FilterManager{
 		 FilterManager::__construct as private __filterConstruct;
@@ -124,25 +124,9 @@ class UpdateManager implements Observable, IOperationManager{
 		 	 );
 
 		 	 //send a pre update signal to observers
-		 	 $preobservers = array_merge(
-		 	 	 ModelObserver::get_model_observers('before', 'update', $this->modelclass), 
-		 	 	 ModelObserver::get_shared_observers('before', 'update')
-		 	 );
-	 	     $this->quick_notify(
-	 	     	 observers: $preobservers,
-	 	     	 code: FeedBack::OK, 
-	 	     	 data: [
-	 	     	 	 'data'          => $clean_data, 
-	 	     	 	 'files'         => $file_data,
-	 	     	 	 'table'         => $this->table, 
-	 	     	 	 'sql'           => $sql_info['sql'], 
-	 	     	 	 'prepared_data' => $sql_info['data'],
-	 	     	 	 'dbclass'       => $this->dbclass,
-	 	     	 	 'db'            => DB_CONTEXT_CLASSES[$this->dbclass]['name'],
-	 	     	 	 'timestamp'     => time(),
-	 	     	 	 'model'         => $this->modelclass
-	 	     	 ]
-	 	     );
+		 	 $named_args = $this->get_named_args('update', $sql_info, null, null, $clean_data, $file_data);
+		 	 $this->notify_observers('before', 'update', $named_args);
+
 	 	     //update data
 		 	 $response = $operation->update($pdo);
 		 	 $this->auto_save_files(array_values($this->container->files));
@@ -150,26 +134,8 @@ class UpdateManager implements Observable, IOperationManager{
 		 	 $result = $multiple ? $updateddata : ($updateddata[0] ?? false);
 
 		 	 //send a post update signal to observers
-		 	 $postobservers = array_merge(
-		 	 	 ModelObserver::get_model_observers('after', 'update', $this->modelclass), 
-		 	 	 ModelObserver::get_shared_observers('after', 'update')
-		 	 );
-	 	     $this->quick_notify(
-	 	     	 observers: $postobservers,
-	 	     	 code: FeedBack::OK, 
-	 	     	 data: [
-	 	     	 	 'data'          => $clean_data, 
-	 	     	 	 'files'         => $file_data,
-	 	     	 	 'table'         => $this->table, 
-	 	     	 	 'sql'           => $sql_info['sql'], 
-	 	     	 	 'prepared_data' => $sql_info['data'],
-	 	     	 	 'dbclass'       => $this->dbclass,
-	 	     	 	 'db'            => DB_CONTEXT_CLASSES[$this->dbclass]['name'],
-	 	     	 	 'timestamp'     => time(),
-	 	     	 	 'model'         => $this->modelclass,
-	 	     	 	 'result'        => $result
-	 	     	 ]
-	 	     );
+		 	 $named_args['result'] = $result;
+		 	 $this->notify_observers('after', 'update', $named_args);
 
 	 	     return $result;
      	 }catch(Exception $ex){

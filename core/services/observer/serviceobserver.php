@@ -19,75 +19,46 @@
 namespace SaQle\Core\Services\Observer;
 
 class ServiceObserver {
-	 static protected array $_before     = [];
-     static protected array $_before_all = [];
-     static protected array $_after      = [];
-     static protected array $_after_all  = [];
+     //an array of observers to notify before a service method is called
+	 static protected array $_before = [];
+
+     //an array of observers to notify after a service method is called
+     static protected array $_after = [];
 
      /**
       * The before observers are run just before a service method is called.
       * 
-      * 1. If a serviceclass is not provided, these observers will be applied to all services that implement IService
-      * 2. If the serviceclass is provided but the methodname is not, the observers will be applied to all
-      *    the methods defined on a service
+      * @param array $service_observers - this is a kay => value array where,
+      * 
+      * Key - a string composed of the service class and the service method in the format: ServiceClass@methodName
+      * Value - an array of observers, each in the format: ObserverClass@methodName
       * */
-     static public function before(array | string $observerclass, ?string $serviceclass = null, null|array|string $methodname = null){
-         $observerclass = is_array($observerclass) ? $observerclass : [$observerclass];
-         
-         if(!$serviceclass){
-             self::$_before_all = array_merge(self::$_before_all, $observerclass);
-         }else{
-             self::$_before[$serviceclass] = self::$_before[$serviceclass] ?? [];
-             if(is_null($methodname)){
-                 $methodname = ['__'];
-             }elseif(is_string($methodname)){
-                 $methodname = [$methodname];
-             }
-
-             //assert array of strings here
-
-             foreach($methodname as $name){
-                 self::$_before[$serviceclass][$name] = self::$_before[$serviceclass][$name] ?? [];
-                 self::$_before[$serviceclass][$name] = array_merge(self::$_before[$serviceclass][$name], $observerclass);
-             }
+     static public function before(array $service_observers){
+         foreach($service_observers as $service => $observers){
+             self::$_before[$service] = array_key_exists($service, self::$_before) ? array_merge(self::$_before[$service], $observers) : $observers;
          }
      }
 
-     static public function after(array | string $observerclass, ?string $serviceclass = null, null|array|string $methodname = null){
-         $observerclass = is_array($observerclass) ? $observerclass : [$observerclass];
-         
-         if(!$serviceclass){
-             self::$_after_all = array_merge(self::$_after_all, $observerclass);
-         }else{
-             self::$_after[$serviceclass] = self::$_after[$serviceclass] ?? [];
-             if(is_null($methodname)){
-                 $methodname = ['__'];
-             }elseif(is_string($methodname)){
-                 $methodname = [$methodname];
-             }
-
-             //assert array of strings here
-
-             foreach($methodname as $name){
-                 self::$_after[$serviceclass][$name] = self::$_after[$serviceclass][$name] ?? [];
-                 self::$_after[$serviceclass][$name] = array_merge(self::$_after[$serviceclass][$name], $observerclass);
-             }
+     /**
+      * The after observers are run just after a service method is called.
+      * 
+      * @param array $service_observers - this is a kay => value array where,
+      * 
+      * Key - a string composed of the service class and the service method in the format: ServiceClass@methodName
+      * Value - an array of observers, each in the format: ObserverClass@methodName
+      * */
+     static public function after(array $service_observers){
+         foreach($service_observers as $service => $observers){
+             self::$_after[$service] = array_key_exists($service, self::$_after) ? array_merge(self::$_after[$service], $observers) : $observers;
          }
      }
 
-     static public function get_service_observers(string $when, string $serviceclass, ?string $method = null){
-         $observers = match($when){
-             'before' => self::$_before[$serviceclass] ?? [],
-             'after'  => self::$_after[$serviceclass] ?? []
-         };
+     static public function get_service_observers(string $when, string $serviceclass, string $method){
+         $key = $serviceclass."@".$method;
 
-         return $method ? ($observers[$method] ?? []) : $observers;
-     }
-
-     static public function get_shared_observers(string $when){
          return match($when){
-             'before' => self::$_before_all,
-             'after'  => self::$_after_all
+             'before' => self::$_before[$key] ?? [],
+             'after'  => self::$_after[$key] ?? []
          };
      }
 }

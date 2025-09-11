@@ -17,11 +17,12 @@
  use SaQle\Core\FeedBack\FeedBack;
  use SaQle\Orm\Entities\Model\Observer\ModelObserver;
  use SaQle\Orm\Entities\Model\Interfaces\IOperationManager;
+ use SaQle\Orm\Entities\Model\Manager\Utils\ObserverUtils;
  use Exception;
  use Closure;
 
 class ReadManager extends IReadManager implements Observable, IOperationManager {
-	 use DateUtils, UrlUtils, StringUtils, ConcreteObservable {
+	 use DateUtils, UrlUtils, StringUtils, ObserverUtils, ConcreteObservable {
 		 ConcreteObservable::__construct as private __coConstruct;
 	 }
 
@@ -413,23 +414,9 @@ class ReadManager extends IReadManager implements Observable, IOperationManager 
 	 	 $operation = new SelectOperation(sql: $sql_info['sql'], data: $sql_info['data']);
 
 	 	 //send pre select signal to observers
-	 	 $preobservers = array_merge(
-	 	 	 ModelObserver::get_model_observers('before', 'select', $model_instance::class), 
-	 	 	 ModelObserver::get_shared_observers('before', 'select')
-	 	 );
- 	     $this->quick_notify(
- 	     	 observers: $preobservers,
- 	     	 code: FeedBack::OK, 
- 	     	 data: [
- 	     	 	 'table'         => $table_name, 
- 	     	 	 'sql'           => $sql_info['sql'], 
- 	     	 	 'prepared_data' => $sql_info['data'],
- 	     	 	 'dbclass'       => $this->dbclass,
- 	     	 	 'db'            => DB_CONTEXT_CLASSES[$this->dbclass]['name'],
- 	     	 	 'timestamp'     => time(),
- 	     	 	 'model'         => $model_instance::class
- 	     	 ]
- 	     );
+	 	 $named_args = $this->get_named_args('select', $sql_info, $table_name, $model_instance::class);
+		 $this->notify_observers('before', 'select', $named_args, $model_instance::class);
+
  	     //get rows
 	 	 $rows = $operation->select($pdo);
 
@@ -443,25 +430,9 @@ class ReadManager extends IReadManager implements Observable, IOperationManager 
 	 	 $result = $this->process_includes($model_instance, $rows, $tracker_active, $data_formatted);
 
 	 	 //send post select signal to observers
-	 	 $postobservers = array_merge(
-	 	 	 ModelObserver::get_model_observers('after', 'select', $model_instance::class), 
-	 	 	 ModelObserver::get_shared_observers('after', 'select')
-	 	 );
- 	     $this->quick_notify(
- 	     	 observers: $postobservers,
- 	     	 code: FeedBack::OK, 
- 	     	 data: [
- 	     	 	 'table'         => $table_name, 
- 	     	 	 'sql'           => $sql_info['sql'], 
- 	     	 	 'prepared_data' => $sql_info['data'],
- 	     	 	 'dbclass'       => $this->dbclass,
- 	     	 	 'db'            => DB_CONTEXT_CLASSES[$this->dbclass]['name'],
- 	     	 	 'timestamp'     => time(),
- 	     	 	 'model'         => $model_instance::class,
- 	     	 	 'rows'          => $rows,
- 	     	 	 'result'        => $result,
- 	     	 ]
- 	     );
+	 	 $named_args['rows'] = $rows;
+	 	 $named_args['result'] = $result;
+	 	 $this->notify_observers('after', 'select', $named_args, $model_instance::class);
 
  	     return $result;
 	 }

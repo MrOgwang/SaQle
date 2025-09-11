@@ -303,3 +303,28 @@ if(!function_exists('from_context')){
      }
 }
 
+if(!function_exists('str_limit')){
+     function str_limit(string $value, int $limit = 100, string $end = '…'): string {
+         return mb_strimwidth($value, 0, $limit, $end, 'UTF-8');
+     }
+}
+
+if(!function_exists('env')){
+     function env(string $key, mixed $default): mixed {
+         $key = strtoupper($key);
+         
+         //Prefer $_ENV
+         if(isset($_ENV[$key])) return $_ENV[$key];
+
+         //Fallback to getenv()
+         $value = getenv($key);
+         if($value !== false) return $value;
+
+         //Fallback to $_SERVER (some servers populate env here)
+         if(isset($_SERVER[$key])) return $_SERVER[$key];
+
+         //If nothing found, return default
+         return $default;
+     }
+}
+
