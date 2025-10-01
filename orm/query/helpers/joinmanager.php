@@ -4,6 +4,7 @@ declare(strict_types = 1);
 namespace SaQle\Orm\Query\Helpers;
 
 use SaQle\Orm\Query\Join\JoinBuilder;
+use SaQle\Orm\Query\Helpers\Q;
 
 trait JoinManager{
 	 /**
@@ -29,7 +30,7 @@ trait JoinManager{
       * @param nullable string $to:       the name of teh field of joining table conecting to primary table.
       * @param nullable string $as:       the aliase name for the joining table.
       * @param nullable string $ref:      the ref name for the joining table
-      * @param nullable array  $select:   aan array of joining table fields to select
+      * @param nullable Q      $q:        introduce a filter with Q
       * @param nullable string $database: the name of the database in which the joining table belongs
       * */
      private function add_join(
@@ -39,7 +40,7 @@ trait JoinManager{
      	 ?string $to       = null, 
      	 ?string $as       = null, 
      	 ?string $ref      = null,
-     	 ?array  $select   = null,
+     	 ?Q      $q        = null,
      	 ?string $database = null
      ){
      	 $this->register_joining_model(table: $table, tblref: $ref, as: $as);
@@ -50,7 +51,7 @@ trait JoinManager{
 		 $pkname   = $model->meta->pk_name;
      	 $from     = $from ?: $pkname;
      	 $to       = $to   ?: $pkname;
-     	 $this->jbuilder->add_join(type: $type, table: $table, from: $from, to: $to, as: $as, ref: $ref, database: $database);
+     	 $this->jbuilder->add_join(type: $type, table: $table, from: $from, to: $to, as: $as, ref: $ref, database: $database, query: $q);
      }
 
      /**
@@ -62,10 +63,10 @@ trait JoinManager{
 	 	 ?string $to       = null, 
 	 	 ?string $as       = null, 
 	 	 ?string $ref      = null,
-	 	 ?array  $select   = null,
+	 	 ?Q      $q        = null,
 	 	 ?string $database = null
 	 ){
-	 	 $this->add_join(type: 'INNER JOIN', table: $table, from: $from, to: $to, as: $as, ref: $ref, select: $select, database: $database);
+	 	 $this->add_join(type: 'INNER JOIN', table: $table, from: $from, to: $to, as: $as, ref: $ref, q: $q, database: $database);
 	     return $this;
 	 }
 
@@ -78,10 +79,10 @@ trait JoinManager{
 	 	 ?string $to       = null, 
 	 	 ?string $as       = null, 
 	 	 ?string $ref      = null,
-	 	 ?array  $select   = null,
+	 	 ?Q      $q        = null,
 	 	 ?string $database = null
 	 ){
-	 	 $this->add_join(type: 'OUTER JOIN', table: $table, from: $from, to: $to, as: $as, ref: $ref, select: $select, database: $database);
+	 	 $this->add_join(type: 'OUTER JOIN', table: $table, from: $from, to: $to, as: $as, ref: $ref, q: $q, database: $database);
 	     return $this;
 	 }
 
@@ -94,10 +95,10 @@ trait JoinManager{
 	 	 ?string $to       = null, 
 	 	 ?string $as       = null, 
 	 	 ?string $ref      = null,
-	 	 ?array  $select   = null,
+	 	 ?Q      $q        = null,
 	 	 ?string $database = null
 	 ){
-	 	 $this->add_join(type: 'LEFT OUTER JOIN', table: $table, from: $from, to: $to, as: $as, ref: $ref, select: $select, database: $database);
+	 	 $this->add_join(type: 'LEFT OUTER JOIN', table: $table, from: $from, to: $to, as: $as, ref: $ref, q: $q, database: $database);
 	     return $this;
 	 }
 
@@ -110,10 +111,10 @@ trait JoinManager{
 	 	 ?string $to       = null, 
 	 	 ?string $as       = null, 
 	 	 ?string $ref      = null,
-	 	 ?array  $select   = null,
+	 	 ?Q      $q        = null,
 	 	 ?string $database = null
 	 ){
-	 	 $this->add_join(type: 'RIGHT OUTER JOIN', table: $table, from: $from, to: $to, as: $as, ref: $ref, select: $select, database: $database);
+	 	 $this->add_join(type: 'RIGHT OUTER JOIN', table: $table, from: $from, to: $to, as: $as, ref: $ref, q: $q, database: $database);
 	     return $this;
 	 }
 
@@ -126,10 +127,10 @@ trait JoinManager{
 	 	 ?string $to       = null, 
 	 	 ?string $as       = null, 
 	 	 ?string $ref      = null,
-	 	 ?array  $select   = null,
+	 	 ?Q      $q        = null,
 	 	 ?string $database = null
 	 ){
-	 	 $this->add_join(type: 'FULL OUTRE JOIN', table: $table, from: $from, to: $to, as: $as, ref: $ref, select: $select, database: $database);
+	 	 $this->add_join(type: 'FULL OUTRE JOIN', table: $table, from: $from, to: $to, as: $as, ref: $ref, q: $q, database: $database);
 	     return $this;
 	 }
 

@@ -174,9 +174,17 @@
 		 );
 	 }
 
-     public function get_select_sql_info(){
+     public function get_sql_info(){
 	 	 $where_clause = $this->wbuilder->get_where_clause($this->ctxtracker, $this->get_configurations());
-     	 $data         = $where_clause->data;
+	 	 $join_clause  = $this->jbuilder->construct_join_clause($this->ctxtracker);
+
+     	 $data         = null;
+     	 if($where_clause->data || $join_clause->data){
+     	 	 $join_clause_data = $join_clause->data ?? [];
+     	 	 $where_clause_data = $where_clause->data ?? [];
+     	 	 $data = array_merge($join_clause_data, $where_clause_data);
+     	 }
+
 		 $select       = $this->get_selected();
 		 $database     = $this->ctxtracker->find_database_name(0);
 		 $table        = $this->ctxtracker->find_table_name(0);
@@ -198,8 +206,7 @@
 		 }
 
 		 $sql         .= $from_ref;
-		 
-		 $sql         .= $this->jbuilder->construct_join_clause($this->ctxtracker);
+		 $sql         .= $join_clause->clause;
 		 $sql         .= $where_clause->clause;
 		 $sql         .= $this->get_groupby_clause();
 		 $sql         .= $this->obuilder->construct_order_clause();

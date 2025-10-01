@@ -82,17 +82,17 @@ class WhereBuilder{
 	 	 $this->aggregator->counter = count($current_raw_filter) > 0 ? 2 : 1;
 	 }
 
-	 public function get_where_clause(DbContextTracker $ctx, array $config){
+	 public function get_where_clause(DbContextTracker $ctx, array $config = [], string $section = 'where'){
 	 	 $filter_object = $this->translator->translate($this->aggregator->filter, $ctx)->filter;
 	 	 $parsed_filter = $this->parser->parse_filters($filter_object, $config);
-	 	 return $this->construct_where_clause($parsed_filter);
+	 	 return $this->construct_where_clause($parsed_filter, $section);
 	 }
 
-	 private function construct_where_clause($parsed_filters){
+	 private function construct_where_clause($parsed_filters, string $section = 'where'){
 	 	 $clause = "";
 		 $data   = null;
 	 	 if($parsed_filters["clause"]){
-	 	 	 $clause = " WHERE ".$parsed_filters["clause"];
+	 	 	 $clause = $section === 'where' ? " WHERE ".$parsed_filters["clause"] : " AND ".$parsed_filters["clause"];
 			 $data = [];
 			 foreach($parsed_filters["values"] as $d){
 				 $data[] = str_replace("'", "", $d);

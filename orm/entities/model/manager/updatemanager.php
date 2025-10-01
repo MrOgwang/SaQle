@@ -116,7 +116,7 @@ class UpdateManager implements Observable, IOperationManager{
 	 	 	 $table      = $this->table;
      	     [$clean_data, $file_data] = $model->get_update_data($this->container->data, resolve('request'), $this->datastate);
      	     $this->container->files = [$file_data];
-     	     $sql_info  = $this->get_update_sql_info($clean_data);
+     	     $sql_info  = $this->get_sql_info($clean_data);
      	     $operation = new UpdateOperation(
 		 	 	 sql:   $sql_info['sql'],
 		 	 	 table: $this->table,
@@ -189,7 +189,12 @@ class UpdateManager implements Observable, IOperationManager{
 	 	  ];
 	 }
 
-	 private function get_update_sql_info($clean_data){
+	 private function get_sql_info(?array $clean_data = null){
+	 	 if(!$clean_data){
+	 	 	 $modelclass = $this->modelclass;
+	 	 	 $model      = $modelclass::state();
+     	     [$clean_data, $file_data] = $model->get_update_data($this->container->data, resolve('request'), $this->datastate);
+	 	 }
 	 	 $where_clause = $this->wbuilder->get_where_clause($this->ctxtracker, $this->get_configurations());
 	 	 $data = $where_clause->data ? array_merge(array_values($clean_data), $where_clause->data) : array_values($clean_data);
 	 	 $database = DB_CONTEXT_CLASSES[$this->dbclass]['name'];

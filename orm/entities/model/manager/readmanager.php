@@ -101,7 +101,7 @@ class ReadManager extends IReadManager implements Observable, IOperationManager 
 	 	  * */
 	 	 $temporary_ids_select_query = TempId::get()
 	 	 ->config(fnqm: 'N-QUALIFY', ftnm: 'N-ONLY', ftqm: 'N-QUALIFY')
-	 	 ->select(['id_value'])->get_select_sql_info();
+	 	 ->select(['id_value'])->get_sql_info();
 
          /**
           * Fine tune how the results from the foreign model table should be by injecting:
@@ -151,7 +151,7 @@ class ReadManager extends IReadManager implements Observable, IOperationManager 
  	         })
  	         ->l_where("{$foreign_key}__in", $temporary_ids_select_query['sql']);
          }
- 	     $cte_manager_query = $cte_manager->get_select_sql_info();
+ 	     $cte_manager_query = $cte_manager->get_sql_info();
 
          $query_table_name = 'ranked_rows';
          $outer_manager = $foreign_model::get(tablealiase: $query_table_name)
@@ -175,7 +175,7 @@ class ReadManager extends IReadManager implements Observable, IOperationManager 
 
  	     $testfilters = $outer_manager->get_wbuilder()->get_where_clause($outer_manager->get_context_tracker(), $outer_manager->get_configurations());
 
-	 	 $outer_manager_query = $outer_manager->get_select_sql_info();
+	 	 $outer_manager_query = $outer_manager->get_sql_info();
 
 	 	 $finalsql = "WITH {$query_table_name} AS ({$cte_manager_query['sql']}) {$outer_manager_query['sql']}";
 
@@ -406,7 +406,7 @@ class ReadManager extends IReadManager implements Observable, IOperationManager 
 	 	 	 }
      	 }*/
 
-	 	 $sql_info = $this->get_select_sql_info();
+	 	 $sql_info = $this->get_sql_info();
 	 	 if($this->is_custom_sql()){
 	 	 	 $sql_info = $this->get_sqlndata();
 	 	 }

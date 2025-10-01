@@ -12,6 +12,7 @@ use SaQle\Core\Observable\{Observable, ConcreteObservable};
 use SaQle\Core\FeedBack\FeedBack;
 use SaQle\Orm\Entities\Model\Interfaces\IOperationManager;
 use SaQle\Orm\Entities\Model\Manager\Utils\{ObserverUtils, ImageUtils};
+use SaQle\Orm\Entities\Model\Schema\TableInfo;
 use Exception;
 
 class CreateManager implements Observable, IOperationManager {
@@ -115,7 +116,7 @@ class CreateManager implements Observable, IOperationManager {
 	 	 	 $modelclass = $this->modelclass;
 	 	 	 $model      = $modelclass::state();
 	 	 	 $modelmeta  = $model->meta;
- 	     	 $sql_info   = $this->get_insert_sql_info($modelmeta);
+ 	     	 $sql_info   = $this->get_sql_info($modelmeta);
  	     	 $pk_type    = $modelmeta->pk_type;
  	     	 $operation  = new InsertOperation( 
  	     	 	 prmkeytype: $pk_type,
@@ -123,8 +124,6 @@ class CreateManager implements Observable, IOperationManager {
 		 	 	 sql:        $sql_info['sql'],
 		 	 	 data:       $sql_info['data']
 		 	 );
-
-
 
 		 	 //send a pre insert signal to observers
 		 	 $named_args = $this->get_named_args('insert', $sql_info, null, null, $this->container->data, $this->container->files);
@@ -152,7 +151,12 @@ class CreateManager implements Observable, IOperationManager {
      	 }
 	 }
 
-	 private function get_insert_sql_info($modelmeta){
+	 public function get_sql_info(?TableInfo $modelmeta = null){
+	 	 if(!$modelmeta){
+	 	 	 $modelclass = $this->modelclass;
+	 	 	 $model      = $modelclass::state();
+	 	 	 $modelmeta  = $model->meta;
+	 	 }
      	 $fields        = array_keys(array_values($this->container->data)[0]);
 		 $data          = array_values($this->container->data);
 		 $values        = [];

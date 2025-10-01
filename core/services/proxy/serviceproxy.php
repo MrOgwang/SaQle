@@ -29,7 +29,6 @@ class ServiceProxy implements Observable, IService{
              ];
          }
 
-
          //send pre signal to observers
          $preobservers = ServiceObserver::get_service_observers('before', $this->service::class, $method);
 

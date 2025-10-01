@@ -53,12 +53,15 @@ class Translator{
 	 }
 
 	 private function do_filter($filter, $ctx, $fill_blanks = true){
-	 	 if(!isset($filter[0]) || !isset($filter[1]))
+	 	 
+	 	 if(!isset($filter[0])){ //if the coloumn name is not provided
 	 	 	 return null;
+	 	 }
          
          $filter_object = null;
-		 if($fill_blanks)
+		 if($fill_blanks){
 			 $filter = $this->fill_in_blanks(filter: $filter, ctx: $ctx, strict_null: true);
+		 }
 			 
 		 for($x = 0; $x < count($filter[0]); $x++){
 			 $basic_filter  = $filter[0][$x]."~".$filter[1][$x]."~".$filter[2][$x];
@@ -168,9 +171,9 @@ class Translator{
 
 	 private function find_lookup_arithmetic_operator($lookup_type, $field_value = null, $strict_null = false, $literal = 0){
 		 $lookups = [
-		     "exact"       => $strict_null && is_null($field_value) ? "IS null"     : "=", 
-			 "ne"          => $strict_null && is_null($field_value) ? "IS NOT null" : "!=", 
-			 "iexact"      => $strict_null && is_null($field_value) ? "IS null"     : "LIKE",
+		     "exact"       => $strict_null && is_null($field_value) ? "IS NULL"     : "=", 
+			 "ne"          => $strict_null && is_null($field_value) ? "IS NOT NULL" : "!=", 
+			 "iexact"      => $strict_null && is_null($field_value) ? "IS NULL"     : "LIKE",
 			 "contains"    => "LIKE",
 			 "icontains"   => "LIKE", 
 			 "in"          => "IN", 
@@ -183,7 +186,8 @@ class Translator{
 			 "endswith"    => "LIKE", 
 			 "iendswith"   => "LIKE", 
 			 "range"       => "BETWEEN", 
-			 "isnull"      => "IS null",
+			 "isnull"      => "IS NULL",
+			 "isnotnull"   => "IS NOT NULL",
 			 "eq"          => "="
 		 ];
 		 return ["operator" => $lookups[$lookup_type], "field_value" => $this->transform_field_value(

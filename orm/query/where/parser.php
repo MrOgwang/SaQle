@@ -15,11 +15,15 @@ class Parser{
 					 }else{
 						 $filter_properties = $this->parse_basic_filter($g->filter, $g->database, $g->table, $g->literal, $config);
 						 $parsed["clause"] .= $filter_properties->field ." ".$filter_properties->operator." ".$filter_properties->placeholder;
-					     if(is_array($filter_properties->value)){
-							 $parsed["values"] = array_merge($parsed["values"], $filter_properties->value);
-						 }else{
-							 array_push($parsed["values"], $filter_properties->value);
-						 }
+					     
+					     //only add value to data array if a placeholder(?) exists
+					     if($filter_properties->placeholder){
+					     	 if(is_array($filter_properties->value)){
+								 $parsed["values"] = array_merge($parsed["values"], $filter_properties->value);
+							 }else{
+								 array_push($parsed["values"], $filter_properties->value);
+							 }
+					     }
 					 }
 				 }else{
 					 $g = $g == "&" ? "AND" : "OR";
@@ -32,7 +36,9 @@ class Parser{
 	 }
 
      private function qualify_name($cn, $table, $database, $config){
-     	 if($config['fnqm'] === 'N-QUALIFY')
+     	 $fnqm = $config && $config['fnqm'] ? $config['fnqm'] : 'N-QUALIFY';
+
+     	 if($fnqm === 'N-QUALIFY')
      	 	return $cn;
      	 
      	 //is the column name a fully qualified name?
@@ -56,6 +62,10 @@ class Parser{
 		 $original_value            = substr($filter, $secend_index + 1);
 		 $filter_object["field"]    = !$literal ? $this->qualify_name($original_field, $table, $database, $config) : $original_field;
 		 $filter_object["operator"] = substr($filter, $first_index + 1, ($secend_index - $first_index - 1));
+
+		 if(str_contains($filter_object["operator"], 'NULL')){
+		 	 $filter_object["placeholder"] = "";
+		 }
 
 		 if(!$literal){
 		 	 if($filter_object["operator"] == "IN"){

@@ -1,6 +1,8 @@
 <?php
 namespace SaQle\Orm\Query\Join;
 
+use SaQle\Orm\Query\Helpers\Q;
+
 class Join{
 
      /**
@@ -92,14 +94,27 @@ class Join{
 
 	 	 get => $this->ref;
 	 }
+
+	 /**
+	  * This will be used to build the AND / OR clause to be used together with the ON clause
+	  * when constructing joins
+	  * */
+	 public private(set) ?Q $query = null{
+	 	 set(?Q $value){
+	 	 	 $this->query = $value;
+	 	 }
+
+	 	 get => $this->query;
+	 }
 	 
-	 public function __construct(string $type, string $table, string $from, string $to, ?string $database = null, ?string $aliase = null, ?string $ref = null){
+	 public function __construct(string $type, string $table, string $from, string $to, ?string $database = null, ?string $aliase = null, ?string $ref = null, ?Q $query = null){
 	 	 $this->type     = $type;
 	 	 $this->table    = $table;
 	 	 $this->from     = $from;
 	 	 $this->to       = $to;
-	 	 $this->database = $this->database;
-	 	 $this->aliase   = $this->aliase;
-	 	 $this->ref      = $this->ref;
+	 	 $this->database = $database;
+	 	 $this->aliase   = $aliase;
+	 	 $this->ref      = $ref;
+	 	 $this->query    = $query;
 	 }
 }

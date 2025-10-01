@@ -207,5 +207,9 @@ class DeleteManager implements Observable, IOperationManager {
 
          return ['sql' => $sql, 'data' => $data];
      }
+
+     public function get_sql_info(){
+     	 return $this->permanently ? $this->get_delete_sql_info() : $this->get_update_sql_info();
+     }
 }
 

@@ -10,14 +10,21 @@ class TotalOperation extends IOperation{
 
 	 public function total(&$pdo){
 	 	 try{
-	 	 	 $data     = $this->settings['where_clause']->data;
+	 	 	 
+     	     $data     = null;
+	     	 if($this->settings['where_clause']->data || $this->settings['join_clause']->data){
+	     	 	 $join_clause_data = $this->settings['join_clause']->data ?? [];
+	     	 	 $where_clause_data = $this->settings['where_clause']->data ?? [];
+	     	 	 $data = array_merge($join_clause_data, $where_clause_data);
+	     	 }
+
 		     $database = $this->settings['database_name'];
 		     $table    = $this->settings['table_name'];
 		     $sql      = "SELECT COUNT(*) AS records_count FROM {$database}.{$table}";
 			 if(isset($this->settings['table_aliase']) && $this->settings['table_aliase']){
 			 	 $sql .= " AS ".$this->settings['table_aliase'];
 			 }
-			 $sql .= $this->settings['join_clause'];
+			 $sql .= $this->settings['join_clause']->clause;
 			 $sql .= $this->settings['where_clause']->clause;
 			 $sql .= $this->settings['order_clause'];
 			 $sql .= $this->settings['limit_clause'];

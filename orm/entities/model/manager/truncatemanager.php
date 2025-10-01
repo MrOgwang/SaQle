@@ -65,7 +65,7 @@ class TruncateManager implements Observable, IOperationManager {
 	 }
 
      private function truncate($pdo){
-     	 $sql_info = $this->get_truncate_sql_info();
+     	 $sql_info = $this->get_sql_info();
 	 	 $operation = new DeleteOperation(
 	 	 	 sql:   $sql_info['sql'],
 	 	 	 data:  null,
@@ -85,7 +85,7 @@ class TruncateManager implements Observable, IOperationManager {
 	 	 return $result;
      }
 
-     private function get_truncate_sql_info(){
+     public function get_sql_info(){
 	 	 $database     = DB_CONTEXT_CLASSES[$this->dbclass]['name'];
 	 	 $table        = $this->table;
 		 $sql          = "TRUNCATE TABLE {$database}.{$table}";

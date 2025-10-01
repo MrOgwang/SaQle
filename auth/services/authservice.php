@@ -43,7 +43,14 @@ class AuthService implements IService {
          //issue credentials
          $session_key = $provider->create_session($user);
 
-         return new AuthResult(true, $user, $session_key, "Login successful");
+         //get user id
+         $id = $provider->get_user_id();
+
+         $user_provider = AuthManager::get_user_provider();
+
+         if(!$user_provider) throw new \RuntimeException("No UserProvider registered.");
+
+         return new AuthResult(true, $user_provider($id), $session_key, "Login successful");
      }
 
      public function get_current_user() : ?IUser {

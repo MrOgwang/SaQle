@@ -2,6 +2,7 @@
 namespace SaQle\Orm\Query\Join;
 
 use SaQle\Orm\Database\Trackers\DbContextTracker;
+use SaQle\Orm\Query\Helpers\Q;
 
 class JoinBuilder {
 
@@ -26,17 +27,19 @@ class JoinBuilder {
      	 ?string $to       = null, 
      	 ?string $as       = null, 
      	 ?string $ref      = null,
-     	 ?array  $select   = null,
+     	 ?Q      $query    = null,
      	 ?string $database = null
      ){
      	 $joins = $this->joins;
-     	 $joins[] = new Join(type: $type, table: $table, from: $from, to: $to, database: $database, aliase: $as, ref: $ref);
+     	 $joins[] = new Join(type: $type, table: $table, from: $from, to: $to, database: $database, aliase: $as, ref: $ref, query: $query);
 	 	 $this->joins = $joins;
 	 }
 
 	 public function construct_join_clause(DbContextTracker $ctx){
 
-		 $join_string = "";
+	 	 $clause = "";
+	 	 $data   = null;
+
 		 if($this->joins){
 			 $join_pieces = [];
 			 for($j = 0; $j < count($this->joins); $j++){
@@ -52,6 +55,7 @@ class JoinBuilder {
 				 $field_a  = $join->from;
 				 $field_b  = $join->to;
 				 $type     = $join->type;
+				 $query    = $join->query;
 
 				 $realtbl  = $tblref ? $tblref : $database.".".$table;
 
@@ -61,11 +65,26 @@ class JoinBuilder {
 
 		         $base_field_qualified_name = $base_table_aliase ? $base_table_aliase.".".$field_a 
 		         : $base_database.".".$base_table.".".$field_a;
-		         $join_pieces[] = $type." ".$joining_table_qualified_name." ON ".$joining_field_qualified_name." = ".$base_field_qualified_name;
+
+		         $join_clause = $type." ".$joining_table_qualified_name." ON ".$joining_field_qualified_name." = ".$base_field_qualified_name;
+
+		         if($query){
+				 	 $where_clause = $query->wbuilder->get_where_clause($ctx, [], 'join');
+				 	 if($where_clause->data){
+				 	 	 $data = !$data ? [] : $data;
+				 	 	 $data = array_merge($data, $where_clause->data);
+				 	 }
+				 	 if($where_clause->clause){
+				 	 	 $join_clause .= $where_clause->clause;
+				 	 }
+				 }
+
+		         $join_pieces[] = $join_clause;
 			 }
-			 $join_string = " ".implode(" ", $join_pieces);
+			 $clause = " ".implode(" ", $join_pieces);
 		 }
-		 return $join_string;
+
+		 return (Object)["clause" => $clause, "data" => $data];
 	 }
 	 
 }
