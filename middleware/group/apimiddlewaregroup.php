@@ -6,7 +6,6 @@ use SaQle\Routes\Middleware\RoutingMiddleware;
 use SaQle\Auth\Middleware\AuthMiddleware;
 use SaQle\Http\Request\Middleware\{DataConsolidatorMiddleware, CsrfMiddleware};
 use SaQle\Permissions\Middleware\PermissionsMiddleware;
-use SaQle\Config\Middlewares\VcSetupMiddleware;
 use SaQle\Http\Cors\Middlewares\CorsMiddleware;
 use SaQle\Middleware\AppMiddleware;
 
@@ -16,7 +15,6 @@ class ApiMiddlewareGroup implements IMiddlewareGroup {
 
 	 	 return [
 	 	 	 CorsMiddleware::class,
-	 	 	 VcSetupMiddleware::class,
 	 	 	 AuthMiddleware::class,
 	 	 	 RoutingMiddleware::class,
 	 	 	 DataConsolidatorMiddleware::class,

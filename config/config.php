@@ -265,5 +265,17 @@ class Config{
                  define($configname, $val);
              }
 		 }
+
+		 /**
+	 	 * The directory in which class mappings will be cached. This is used by the framework and cannot be customized
+	 	 * at the moment
+	 	 * */
+	 	 define("CLASS_MAPPINGS_DIR", "/storage/framework/build/cache/mappings/");
+
+	 	 /**
+	 	 * The directory in which compiled views will be cached. This is used by the framework and cannot be customized
+	 	 * at the moment
+	 	 * */
+	 	 define("TEMPLATES_CACHE_DIR", "/storage/framework/build/cache/templates/");
 	 }
 }

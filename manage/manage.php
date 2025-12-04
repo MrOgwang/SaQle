@@ -2,6 +2,7 @@
 namespace SaQle\Manage;
 
 use SaQle\Migration\Commands\{MakeMigrations, Migrate, MakeCollections, MakeModels, MakeThroughs, SeedDatabase, ResetDatabase, MakeSuperuser, StartProject, StartApps};
+use SaQle\Build\Commands\{BuildProject};
 
 class Manage{
 	 private string $command      = '';
@@ -20,6 +21,7 @@ class Manage{
 	 	 	'db:reset'         => [],
 	 	 	'start:project'    => $this->extract_startproject_args($args),
 	 	 	'start:apps'       => $this->extract_startapps_args($args),
+	 	 	'build'            => $this->extract_build_args($args),
 	 	 	default            => throw new \Exception("Unknown command!")
 	 	 };
 	 	 $this->project_root = $args[ count($args) - 1];
@@ -44,6 +46,12 @@ class Manage{
 	 private function extract_makemigrations_args(array $args){
 	 	 $expected_short = ['-n', '-c', '-a'];
 	 	 $expected_long  = ['--name', '--context', '--app'];
+	 	 return $this->extract_args($expected_short, $expected_long, $args);
+	 }
+
+	 private function extract_build_args(array $args){
+	 	 $expected_short = ['-t'];
+	 	 $expected_long  = ['--type'];
 	 	 return $this->extract_args($expected_short, $expected_long, $args);
 	 }
 
@@ -122,6 +130,10 @@ class Manage{
 			 case 'start:apps':
 			     $name = $this->arguments['name'] ?? null;
 			     resolve(StartApps::class)->execute($this->project_root, $name);
+			 break;
+			 case 'build':
+			     $type = $this->arguments['type'] ?? 'all';
+			     resolve(BuildProject::class)->execute($this->project_root, $type);
 			 break;
 			 default:
 			     throw new \Exception("Unknown command!");

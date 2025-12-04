@@ -15,7 +15,7 @@
  * as context from a controller method
  * 
  * @pacakge SaQle
- * @author  Wycliffe Omondi Otieno <wycliffe.omondi@saqle.com>
+ * @author  Wycliffe Omondi Otieno <wycliffomondiotieno@gmail.com>
  * */
 
 namespace SaQle\Http\Response\Models;

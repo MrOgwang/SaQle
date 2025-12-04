@@ -138,7 +138,7 @@ class Route implements IRoute{
              $this->target = $proxy->controller::class;
              $actions = $proxy->get_actions();
          }
-         $this->method = $_SERVER['REQUEST_METHOD'];
+         $this->method = $_SERVER['REQUEST_METHOD'] ?? '';
 
          /**
           * if actions is not provided, fill in with default handlers that correspond with http names

@@ -2,7 +2,6 @@
 namespace SaQle\Controllers\Base;
 
 use SaQle\Http\Response\HttpMessage;
-use SaQle\Controllers\Refs\ControllerRef;
 use Exception;
 
 abstract class BaseController{

@@ -7,44 +7,19 @@ use SaQle\Auth\Models\Interfaces\IUser;
 class View{
 
      private string $content;
+
      private array  $data;
-     private IUser  $user;
 
-     public function __construct(string $template, IUser $user, bool $isfile = true){
-         $this->user    = $user;
-         $this->content = $isfile ? $this->prune_template(file_get_contents($template)) : $this->prune_template($template);
-     }
-
-     private function prune_template($template){
-         $user = $this->user;
-         $pattern = '/@(can|cannot|is|isnot)\((.*?)\)(.*?)@end\1/s';
-
-         while (preg_match($pattern, $template, $matches, PREG_OFFSET_CAPTURE)) {
-             $directive = $matches[1][0]; // 'can' or 'is'
-             $arg = trim($matches[2][0], '\'"');
-             $content = $matches[3][0];
-
-             $allowed = match ($directive){
-                 'can'    => method_exists($user, 'can') && $user->can($arg),
-                 'cannot' => method_exists($user, 'cannot') && $user->cannot($arg),
-                 'is'     => method_exists($user, 'is') && $user->is($arg),
-                 'isnot'  => method_exists($user, 'isnot') && $user->isnot($arg),
-                 default  => false,
-             };
-
-             $full_match = $matches[0][0];
-             $template = str_replace($full_match, $allowed ? $content : '', $template);
-         }
-
-         return $template;
-     }
-
-     public function get_template(){
-         return $this->content;
+     public function __construct(string $template, bool $isfile = true){
+         $this->content = $isfile ? file_get_contents($template) : $template;
      }
 
      public function set_context(array $data){
          $this->data = $data;
+     }
+
+     public function get_template(){
+         return $this->content;
      }
 
      public function get_blocks(){
@@ -139,9 +114,6 @@ class View{
          //extract the data
          extract($this->data);
 
-         $user = $this->user;
-         //run the permissions and roles first
-
          //replace template syntax with php syntax
          /*$this->content = preg_replace("/{{\s*(.+?)\s*}}/", "<?php echo htmlspecialchars($1, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8', false); ?>", $this->content);*/
          $this->content = preg_replace("/{{\s*(.+?)\s*}}/", "<?php echo $1; ?>", $this->content);
@@ -152,12 +124,12 @@ class View{
          $this->content = str_replace('@endif', '<?php endif; ?>', $this->content);
          $this->content = preg_replace('/@foreach\(\s*(.+?)\s*\)/', '<?php foreach($1): ?>', $this->content);
          $this->content = str_replace('@endforeach', '<?php endforeach; ?>', $this->content);
-         $this->content = preg_replace_callback('/@can\((.*?)\)/', function ($matches) use ($user){
-            return "<?php if (\$user && \$user->can({$matches[1]})): ?>";
+         $this->content = preg_replace_callback('/@can\((.*?)\)/', function ($matches) use ($session_user){
+            return "<?php if (\$session_user && \$session_user->can({$matches[1]})): ?>";
          }, $this->content);
          $this->content = str_replace('@endcan', '<?php endif; ?>', $this->content);
-         $this->content = preg_replace_callback('/@is\((.*?)\)/', function ($matches) use ($user) {
-            return "<?php if (\$user && \$user->is({$matches[1]})): ?>";
+         $this->content = preg_replace_callback('/@is\((.*?)\)/', function ($matches) use ($session_user) {
+            return "<?php if (\$session_user && \$session_user->is({$matches[1]})): ?>";
          }, $this->content);
          $this->content = str_replace('@endis', '<?php endif; ?>', $this->content);
 
