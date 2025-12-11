@@ -70,7 +70,15 @@ class ClassMapper{
          return [$views, $controllers];
      }
 
-     private function cache_vc(array $items, string $cache_file, string $type = 'controllers'): void {
+     private function cache_components(array $items): void {
+         //create the components mappings dir
+         $mappings_folder = $this->projectroot.CLASS_MAPPINGS_DIR;
+         if(!file_exists($mappings_folder)){
+             mkdir($mappings_folder, 0777, true);
+         }
+
+         $mappings_file = $mappings_folder."components.php";
+
          //convert array to a PHP array representation
          $exported_array = var_export($items, true);
     
@@ -78,51 +86,82 @@ class ClassMapper{
          $php_content = <<<PHP
              <?php
              /**
-             * This is an auto generated file: This is a cache of all the $type
-             * defined for your project. 
+             * This is an auto generated file: A mapping of all component controllers and templates.
              * 
-             * WARNING: Just leave this file alone kindly.
+             * WARNING: This file is used by the templating engine to render your web app
+             * correctly. DO NOT MODIFY the file or its contents
              */
 
              return {$exported_array};
-
              
          PHP;
 
-         //write to the cache file
-         $mappings_folder = $this->projectroot.CLASS_MAPPINGS_DIR;
-         if(!file_exists($mappings_folder)){
-             mkdir($mappings_folder, 0777, true);
+         file_put_contents($mappings_file, $php_content);
+     }
+
+     protected function map_components(){
+         /**
+          * Get all directories where components live
+          * 
+          * 1. Top level components in project root
+          * 2. App level components inside app directories
+          * 2. Other components as listed in EXTRA_COMPONENTS_DIRS setting
+          * */
+         $components_dirs = [$this->projectroot.'/components'];
+
+         foreach(INSTALLED_APPS as $f){
+             $components_dirs[] = $this->projectroot."/apps/".$f."/components";
          }
 
-         file_put_contents($cache_file, $php_content);
+         foreach(EXTRA_COMPONENTS_DIRS as $d){
+             $components_dirs[] = $this->projectroot."/".$d;
+         }
+
+         /**
+          * Iterate through each components directory, mapping 
+          * components controllers and templates to componets names
+          * */
+         $components = [];
+         foreach($components_dirs as $dir){
+             $dir_iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir));
+             foreach($dir_iterator as $file){
+                 if($file->isFile()){
+                     $component_name = str_replace(".php", "", $file->getFilename());
+                     $component_name = str_replace(".".COMPONENT_TEMPLATE_EXT, "", $component_name);
+                     $path           = $file->getRealPath();
+
+                     if(!isset($components[$component_name])){
+                         $components[$component_name] = ['controller' => '', 'controller_path' => '', 'template_path' => ''];
+                     }
+
+                     if($file->getExtension() === COMPONENT_TEMPLATE_EXT){
+                         $components[$component_name]['template_path'] = $path;
+                     }elseif($file->getExtension() === 'php'){
+                         $components[$component_name]['controller_path'] = $path;
+
+                         //read file contents
+                         $content = file_get_contents($path);
+
+                         //extract namespace
+                         preg_match('/namespace\s+([^;]+);/', $content, $namespace_match);
+                         $namespace = $namespace_match[1] ?? null;
+
+                         //extract class name
+                         preg_match('/class\s+(\w+)/', $content, $class_match);
+                         $class_name = $class_match[1] ?? null;
+
+                         if($namespace && $class_name){
+                             $components[$component_name]['controller'] = $namespace . '\\' . $class_name;
+                         }
+                     }
+                 }
+             }
+         }
+
+         $this->cache_components($components);
      }
 
      public function map(){
-         $cache_controllers_file = $this->projectroot.CLASS_MAPPINGS_DIR."controllers.php";
-         $cache_views_file = $this->projectroot.CLASS_MAPPINGS_DIR."views.php";
-         $controllers = [];
-         $views = [];
-
-         //get app level controllers and templates
-         foreach(INSTALLED_APPS as $f){
-             $controllers_folder = $this->projectroot."/apps/".$f."/controllers";
-             $views_folder       = $this->projectroot."/apps/".$f."/templates";
-             [$v, $c]            = $this->get_folder_vc($controllers_folder, $views_folder);
-             $controllers        = array_merge($controllers, $c);
-             $views              = array_merge($views, $v);
-         }
-
-         //get project level controllers and templates
-         [$v, $c]     = $this->get_folder_vc($this->projectroot."/controllers", $this->projectroot."/templates");
-
-         $controllers = array_merge($controllers, $c);
-         $views       = array_merge($views, $v);
-
-         $controllers['page'] = Page::class;
-         $views['page']       = $this->projectroot."/templates/page.html";
-
-         $this->cache_vc($controllers, $cache_controllers_file);
-         $this->cache_vc($views,       $cache_views_file, 'views');
-      }
+         $this->map_components();
+     }
 }

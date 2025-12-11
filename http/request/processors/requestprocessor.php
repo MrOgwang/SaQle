@@ -47,23 +47,9 @@ class RequestProcessor{
 	  * @param string $target
 	  * @return array $response_data;
 	  * */
-	 public function get_target_response(string $target_classname, string $target_method, ?array $parent_context = null) : array{
-	 	 $instance      = new $target_classname();
-	 	 $pcontext      = $instance->pcontext;
-	 	 $ctxfromparent = [];
-	 	 if($parent_context && $pcontext){
-	 	 	 $pcn = explode("\\", $this::class);
-	 	 	 $processor = strtolower(end($pcn));
-	 	 	 if(str_starts_with($processor, $pcontext['type'])){
-	 	 	 	 foreach($pcontext['keys'] as $ck){
-	 	 	 	 	 if(array_key_exists($ck, $parent_context)){
-	 	 	 	 	 	 $ctxfromparent[$ck] = $parent_context[$ck];
-	 	 	 	 	 }
-	 	 	 	 }
-	 	 	 }
-	 	 }
-
-	 	 return [$this->call_target_method($instance, $target_method), $ctxfromparent];
+	 public function get_target_response(string $target_classname, string $target_method){
+	 	 $instance = new $target_classname();
+	 	 return $this->call_target_method($instance, $target_method);
 	 }
 
 	 private function call_target_method($target_instance, $method){

@@ -1,7 +1,6 @@
 <?php
 namespace SaQle\Http\Request\Processors;
 
-use SaQle\Controllers\Page;
 use ReflectionClass;
 use SaQle\Views\View;
 use SaQle\Controllers\Refs\ControllerRef;
@@ -19,8 +18,11 @@ class WebRequestProcessor extends RequestProcessor{
      private $templaterefs   = [];
 
      public function __construct(){
-     	 $this->controllerrefs = ControllerRef::init()::get_controllers();
-     	 $this->templaterefs = ControllerRef::init()::get_views();
+     	 $cache_controllers_file = DOCUMENT_ROOT.CLASS_MAPPINGS_DIR."controllers.php";
+         $cache_views_file = DOCUMENT_ROOT.CLASS_MAPPINGS_DIR."views.php";
+
+     	 $this->controllerrefs = require_once $cache_controllers_file; //ControllerRef::init()::get_controllers();
+     	 $this->templaterefs = require_once $cache_views_file; //ControllerRef::init()::get_views();
      	 parent::__construct();
      }
 
@@ -64,71 +66,25 @@ class WebRequestProcessor extends RequestProcessor{
 	 	 	 $tc = count($this->request->trail);
 	 	 	 $this->serve_media($this->request->trail[$tc - 1]->target, $this->request->trail[$tc - 1]->action);
          }else{
-         	 //get the request trail
+         	 //serve regular requests
          	 $trail = $this->request->trail;
 
-         	 //gather all the context data in one place
-         	 $context = [];
-
-         	 foreach($trail as $t){
-         	 	 if(class_exists($t->target)){
-         	 	 	 $http_message = $this->get_target_response($t->target, $t->action);
-         	 	 	 $context = array_merge($context, $http_message->data);
-         	 	 	 $context['http_response_code'] = $http_message->code;
-	 	             $context['http_response_message'] = $http_message->message;
-         	 	 }
-         	 }
-
-         	 /**
-         	 * call default and block controllers to fill in their context data as you find the comipled template for this route
-         	 * */
-         	 $focused_url = $this->request->route->url."/";
-         	 $mappings_file = DOCUMENT_ROOT.CLASS_MAPPINGS_DIR."routes.php";
-         	 $route_mappings = file_exists($mappings_file) ? require_once $mappings_file : [];
-         	 $extra_controllers = [];
-         	 $template_path = '';
-
-         	 if(array_key_exists($focused_url, $route_mappings)){
-         	 	 $extra_controllers = $route_mappings[$focused_url]['extra_controllers'];
-         	 	 $template_path = $route_mappings[$focused_url]['template_path'];
-
-         	 	 echo "Template: $template_path\n";
-
-         	 	 foreach($extra_controllers as $et){
-         	 	 	 $et_http_message = $this->get_target_response($et->target, $et->action);
-         	 	 	 //echo "Target: $et->target\n";
-         	 	 	 //print_r( $et_http_message);
-         	 	 	 //echo "\n-----------------------\n";
-
-         	 	 	 $context = array_merge($context, $et_http_message->data ?? []);
-         	 	 }
-         	 }
-
-         	 //add feedback context
 	         $efb = ExceptionFeedBack::init();
-	         $context = array_merge($context, $efb->acquire_context());
+		 	 $feedback_context = $efb->acquire_context();
 
-	         //inject global context data
-	         $context = array_merge($context, Template::init()::get_context());
+		 	 [$all_css, $all_js, $all_meta, $all_title, $all_html, $trail_context] = $this->process_trail($trail, $feedback_context);
 
-             //inject csrf token input here
-             $token_key = CsrfMiddleware::get_token_key();
-             $token     = CsrfMiddleware::get_token();
-
-             $context[$token_key] = "<input type='hidden' id='".$token_key."' name='".$token_key."' value='".$token."'>";
-
-             //inject the user
-             $context['session_user'] = $this->request->user ?? new GuestUser();
-
-             if($template_path){
-             	 $page = new View($template_path);
-			 	 $page->set_context($context);
-		 	     echo $page->view();
-
-		 	     return;
-             }
-
-		 	 echo "";
+	         $pagetemplate = $this->templaterefs['page'];
+		 	 $page = new View($pagetemplate, $this->request->user ?? new GuestUser());
+		 	 $page->set_context([
+		 	 	 'content' => $all_html, 
+		 	 	 'title' => $all_title, 
+		 	 	 'css' => implode("\n", array_unique($all_css)), 
+		 	 	 'js' => implode("\n", array_unique($all_js)), 
+		 	 	 'meta' => implode("\n", array_unique($all_meta))
+		 	 ]);
+		 	 
+		 	 echo $page->view();
          }
 	 }
 
@@ -162,6 +118,8 @@ class WebRequestProcessor extends RequestProcessor{
 	 	     $response = array_merge($global_context, $context_from_parent, $target_context, $feedback_context);
 	 	 }
 	 	 
+	 	 echo "Target is: $target\n";
+
 	 	 $view = new View($template_file, $this->request->user ?? new GuestUser());
 
 	 	 $css     = $view->get_css();
@@ -170,6 +128,9 @@ class WebRequestProcessor extends RequestProcessor{
 	 	 $title   = $this->set_template_context($view->get_title(), $response, true);
 	 	 $default = $view->get_default();
 	 	 $blocks  = $view->get_blocks();
+
+	 	 print_r($blocks);
+	 	 //echo $view->get_template();
 
          foreach($blocks as $b){
          	 $response[$b] = "";

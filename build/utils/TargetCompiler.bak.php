@@ -35,45 +35,28 @@ class TargetCompiler{
          $this->components = require_once $this->projectroot.CLASS_MAPPINGS_DIR."components.php";
      }
 
-     private function get_component_name(string $target, bool $throw_error = true){
-         $component_name = $target;
-
-         if(class_exists($target)){
-             $target_namespaces = explode("\\", $target);
-             $component_name = strtolower(end($target_namespaces));
-         }
-
-         if(!isset($this->components[$component_name])){
-             if($throw_error)
-                 throw new \Exception('The component for the target named: '.$target.' does not exist!\n');
-
-             $component_name = '';
-         }
-
-         return $component_name;
-     }
-
-     private function compile_target($component_name, $action){
-         $template_path = $this->components[$component_name]['template_path'];
+     private function compile_target($target, $action){
+         $template_file = class_exists($target) ? $this->templaterefs[array_flip($this->controllerrefs)[$target]] ?? '' : $this->templaterefs[$target];
 
          /**
           * template file will not exist in some cases: For example when a user requests to logout.
           * */
-         if(empty($template_path))
+         if(empty($template_file))
              return [[], [], [], '', '', '', []];
 
-         $uitree   = (Object)['component' => $component_name, 'action' => $action, 'children' => []];
+         $view = new View($template_file);
 
-         $view     = new View($template_path);
-         $css      = $view->get_css();
-         $js       = $view->get_js();
-         $meta     = $view->get_meta();
-         $title    = $view->get_title();
-         $blocks   = $view->get_blocks();
-         $context  = [];
+         $css     = $view->get_css();
+         $js      = $view->get_js();
+         $meta    = $view->get_meta();
+         $title   = $view->get_title();
+         $default = $view->get_default();
+         $blocks  = $view->get_blocks();
+         $block_context = [];
+         $extctlers = [];
 
          foreach($blocks as $b){
-             $block_view_path = $this->components[$b]['template_path'];
+             $block_view_path = $this->templaterefs[$b] ?? '';
 
              //the view file must exist for this block to be considered
              if(!$block_view_path || !file_exists($block_view_path)){
@@ -81,25 +64,26 @@ class TargetCompiler{
                  continue;
              }
 
-             $block_controller_class = $this->components[$b]['controller'];
-             $block_action = '';
-             if($block_controller_class && class_exists($block_controller_class)){
+             $block_controller_class = $this->controllerrefs[$b] ?? '';
+             if(isset($block_controller_class) && class_exists($block_controller_class)){
                  $block_controller_instance = new $block_controller_class();
-                 $block_action = $block_controller_instance->get_index();
+
+                 //add to extra controllers
+                 $extctlers[] = (Object)['target' => $block_controller_class, 'action' => $block_controller_instance->get_index()];
              }
 
              //compile the parent view with block view
-             [$block_css, $block_js, $block_meta, $block_title, $block_html, $block_uitree] = $this->compile_target($b, $block_action);
-             $uitree->children[] = $block_uitree;
-             $css         = array_merge($css, $block_css);
-             $js          = array_merge($js, $block_js);
-             $wrapped     = "<!--COMPONENT:{$b}-->\n".$block_html."\n"."<!--END COMPONENT-->";
-             $context[$b] = $wrapped;
+             $trail = [(Object)['url' => '', 'target' => $b, 'action' => '']];
+             [$block_css, $block_js, $block_meta, $block_title, $block_html] = $this->compile_trail($trail);
+
+             $css  = array_merge($css, $block_css);
+             $js   = array_merge($js, $block_js);
+             $block_context[$b] = $block_html;
          }
 
-         $html = $this->set_template_context($view->get_template(), $context, true);
+         $html = $this->set_template_context($view->get_template(), $block_context, true);
          
-         return [$css, $js, $meta, $title, $html, $uitree];
+         return [$css, $js, $meta, $title, $html, $default, $extctlers];
      }
 
      private function compile_trail(array $trail){
@@ -108,27 +92,46 @@ class TargetCompiler{
          $all_meta  = [];
          $all_title = "";
          $all_html  = "";
-         $ui_tree   = [];
+         $extra_controllers = [];
 
          for($t = 0; $t < count($trail); $t++){
-             $component_name = $this->get_component_name($trail[$t]->target);
 
-             [$css, $js, $meta, $title, $html, $tree] = $this->compile_target($component_name, $trail[$t]->action);
-
-             $ui_tree[] = $tree;
+             [$css, $js, $meta, $title, $html, $default, $extctlers] = $this->compile_target($trail[$t]->target, $trail[$t]->action);
             
              $all_css   = array_merge($all_css, $css);
              $all_js    = array_merge($all_js, $js);
              $all_meta  = array_merge($all_meta, $meta);
              $all_title = $title ? $title : $all_title;
+             $all_html  = $t === 0 ? $html : preg_replace('/@content(.*?)@endcontent/', $html, $all_html);
+             $extra_controllers = array_merge($extra_controllers, $extctlers);
+             
+             //if there is a default child
+             if($t === count($trail) - 1 && $default){
 
-             $wrapped   = "<!--DYNAMIC:{$component_name}-->\n".$html."\n"."<!--END DYNAMIC-->";
+                 if(class_exists($trail[$t]->target)){
+                     $ctrl = $trail[$t]->target;
+                     $ctrlinstance = new $ctrl();
 
-             //$all_html  = $t === 0 ? $html : preg_replace('/@content(.*?)@endcontent/', $html, $all_html);
-             $all_html  = $t === 0 ? $html : preg_replace('/@content(.*?)@endcontent/', $wrapped, $all_html);
+                     if($ctrlinstance instanceof WebController){
+                         $default = $ctrlinstance->get_default();
+                     }
+                 }
+
+                 //at this point the default is a view name.
+                 if(isset($this->controllerrefs[$default]) && class_exists($this->controllerrefs[$default])){
+                     $controller_name = $this->controllerrefs[$default];
+                     $controller_instance = new $controller_name();
+
+                     //add to extra controllers
+                     $extra_controllers[] = (Object)['target' => $controller_name, 'action' => $controller_instance->get_index()];
+                 }
+
+                 //add to the current trail
+                 $trail[] = (Object)['url' => '', 'target' => $default, 'action' => ''];
+             }
          }
 
-         return [$all_css, $all_js, $all_meta, $all_title, $all_html, $ui_tree];
+         return [$all_css, $all_js, $all_meta, $all_title, $all_html, $extra_controllers];
      }
 
      private function get_template_name(array $trail, $index){
@@ -140,13 +143,13 @@ class TargetCompiler{
          if(!$target)
              return 'unknown.html';
 
-         $templatename = $this->get_component_name($target, false);
+         $templatename = class_exists($target) ? array_flip($this->controllerrefs)[$target] ?? '' : $target;
 
          //ensure this template was mapped
-         if(!$templatename)
+         if(!isset($this->templaterefs[$templatename]))
              return 'unknown.html';
 
-         return $templatename.'_'.$index.'.'.COMPONENT_TEMPLATE_EXT;
+         return $templatename.'_'.$index.'.html';
      }
 
      public function compile($changed_files){
@@ -175,32 +178,24 @@ class TargetCompiler{
                  
                  $trail = $r->get_trail();
 
-                 [$all_css, $all_js, $all_meta, $all_title, $all_html, $ui_tree] = $this->compile_trail($trail);
+                 [$all_css, $all_js, $all_meta, $all_title, $all_html, $extra_controllers] = $this->compile_trail($trail);
 
-                 //add the root node of ui tree
-                 $page_class = $this->components['page']['controller'];
-                 $page_instance = new $page_class();
-
-                 array_unshift($ui_tree, (Object)['component' => 'page', 'action' => $page_instance->get_index(), 'children' => []]);
-                 //$uitree = (Object)['component' => 'page', 'action' => $page_instance->get_index(), 'children' => $ui_tree];
-
-                 $templatename = $this->get_template_name($trail, $c);
-                 $first_component_name = $this->get_component_name($trail[0]->target, false);
-
-                 $routes_cache[$r->url] = [
-                     'trail' => $trail,
-                     'uitree' => $ui_tree,
-                     'template_path' => $this->projectroot.TEMPLATES_CACHE_DIR.$templatename
-                 ];
-
-                 $page = new View($this->components['page']['template_path']);
+                 $page = new View($this->templaterefs['page']);
                  $compiled_template = $this->set_template_context($page->get_template(), [
-                     'content' => "<!--DYNAMIC:$first_component_name-->\n".$all_html."\n"."<!--END DYNAMIC-->", 
+                     'content' => $all_html, 
                      'title'   => $all_title, 
                      'css'     => implode("\n", array_unique($all_css)), 
                      'js'      => implode("\n", array_unique($all_js)), 
                      'meta'    => implode("\n", array_unique($all_meta))
                  ], true);
+
+                 $templatename = $this->get_template_name($trail, $c);
+
+                 $routes_cache[$r->url] = [
+                     'trail' => $trail,
+                     'extra_controllers' => $extra_controllers,
+                     'template_path' => $this->projectroot.TEMPLATES_CACHE_DIR.$templatename
+                 ];
 
                  $templates_cache[$templatename] = $compiled_template;
              }
@@ -211,6 +206,8 @@ class TargetCompiler{
      }
 
      private function cache_template_files($templates_cache){
+         
+
          //write to the cache file
          $views_folder = $this->projectroot.TEMPLATES_CACHE_DIR;
          if(!file_exists($views_folder)){
