@@ -55,6 +55,10 @@ class FieldValidator{
 			'strict'                   => $builder->strict(),
 			'zero'                     => $builder->zero(),
 			'absolute'                 => $builder->absolute(),
+			'email'                    => $builder->email(),
+			'phone'                    => $builder->phone(),
+			'url'                      => $builder->url(),
+			'format'                   => $builder->format(),
 			default                    => $builder
 		};
 	}

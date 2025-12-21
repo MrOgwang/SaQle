@@ -166,8 +166,20 @@ abstract class RealField extends Simple{
 	 	 return [
 	 	 	 'column_type',
 	 	 	 'column_name',
-	 	 	 'value'
+	 	 	 'value',
+	 	 	 'default'
 	 	 ];
+	 }
+
+	 public function get_control_kwargs() : array{
+	 	 return array_merge(parent::get_control_kwargs(), [
+	 	 	 'value'    => $this->default,
+	 	 	 'required' => $this->required,
+	 	 	 'max'      => $this->maximum,
+	 	 	 'min'      => $this->minimum,
+	 	 	 'pattern'  => $this->pattern,
+	 	 	 'length'   => $this->length
+	 	 ]);
 	 }
 
      //get validation configurations
@@ -216,5 +228,55 @@ abstract class RealField extends Simple{
 	 	 }
 	 	 return $kwargs;*/
 	 	 return [];
+	 }
+
+	 //set the default value
+	 public function default(mixed $default){
+	 	 $this->default = $default;
+	 	 return $this;
+	 }
+
+	 //set required
+	 public function required(){
+	 	 $this->required = true;
+	 	 return $this;
+	 }
+
+	 //set null
+	 public function nullable(){
+	 	 $this->null = true;
+	 	 return $this;
+	 }
+
+	 //set the maximum limit
+	 public function max(mixed $maximum, bool $max_inclusive = true){
+	 	 $this->maximum = $maximum;
+	 	 $this->max_inclusive = $max_inclusive;
+	 	 return $this;
+	 }
+
+	 //set minimum value
+	 public function min(mixed $minimum, bool $min_inclusive = true){
+	 	 $this->minimum = $minimum;
+	 	 $this->min_inclusive = $min_inclusive;
+	 	 return $this;
+	 }
+
+	 //set the length for value
+	 public function length(int $length){
+	 	 $this->length = $length;
+	 	 return $this;
+	 }
+
+	 //set the pattern
+	 public function pattern(string $pattern){
+	 	 $this->pattern = $pattern;
+	 	 return $this;
+	 }
+
+	 //set whether compact or not
+	 public function compact(bool $compact){
+	 	 $this->compact = $compact;
+	 	 return $this;
 	 }
 }

@@ -202,4 +202,35 @@ abstract class Binary extends RealField{
 	 protected function get_validation_kwargs() : array{
 		 return array_merge(parent::get_validation_kwargs(), ['accept']);
 	 }
+
+	 public function get_control_kwargs() : array{
+	 	 return array_merge(parent::get_control_kwargs(), [
+	 	 	 'multiple' => $this->multiple,
+	 	 	 'accept'   => $this->accept
+	 	 ]);
+	 }
+
+	 //set multiple
+	 public function multiple(){
+	 	 $this->multiple = true;
+	 	 return $this;
+	 }
+
+	 //set crop values
+	 public function crop_to(array $sizes){
+	 	 $this->crop_dimensions = $sizes;
+	 	 return $this;
+	 }
+
+	 //set resize values
+	 public function resize_to(array $sizes){
+	 	 $this->resize_dimensions = $sizes;
+	 	 return $this;
+	 }
+
+	 //set acceptable extensions
+	 public function accept(array $accept){
+	 	 $this->accept = $accept;
+	 	 return $this;
+	 }
 }

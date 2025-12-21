@@ -251,6 +251,12 @@ class Config{
 
 		 define("RSC_BASE_URL", "");
 
+		 /**
+		  * These models are resource models. Resource models are models that get
+		  * automatic resource controllers, views and routes for add, edit, delete, view actions.
+		  * */
+		 define("RESOURCE_MODELS", $settings['resource_models'] ?? []);
+
 		 foreach($settings as $key => $val){
 		 	 $configname = strtoupper($key);
 		 	 if(!defined($configname)){

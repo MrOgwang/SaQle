@@ -2,10 +2,10 @@
 
 namespace SaQle\Orm\Entities\Field\Types;
 
-use SaQle\Orm\Entities\Field\Types\Base\Scalar;
 use SaQle\Orm\Entities\Field\Interfaces\IField;
+use SaQle\Orm\Entities\Field\Types\Base\RealField;
 
-class NumberType extends Scalar implements IField{
+class NumberType extends RealField  implements IField{
 	 //whether negative numbers are allowed
 	 public protected(set) bool $absolute = false {
 	 	 set(bool $value){
@@ -32,5 +32,11 @@ class NumberType extends Scalar implements IField{
 
 	 protected function get_validation_kwargs(): array {
 		 return array_merge(parent::get_validation_kwargs(), ['absolute', 'zero']);
+	 }
+
+	 public function get_control_kwargs() : array{
+	 	 return array_merge(parent::get_control_kwargs(), [
+	 	 	 'type' => 'number',
+	 	 ]);
 	 }
 }

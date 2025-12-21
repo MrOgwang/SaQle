@@ -23,4 +23,18 @@ class ManyToMany extends Relation implements IField{
 	 protected function get_relation_kwargs() : array{
 		 return array_merge(parent::get_relation_kwargs(), ['through']);
 	 }
+
+	 //set through model
+	 public function through(string $through){
+	 	 $this->through = $through;
+	 	 return $this;
+	 }
+
+	 public function get_control_kwargs() : array{
+	 	 return array_merge(parent::get_control_kwargs(), [
+	 	 	 'type'       => 'select',
+	 	 	 'multiple'   => true,
+	 	 	 'options'    => []
+	 	 ]);
+	 }
 }

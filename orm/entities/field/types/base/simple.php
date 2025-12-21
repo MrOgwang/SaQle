@@ -100,7 +100,19 @@ abstract class Simple implements IField{
 	 	 return [];
 	 }
 
+	 public function get_control_kwargs() : array{
+	 	 return [
+	 	 	 'name' => $this->field_name
+	 	 ];
+	 }
+
 	 public function __toString() {
          return $this->render($this->context);
+     }
+
+     //set the field's database column name
+     public function column(string $column_name){
+     	 $this->column_name = $column_name;
+     	 return $this;
      }
 }

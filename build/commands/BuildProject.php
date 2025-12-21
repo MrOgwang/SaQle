@@ -16,7 +16,8 @@ class BuildProject{
       protected TargetCompiler $targetcompiler;
 
       protected array $watch_dirs = [
-           'routes'
+           'routes',
+           'models'
       ];
 
       protected function get_all_files(string $project_root, bool $changed = false){

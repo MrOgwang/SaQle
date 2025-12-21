@@ -19,7 +19,7 @@
 namespace SaQle\Build\Utils;
 
 use SaQle\Routes\Router;
-use SaQle\Views\View;
+use SaQle\Views\{AutoForm, View};
 use SaQle\Controllers\Interfaces\WebController;
 use SaQle\Commons\StringUtils;
 
@@ -28,11 +28,14 @@ class TargetCompiler{
 
      protected array $components;
 
+     protected array $models;
+
      protected string $projectroot;
 
      public function __construct(string $projectroot){
          $this->projectroot = $projectroot;
          $this->components = require_once $this->projectroot.CLASS_MAPPINGS_DIR."components.php";
+         $this->models = require_once $this->projectroot.CLASS_MAPPINGS_DIR."models.php";
      }
 
      private function get_component_name(string $target, bool $throw_error = true){
@@ -70,8 +73,11 @@ class TargetCompiler{
          $meta     = $view->get_meta();
          $title    = $view->get_title();
          $blocks   = $view->get_blocks();
-         $context  = [];
+         $forms    = $view->get_forms();
 
+         print_r($forms);
+
+         $context  = [];
          foreach($blocks as $b){
              $block_view_path = $this->components[$b]['template_path'];
 
@@ -95,6 +101,15 @@ class TargetCompiler{
              $js          = array_merge($js, $block_js);
              $wrapped     = "<!--COMPONENT:{$b}-->\n".$block_html."\n"."<!--END COMPONENT-->";
              $context[$b] = $wrapped;
+         } 
+
+
+         if($forms){
+             $auto_form = new AutoForm();
+             foreach($forms as $form){
+                 //generate a form view here!
+                 $form_block = $auto_form->generate_form($form, $this->models);
+             }
          }
 
          $html = $this->set_template_context($view->get_template(), $context, true);

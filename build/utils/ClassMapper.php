@@ -19,6 +19,7 @@
 namespace SaQle\Build\Utils;
 
 use SaQle\controllers\Page;
+use SaQle\Orm\Entities\Model\Schema\Model;
 use RecursiveIteratorIterator;
 use RecursiveDirectoryIterator;
 
@@ -30,54 +31,33 @@ class ClassMapper{
          $this->projectroot = $projectroot;
      }
 
-     private function get_folder_vc($controllers_folder, $templates_folder){
-         $controllers = [];
-         $views       = [];
+     private function get_model_classes_from_file(string $file): array {
+         $declaredBefore = get_declared_classes();
 
-         $controllers_iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($controllers_folder));
-         foreach($controllers_iterator as $file){
-             if($file->isFile() && $file->getExtension() === 'php'){
-                 $file_name     = str_replace(".php", "", $file->getFilename());
-                 $file_path     = $file->getRealPath();
+         // Temporarily include the file
+         include_once $file;
 
-                 //read file contents
-                 $content = file_get_contents($file_path);
+         $declaredAfter = get_declared_classes();
+         $newClasses = array_diff($declaredAfter, $declaredBefore);
 
-                 //extract namespace
-                 preg_match('/namespace\s+([^;]+);/', $content, $namespace_match);
-                 $namespace = $namespace_match[1] ?? null;
-
-                 //extract class name
-                 preg_match('/class\s+(\w+)/', $content, $class_match);
-                 $class_name = $class_match[1] ?? null;
-
-                 if($namespace && $class_name){
-                     $full_class_name = $namespace . '\\' . $class_name;
-                     $controllers[$file_name] = $full_class_name;
-                 }
+         $models = [];
+         foreach ($newClasses as $class) {
+             if (is_subclass_of($class, Model::class)) {
+                $models[] = $class;
              }
          }
 
-         $views_iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($templates_folder));
-         foreach($views_iterator as $file){
-             if($file->isFile() && $file->getExtension() === 'html'){
-                 $file_name     = str_replace(".html", "", $file->getFilename());
-                 $file_path     = $file->getRealPath();
-                 $views[$file_name] = $file_path;
-             }
-         }
-
-         return [$views, $controllers];
+         return $models;
      }
 
-     private function cache_components(array $items): void {
+     private function cache_mappings(array $items, string $type = 'components'): void {
          //create the components mappings dir
          $mappings_folder = $this->projectroot.CLASS_MAPPINGS_DIR;
          if(!file_exists($mappings_folder)){
              mkdir($mappings_folder, 0777, true);
          }
 
-         $mappings_file = $mappings_folder."components.php";
+         $mappings_file = $mappings_folder.$type.".php";
 
          //convert array to a PHP array representation
          $exported_array = var_export($items, true);
@@ -158,10 +138,97 @@ class ClassMapper{
              }
          }
 
-         $this->cache_components($components);
+         $this->cache_mappings($components);
+     }
+
+     protected function map_models(){
+         /**
+          * Get all directories where models live
+          * 
+          * 1. Top level models in project root
+          * 2. App level models inside app directories
+          * 2. Other models as listed in EXTRA_MODELS_DIRS setting
+          * */
+         $models_dirs = [$this->projectroot.'/models'];
+
+         foreach(INSTALLED_APPS as $f){
+             $models_dirs[] = $this->projectroot."/apps/".$f."/models";
+         }
+
+         foreach(EXTRA_MODELS_DIRS as $d){
+             $models_dirs[] = $this->projectroot."/".$d;
+         }
+
+         /**
+          * Iterate through each models directory, mapping 
+          * model name to full namespaced class name
+          * */
+         $models = [];
+
+         foreach($models_dirs as $dir){
+             $dir_iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir));
+             foreach($dir_iterator as $file){
+                 if($file->isFile() && $file->getExtension() === 'php'){
+                     $model_name = strtolower(str_replace(".php", "", $file->getFilename()));
+                     $path       = $file->getRealPath();
+
+                     $declared_models = $this->get_model_classes_from_file($path);
+
+                     if($declared_models){
+                         $models[$model_name] = $declared_models[0];
+                     }
+                 }
+             }
+         }
+
+         $this->cache_mappings($models, 'models');
+     }
+
+     protected function map_models(){
+         /**
+          * Get all directories where models live
+          * 
+          * 1. Top level models in project root
+          * 2. App level models inside app directories
+          * 2. Other models as listed in EXTRA_MODELS_DIRS setting
+          * */
+         $models_dirs = [$this->projectroot.'/models'];
+
+         foreach(INSTALLED_APPS as $f){
+             $models_dirs[] = $this->projectroot."/apps/".$f."/models";
+         }
+
+         foreach(EXTRA_MODELS_DIRS as $d){
+             $models_dirs[] = $this->projectroot."/".$d;
+         }
+
+         /**
+          * Iterate through each models directory, mapping 
+          * model name to full namespaced class name
+          * */
+         $models = [];
+
+         foreach($models_dirs as $dir){
+             $dir_iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir));
+             foreach($dir_iterator as $file){
+                 if($file->isFile() && $file->getExtension() === 'php'){
+                     $model_name = strtolower(str_replace(".php", "", $file->getFilename()));
+                     $path       = $file->getRealPath();
+
+                     $declared_models = $this->get_model_classes_from_file($path);
+
+                     if($declared_models){
+                         $models[$model_name] = $declared_models[0];
+                     }
+                 }
+             }
+         }
+
+         $this->cache_mappings($models, 'models');
      }
 
      public function map(){
          $this->map_components();
+         $this->map_models();
      }
 }

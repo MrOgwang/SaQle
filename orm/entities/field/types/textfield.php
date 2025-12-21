@@ -10,4 +10,10 @@ class TextField extends TextType implements IField{
 		 $kwargs['maximum']     = isset($kwargs['maximum']) ? $kwargs['maximum'] : 65535;
 		 parent::__construct(...$kwargs);
 	 }
+
+	 public function get_control_kwargs() : array{
+	 	 return array_merge(parent::get_control_kwargs(), [
+	 	 	 'type' => 'textarea',
+	 	 ]);
+	 }
 }

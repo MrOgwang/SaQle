@@ -1,7 +1,8 @@
 <?php
 namespace SaQle\Security\Builders;
 
-use SaQle\Security\Validators\{IValidator, InputValidator, NullValidator, TypeValidator, ChoicesValidator, EmptyValidator, LengthValidator, MaxValidator, MinValidator, PatternValidator, StrictValidator, UploadValidator, ZeroValidator, SpecialValidator, AbsoluteValidator};
+use SaQle\Security\Validators\{IValidator, InputValidator, NullValidator, TypeValidator, ChoicesValidator, EmptyValidator, LengthValidator, MaxValidator, MinValidator, PatternValidator, StrictValidator, UploadValidator, ZeroValidator, SpecialValidator, AbsoluteValidator, EmailValidator, PhoneValidator,
+UrlValidator, FormatValidator};
 
 class ValidatorBuilder{
 	private IValidator $validator;
@@ -73,6 +74,26 @@ class ValidatorBuilder{
 
 	public function absolute(){
 		$this->validator = new AbsoluteValidator($this->validator);
+		return $this;
+	}
+
+	public function email(){
+		$this->validator = new EmailValidator($this->validator);
+		return $this;
+	}
+
+	public function phone(){
+		$this->validator = new PhoneValidator($this->validator);
+		return $this;
+	}
+
+	public function url(){
+		$this->validator = new UrlValidator($this->validator);
+		return $this;
+	}
+
+	public function format(){
+		$this->validator = new FormatValidator($this->validator);
 		return $this;
 	}
 

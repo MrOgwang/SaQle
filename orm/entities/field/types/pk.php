@@ -2,10 +2,10 @@
 
 namespace SaQle\Orm\Entities\Field\Types;
 
-use SaQle\Orm\Entities\Field\Types\Base\Scalar;
 use SaQle\Orm\Entities\Field\Interfaces\IField;
+use SaQle\Orm\Entities\Field\Types\Base\RealField;
 
-class Pk extends Scalar implements IField{
+class Pk extends RealField implements IField{
 	 public function __construct(...$kwargs){
 		 if(PRIMARY_KEY_TYPE === "GUID"){
 			 $kwargs['column_type']     = "VARCHAR";

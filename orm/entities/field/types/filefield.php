@@ -8,4 +8,10 @@ class FileField extends Binary implements IField{
 	 public function __construct(...$kwargs){
 		 parent::__construct(...$kwargs);
 	 }
+
+	 public function get_control_kwargs() : array{
+	 	 return array_merge(parent::get_control_kwargs(), [
+	 	 	 'type' => 'file',
+	 	 ]);
+	 }
 }

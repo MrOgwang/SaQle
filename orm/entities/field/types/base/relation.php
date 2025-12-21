@@ -16,7 +16,7 @@ abstract class Relation extends RealField implements IRelation{
 		 $kwargs['length']          = PRIMARY_KEY_TYPE === "GUID" ? 255       : 11;
 		 $kwargs['maximum']         = PRIMARY_KEY_TYPE === "GUID" ? 255       : 4294967295;
 
-		 if(!PRIMARY_KEY_TYPE === "GUID"){
+		 if(!PRIMARY_KEY_TYPE === "INT"){
 		 	 $kwargs['absolute'] = true;
 			 $kwargs['zero']     = false;
 			 $kwargs['minimum']  = 1;
