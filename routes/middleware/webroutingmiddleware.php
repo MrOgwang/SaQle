@@ -21,7 +21,6 @@ namespace SaQle\Routes\Middleware;
 use SaQle\Middleware\MiddlewareRequestInterface;
 use SaQle\Routes\Middleware\Base\BaseRoutingMiddleware;
 use SaQle\Routes\Exceptions\{RouteNotFoundException, MethodNotAllowedException};
-use SaQle\Controllers\Refs\ControllerRef;
 use SaQle\Routes\{Router, Route};
 use SaQle\Controllers\MediaController;
 
@@ -39,7 +38,7 @@ class WebRoutingMiddleware extends BaseRoutingMiddleware {
          $request->trail = $match->get_trail();
          $request->enforce_permissions = false;
 
-         $controllers = ControllerRef::init()::get_controllers();
+         $controllers = [];
          $targets = array_column($request->trail, 'target');
          foreach($targets as $controller){
              if(in_array($controller, $controllers)){

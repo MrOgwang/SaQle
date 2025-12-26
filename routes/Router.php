@@ -18,7 +18,27 @@ declare(strict_types = 1);
 
 namespace SaQle\Routes;
 
-class Router {
+use SaQle\Core\Assert\Assert;
+
+final class Router {
+
+     //only one instance of router must exist
+     protected static ?self $instance = null;
+
+     private function __construct(){}
+
+     protected static function instance(): self {
+         if (!static::$instance) {
+             static::$instance = new static();
+         }
+
+         return static::$instance;
+     }
+
+     /**
+      * The routes are batched(so this is technically an array of arrays). This is to make it easy
+      * to apply shared route properties to a group of routes.
+      * */
      protected static array $routes = [];
      
      /**
@@ -27,158 +47,180 @@ class Router {
       * @param string $url 
       *     - the url to match for this route
       * 
-      * @param string | array $target
-      *     - this is the controller class name or the view name if given as string.
-      *     - if this is provided as an array, the array must be a key => value array
-      *       where the key is a user role and the value is a controller class name or view name
+      * @param string $target 
       * 
-      * @param nullable string $target_method:
-      *     - this is the name of the method on the controller to call. Only provided if the target is a controller.
-      *     - Where this is not provided for a controller, the $target_method defaults the name of the http method in all lowercase.
+      * Target can be provided in several formats:
+      * 
+      * ControllerName@method - the controller class name and the method to execute
+      * componentname@method  - the component name and the method to execute
+      * ControllerName        - just the controller name, the method to execute will be determined
+      * componentname         - just the component name, the method to excute will be determined automatically if a component has a controller
+      * 
       * */
-     static public function get(string $url, string | array $target, ?string $target_method = null) : Route {
-         return self::register_route(['get' => $target_method ?? 'get'], $url, $target, $target_method);
+     static public function get(string $url, string $target) : Router {
+         $route = new Route('get', $url, $target);
+         self::$routes[] = [$route];
+
+         return static::instance();
+     }
+
+     //parameters as descirbed in get
+     static public function post(string $url, string $target) : Router {
+         $route = new Route('post', $url, $target);
+         self::$routes[] = [$route];
+
+         return static::instance();
+     }
+
+     //parameters as descirbed in get
+     static public function patch(string $url, string $target) : Router {
+         $route = new Route('patch', $url, $target);
+         self::$routes[] = [$route];
+
+         return static::instance();
+     }
+
+     //parameters as descirbed in get
+     static public function put(string $url, string $target) : Router {
+         $route = new Route('put', $url, $target);
+         self::$routes[] = [$route];
+
+         return static::instance();
+     }
+
+     //parameters as descirbed in get
+     static public function delete(string $url, string $target) : Router {
+         $route = new Route('delete', $url, $target);
+         self::$routes[] = [$route];
+
+         return static::instance();
      }
 
      /**
-      * Define a route for a post request
-      * 
-      * @param string $url 
-      *     - the url to match for this route
-      * 
-      * @param string | array $target
-      *     - this is the controller class name or the view name if given as string.
-      *     - if this is provided as an array, the array must be a key => value array
-      *       where the key is a user role and the value is a controller class name or view name
-      * 
-      * @param nullable string $target_method:
-      *     - this is the name of the method on the controller to call. Only provided if the target is a controller.
-      *     - Where this is not provided for a controller, the $target_method defaults the name of the http method in all lowercase.
-      * */
-     static public function post(string $url, string | array $target, ?string $target_method = null) : Route {
-         return self::register_route(['post' => $target_method ?? 'post'], $url, $target, $target_method);
-     }
-
-     /**
-      * Define route for a patch request
-      * 
-      * @param string $url 
-      *     - the url to match for this route
-      * 
-      * @param string | array $target
-      *     - this is the controller class name or the view name if given as string.
-      *     - if this is provided as an array, the array must be a key => value array
-      *       where the key is a user role and the value is a controller class name or view name
-      * 
-      * @param nullable string $target_method:
-      *     - this is the name of the method on the controller to call. Only provided if the target is a controller.
-      *     - Where this is not provided for a controller, the $target_method defaults the name of the http method in all lowercase.
-      * */
-     static public function patch(string $url, string | array $target, ?string $target_method = null) : Route {
-         return self::register_route(['patch' => $target_method ?? 'patch'], $url, $target, $target_method);
-     }
-
-     /**
-      * Define route for a put request
-      * 
-      * @param string $url 
-      *     - the url to match for this route
-      * 
-      * @param string | array $target
-      *     - this is the controller class name or the view name if given as string.
-      *     - if this is provided as an array, the array must be a key => value array
-      *       where the key is a user role and the value is a controller class name or view name
-      * 
-      * @param nullable string $target_method:
-      *     - this is the name of the method on the controller to call. Only provided if the target is a controller.
-      *     - Where this is not provided for a controller, the $target_method defaults the name of the http method in all lowercase.
-      * */
-     static public function put(string $url, string | array $target, ?string $target_method = null) : Route {
-         return self::register_route(['put' => $target_method ?? 'put'], $url, $target, $target_method);
-     }
-
-     /**
-      * Define route for a delete request
-      * 
-      * @param string $url 
-      *     - the url to match for this route
-      * 
-      * @param string | array $target
-      *     - this is the controller class name or the view name if given as string.
-      *     - if this is provided as an array, the array must be a key => value array
-      *       where the key is a user role and the value is a controller class name or view name
-      * 
-      * @param nullable string $target_method:
-      *     - this is the name of the method on the controller to call. Only provided if the target is a controller.
-      *     - Where this is not provided for a controller, the $target_method defaults the name of the http method in all lowercase.
-      * */
-     static public function delete(string $url, string | array $target, ?string $target_method = null) : Route {
-         return self::register_route(['delete' => $target_method ?? 'delete'], $url, $target, $target_method);
-     }
-
-     /**
-      * Define route for a more than one http method
+      * Handle more than one http verb for a given route and target
       * 
       * @param array $methods
-      *     - a key => value array of the http methods to match,
-      *       where they key is the http method name and the value is the 
-      *       controller method name.
+      *    - http methods to handle
       * 
       * @param string $url 
-      *     - the url to match for this route
+      *     - the url
       * 
-      * @param string | array $target
-      *     - this is the controller class name or the view name if given as string.
-      *     - if this is provided as an array, the array must be a key => value array
-      *       where the key is a user role and the value is a controller class name or view name
+      * @param string $target
+      * 
+      * Target can be provided in several formats:
+      * 
+      * ControllerName@method - the controller class name and the method to execute
+      * componentname@method  - the component name and the method to execute
+      * ControllerName        - just the controller name, the method to execute will be determined
+      * componentname         - just the component name, the method to excute will be determined automatically if a component has a controller
       * 
       * */
-     static public function match(array $methods, string $url, string | array $target) : Route {
-         $clean_methods = [];
-         foreach($methods as $k => $v){
-             $m = is_numeric($k) ? $v : $k;
-             $t = is_numeric($k) ? strtolower($v) : $v;
-
-             $clean_methods[$m] = $t;
+     static public function match(array $methods, string $url, string $target) : Router {
+         $routes = [];
+         foreach($methods as $m){
+             $routes[] = new Route($m, $url, $target);
          }
-         return self::register_route($clean_methods, $url, $target);
-     }
 
-     static public function from_parents(array $parents, array $routes){
-         foreach($routes as $r){
-             $r->with_parents($parents);
-         }
-     }
+         self::$routes[] = $routes;
 
-     /**
-      * Register a given route 
-      * */
-     static private function register_route(array $methods, string $url, null | string | array $target, ?string $target_method = null) : Route {
-         $route = new Route($url, $target, $methods);
-         self::$routes[] = $route;
-         return $route;
-     }
-
-     /**
-      * Register a given redirect route 
-      * */
-     static private function register_redirect_route(array $methods, string $from_url, string $to_url) : Route {
-         $route = new Route($from_url, '', $methods);
-         $route->redirect = true;
-         $route->redirect_url = $to_url;
-         self::$routes[] = $route;
-         return $route;
+         return static::instance();
      }
 
      public static function all(): array {
-         return self::$routes;
+         //return a flattened array
+         return array_merge(...self::$routes);
      }
 
      public static function clear(): void {
          self::$routes = [];
      }
 
-     public static function redirect(string $from_url, string $to_url){
-         return self::register_redirect_route(['get' => 'get'], $from_url, $to_url);
+     // Route decoration methods
+
+     private static function apply_decoration(string $deco, ...$params){
+         if(!self::$routes)
+             return;
+
+         $last_batch = self::$routes[ count(self::$routes) - 1];
+
+         foreach($last_batch as $r){
+             match($deco){
+                 'compose_with' => $r->compose_with(...$params),
+                 'requires'     => $r->requires(...$params),
+                 'requires_any' => $r->requires_any(...$params),
+                 'requires_all' => $r->requires_all(...$params),
+                 'respond_with' => $r->respond_with(...$params)
+             };
+         }
+     }
+
+     /**
+      * For web requests, the route will declare which components
+      * the final UI layout will be composed with
+      * 
+      * @param array $layouts: an array of components to compose the layout from. This can be an array of strings,
+      * or an array of arrays of strings.
+      * 
+      * When an array of arrays of strings is provided, the resolver must be provided to determine
+      * which layout group to use.
+      * */
+     public function compose_with(array $layouts, ?string $resolver = null){
+         $this->apply_decoration('compose_with', ...['layouts' => $layouts, 'resolver' => $resolver]);
+         return $this;
+     }
+
+     /**
+      * Add roles, permissions and attributes as the developer will have defined
+      * in the AuthorizationProvider class that will determine whether the user 
+      * is authorized to access this route or not
+      * */
+     public function requires(string $guard){
+         $this->apply_decoration('requires', ...['guard' => $guard]);
+         return $this;
+     }
+
+     public function requires_any(array $guards){
+         $this->apply_decoration('requires_any', ...['guards' => $guards]);
+         return $this;
+     }
+
+     public static function requires_all(array $guards){
+         $this->apply_decoration('requires_all', ...['guards' => $guards]);
+         return $this;
+     }
+
+     /**
+      * Add url aliases for this route
+      * */
+     public static function with_aliase(array $aliases){
+         if(!self::$routes)
+             return $this;
+
+         //aliases must be an array of non empty strings, otherwise complain loudly
+         Assert::allStringNotEmpty($aliases, 'Please provide an array of non empty string names for url aliases');
+
+         $last_batch = self::$routes[ count(self::$routes) - 1];
+         $new_last_batch = [];
+
+         //for each aliase, for each route in last batch, create a new route 
+         foreach($last_batch as $r){
+             foreach($aliases as $a){
+                 $aliase_route = clone $r;
+                 $aliase_route->url = $a;
+                 $new_last_batch[] = $aliase_route;
+             }
+         }
+
+         self::$routes[] = $new_last_batch;
+
+         return $this;
+     }
+
+     /**
+      * Set the response type from this route
+      * */
+     public function respond_with(array $restype){
+         $this->apply_decoration('respond_with', ...['restype' => $restype]);
+         return $this;
      }
 }

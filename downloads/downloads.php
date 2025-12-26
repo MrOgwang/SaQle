@@ -6,7 +6,7 @@
 	 header('Cache-Control: private', false);
      if(isset($_SESSION['fileToDownloadPath'])){
 		 $file_path = $_SESSION['fileToDownloadPath'];
-		 $abs_path = $_SERVER['DOCUMENT_ROOT'] .$file_path;
+		 $abs_path = DOCUMENT_ROOT.'/'.$file_path;
 		 $file_name = isset($_SESSION['fileToDownloadName']) ? $_SESSION['fileToDownloadName'] : $file_path;
 		 $file_type = filetype($abs_path);
 		 $file_size = filesize($abs_path);

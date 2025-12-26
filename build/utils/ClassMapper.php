@@ -184,49 +184,6 @@ class ClassMapper{
          $this->cache_mappings($models, 'models');
      }
 
-     protected function map_models(){
-         /**
-          * Get all directories where models live
-          * 
-          * 1. Top level models in project root
-          * 2. App level models inside app directories
-          * 2. Other models as listed in EXTRA_MODELS_DIRS setting
-          * */
-         $models_dirs = [$this->projectroot.'/models'];
-
-         foreach(INSTALLED_APPS as $f){
-             $models_dirs[] = $this->projectroot."/apps/".$f."/models";
-         }
-
-         foreach(EXTRA_MODELS_DIRS as $d){
-             $models_dirs[] = $this->projectroot."/".$d;
-         }
-
-         /**
-          * Iterate through each models directory, mapping 
-          * model name to full namespaced class name
-          * */
-         $models = [];
-
-         foreach($models_dirs as $dir){
-             $dir_iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir));
-             foreach($dir_iterator as $file){
-                 if($file->isFile() && $file->getExtension() === 'php'){
-                     $model_name = strtolower(str_replace(".php", "", $file->getFilename()));
-                     $path       = $file->getRealPath();
-
-                     $declared_models = $this->get_model_classes_from_file($path);
-
-                     if($declared_models){
-                         $models[$model_name] = $declared_models[0];
-                     }
-                 }
-             }
-         }
-
-         $this->cache_mappings($models, 'models');
-     }
-
      public function map(){
          $this->map_components();
          $this->map_models();

@@ -1,10 +1,9 @@
 <?php
 namespace SaQle\Controllers;
 
-use SaQle\Controllers\Base\BaseController;
 use SaQle\Commons\StringUtils;
 
-class MediaController extends BaseController{
+class MediaController {
      use StringUtils;
      
      public function get(string $token){

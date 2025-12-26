@@ -16,14 +16,14 @@
  * @pacakge SaQle
  * @author  Wycliffe Omondi Otieno <wycliffomondiotieno@gmail.com>
  * */
-namespace SaQle\Services\Providers;
+namespace SaQle\Core\Services\Providers;
 
 use SaQle\Auth\Utils\AuthManager;
 use SaQle\Auth\Strategies\PasswordLoginStrategy;
 use SaQle\Auth\Providers\Resolver\DefaultProviderResolver;
 use SaQle\Core\Services\Providers\ServiceProvider;
 
-class DefaultAuthenticationProvider extends ServiceProvider {
+class AuthenticationProvider extends ServiceProvider {
      public function register(): void {
          /**
           * Register available login strategies. Login strategies are the several ways you

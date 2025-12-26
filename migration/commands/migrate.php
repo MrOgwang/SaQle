@@ -235,7 +235,7 @@ class Migrate{
          }
 
          $files                  = [];
-         if($app::getenvironment() === 'development'){
+         if(app()->environment === 'development'){
              $files              = $tracker ? $tracker->get_migration_files() : [];
          }
 

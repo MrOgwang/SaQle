@@ -11,7 +11,6 @@ class CsrfMiddleware extends IMiddleware{
          if(session_status() == PHP_SESSION_NONE){
              session_start();
          }
-
          
          //Generate CSRF token if not set
          $token_key      = CsrfMiddleware::get_token_key();

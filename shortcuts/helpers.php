@@ -1,6 +1,5 @@
 <?php
 
-use SaQle\Core\Services\Container\Container;
 use SaQle\Log\FileLogger;
 use SaQle\Http\Response\HttpMessage;
 use SaQle\Http\Response\Types\RedirectResponse;
@@ -8,10 +7,24 @@ use SaQle\FeedBack\ExceptionFeedBack;
 use SaQle\Core\Exceptions\Http\{ProcessingException, OkException, CreatedException, NoContentException, BadRequestException, PartialContentException, MovedPermanentlyException, FoundException, UnauthorizedException, PaymentRequiredException, ForbiddenException, NotFoundException, MethodNotAllowedException, NotAcceptableException, RequestTimeoutException, ConflictException, TooManyRequestsException, InternalServerErrorException, ServiceUnavailableException};
 use SaQle\Core\FeedBack\FeedBack;
 use SaQle\Http\Request\Request;
+use SaQle\Core\Support\AppContext;
+use SaQle\App;
+
+if(!function_exists('app')){
+     function app() : App {
+         return AppContext::get();
+     }
+}
 
 if(!function_exists('resolve')){
      function resolve(string $abstract, array $parameters = []){
-         return Container::init()->resolve($abstract, $parameters);
+         return app()->container->resolve($abstract, $parameters);
+     }
+}
+
+if(!function_exists('request')){
+     function request(){
+         return Request::init();
      }
 }
 

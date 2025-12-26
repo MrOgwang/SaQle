@@ -175,4 +175,8 @@ class Request implements MiddlewareRequestInterface{
      public function add_context(string $name, mixed $value, bool $session = false){
          $this->context->set($name, $value, $session);
      }
+
+     public function url(){
+         return $this->route->url;
+     }
 }

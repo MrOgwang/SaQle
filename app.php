@@ -1,122 +1,92 @@
 <?php
+
 namespace SaQle;
 
+use SaQle\Core\Config\AppSetup;
+use SaQle\Core\Services\Container\Container;
+use SaQle\Core\Registries\{
+    MiddlewareRegistry,
+    ObserverRegistry
+};
+use SaQle\Core\Services\Providers\{
+     FrameworkDIProvider, 
+     ModelObserverProvider, 
+     AuthenticationProvider
+};
+use SaQle\Http\Cors\CorsConfig;
+use SaQle\Core\Support\AppContext;
+use SaQle\Core\Config\Config;
 use SaQle\Http\Request\{Request, RequestManager};
-use SaQle\Config\AppConfig;
-use SaQle\Middleware\AppMiddleware;
-use SaQle\Templates\Context\AppContext;
-use SaQle\Controllers\Refs\ControllerRef;
-use SaQle\Http\Cors\AppCors;
-use SaQle\Core\Services\Container\AppContainer;
-use SaQle\Core\Services\Providers\AppProvider;
-use SaQle\Services\Locators\DefaultServiceLocator;
-use SaQle\Services\Providers\{RequestContextModelObserversProvider, DefaultAuthenticationProvider};
-use Closure;
 
-class App{
-     private static ?self $instance = null;
+final class App{
+     public readonly string $environment;
+     public MiddlewareRegistry $middleware;
+     public Container $container;
+     public CorsConfig $cors;
 
-     private static string        $_environment;
-     private static AppConfig     $_appconfig;
-     private static AppMiddleware $_appmiddleware;
-     private static AppContext    $_appcontext;
-     private static ControllerRef $_appcontrollers;
-     private static AppCors       $_appcors;
-     private static AppContainer  $_locators;
-     private static AppProvider   $_providers;
+     public function __construct(private AppSetup $setup){
+         $this->environment = $setup->environment;
+         $this->middleware  = new MiddlewareRegistry();
+         $this->container   = new Container();
+         $this->cors        = new CorsConfig($setup->cors);
 
-     private function __construct(){
-         self::$_appconfig      = AppConfig::init();
-         self::$_appmiddleware  = AppMiddleware::init();
-         self::$_appcontext     = AppContext::init();
-         self::$_appcontrollers = ControllerRef::init();
-         self::$_appcors        = AppCors::init();
-         self::$_locators       = AppContainer::init();
-         self::$_providers      = AppProvider::init();
+         $this->boot();
+
+         AppContext::set($this);
      }
 
-     public static function init(): self{
-         if(self::$instance === null) {
-             self::$instance = new self();
-         }
-         //bootstrap helpers
+     public function boot(): void {
          require_once __DIR__.'/shortcuts/helpers.php';
-         return self::$instance;
+         $this->load_environment();
+         $this->load_config();
+         $this->register_middlewares();
+         $this->register_providers();
      }
 
-     private function __clone(){}
-     public function __wakeup(){}
-
-     public static function context(){
-         return self::$_appcontext;
+     private function load_environment(): void {
+         ($this->setup->environment_loader && is_callable($this->setup->environment_loader)) ? (
+             ($this->setup->environment_loader)($this->setup->environment)
+         ) : null;
      }
 
-     public static function config(){
-         return self::$_appconfig;
-     }
-
-     public static function middleware(){
-         return self::$_appmiddleware;
-     }
-
-     public static function controllers(){
-         return self::$_appcontrollers;
-     }
-
-     public static function environment(string $env, ?Closure $config_callback = null){
-         self::$_environment = $env;
-         if($config_callback){
-             $config_callback(self::$_environment);
+     private function load_config(): void{
+         if($this->setup->config_dir){
+             $files = ['app', 'auth', 'database', 'email', 'model', 'tenant', 'session'];
+             $configurations = [];
+             for($f = 0; $f < count($files); $f++){
+                 $file_name = $files[$f];
+                 $path = $this->setup->config_dir.'/'.$file_name.'.config.php';
+                 if(file_exists($path)){
+                     $configurations = array_merge($configurations, require $path);
+                 }
+             }
+             new Config(...$configurations);
          }
      }
 
-     public static function getenvironment(){
-         return self::$_environment;
+     private function register_middlewares(): void {
+         foreach ($this->setup->middlewares as $mw) {
+             $this->middleware->register($mw);
+         }
      }
 
-     public static function cors(){
-         return self::$_appcors;
+     private function register_providers(): void {
+         $framework_providers = [
+             FrameworkDIProvider::class,
+             ModelObserverProvider::class,
+             AuthenticationProvider::class
+         ];
+
+         foreach(array_merge($framework_providers, $this->setup->providers) as $provider){
+             (new $provider($this))->register();
+         }
      }
 
-     public static function locators(){
-         return self::$_locators;
-     }
-
-     public static function providers(){
-         return self::$_providers;
-     }
-
-     public static function run(){
-         self::bootstrap();
-
-         //start and process request
+     public function run(): void {
          $request         = Request::init();
          $request_manager = new RequestManager($request);
          $request_manager->process();
-     }
 
-     public static function bootstrap(){
-         //register and load locators
-         self::$_locators::register([DefaultServiceLocator::class]);
-         self::$_locators::load();
-
-         //register and load providers
-         self::$_providers::register([
-             RequestContextModelObserversProvider::class,
-             DefaultAuthenticationProvider::class
-         ]);
-         self::$_providers::load(); 
-     }
-
-     public static function cli_bootstrap(){
-         //load config
-         self::$_appconfig::load();
-
-         //bootstrap helpers
-         require_once __DIR__.'/shortcuts/helpers.php';
-
-         //register and load locators
-         self::$_locators::register([DefaultServiceLocator::class]);
-         self::$_locators::load();
+         //HTTP kernel / CLI kernel / worker kernel
      }
 }

@@ -10,18 +10,8 @@ use SaQle\Core\Services\IService;
 use SaQle\Core\Services\Proxy\ServiceProxy;
 
 class Container {
-     private static ?Container $instance = null;
      private array $bindings = [];
      private array $instances = [];
-
-     private function __construct(){}
-
-     public static function init(): Container {
-         if(self::$instance === null){
-             self::$instance = new self();
-         }
-         return self::$instance;
-     }
 
      //bind a class or interface to the container
      public function bind(string $abstract, callable|string|null $concrete = null, bool $singleton = false): void {

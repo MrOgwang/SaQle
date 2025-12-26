@@ -3,7 +3,6 @@ namespace SaQle\Http\Request\Processors;
 
 use ReflectionClass;
 use SaQle\Views\View;
-use SaQle\Controllers\Refs\ControllerRef;
 use SaQle\Commons\StringUtils;
 use SaQle\Http\Request\Middleware\CsrfMiddleware;
 use SaQle\Controllers\Interfaces\WebController;
@@ -144,101 +143,6 @@ class WebRequestProcessor extends RequestProcessor{
 	     //Now replace placeholder with the processed (marker-free) content
 	     $html = str_replace($placeholder, $processedInner, $html);
 	 }
-
-	 /**
-	 * Extracts only top-level sibling components and replaces each
-	 * with a placeholder marker so they can be reinserted later.
-	 *
-	 * Returns:
-	 * [
-	 *   'components' => [ 'name' => 'full html component string' ],
-	 *   'html'       => 'html with placeholders'
-	 * ]
-	 * 
-	 */
-	 /*function extract_top_level_components(string $html): array {
-	     $components = [];
-	     $output = $html;
-
-	     $pattern = '/<!--COMPONENT:([a-zA-Z0-9_\-]+)-->/';
-
-	     if (!preg_match_all($pattern, $html, $matches, PREG_OFFSET_CAPTURE)){
-	         return ['components' => [], 'html' => $html];
-	     }
-
-	     $starts = $matches[0];
-	     $positions = [];
-
-	     foreach ($starts as $match){
-	         $marker = $match[0];
-	         $offset = $match[1];
-
-	         preg_match('/<!--COMPONENT:([a-zA-Z0-9_\-]+)-->/', $marker, $m);
-	         $name = $m[1];
-
-	         $positions[] = [
-	             'name' => $name,
-	             'start_marker' => $marker,
-	             'start_pos' => $offset
-	         ];
-	     }
-
-	     //Find matching END markers
-	     foreach ($positions as &$pos) {
-	         $startPos = $pos['start_pos'];
-	         $cursor = $startPos + 1;
-	         $depth = 0;
-
-	         while (true) {
-	             // Find next markers
-	             $nextStart = preg_match('/<!--COMPONENT:[a-zA-Z0-9_\-]+-->/',
-	                $html, $s, PREG_OFFSET_CAPTURE, $cursor) ? $s[0][1] : false;
-
-	             $nextEnd = preg_match('/<!--END COMPONENT-->/', 
-	                $html, $e, PREG_OFFSET_CAPTURE, $cursor) ? $e[0][1] : false;
-
-	             if($nextStart === false && $nextEnd === false) {
-	                 break;
-	             }
-
-	             //End comes first?
-	             if ($nextEnd !== false && ($nextStart === false || $nextEnd < $nextStart)) {
-	                if ($depth === 0) {
-	                    $pos['end_pos'] = $nextEnd;
-	                    $pos['end_marker'] = '<!--END COMPONENT-->';
-	                    break;
-	                }
-	                $depth--;
-	                $cursor = $nextEnd + 1;
-	             } else {
-	                $depth++;
-	                $cursor = $nextStart + 1;
-	             }
-	         }
-	     }
-	     unset($pos);
-
-	     //Remove components from bottom to top
-	     usort($positions, fn($a, $b) => $b['start_pos'] <=> $a['start_pos']);
-
-	     foreach ($positions as $pos) {
-	        $start = $pos['start_pos'];
-	        $end = $pos['end_pos'] + strlen($pos['end_marker']);
-
-	        $fullHtml = substr($html, $start, $end - $start);
-
-	        $components[$pos['name']] = $fullHtml;
-
-	        // Replace with placeholder
-	        $placeholder = "<!--COMPONENT:{$pos['name']}-->";
-	        $output = substr_replace($output, $placeholder, $start, $end - $start);
-	     }
-
-	     return [
-	        'components' => $components,
-	        'html' => $output
-	     ];
-	 }*/
 
 	 /**
 	 * Extract only top-level sibling components (depth 0).

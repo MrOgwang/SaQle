@@ -10,7 +10,7 @@ SaQle\Autoloader::register(function($class){
 use SaQle\Manage\Manage;
 use SaQle\Config\AppConfig;
 
-AppConfig::init()::load();
+//AppConfig::init()::load(); remove this as AppConfig no longer exists
 
 $argv[] = dirname(__FILE__);
 (new Manage($argv))();

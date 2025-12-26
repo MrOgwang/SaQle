@@ -15,7 +15,7 @@
  * @author  Wycliffe Omondi Otieno <wycliffomondiotieno@gmail.com>
  * */
 
-namespace SaQle\Config;
+namespace SaQle\Core\Config;
 
 use SaQle\Auth\Models\{BaseRole, BasePermission, BaseTenant, BaseUser};
 use SaQle\Auth\Services\Providers\AuthorizationProvider;
@@ -46,7 +46,7 @@ class Config{
 	 	 /**
 	 	  * Project document root
 	 	  * */
-	 	 define("DOCUMENT_ROOT", $settings['document_root'] ?? ($_SERVER['DOCUMENT_ROOT'] ?? ''));
+	 	 define("DOCUMENT_ROOT", defined('PROJECT_ROOT') ? PROJECT_ROOT : ( $settings['document_root'] ?? ($_SERVER['DOCUMENT_ROOT'] ?? '')) );
 
          /**
           * App root domain
@@ -257,7 +257,24 @@ class Config{
 		  * */
 		 define("RESOURCE_MODELS", $settings['resource_models'] ?? []);
 
-		 foreach($settings as $key => $val){
+		 /**
+	 	 * The directory in which class mappings will be cached. This is used by the framework and cannot be customized
+	 	 * at the moment
+	 	 * */
+	 	 define("CLASS_MAPPINGS_DIR", "/storage/framework/build/cache/mappings/");
+
+	 	 /**
+	 	 * The directory in which compiled views will be cached. This is used by the framework and cannot be customized
+	 	 * at the moment
+	 	 * */
+	 	 define("TEMPLATES_CACHE_DIR", "/storage/framework/build/cache/templates/");
+
+	 	 /**
+	 	  * The extension for component templates
+	 	  * */
+	 	 define("COMPONENT_TEMPLATE_EXT", $settings['component_template_ext'] ?? 'html');
+
+	 	 foreach($settings as $key => $val){
 		 	 $configname = strtoupper($key);
 		 	 if(!defined($configname)){
 
@@ -271,17 +288,5 @@ class Config{
                  define($configname, $val);
              }
 		 }
-
-		 /**
-	 	 * The directory in which class mappings will be cached. This is used by the framework and cannot be customized
-	 	 * at the moment
-	 	 * */
-	 	 define("CLASS_MAPPINGS_DIR", "/storage/framework/build/cache/mappings/");
-
-	 	 /**
-	 	 * The directory in which compiled views will be cached. This is used by the framework and cannot be customized
-	 	 * at the moment
-	 	 * */
-	 	 define("TEMPLATES_CACHE_DIR", "/storage/framework/build/cache/templates/");
 	 }
 }

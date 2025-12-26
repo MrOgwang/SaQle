@@ -22,11 +22,11 @@ use SaQle\App;
 
 class CorsMiddleware extends IMiddleware{
       public function handle(MiddlewareRequestInterface &$request){
-           $app         = App::init();
-           $origins     = $app::cors()::getorigins();
-           $headers     = $app::cors()::getheaders();
-           $methods     = $app::cors()::getmethods();
-           $credentials = $app::cors()::getcredentials();
+           $app         = app();
+           $origins     = $app->cors->get_origins();
+           $headers     = $app->cors->get_headers();
+           $methods     = $app->cors->get_methods();
+           $credentials = $app->cors->allows_credentials();
 
            $origin = $_SERVER['HTTP_ORIGIN'] ?? '*';
 

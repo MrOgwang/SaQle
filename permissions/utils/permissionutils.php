@@ -1,8 +1,6 @@
 <?php
 namespace SaQle\Permissions\Utils;
 
-use SaQle\Services\Container\Cf;
-
 trait PermissionUtils{
     private static function at_least_one_passed($results){
         return in_array(true, $results);

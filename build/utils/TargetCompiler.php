@@ -167,7 +167,7 @@ class TargetCompiler{
      public function compile($changed_files){
          $route_files = array_filter($changed_files, function($file){
              $filename = basename($file['path']);
-             return $file['dir'] === 'routes' && $file['type'] === 'modified' && $filename === 'web.php';
+             return $file['dir'] === 'routes' && $file['type'] === 'modified' && $filename === 'routes.php';
          });
          
          foreach ($route_files as $file){
@@ -182,43 +182,41 @@ class TargetCompiler{
          $routes_cache = [];
          $templates_cache = [];
          foreach($routes as $c => $r){
-             if(!$r->redirect){
-                 if(array_key_exists($r->url, $routes_cache)){
-                     echo $r->url.": already exists in cache!\n";
-                     continue;
-                 }
-                 
-                 $trail = $r->get_trail();
-
-                 [$all_css, $all_js, $all_meta, $all_title, $all_html, $ui_tree] = $this->compile_trail($trail);
-
-                 //add the root node of ui tree
-                 $page_class = $this->components['page']['controller'];
-                 $page_instance = new $page_class();
-
-                 array_unshift($ui_tree, (Object)['component' => 'page', 'action' => $page_instance->get_index(), 'children' => []]);
-                 //$uitree = (Object)['component' => 'page', 'action' => $page_instance->get_index(), 'children' => $ui_tree];
-
-                 $templatename = $this->get_template_name($trail, $c);
-                 $first_component_name = $this->get_component_name($trail[0]->target, false);
-
-                 $routes_cache[$r->url] = [
-                     'trail' => $trail,
-                     'uitree' => $ui_tree,
-                     'template_path' => $this->projectroot.TEMPLATES_CACHE_DIR.$templatename
-                 ];
-
-                 $page = new View($this->components['page']['template_path']);
-                 $compiled_template = $this->set_template_context($page->get_template(), [
-                     'content' => "<!--DYNAMIC:$first_component_name-->\n".$all_html."\n"."<!--END DYNAMIC-->", 
-                     'title'   => $all_title, 
-                     'css'     => implode("\n", array_unique($all_css)), 
-                     'js'      => implode("\n", array_unique($all_js)), 
-                     'meta'    => implode("\n", array_unique($all_meta))
-                 ], true);
-
-                 $templates_cache[$templatename] = $compiled_template;
+             if(array_key_exists($r->url, $routes_cache)){
+                 echo $r->url.": already exists in cache!\n";
+                 continue;
              }
+             
+             $trail = $r->get_trail();
+
+             [$all_css, $all_js, $all_meta, $all_title, $all_html, $ui_tree] = $this->compile_trail($trail);
+
+             //add the root node of ui tree
+             $page_class = $this->components['page']['controller'];
+             $page_instance = new $page_class();
+
+             array_unshift($ui_tree, (Object)['component' => 'page', 'action' => $page_instance->get_index(), 'children' => []]);
+             //$uitree = (Object)['component' => 'page', 'action' => $page_instance->get_index(), 'children' => $ui_tree];
+
+             $templatename = $this->get_template_name($trail, $c);
+             $first_component_name = $this->get_component_name($trail[0]->target, false);
+
+             $routes_cache[$r->url] = [
+                 'trail' => $trail,
+                 'uitree' => $ui_tree,
+                 'template_path' => $this->projectroot.TEMPLATES_CACHE_DIR.$templatename
+             ];
+
+             $page = new View($this->components['page']['template_path']);
+             $compiled_template = $this->set_template_context($page->get_template(), [
+                 'content' => "<!--DYNAMIC:$first_component_name-->\n".$all_html."\n"."<!--END DYNAMIC-->", 
+                 'title'   => $all_title, 
+                 'css'     => implode("\n", array_unique($all_css)), 
+                 'js'      => implode("\n", array_unique($all_js)), 
+                 'meta'    => implode("\n", array_unique($all_meta))
+             ], true);
+
+             $templates_cache[$templatename] = $compiled_template;
          }
 
          $this->cache_routes_mapping($routes_cache);

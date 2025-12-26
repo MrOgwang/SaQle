@@ -11,7 +11,7 @@ use SaQle\Middleware\AppMiddleware;
 
 class ApiMiddlewareGroup implements IMiddlewareGroup {
 	 public function get_middlewares() : array {
-	 	 $custom_middlewares = AppMiddleware::init()::get();
+	 	 $custom_middlewares = app()->middleware->all();
 
 	 	 return [
 	 	 	 CorsMiddleware::class,
