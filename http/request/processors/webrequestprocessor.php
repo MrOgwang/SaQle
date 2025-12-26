@@ -412,6 +412,7 @@ class WebRequestProcessor extends RequestProcessor{
 
          	 //get the ui tree
          	 $focused_url = $this->request->route->url."/";
+         	 
          	 $mappings_file = DOCUMENT_ROOT.CLASS_MAPPINGS_DIR."routes.php";
          	 $route_mappings = file_exists($mappings_file) ? require_once $mappings_file : [];
          	 $template_path = '';

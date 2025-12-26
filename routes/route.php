@@ -58,68 +58,10 @@ final class Route {
       * */
      public string $target {
          set(string $value){
-             $compiled_target = [null, null, null]; //controller, action, template_path
-
-             //target must be a non empty string, otherwise complain loudly
-             Assert::stringNotEmpty($value, 'Provide a non empty string for target for the route: '.$this->url);
-
-             $target_array = explode("@", $value);
-             $component_name = $target_array[0];
-
-             //assert component exists
-             $this->assert_components_exist([$component_name]);
-
-             /**
-              * a component can have at least a template or a controller(purely api components),
-              * otherwise it can have both a template and a controller.
-              * */
-             $component = ComponentRegistry::get($component_name);
-             $controller = $component['controller'];
-             $template_path = $component['template_path'];
-
-             if(!$controller && !$template_path){
-                 throw new InvalidArgumentException('Target must have at least a controller or a template for the route: '.$this->url);
-             }
-
-             //if there is a controller, ensure the class is defined and the action method provided exists
-             if($controller){
-                 if(!class_exists($controller)){
-                     throw new InvalidArgumentException('Target must have at least a controller or a template for the route: '.$this->url);
-                 }
-
-                 $compiled_target[0] = $controller;
-
-                 $action = $target_array[1] ?? '';
-
-                 //if the action has been provided at this point, ensure the method exists in class
-                 if($action && !method_exists($controller, $action)){
-                     throw new InvalidArgumentException('The method ['.$action.'] does not exist in the class ['.$controller.'] for the route: '.$this->url);
-                 }
-
-                 //if the method still doesnt exist here, dynamically determine a method to use
-                 if(!$action){
-                     $action = $this->find_appropriate_action($controller);
-                 }
-
-                 $compiled_target[1] = $action;
-             }
-
-             //if there is a template_path, ensure the file exists
-             if($template_path){
-                 if(!file_exists($template_path)){
-                     throw new InvalidArgumentException('The template file: '.$template_path.' does not exist for the route: '.$this->url);
-                 }
-
-                 $extension = pathinfo($template_path, PATHINFO_EXTENSION);
-
-                 if (strtolower($extension) !== strtolower(COMPONENT_TEMPLATE_EXT)) {
-                     throw new InvalidArgumentException("Invalid template file type for the route: ".$this->url." Expected an .".COMPONENT_TEMPLATE_EXT." file.");
-                 }
-
-                 $compiled_target[2] = $template_path;
-             }
+             [$compiled_target, $component_name] = $this->get_compiled_target($value, 'target');
 
              $this->compiled_target = $compiled_target;
+
              $this->target = !is_null($compiled_target[1]) ? $component_name."@".$compiled_target[1] : $component_name;
          }
 
@@ -247,6 +189,15 @@ final class Route {
              throw new RuntimeException("Multiple methods found for HTTP verb ".$http_verb." for the route: ".$this->url.". Please specify. Matching methods: $names");
          }
 
+         // 3. Match method name to HTTP verb
+         $verb_name = strtolower($this->method);
+
+         foreach ($public_methods as $method) {
+             if (strtolower($method->getName()) === $verb_name) {
+                 return $method->getName();
+             }
+         }
+
          //3. Methods with Index attribute
          $index_methods = array_filter($public_methods, fn($m) => !empty($m->getAttributes(Index::class)));
 
@@ -262,6 +213,71 @@ final class Route {
          //4. No appropriate method found
          $method_names = implode(', ', array_map(fn($m) => $m->getName(), $public_methods));
          throw new RuntimeException("No suitable action method found in class '$class_name' for HTTP verb '$http_verb' for the route '".$this->url."'. Public methods found: $method_names");
+     }
+
+     private function get_compiled_target(string $target, string $type = 'target'){
+         $compiled_target = [null, null, null]; //controller, action, template_path
+
+         //target must be a non empty string, otherwise complain loudly
+         Assert::stringNotEmpty($target, 'Provide a non empty string for target for the route: '.$this->url);
+
+         $target_array = explode("@", $target);
+         $component_name = $target_array[0];
+
+         //assert component exists
+         $this->assert_components_exist([$component_name]);
+
+         /**
+          * a component can have at least a template or a controller(purely api components),
+          * otherwise it can have both a template and a controller.
+          * */
+         $component = ComponentRegistry::get($component_name);
+         $controller = $component['controller'];
+         $template_path = $component['template_path'];
+
+         if(!$controller && !$template_path){
+             throw new InvalidArgumentException('Target must have at least a controller or a template for the route: '.$this->url);
+         }
+
+         //if there is a controller, ensure the class is defined and the action method provided exists
+         if($controller){
+             if(!class_exists($controller)){
+                 throw new InvalidArgumentException('Target must have at least a controller or a template for the route: '.$this->url);
+             }
+
+             $compiled_target[0] = $controller;
+
+             $action = $target_array[1] ?? '';
+
+             //if the action has been provided at this point, ensure the method exists in class
+             if($action && !method_exists($controller, $action)){
+                 throw new InvalidArgumentException('The method ['.$action.'] does not exist in the class ['.$controller.'] for the route: '.$this->url);
+             }
+
+             //if the method still doesnt exist here, dynamically determine a method to use
+             if(!$action){
+                 $action = $this->find_appropriate_action($controller, $type);
+             }
+
+             $compiled_target[1] = $action;
+         }
+
+         //if there is a template_path, ensure the file exists
+         if($template_path){
+             if(!file_exists($template_path)){
+                 throw new InvalidArgumentException('The template file: '.$template_path.' does not exist for the route: '.$this->url);
+             }
+
+             $extension = pathinfo($template_path, PATHINFO_EXTENSION);
+
+             if (strtolower($extension) !== strtolower(COMPONENT_TEMPLATE_EXT)) {
+                 throw new InvalidArgumentException("Invalid template file type for the route: ".$this->url." Expected an .".COMPONENT_TEMPLATE_EXT." file.");
+             }
+
+             $compiled_target[2] = $template_path;
+         }
+
+         return [$compiled_target, $component_name];
      }
 
      /**

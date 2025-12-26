@@ -118,7 +118,7 @@ class BuildProject{
                  RouteCompiler::compile(Router::all(), $project_root);
 
                  //compile project routes and layoutes
-                 $this->targetcompiler = new TargetCompiler($project_root);
+                 //$this->targetcompiler = new TargetCompiler($project_root);
                  //$this->targetcompiler->compile($files);
 
                  //save the updated build manifest
