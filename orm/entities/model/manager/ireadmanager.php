@@ -3,8 +3,6 @@
 
  namespace SaQle\Orm\Entities\Model\Manager;
 
- require_once __DIR__."/../../../../exceptions/exceptions.php";
-
  use SaQle\Orm\Entities\Model\Interfaces\ITableSchema;
  use SaQle\Orm\Database\Trackers\DbContextTracker;
  use SaQle\Orm\Database\Attributes\IDbContextOptions;

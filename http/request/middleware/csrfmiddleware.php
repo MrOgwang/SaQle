@@ -8,9 +8,6 @@ class CsrfMiddleware extends IMiddleware{
      private static string $token_key      = 'csrf_token';
      private static array  $except_methods = ['GET', 'HEAD', 'OPTIONS'];
      public function handle(MiddlewareRequestInterface &$request){
-         if(session_status() == PHP_SESSION_NONE){
-             session_start();
-         }
          
          //Generate CSRF token if not set
          $token_key      = CsrfMiddleware::get_token_key();

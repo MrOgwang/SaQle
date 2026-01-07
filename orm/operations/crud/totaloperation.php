@@ -2,7 +2,7 @@
 namespace SaQle\Orm\Operations\Crud;
 
 use SaQle\Orm\Operations\IOperation;
-use SaQle\Orm\Operations\Crud\Exceptions\SelectOperationFailedException;
+use SaQle\Core\Exceptions\Model\SelectOperationFailedException;
 use PDO;
 use Exception;
 
@@ -30,9 +30,14 @@ class TotalOperation extends IOperation{
 			 $sql .= $this->settings['limit_clause'];
 			 $statement = $pdo->prepare($sql);
 		     $response  = $statement->execute($data);
+		     $error_code = $statement->errorCode();
 
-			 if($response === false || $statement->errorCode() !== "00000")
-			 	 throw new SelectOperationFailedException(name: $table);
+			 if($response === false || $error_code !== "00000"){
+			 	 throw new SelectOperationFailedException([
+			 	 	'table' => $table,
+			 	 	'statement_error_code' => $error_code
+			 	 ]);
+			 }
 
              $rows = $statement->fetchAll(PDO::FETCH_OBJ);
 		     return $rows[0]->records_count;

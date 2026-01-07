@@ -1,18 +1,17 @@
 <?php
 namespace SaQle\Http\Response\Types;
 
-class HtmlResponse{
-     protected $content;
-     protected $status;
+use SaQle\Http\Response\HttpResponse;
 
-     public function __construct($content, $status = 200){
-         $this->content = $content;
-         $this->status = $status;
-     }
+class HtmlResponse extends HttpResponse{
+     public function __construct(
+         private string $html, 
+         private int $status
+     ){}
 
-     public function send(){
+     public function send() : void{
          http_response_code($this->status);
          header('Content-Type: text/html; charset=UTF-8');
-         echo $this->content;
+         echo $this->html;
      }
 }

@@ -2,7 +2,7 @@
 namespace SaQle\Orm\Operations\Crud;
 
 use SaQle\Orm\Operations\IOperation;
-use SaQle\Orm\Operations\Crud\Exceptions\SelectOperationFailedException;
+use SaQle\Core\Exceptions\Model\SelectOperationFailedException;
 use Exception;
 use PDO;
 
@@ -15,9 +15,14 @@ class SelectOperation extends IOperation{
 
 		     $statement = $pdo->prepare($sql);
 		     $response  = $statement->execute($data);
+		     $error_code = $statement->errorCode();
 
-			 if($response === false || $statement->errorCode() !== "00000")
-				 throw new SelectOperationFailedException(name: '');
+			 if($response === false || $error_code !== "00000"){
+			 	 throw new SelectOperationFailedException([
+			 	 	'table' => '',
+			 	 	'statement_error_code' => $error_code
+			 	 ]);
+			 }
 
 		     return $statement->fetchAll(PDO::FETCH_OBJ);
 	 	 }catch(Exception $ex){

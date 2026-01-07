@@ -19,8 +19,11 @@ declare(strict_types = 1);
 namespace SaQle\Routes;
 
 use SaQle\Core\Assert\Assert;
+use SaQle\Core\Registries\RouteRegistry;
 
 final class Router {
+
+     protected static array $group_stack = [];
 
      //only one instance of router must exist
      protected static ?self $instance = null;
@@ -59,7 +62,10 @@ final class Router {
       * */
      static public function get(string $url, string $target) : Router {
          $route = new Route('get', $url, $target);
+
          self::$routes[] = [$route];
+
+         self::push_group_attributes();
 
          return static::instance();
      }
@@ -67,7 +73,10 @@ final class Router {
      //parameters as descirbed in get
      static public function post(string $url, string $target) : Router {
          $route = new Route('post', $url, $target);
+
          self::$routes[] = [$route];
+
+         self::push_group_attributes();
 
          return static::instance();
      }
@@ -75,7 +84,10 @@ final class Router {
      //parameters as descirbed in get
      static public function patch(string $url, string $target) : Router {
          $route = new Route('patch', $url, $target);
+
          self::$routes[] = [$route];
+
+         self::push_group_attributes();
 
          return static::instance();
      }
@@ -83,7 +95,10 @@ final class Router {
      //parameters as descirbed in get
      static public function put(string $url, string $target) : Router {
          $route = new Route('put', $url, $target);
+
          self::$routes[] = [$route];
+
+         self::push_group_attributes();
 
          return static::instance();
      }
@@ -91,7 +106,10 @@ final class Router {
      //parameters as descirbed in get
      static public function delete(string $url, string $target) : Router {
          $route = new Route('delete', $url, $target);
+
          self::$routes[] = [$route];
+
+         self::push_group_attributes();
 
          return static::instance();
      }
@@ -122,6 +140,8 @@ final class Router {
          }
 
          self::$routes[] = $routes;
+
+         self::push_group_attributes();
 
          return static::instance();
      }
@@ -164,8 +184,8 @@ final class Router {
       * When an array of arrays of strings is provided, the resolver must be provided to determine
       * which layout group to use.
       * */
-     public function compose_with(array $layouts, ?string $resolver = null){
-         $this->apply_decoration('compose_with', ...['layouts' => $layouts, 'resolver' => $resolver]);
+     public function compose_with(array $layouts){
+         $this->apply_decoration('compose_with', ...['layouts' => $layouts]);
          return $this;
      }
 
@@ -184,7 +204,7 @@ final class Router {
          return $this;
      }
 
-     public static function requires_all(array $guards){
+     public function requires_all(array $guards){
          $this->apply_decoration('requires_all', ...['guards' => $guards]);
          return $this;
      }
@@ -192,7 +212,7 @@ final class Router {
      /**
       * Add url aliases for this route
       * */
-     public static function with_aliase(array $aliases){
+     public function with_aliase(array $aliases){
          if(!self::$routes)
              return $this;
 
@@ -222,5 +242,147 @@ final class Router {
      public function respond_with(array $restype){
          $this->apply_decoration('respond_with', ...['restype' => $restype]);
          return $this;
+     }
+
+     protected static function with_group(array $attributes, callable $routes): void {
+         self::$group_stack[] = $attributes;
+
+         $routes();
+         
+         array_pop(self::$group_stack);
+     }
+
+     private static function push_group_attributes(){
+         if(!self::$group_stack) return;
+
+         $router = static::instance();
+
+         //Apply group attributes
+         foreach (self::$group_stack as $group){
+             if(!empty($group['guards_all'])) {
+                 $router->requires_all($group['guards_all']);
+             }
+
+             if (!empty($group['guards_any'])) {
+                 $router->requires_any($group['guards_any']);
+             }
+
+             if (!empty($group['restype'])) {
+                 $router->respond_with($group['restype']);
+             }
+
+             if (!empty($group['layouts'])) {
+                 $router->compose_with($group['layouts']);
+             }
+         }
+     }
+
+     public static function with_layout(array $layouts, callable $routes): void {
+         self::with_group(['layouts' => $layouts], $routes);
+     }
+
+     public static function with_guards(array $guards, callable $routes, string $mode = 'all'): void {
+         self::with_group([$mode === 'all' ? 'guards_all' : 'guards_any' => $guards], $routes);
+     }
+
+     public static function with_responses(array $types, callable $routes): void {
+         self::with_group(['restype' => $types], $routes);
+     }
+
+     public static function find_matching_route(string $method, string $uri): ?array{
+        // Merge all prefixes
+        $all_prefixes = array_merge(API_URL_PREFIXES, SSE_URL_PREFIXES);
+
+        // Get all compiled routes from your registry
+        $compiled_routes = RouteRegistry::all();
+
+        // Parse URI
+        $parts = parse_url($uri);
+        $path = '/' . trim($parts['path'] ?? '/', '/'); // normalize path with leading slash
+        $query_params = [];
+        if (isset($parts['query'])) {
+            parse_str($parts['query'], $query_params);
+        }
+
+        // Strip prefix
+        $prefix_data = self::strip_prefix($path, $all_prefixes);
+        $prefix = $prefix_data['prefix'];           // matched prefix string (e.g., /api/v1)
+        $path_without_prefix = $prefix_data['path']; // path after removing prefix
+
+        // Determine allowed restype if prefix matched
+        $allowed_restype = 'html';
+        if ($prefix) {
+            if (self::prefix_in_array($prefix, API_URL_PREFIXES)) {
+                $allowed_restype = 'json';
+            } elseif (self::prefix_in_array($prefix, SSE_URL_PREFIXES)) {
+                $allowed_restype = 'sse';
+            }
+        }
+
+        // Iterate over compiled routes
+        foreach ($compiled_routes as $route) {
+            // HTTP method check
+            if (strtoupper($route['method']) !== strtoupper($method)) continue;
+
+            // Check restype if prefix matched
+            if ($allowed_restype && !in_array($allowed_restype, $route['route']['restype'] ?? [])) {
+                 continue;
+            }
+
+            // Match path regex
+            if (preg_match($route['pattern'], $path_without_prefix, $matches)) {
+                // Extract path params
+                $params = [];
+                if (!empty($route['param_names'])) {
+                    foreach ($route['param_names'] as $i => $name) {
+                        $params[$name] = $matches[$i + 1] ?? null;
+                    }
+                }
+
+                return [
+                    'route' => $route['route'],
+                    'params' => $params,
+                    'query' => $query_params,
+                    'path' => $path_without_prefix,
+                    'method' => $method,
+                    'prefix' => $prefix,
+                ];
+            }
+        }
+
+        // No match found
+        return null;
+     }
+
+     /**
+     * Strip the longest matching prefix from the path
+     */
+     protected static function strip_prefix(string $path, array $prefixes): array{
+        // Normalize path: ensure leading slash
+        $normalizedPath = '/' . trim($path, '/');
+
+        // Sort prefixes by length descending to match the longest first
+        usort($prefixes, fn($a, $b) => strlen(trim($b, '/')) - strlen(trim($a, '/')));
+
+        foreach ($prefixes as $prefix) {
+            $normalizedPrefix = '/' . trim($prefix, '/');
+            if (str_starts_with($normalizedPath, $normalizedPrefix)) {
+                $stripped = substr($normalizedPath, strlen($normalizedPrefix));
+                $stripped = '/' . ltrim($stripped, '/'); // ensure leading slash
+                return ['prefix' => $normalizedPrefix, 'path' => $stripped];
+            }
+        }
+
+        return ['prefix' => null, 'path' => $normalizedPath];
+     }
+
+     /**
+     * Helper: check if normalized prefix is in an array of prefixes
+     */
+     protected static function prefix_in_array(string $prefix, array $prefix_array): bool{
+        foreach ($prefix_array as $p) {
+            if ('/' . trim($p, '/') === $prefix) return true;
+        }
+        return false;
      }
 }

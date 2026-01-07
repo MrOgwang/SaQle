@@ -20,14 +20,13 @@ use SaQle\Auth\Utils\{AuthManager, AuthResult};
 use SaQle\Core\Assert\Exceptions\InvalidArgumentException;
 use SaQle\Auth\Models\Interfaces\IUser;
 use SaQle\Core\Services\IService;
-use SaQle\Core\Services\Attr\ResultName;
+use RuntimeException;
 
 class AuthService implements IService {
      /**
      * Main login entry point.
      * $strategy_name = which login method (password, google, magic, etc.)
      */
-     #[ResultName(name: 'auth_result')]
      public function login(string $strategy_name, array $credentials): AuthResult {
          $strategy = AuthManager::get_strategy($strategy_name);
 
@@ -48,12 +47,12 @@ class AuthService implements IService {
 
          $user_provider = AuthManager::get_user_provider();
 
-         if(!$user_provider) throw new \RuntimeException("No UserProvider registered.");
+         if(!$user_provider) throw new RuntimeException("No UserProvider registered.");
 
          return new AuthResult(true, $user_provider($id), $session_key, "Login successful");
      }
 
-     public function get_current_user() : ?IUser {
+     public function resolve_user() : ?IUser {
          $provider_resolver = AuthManager::get_session_provider_resolver();
          $provider = $provider_resolver();
 
@@ -62,8 +61,17 @@ class AuthService implements IService {
 
          $user_provider = AuthManager::get_user_provider();
 
-         if(!$user_provider) throw new \RuntimeException("No UserProvider registered.");
+         if(!$user_provider) throw new RuntimeException("No UserProvider registered.");
 
          return $user_provider($id);
+     }
+
+     public function logout(){
+         $user = resolve('request')->user;
+
+         session_unset();
+         session_destroy();
+
+         return $user;
      }
 }

@@ -126,12 +126,11 @@ class View{
      }
 
      public function get_meta(){
-         $meta = [];
+         $meta = "";
 
          if(preg_match('/@meta(.*?)@endmeta/s', $this->content, $matches)){
-             $metaline = trim($matches[1]);
+             $meta = trim($matches[1]);
              $this->content = preg_replace('/@meta(.*?)@endmeta/s', '', $this->content);
-             $meta = explode(",", $metaline);
          } 
 
          return $meta;

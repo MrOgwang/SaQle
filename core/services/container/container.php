@@ -8,6 +8,7 @@ use Exception;
 use ReflectionFunctionAbstract;
 use SaQle\Core\Services\IService;
 use SaQle\Core\Services\Proxy\ServiceProxy;
+use SaQle\Core\Events\EventBus;
 
 class Container {
      private array $bindings = [];
@@ -44,8 +45,13 @@ class Container {
           * this is done so that observers can be attached to the service methods
           * */
          if($object instanceof IService){
-             $object = new ServiceProxy($object);
+             return new ServiceProxy(
+                 target: $object,
+                 event_bus: $this->resolve(EventBus::class),
+                 request: $this->resolve('request')
+             );
          }
+
          return $object;
      }
 

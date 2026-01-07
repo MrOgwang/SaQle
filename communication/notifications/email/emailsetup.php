@@ -17,7 +17,7 @@ abstract class EmailSetup extends INotificationSetup{
 		     'rec_name' => $this->configurations['rec_name'],
 			 'rec_email' => $this->configurations['rec_email'],
 			 'subject' => $this->email_subject,
-			 'email_text' => $this->set_template_context($this->email_message,  $this->configurations['placeholder_values']),
+			 'email_text' => self::set_template_context($this->email_message,  $this->configurations['placeholder_values']),
 			 'template_path' => $this->email_template_path,
 			 'cc_address' => $this->configurations['cc_address'] ?? [],
 			 'bcc_address' => $this->configurations['bcc_address'] ?? [],

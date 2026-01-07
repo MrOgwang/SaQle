@@ -1,0 +1,52 @@
+<?php
+/**
+ * A route object
+ * */
+declare(strict_types = 1);
+
+namespace SaQle\Routes;
+
+use SaQle\Core\Assert\Assert;
+use SaQle\Core\Registries\ComponentRegistry;
+use SaQle\Templates\Template;
+use InvalidArgumentException;
+
+final class MatchedRoute {
+     public function __construct(
+         //the route url
+         public string $url,
+
+         //the non prefix path
+         public string $path,
+
+         //the http method to handle
+         public string $method,
+
+         //the route handler
+         public array $compiled_target,
+
+         //the layout wrappers
+         public ?array $layout = null,
+
+         //permissions, roles and attributes to enforce on route
+         public ?array $guards = null,
+
+         //the response types.
+         public ?array $restype = null,
+
+         //layout components
+         public ?array $trail = null,
+
+         //the prefix the url came with
+         public ?string $prefix = null,
+     ){}
+
+     //check if the matched route supports a given response type
+     public function supports(string $response_type){
+         return in_array($response_type, $this->restype, true);
+     }
+
+     public function supported_responses(){
+         return $this->restype;
+     }
+}

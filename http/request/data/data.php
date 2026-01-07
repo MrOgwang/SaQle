@@ -1,7 +1,7 @@
 <?php
 namespace SaQle\Http\Request\Data;
 
-use SaQle\Http\Request\Data\Exceptions\KeyNotFoundException;
+use SaQle\Core\Exceptions\Data\KeyNotFoundException;
 
 class Data{
 	 protected array $data;

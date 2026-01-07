@@ -2,7 +2,7 @@
  namespace SaQle\Orm\Entities\Model\Manager;
 
  use SaQle\Orm\Operations\Crud\{SelectOperation, TotalOperation};
- use SaQle\Orm\Entities\Model\Exceptions\NullObjectException;
+ use SaQle\Core\Exceptions\Model\NullObjectException;
  use SaQle\Orm\Entities\Model\Schema\Model;
  use SaQle\Commons\{DateUtils, UrlUtils, StringUtils};
  use SaQle\Orm\Entities\Field\Relations\Many2Many;
@@ -45,7 +45,7 @@ class ReadManager extends IReadManager implements Observable, IOperationManager 
 	 	 $response = $this->get();
 	 	 if(!$response){
 	 	 	$table = $this->ctxtracker->find_table_name(0);
-	 	 	throw new NullObjectException(table: $table);
+	 	 	throw new NullObjectException(['table' => $table]);
 	 	 }
 	 	 return $response[0];
 	 }
@@ -60,7 +60,7 @@ class ReadManager extends IReadManager implements Observable, IOperationManager 
 	 public function last(){
 	 	 $response = $this->get();
 	 	 if(!$response){
-	 	 	throw NullObjectException(table: $this->ctxtracker->find_table_name(0));
+	 	 	throw NullObjectException(['table' => $this->ctxtracker->find_table_name(0)]);
 	 	 }
 	 	 return $response[count($response) - 1];
 	 }

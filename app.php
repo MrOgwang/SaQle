@@ -6,7 +6,8 @@ use SaQle\Core\Config\AppSetup;
 use SaQle\Core\Services\Container\Container;
 use SaQle\Core\Registries\{
     MiddlewareRegistry,
-    ObserverRegistry
+    ObserverRegistry,
+    EventRegistry
 };
 use SaQle\Core\Services\Providers\{
      FrameworkDIProvider, 
@@ -16,19 +17,26 @@ use SaQle\Core\Services\Providers\{
 use SaQle\Http\Cors\CorsConfig;
 use SaQle\Core\Support\AppContext;
 use SaQle\Core\Config\Config;
-use SaQle\Http\Request\{Request, RequestManager};
+use SaQle\Http\Request\{Request, Runtime};
+use SaQle\Session\Providers\SessionProvider;
+use SaQle\Routes\Providers\RoutingProvider;
+use SaQle\Auth\Guards\GuardManager;
 
 final class App{
      public readonly string $environment;
      public MiddlewareRegistry $middleware;
      public Container $container;
      public CorsConfig $cors;
+     public GuardManager $guards;
+     public EventRegistry $events;
 
      public function __construct(private AppSetup $setup){
          $this->environment = $setup->environment;
          $this->middleware  = new MiddlewareRegistry();
          $this->container   = new Container();
          $this->cors        = new CorsConfig($setup->cors);
+         $this->guards      = new GuardManager();
+         $this->events      = new EventRegistry();
 
          $this->boot();
 
@@ -74,7 +82,9 @@ final class App{
          $framework_providers = [
              FrameworkDIProvider::class,
              ModelObserverProvider::class,
-             AuthenticationProvider::class
+             AuthenticationProvider::class,
+             SessionProvider::class,
+             //RoutingProvider::class
          ];
 
          foreach(array_merge($framework_providers, $this->setup->providers) as $provider){
@@ -83,10 +93,6 @@ final class App{
      }
 
      public function run(): void {
-         $request         = Request::init();
-         $request_manager = new RequestManager($request);
-         $request_manager->process();
-
-         //HTTP kernel / CLI kernel / worker kernel
+         new Runtime()->handle(Request::init());
      }
 }

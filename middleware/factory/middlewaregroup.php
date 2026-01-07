@@ -2,26 +2,33 @@
 namespace SaQle\Middleware\Factory;
 
 use SaQle\Middleware\Interface\IMiddlewareGroup;
-use SaQle\Middleware\Group\{WebMiddlewareGroup, ApiMiddlewareGroup, AjaxMiddlewareGroup};
-use SaQle\Http\Request\Request;
 use SaQle\Middleware\Base\BaseMiddlewareGroup;
+use SaQle\Session\Middleware\SessionMiddleware;
+use SaQle\Auth\Middleware\AuthenticationMiddleware;
+use SaQle\Routes\Middleware\RoutingMiddleware;
+use SaQle\Http\Request\Middleware\{DataMiddleware, CsrfMiddleware};
+use SaQle\Auth\Middleware\AuthorizationMiddleware;
+use SaQle\Http\Cors\Middlewares\CorsMiddleware;
+use SaQle\Middleware\MiddlewareRequestInterface;
+use SaQle\Http\Request\Request;
 
 class MiddlewareGroup extends BaseMiddlewareGroup implements IMiddlewareGroup{
-	 private string $request_type;
+	 public function get_middlewares() : array {
+	 	 $custom_middlewares = app()->middleware->all();
 
-	 public function __construct(){
-	 	 $request = Request::init();
-	 	 $this->request_type = !$request->is_api_request() ? 'web' : ($request->is_ajax_request() ? 'ajax' : 'api');
+	 	 return [
+	 	 	 RoutingMiddleware::class,
+	 	 	 CorsMiddleware::class,
+	 	 	 SessionMiddleware::class,
+	 	 	 AuthenticationMiddleware::class,
+             DataMiddleware::class,
+             CsrfMiddleware::class,
+             AuthorizationMiddleware::class,
+             ...$custom_middlewares
+	 	 ];
 	 }
 
-	 public function get_middlewares() : array{
-	 	 return match($this->request_type){
-	 	 	 'web', 'ajax' => (new WebMiddlewareGroup())->get_middlewares(),
-	 	 	 'api'  => (new ApiMiddlewareGroup())->get_middlewares()
-	 	 };
-	 }
-
-	 public function handle(Request $request) : void{
+	 public function handle(MiddlewareRequestInterface &$request) : Request {
 	 	 $request_middlewares = $this->get_middlewares();
 	 	 if($request_middlewares){
 	 	 	 $middleware          = $request_middlewares[0];
@@ -29,5 +36,7 @@ class MiddlewareGroup extends BaseMiddlewareGroup implements IMiddlewareGroup{
              $this->assign_middlewares($middleware_instance, $request_middlewares, 1);
              $middleware_instance->handle($request);
 	 	 }
+
+	 	 return $request;
 	 }
 }

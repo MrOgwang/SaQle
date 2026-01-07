@@ -18,7 +18,7 @@ namespace SaQle\Http\Request;
 
 use SaQle\Http\Request\Data\{RequestContext, Data};
 use SaQle\Middleware\MiddlewareRequestInterface;
-use SaQle\Routes\Route;
+use SaQle\Routes\MatchedRoute;
 use SaQle\Auth\Models\BaseUser;
 use Closure;
 
@@ -61,6 +61,24 @@ class Request implements MiddlewareRequestInterface{
          get => $this->cookies;
      }
 
+     //path queries
+     public ?Data $queries = null {
+         set(?Data $value){
+             $this->queries = $value;
+         }
+
+         get => $this->queries;
+     }
+
+     //path params
+     public ?Data $params = null {
+         set(?Data $value){
+             $this->params = $value;
+         }
+
+         get => $this->params;
+     }
+
      //the user who is currently logged in
      public ?BaseUser $user {
          get {
@@ -69,37 +87,24 @@ class Request implements MiddlewareRequestInterface{
      }
 
      //the selected route object
-     public ?Route $route = null {
-         set(?Route $value){
+     public ?MatchedRoute $route = null {
+         set(?MatchedRoute $value){
              $this->route = $value;
          }
 
          get => $this->route;
      }
 
-     //the trail of routes for a web request
-     public ?array $trail = null {
-         set(?array $value){
-             $this->trail = $value;
-         }
-
-         get => $this->trail;
-     }
-     
-     //whether to enforce permissions check on this route
-     public bool $enforce_permissions = false {
-         set(bool $value){
-             $this->enforce_permissions = $value;
-         }
-
-         get => $this->enforce_permissions;
-     }
+     //request type
+     public RequestIntent $intent = RequestIntent::WEB;
 
      //prevent direct creation of request object
 	 private function __construct(){
          $this->data    = new Data();
          $this->headers = new Data();
          $this->cookies = new Data();
+         $this->queries = new Data();
+         $this->params  = new Data();
          $this->context = new RequestContext();
      }
 
@@ -115,68 +120,64 @@ class Request implements MiddlewareRequestInterface{
          return self::$instance;
      }
 
-     /**
-      * Is this an api request. This is really just a basic test that relies
-      * on whether a url has api prefixes or not
-      * 
-      * @return bool
-      * */
-     public function is_api_request() : bool{
-         $is_api_request = false;
-         for($u = 0; $u < count(API_URL_PREFIXES); $u++){
-             if(str_contains($_SERVER['REQUEST_URI'], API_URL_PREFIXES[$u])){
-                 $is_api_request = true;
-                 break;
-             }
-         }
-
-         return $is_api_request;
-     }
-
-     /**
-      * Is this an ajax request. Ajax requests are api requests
-      * sent from the same origin as the backend
-      * 
-      * @return bool
-      * */
-     public function is_ajax_request() : bool{
-         $origin  = $_SERVER['HTTP_ORIGIN'] ?? null;
-         $referer = $_SERVER['HTTP_REFERER'] ?? null;
-         $host    = $_SERVER['HTTP_HOST'];
-
-         if( (($origin && parse_url($origin, PHP_URL_HOST) === $host) || ($referer && parse_url($referer, PHP_URL_HOST) === $host)) && $this->is_api_request()){
-             return true;
-         }
-
-         return false;
-     }
-
-     /**
-      * Is this an sse request. This is really just a basic test that relies on whether
-      * a url has sse preixes or not
-      * 
-      * @return bool
-      * */
-     public function is_sse_request() : bool{
-        $is_sse_request = false;
-        for($u = 0; $u < count(SSE_URL_PREFIXES); $u++){
-            if(str_contains($_SERVER['REQUEST_URI'], SSE_URL_PREFIXES[$u])){
-                $is_sse_request = true;
-                break;
-            }
-        }
-        return $is_sse_request;
-     }
-
-     public function is_web_request() : bool{
-         return !$this->is_api_request() && !$this->is_ajax_request() && !$this->is_sse_request();
-     }
+     //helper functions
 
      public function add_context(string $name, mixed $value, bool $session = false){
          $this->context->set($name, $value, $session);
      }
 
-     public function url(){
-         return $this->route->url;
+     public function add_query_param(string $name, mixed $value){
+         $this->queries->set($name, $value);
+     }
+
+     public function add_path_param(string $name, mixed $value){
+         $this->params->set($name, $value);
+     }
+
+     public function uri(){
+         return $_SERVER['REQUEST_URI'] ?? '/';
+     }
+
+     public function path(){
+         return parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '/';
+     }
+
+     public function method(){
+         return strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
+     }
+
+     public function header(string $name): ?string {
+         return $_SERVER['HTTP_'.strtoupper(str_replace('-', '_', $name))] ?? null;
+     }
+
+     public function accepts(string $mime): bool {
+         $accept = $this->header('Accept');
+         return $accept && str_contains($accept, $mime);
+     }
+
+     public function path_starts_with(array $prefixes): bool {
+         $path = $this->path();
+         foreach ($prefixes as $prefix) {
+             if (str_starts_with($path, rtrim($prefix, '/'))) {
+                 return true;
+             }
+         }
+         return false;
+     }
+
+     public function is_api_request() : bool{
+         return $this->intent === RequestIntent::API;
+     }
+
+     public function is_ajax_request() : bool{
+         return $this->intent === RequestIntent::AJAX;
+     }
+
+     public function is_sse_request() : bool{
+         return $this->intent === RequestIntent::SSE;
+     }
+
+     public function is_web_request() : bool{
+         return $this->intent === RequestIntent::WEB;
      }
 }

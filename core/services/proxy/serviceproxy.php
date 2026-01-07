@@ -1,71 +1,57 @@
 <?php
 namespace SaQle\Core\Services\Proxy;
 
-use SaQle\Core\Services\IService;
-use SaQle\Core\Services\Observer\ServiceObserver;
-use SaQle\Core\Observable\{Observable, ConcreteObservable};
-use SaQle\Core\Services\Attr\ResultName;
+use ReflectionMethod;
+use SaQle\Core\Events\EventBus;
+use SaQle\Core\Events\EventContext;
+use SaQle\Core\Events\EventMetadata;
+use SaQle\Http\Request\Request;
 
-class ServiceProxy implements Observable, IService{
-     use ConcreteObservable {
-         ConcreteObservable::__construct as private __coConstruct;
-     }
+final class ServiceProxy {
 
-     public function __construct(private IService $service){
-         $this->__coConstruct();
-     }
+     public function __construct(
+         private object $target,
+         private EventBus $event_bus,
+         private Request $request
+     ) {}
 
-     public function __call(string $method, array $args){
-         $ref_method = new \ReflectionMethod($this->service, $method);
-         $parameters = $ref_method->getParameters();
+     public function __call(string $method, array $args): mixed {
 
-         $arg_meta = [];
-         foreach($parameters as $index => $param){
-             $type = $param->getType();
-             $arg_meta[] = [
-                 'name'   => $param->getName(),
-                 'type'   => $type ? $type->getName() : null,
-                 'value'  => $args[$index] ?? null,
-             ];
+         $ref_method = new ReflectionMethod($this->target, $method);
+
+         $context = new EventContext(
+             service: $this->target,
+             method: $method,
+             args: $this->map_named_args($ref_method, $args),
+             result: null,
+             user: $this->request->user
+         );
+
+         //BEFORE EVENTS
+         foreach (EventMetadata::for_method($ref_method, 'before') as $event_class) {
+             $this->event_bus->dispatch($event_class::from_context($context));
          }
 
-         //send pre signal to observers
-         $preobservers = ServiceObserver::get_service_observers('before', $this->service::class, $method);
+         //ACTUAL METHOD CALL
+         $result = $ref_method->invokeArgs($this->target, $args);
 
-         if($preobservers){
-             $this->quick_notify(observers: $preobservers, args: $args, args_meta: $arg_meta);
-         }
+         $context = $context->with_result($result);
 
-         $result = call_user_func_array([$this->service, $method], $args);
-
-         //send post signal to observers
-         $postobservers = ServiceObserver::get_service_observers('after', $this->service::class, $method);
-
-         if($postobservers){
-             //check for ResultName attribute
-             $result_name = 'result';
-             foreach ($ref_method->getAttributes(ResultName::class) as $attr){
-                 $result_name = $attr->newInstance()->name;
-             }
-
-             $arg_meta[] = [
-                'name'  => $result_name,
-                'type'  => is_object($result) ? get_class($result) : gettype($result),
-                'value' => $result,
-             ];
-            
-            $this->quick_notify(observers: $postobservers, args: array_merge($args, [$result]), args_meta: $arg_meta);
+         //AFTER EVENTS
+         foreach (EventMetadata::for_method($ref_method, 'after') as $event_class){
+             $this->event_bus->dispatch(
+                 $event_class::from_context($context)
+             );
          }
 
          return $result;
      }
 
-     public function __get(string $name){
-         return $this->service->$name;
-     }
-
-     public function __set(string $name, $value){
-         $this->service->$name = $value;
+     private function map_named_args(ReflectionMethod $method, array $args): array {
+         $named = [];
+         foreach ($method->getParameters() as $index => $param) {
+             $named[$param->getName()] = $args[$index] ?? null;
+         }
+         return $named;
      }
 }
-

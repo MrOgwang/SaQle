@@ -2,7 +2,7 @@
 namespace SaQle\Observers\Model;
 
 use SaQle\Core\Observable\Observer;
-use SaQle\Auth\Middleware\AuthMiddleware;
+use SaQle\Auth\Middleware\AuthenticationMiddleware;
 
 class UserModelChangeObserver implements Observer {
      public function update_user($result){
@@ -12,7 +12,7 @@ class UserModelChangeObserver implements Observer {
          }) : ($result->user_id === $request->user->user_id ? $result : null);
 
          if($user){
-             new AuthMiddleware()->handle($request);
+             new AuthenticationMiddleware()->handle($request);
          }
      }
 }

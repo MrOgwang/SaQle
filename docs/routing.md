@@ -383,7 +383,7 @@ namespace SchoolPortal\Controllers;
 
 use SaQle\Controllers\ProxyController;
 use SaQle\Controllers\Base\BaseController;
-use SaQle\Auth\Permissions\Guard;
+use SaQle\Auth\Guards\Guard;
 
 //require your controllers
 use SchoolPortal\Controllers\{Teachers, Students, SupportStaff, Dashboard};

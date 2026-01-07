@@ -12,6 +12,7 @@ class PhpSessionProvider implements SessionProvider {
      }
 
      public function create_session(IUser $user): string{
+         session_regenerate_id();
          $_SESSION['user_id'] = $user->user_id;
          return session_id();
      }

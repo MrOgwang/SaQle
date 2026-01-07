@@ -30,9 +30,6 @@ trait SelectManager{
      /**
      * Specify model fields to return in a select operation. Fields can be qualified with . operator. Example users.first_name;
      * @param array
-     * @throw DatabaseNotFoundException
-     * @throw ModelNotFoundException
-     * @throw FieldNotFoundException
      */
      public function select(?array $fields = null, ?Closure $callback = null){
          $this->callback = $callback;

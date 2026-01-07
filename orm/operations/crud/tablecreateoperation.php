@@ -2,7 +2,7 @@
 namespace SaQle\Orm\Operations\Crud;
 
 use SaQle\Orm\Operations\IOperation;
-use SaQle\Orm\Operations\Crud\Exceptions\TableCreateOperationFailedException;
+use SaQle\Core\Exceptions\Model\TableCreateOperationFailedException;
 use Exception;
 
 class TableCreateOperation extends IOperation{
@@ -15,9 +15,14 @@ class TableCreateOperation extends IOperation{
 		     $sql       = $temp ? "CREATE TEMPORARY TABLE IF NOT EXISTS {$table} ({$fields})" : "CREATE TABLE IF NOT EXISTS {$table} ({$fields})";
 		     $statement = $pdo->prepare($sql);
 			 $response  = $statement->execute(null);
+			 $error_code = $statement->errorCode();
 
-			 if($response === false || $statement->errorCode() !== "00000")
-			 	 throw new TableCreateOperationFailedException(name: $table);
+			 if($response === false || $error_code !== "00000"){
+			 	 throw new TableCreateOperationFailedException([
+			 	 	 'table' => $table,
+			 	 	 'statement_error_code' => $error_code
+			 	 ]);
+			 }
 
 		     return true;
 	 	 }catch(Exception $ex){

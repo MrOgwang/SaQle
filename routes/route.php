@@ -9,10 +9,7 @@ namespace SaQle\Routes;
 use SaQle\Core\Assert\Assert;
 use SaQle\Core\Registries\ComponentRegistry;
 use SaQle\Templates\Template;
-use SaQle\Http\Methods\Attributes\{HttpMethod, Index};
 use InvalidArgumentException;
-use ReflectionClass;
-use ReflectionMethod;
 use RuntimeException;
 
 final class Route {
@@ -46,6 +43,8 @@ final class Route {
      public private(set) array $compiled_target {
          set(array $value){
              $this->compiled_target = $value;
+
+             $this->trail = $this->construct_layout_trail();
          }
 
          get => $this->compiled_target;
@@ -58,11 +57,11 @@ final class Route {
       * */
      public string $target {
          set(string $value){
-             [$compiled_target, $component_name] = $this->get_compiled_target($value, 'target');
+             $compiled_target = ComponentRegistry::resolve_component($value, $this->method, 'target');
 
              $this->compiled_target = $compiled_target;
 
-             $this->target = !is_null($compiled_target[1]) ? $component_name."@".$compiled_target[1] : $component_name;
+             $this->target = !is_null($compiled_target[2]) ? $compiled_target[0]."@".$compiled_target[2] : $compiled_target[0];
          }
 
          get => $this->target;
@@ -76,6 +75,8 @@ final class Route {
      public ?array $layout = null {
          set(?array $value){
              $this->layout = $value;
+
+             $this->trail = $this->construct_layout_trail();
          }
 
          get => $this->layout;
@@ -85,25 +86,19 @@ final class Route {
       * These are roles, permissions and attributes as the developer will have defined
       * in the AuthorizationProvider class that will determine whether the user 
       * is authorized to access this route or not
+      * 
+      * each entry into the guards takes the structure below
+      * 
+      * [mode: 'all', guards: ['guard1', 'guard2']]
+      * 
       * */
      public ?array $guards = null{
          set(?array $value){
-             //guards must be an array of non empty strings, otherwise complain loudly
-             Assert::allStringNotEmpty($value, 'Please provide an array of non empty string names for roles, permissions and attributes');
-
              $this->guards = $value;
          }
 
          get => $this->guards;
      }
-
-     /**
-      * The guard level determines how the guards are evaluated: options include
-      * 
-      * all - the user must pass all the listed guards
-      * any - the user need only pass one of the listed guards
-      * */
-     private string $guard_level = 'all';
 
      /**
       * This is a list of the response types to be returned from this route. options include
@@ -125,6 +120,18 @@ final class Route {
          get => $this->restype;
      }
 
+     /**
+      * The trail is an array of the components and actions
+      * that will be used to construct the final layout
+      *
+      * */
+     public ?array $trail = null {
+         set(?array $value){
+             $this->trail = $value;
+         }
+
+         get => $this->trail;
+     }
 
      //create a new route object
 	 public function __construct(string $method, string $url, string $target){
@@ -154,132 +161,6 @@ final class Route {
          return $url;
      }
 
-     private function find_appropriate_action(string $class_name){
-         if (!class_exists($class_name)) {
-             throw new RuntimeException("Class '$class_name' does not exist for the route: ".$this->url);
-         }
-
-         $reflection = new ReflectionClass($class_name);
-         $public_methods = array_filter($reflection->getMethods(ReflectionMethod::IS_PUBLIC), fn($m) => !$m->isConstructor() && !$m->isStatic());
-
-         //1. Only one public method
-         if(count($public_methods) === 1){
-             return $public_methods[0]->getName();
-         }
-
-         //2. Methods with HttpMethod attribute matching the HTTP verb
-         $http_verb = $this->method;
-         $http_methods = array_filter($public_methods, function($method) use ($http_verb){
-             $attributes = $method->getAttributes(HttpMethod::class);
-             foreach ($attributes as $attr) {
-                 $instance = $attr->newInstance();
-                 if (in_array(strtoupper($http_verb), array_map('strtoupper', $instance->methods))) {
-                     return true;
-                 }
-             }
-             return false;
-         });
-
-         if(count($http_methods) === 1) {
-             return array_values($http_methods)[0]->getName();
-         }
-
-         if (count($http_methods) > 1) {
-             $names = implode(', ', array_map(fn($m) => $m->getName(), $http_methods));
-             throw new RuntimeException("Multiple methods found for HTTP verb ".$http_verb." for the route: ".$this->url.". Please specify. Matching methods: $names");
-         }
-
-         // 3. Match method name to HTTP verb
-         $verb_name = strtolower($this->method);
-
-         foreach ($public_methods as $method) {
-             if (strtolower($method->getName()) === $verb_name) {
-                 return $method->getName();
-             }
-         }
-
-         //3. Methods with Index attribute
-         $index_methods = array_filter($public_methods, fn($m) => !empty($m->getAttributes(Index::class)));
-
-         if(count($index_methods) === 1) {
-              return array_values($index_methods)[0]->getName();
-         }
-
-         if(count($index_methods) > 1) {
-             $names = implode(', ', array_map(fn($m) => $m->getName(), $index_methods));
-             throw new RuntimeException("Multiple methods found with Index attribute for the route: ".$this->url.". Please specify. Available methods: $names");
-         }
-
-         //4. No appropriate method found
-         $method_names = implode(', ', array_map(fn($m) => $m->getName(), $public_methods));
-         throw new RuntimeException("No suitable action method found in class '$class_name' for HTTP verb '$http_verb' for the route '".$this->url."'. Public methods found: $method_names");
-     }
-
-     private function get_compiled_target(string $target, string $type = 'target'){
-         $compiled_target = [null, null, null]; //controller, action, template_path
-
-         //target must be a non empty string, otherwise complain loudly
-         Assert::stringNotEmpty($target, 'Provide a non empty string for target for the route: '.$this->url);
-
-         $target_array = explode("@", $target);
-         $component_name = $target_array[0];
-
-         //assert component exists
-         $this->assert_components_exist([$component_name]);
-
-         /**
-          * a component can have at least a template or a controller(purely api components),
-          * otherwise it can have both a template and a controller.
-          * */
-         $component = ComponentRegistry::get($component_name);
-         $controller = $component['controller'];
-         $template_path = $component['template_path'];
-
-         if(!$controller && !$template_path){
-             throw new InvalidArgumentException('Target must have at least a controller or a template for the route: '.$this->url);
-         }
-
-         //if there is a controller, ensure the class is defined and the action method provided exists
-         if($controller){
-             if(!class_exists($controller)){
-                 throw new InvalidArgumentException('Target must have at least a controller or a template for the route: '.$this->url);
-             }
-
-             $compiled_target[0] = $controller;
-
-             $action = $target_array[1] ?? '';
-
-             //if the action has been provided at this point, ensure the method exists in class
-             if($action && !method_exists($controller, $action)){
-                 throw new InvalidArgumentException('The method ['.$action.'] does not exist in the class ['.$controller.'] for the route: '.$this->url);
-             }
-
-             //if the method still doesnt exist here, dynamically determine a method to use
-             if(!$action){
-                 $action = $this->find_appropriate_action($controller, $type);
-             }
-
-             $compiled_target[1] = $action;
-         }
-
-         //if there is a template_path, ensure the file exists
-         if($template_path){
-             if(!file_exists($template_path)){
-                 throw new InvalidArgumentException('The template file: '.$template_path.' does not exist for the route: '.$this->url);
-             }
-
-             $extension = pathinfo($template_path, PATHINFO_EXTENSION);
-
-             if (strtolower($extension) !== strtolower(COMPONENT_TEMPLATE_EXT)) {
-                 throw new InvalidArgumentException("Invalid template file type for the route: ".$this->url." Expected an .".COMPONENT_TEMPLATE_EXT." file.");
-             }
-
-             $compiled_target[2] = $template_path;
-         }
-
-         return [$compiled_target, $component_name];
-     }
-
      /**
       * For web requests, the route will declare which components
       * the final UI layout will be composed with
@@ -290,82 +171,46 @@ final class Route {
       * When an array of arrays of strings is provided, the resolver must be provided to determine
       * which layout group to use.
       * */
-     public function compose_with(array $layouts, ?string $resolver = null): self {
+     public function compose_with(array $layouts): self {
 
-         Assert::isNonEmptyList($layouts, 'Layouts array cannot be empty for route: '.$this->url);
+         Assert::allStringNotEmpty($layouts, 'Layout components must be non-empty strings for route: '.$this->url);
 
-         $is_flat   = true;
-         $is_nested = true;
+         ComponentRegistry::assert_components_exist($layouts);
 
-         foreach ($layouts as $item) {
-             if (!is_string($item)){
-                 $is_flat = false;
-             }
-             if (!is_array($item)) {
-                 $is_nested = false;
-             }
-         }
+         $layouts = array_unique(array_merge($this->layout ?? [], $layouts));
 
-         //Mixed or invalid structure
-         if (!$is_flat && !$is_nested) {
-             throw new InvalidArgumentException('Layouts must be either an array of strings or an array of arrays of strings for route: '.$this->url);
-         }
+         //array_unshift($layouts, 'page');
 
-         //CASE A: ['home', 'dashboard']
-         if ($is_flat){
-
-             Assert::allStringNotEmpty($layouts, 'Layout components must be non-empty strings for route: '.$this->url);
-
-             if($resolver !== null){
-                 throw new InvalidArgumentException('Resolver is not allowed for a single layout for route: '.$this->url);
-             }
-
-             $this->assert_components_exist($layouts);
-
-             $this->layout = ['type' => 'static', 'layouts'=> [$layouts]];
-
-             return $this;
-         }
-
-         //CASE B: [['admin','dashboard'], ['home','dashboard']]
-         Assert::stringNotEmpty($resolver, 'A resolver name is required when multiple layouts are provided for route: '.$this->url);
-
-         //Validate each layout
-         foreach ($layouts as $layout){
-             Assert::isArray($layout, 'Each layout must be an array for route: '.$this->url);
-             Assert::allStringNotEmpty($layout, 'Layout components must be non-empty strings for route: '.$this->url);
-         }
-
-         //Ensure no duplicate layouts (order-sensitive)
-         $seen = [];
-         foreach ($layouts as $layout) {
-             $key = implode('|', $layout);
-             if (isset($seen[$key])) {
-                 throw new InvalidArgumentException('Duplicate layout detected: [' . implode(', ', $layout) . '] for route: '.$this->url);
-             }
-             $seen[$key] = true;
-         }
-
-         //Flatten and validate component existence
-         $all_components = array_unique(array_merge(...$layouts));
-         $this->assert_components_exist($all_components);
-
-         //Ensure resolver exists
-         if (!Template::has($resolver, 'resolver')){
-             throw new InvalidArgumentException("Layout resolver '{$resolver}' has not been registered for route: ".$this->url);
-         }
-
-         $this->layout = ['type' => 'dynamic', 'layouts' => $layouts, 'resolver' => $resolver];
+         $this->layout = $layouts;
 
          return $this;
      }
 
-     private function assert_components_exist(array $components): void {
-         foreach($components as $component){
-             if(!ComponentRegistry::exists($component)){
-                 throw new InvalidArgumentException("Layout component '{$component}' does not exist for route: ".$this->url);
+     private function construct_layout_trail(){
+         
+         $page_compiled_target = ComponentRegistry::resolve_component('page', $this->method, 'layout');
+         $compiled_targets = [];
+         $trail_components = [];
+
+         if($this->layout){
+             
+             foreach($this->layout as $c) {
+                 $ct = ComponentRegistry::resolve_component($c, $this->method, 'layout');
+                 $trail_components[] = $ct[0];
+                 $compiled_targets[] = $ct;
              }
+
          }
+
+         //add the targets compiled target
+         $compiled_targets[] = $this->compiled_target;
+         $trail_components[] = $this->compiled_target[0];
+
+         //push in the page component
+         array_unshift($trail_components, $page_compiled_target[0]);
+         array_unshift($compiled_targets, $page_compiled_target);
+
+         return [implode('.', $trail_components) => $compiled_targets];
      }
 
      /**
@@ -373,21 +218,25 @@ final class Route {
       * in the AuthorizationProvider class that will determine whether the user 
       * is authorized to access this route or not
       * */
+
+     private function register_guards(array $guards, string $mode){
+         $current_guards = $this->guards ?? [];
+         $current_guards[] = ['mode' => $mode, 'guards' => $guards];
+         $this->guards = $current_guards;
+     }
+
      public function requires(string $guard){
-         $this->guards = [$guard];
-         $this->guard_level = 'all';
+         $this->register_guards([$guard], 'all');
          return $this;
      }
 
      public function requires_any(array $guards){
-         $this->guards = $guards;
-         $this->guard_level = 'any';
+         $this->register_guards($guards, 'any');
          return $this;
      }
 
      public function requires_all(array $guards){
-         $this->guards = $guards;
-         $this->guard_level = 'all';
+         $this->register_guards($guards, 'all');
          return $this;
      }
 
@@ -395,7 +244,7 @@ final class Route {
       * Set the response type from this route
       * */
      public function respond_with(array $restype){
-         $this->restype = $restype;
+         $this->restype = array_unique(array_merge($this->restype ?? [], $restype));
          return $this;
      }
 }

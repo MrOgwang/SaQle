@@ -283,7 +283,7 @@ class Config{
 		             $constant_value = constant(strtoupper($match));
 		             $context = [];
 		             $context[$match] = $constant_value;
-		             $val = $this->set_template_context($val, $context);
+		             $val = self::set_template_context($val, $context);
 		         } 
                  define($configname, $val);
              }

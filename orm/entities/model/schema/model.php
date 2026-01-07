@@ -5,7 +5,7 @@ use SaQle\Orm\Entities\Field\Relations\Interfaces\IRelation;
 use SaQle\Orm\Entities\Field\Relations\{Many2Many};
 use SaQle\Orm\Entities\Field\Interfaces\IField;
 use SaQle\Orm\Entities\Field\Types\{Pk, TextField, OneToOne, OneToMany, FloatField, IntegerField, BigIntegerField, PhpTimestampField, ManyToMany, FileField, TinyTextField, DateField, TimeField, DateTimeField, TimestampField, BooleanField, VirtualField};
-use SaQle\Orm\Entities\Field\Exceptions\FieldValidationException;
+use SaQle\Core\Exceptions\Model\FieldValidationException;
 use SaQle\Security\Models\ModelValidator;
 use SaQle\Commons\StringUtils;
 use SaQle\Orm\Entities\Field\Types\Base\{Relation, RealField};

@@ -20,7 +20,6 @@ namespace SaQle\Build\Utils;
 
 use SaQle\Routes\Router;
 use SaQle\Views\{AutoForm, View};
-use SaQle\Controllers\Interfaces\WebController;
 use SaQle\Commons\StringUtils;
 
 class TargetCompiler{
@@ -112,7 +111,7 @@ class TargetCompiler{
              }
          }
 
-         $html = $this->set_template_context($view->get_template(), $context, true);
+         $html = self::set_template_context($view->get_template(), $context, true);
          
          return [$css, $js, $meta, $title, $html, $uitree];
      }
@@ -187,7 +186,7 @@ class TargetCompiler{
                  continue;
              }
              
-             $trail = $r->get_trail();
+             $trail = $r->trail;
 
              [$all_css, $all_js, $all_meta, $all_title, $all_html, $ui_tree] = $this->compile_trail($trail);
 
@@ -208,7 +207,7 @@ class TargetCompiler{
              ];
 
              $page = new View($this->components['page']['template_path']);
-             $compiled_template = $this->set_template_context($page->get_template(), [
+             $compiled_template = self::set_template_context($page->get_template(), [
                  'content' => "<!--DYNAMIC:$first_component_name-->\n".$all_html."\n"."<!--END DYNAMIC-->", 
                  'title'   => $all_title, 
                  'css'     => implode("\n", array_unique($all_css)), 

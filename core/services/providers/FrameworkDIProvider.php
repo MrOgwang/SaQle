@@ -23,6 +23,10 @@ use SaQle\Migration\Commands\{MakeMigrations, Migrate, MakeCollections, MakeMode
 use SaQle\Migration\Managers\Interfaces\IMigrationManager;
 use SaQle\Log\FileLogger;
 use SaQle\Auth\Models\Interfaces\SessionUser;
+use SaQle\Auth\Services\AuthService;
+use SaQle\Routes\Router;
+use SaQle\Core\Registries\{EventRegistry, RouteRegistry};
+use SaQle\Core\Events\EventBus;
 
 class FrameworkDIProvider extends ServiceProvider {
      public function register(): void {
@@ -69,6 +73,14 @@ class FrameworkDIProvider extends ServiceProvider {
              $request = $c->resolve('request');
              return $request->user;
          });
+         $this->app->container->bind(AuthService::class);
+         $this->app->container->bind(Router::class);
+         $this->app->container->bind(RouteRegistry::class);
+
+         $this->app->container->bind(EventRegistry::class, fn () => $this->app->events);
+         $this->app->container->bind(EventBus::class, fn () =>
+             new EventBus($this->app->container->get(EventRegistry::class))
+         );
      }
 }
 

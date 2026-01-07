@@ -91,5 +91,5 @@ class FeedBack {
 	        503 => 'Service Unavailable – We’re temporarily offline for maintenance. Please try again later.'
 	     ];
 	     return $status_code[$code];
-	}
+	 }
 }

@@ -1,7 +1,7 @@
 <?php
 namespace SaQle\Build\Commands;
 
-use SaQle\Build\Utils\{Manifest, ClassMapper, TargetCompiler, RouteCompiler};
+use SaQle\Build\Utils\{Manifest, ClassMapper, TargetCompiler, RouteCompiler, TemplateCompiler};
 use SaQle\Routes\Router;
 use RecursiveIteratorIterator;
 use RecursiveDirectoryIterator;
@@ -116,6 +116,9 @@ class BuildProject{
 
                  //compile routes
                  RouteCompiler::compile(Router::all(), $project_root);
+
+                 //compile the templates
+                 TemplateCompiler::compile($project_root);
 
                  //compile project routes and layoutes
                  //$this->targetcompiler = new TargetCompiler($project_root);

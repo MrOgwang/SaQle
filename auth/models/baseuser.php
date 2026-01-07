@@ -5,7 +5,7 @@ use SaQle\Orm\Entities\Field\Types\{Pk, TextField, OneToMany, ManyToMany};
 use SaQle\Orm\Entities\Field\Interfaces\IField;
 use SaQle\Orm\Entities\Model\Schema\{Model, TableInfo};
 use SaQle\Auth\Models\Interfaces\IUser;
-use SaQle\Auth\Permissions\Guard;
+use SaQle\Auth\Guards\Guard;
 
 class BaseUser extends Model implements IUser {
 	 protected function model_setup(TableInfo $meta) : void{

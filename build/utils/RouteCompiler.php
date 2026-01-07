@@ -3,6 +3,7 @@
 namespace SaQle\Build\Utils;
 
 use SaQle\Routes\{Route, Router};
+use SaQle\Core\Registries\RouteRegistry;
 
 final class RouteCompiler {
 
@@ -13,7 +14,7 @@ final class RouteCompiler {
              $compiled[] = self::compile_route($route);
          }
 
-         self::cache_routes_mapping($compiled, $project_root);
+         RouteRegistry::cache_routes_mapping($compiled, $project_root);
      }
 
      private static function compile_route(Route $route, ?Route $source = null): array{
@@ -37,25 +38,8 @@ final class RouteCompiler {
                  'guards'          => $route->guards,
                  'layout'          => $route->layout,
                  'restype'         => $route->restype,
+                 'trail'           => $route->trail
              ]
          ];
-     }
-
-     private static function cache_routes_mapping($routes_cache, $project_root){
-         $export = var_export($routes_cache, true);
-         $export = preg_replace('/^/m', '    ', $export); // indent
-
-         $php =
-         "<?php\n\n" .
-         "return ".$export.";\n";
-
-         //write to the cache file
-         $mappings_folder = $project_root.CLASS_MAPPINGS_DIR;
-         if(!file_exists($mappings_folder)){
-             mkdir($mappings_folder, 0777, true);
-         }
-
-         $mappings_file = $project_root.CLASS_MAPPINGS_DIR."routes1.php";
-         file_put_contents($mappings_file, $php);
      }
 }

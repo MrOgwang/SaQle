@@ -20,18 +20,45 @@ namespace SaQle\Routes\Middleware;
 
 use SaQle\Middleware\MiddlewareRequestInterface;
 use SaQle\Middleware\IMiddleware;
+use SaQle\Routes\{Router, MatchedRoute};
+use SaQle\Http\Request\RequestIntentResolver;
+use SaQle\Core\Exceptions\Route\RouteNotFoundException;
 
 class RoutingMiddleware extends IMiddleware{
      
      public function handle(MiddlewareRequestInterface &$request){
 
-         if($request->is_api_request()){
-             (new ApiRoutingMiddleware())->handle($request);
-         }else{
-             (new WebRoutingMiddleware())->handle($request);
+         $match = Router::find_matching_route($request->method(), $request->uri());
+
+         if (!$match) throw new RouteNotFoundException(['url' => $request->uri()]);
+
+         //set request route
+         $matched_route = new MatchedRoute(
+             $match['route']['url'],
+             $match['path'], 
+             $match['method'], 
+             $match['route']['compiled_target'],
+             $match['route']['layout'],
+             $match['route']['guards'],
+             $match['route']['restype'],
+             $match['route']['trail'],
+             $match['prefix']
+         );
+         $request->route = $matched_route;
+
+         //set path params
+         foreach($match['params'] as $pk => $pv){
+             $request->add_path_param($pk, $pv);
          }
+
+         //set query params
+         foreach($match['query'] as $qk => $qv){
+             $request->add_query_param($pk, $pv);
+         }
+
+         //set request intent
+         $request->intent = new RequestIntentResolver()->resolve($request);
 
      	 parent::handle($request);
      }
-
 }
