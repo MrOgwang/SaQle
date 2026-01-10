@@ -4,6 +4,7 @@ namespace SaQle\Auth\utils;
 
 use SaQle\Auth\Strategies\PasswordLoginStrategy;
 use SaQle\Auth\Strategies\Interfaces\LoginStrategy;
+use SaQle\Auth\Providers\Resolver\DefaultProviderResolver;
 use Closure;
 
 class AuthManager {
@@ -43,6 +44,14 @@ class AuthManager {
      }
 
      public static function get_session_provider_resolver(){
+         if (self::$session_provider_resolver === null) {
+             self::$session_provider_resolver = self::default_session_provider_resolver();
+         }
+
          return self::$session_provider_resolver;
+     }
+
+     protected static function default_session_provider_resolver(): callable {
+         return [new DefaultProviderResolver(), 'resolve_provider'];
      }
 }

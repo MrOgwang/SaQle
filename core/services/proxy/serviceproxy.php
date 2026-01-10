@@ -5,6 +5,8 @@ use ReflectionMethod;
 use SaQle\Core\Events\EventBus;
 use SaQle\Core\Events\EventContext;
 use SaQle\Core\Events\EventMetadata;
+use SaQle\Core\Events\Event;
+use SaQle\Core\Events\GenericEvent;
 use SaQle\Http\Request\Request;
 
 final class ServiceProxy {
@@ -16,9 +18,7 @@ final class ServiceProxy {
      ) {}
 
      public function __call(string $method, array $args): mixed {
-
          $ref_method = new ReflectionMethod($this->target, $method);
-
          $context = new EventContext(
              service: $this->target,
              method: $method,
@@ -27,24 +27,31 @@ final class ServiceProxy {
              user: $this->request->user
          );
 
-         //BEFORE EVENTS
-         foreach (EventMetadata::for_method($ref_method, 'before') as $event_class) {
-             $this->event_bus->dispatch($event_class::from_context($context));
+         // BEFORE EVENTS
+         foreach (EventMetadata::for_method($ref_method, 'before') as $event_class_or_name) {
+             $this->dispatch_event($event_class_or_name, $context);
          }
 
-         //ACTUAL METHOD CALL
+         // ACTUAL METHOD CALL
          $result = $ref_method->invokeArgs($this->target, $args);
-
          $context = $context->with_result($result);
+        
+         // AFTER EVENTS
+         foreach (EventMetadata::for_method($ref_method, 'after') as $event_class_or_name) {
+             $this->dispatch_event($event_class_or_name, $context);
+         }
+        
+         return $result;
+     }
 
-         //AFTER EVENTS
-         foreach (EventMetadata::for_method($ref_method, 'after') as $event_class){
-             $this->event_bus->dispatch(
-                 $event_class::from_context($context)
-             );
+     private function dispatch_event(string $event_class_or_name, EventContext $context): void {
+         if (class_exists($event_class_or_name) && is_subclass_of($event_class_or_name, Event::class)){
+             $event = $event_class_or_name::from_context($context);
+         }else{
+             $event = GenericEvent::named($event_class_or_name, $context);
          }
 
-         return $result;
+         $this->event_bus->dispatch($event);
      }
 
      private function map_named_args(ReflectionMethod $method, array $args): array {

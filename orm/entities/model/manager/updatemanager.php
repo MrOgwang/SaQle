@@ -10,22 +10,17 @@ use SaQle\Orm\Connection\Connection;
 use SaQle\Image\Image;
 use SaQle\Orm\Database\Trackers\DbContextTracker;
 use SaQle\Orm\Query\Helpers\FilterManager;
-use SaQle\Core\Observable\{Observable, ConcreteObservable};
 use SaQle\Core\FeedBack\FeedBack;
-use SaQle\Orm\Entities\Model\Observer\ModelObserver;
 use SaQle\Orm\Entities\Model\Interfaces\IOperationManager;
-use SaQle\Orm\Entities\Model\Manager\Utils\{ObserverUtils, ImageUtils};
+use SaQle\Orm\Entities\Model\Manager\Utils\{EventUtils, ImageUtils};
+use SaQle\Core\Events\ModelEventPhase;
 use Exception;
 
-class UpdateManager implements Observable, IOperationManager{
-	 use ImageUtils, ObserverUtils;
+class UpdateManager implements IOperationManager{
+	 use ImageUtils, EventUtils;
 	 
 	 use FilterManager{
 		 FilterManager::__construct as private __filterConstruct;
-	 }
-
-	 use ConcreteObservable {
-		 ConcreteObservable::__construct as private __coConstruct;
 	 }
 
 	 private ?string $table = null {
@@ -104,7 +99,6 @@ class UpdateManager implements Observable, IOperationManager{
 		 );
 
 		 $this->__filterConstruct();
-		 $this->__coConstruct();
 	 }
 
 	 public function update(bool $multiple = false){
@@ -125,7 +119,7 @@ class UpdateManager implements Observable, IOperationManager{
 
 		 	 //send a pre update signal to observers
 		 	 $named_args = $this->get_named_args('update', $sql_info, null, null, $clean_data, $file_data);
-		 	 $this->notify_observers('before', 'update', $named_args);
+	 	     $this->dispatch_event($modelclass, ModelEventPhase::UPDATING, $named_args, resolve('request')->user);
 
 	 	     //update data
 		 	 $response = $operation->update($pdo);
@@ -134,8 +128,7 @@ class UpdateManager implements Observable, IOperationManager{
 		 	 $result = $multiple ? $updateddata : ($updateddata[0] ?? false);
 
 		 	 //send a post update signal to observers
-		 	 $named_args['result'] = $result;
-		 	 $this->notify_observers('after', 'update', $named_args);
+		 	 $this->dispatch_event($modelclass, ModelEventPhase::UPDATED, $named_args, resolve('request')->user, $result);
 
 	 	     return $result;
      	 }catch(Exception $ex){

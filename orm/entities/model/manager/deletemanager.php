@@ -7,23 +7,18 @@ use SaQle\Orm\Query\Helpers\FilterManager;
 use SaQle\Orm\Operations\Crud\{UpdateOperation, DeleteOperation};
 use SaQle\Orm\Connection\Connection;
 use SaQle\Orm\Database\Trackers\DbContextTracker;
-use SaQle\Core\Observable\{Observable, ConcreteObservable};
 use SaQle\Core\FeedBack\FeedBack;
-use SaQle\Orm\Entities\Model\Observer\ModelObserver;
 use SaQle\Orm\Entities\Model\Interfaces\IOperationManager;
-use SaQle\Orm\Entities\Model\Manager\Utils\ObserverUtils;
+use SaQle\Orm\Entities\Model\Manager\Utils\EventUtils;
+use SaQle\Core\Events\ModelEventPhase;
 use Exception;
 
-class DeleteManager implements Observable, IOperationManager {
+class DeleteManager implements IOperationManager {
 	 use FilterManager {
 		 FilterManager::__construct as private __filterConstruct;
 	 }
 
-	 use ConcreteObservable {
-		 ConcreteObservable::__construct as private __coConstruct;
-	 }
-
-	 use ObserverUtils;
+	 use EventUtils;
 
 	 private bool $permanently = false {
 	 	 set(bool $value){
@@ -86,7 +81,6 @@ class DeleteManager implements Observable, IOperationManager {
 		 );
 
          $this->__filterConstruct();
-		 $this->__coConstruct();
 	 }
 
 	 public function now(){
@@ -113,14 +107,13 @@ class DeleteManager implements Observable, IOperationManager {
 
 	 	 //send a pre delete signal to observers
 	 	 $named_args = $this->get_named_args('delete', $sql_info);
-		 $this->notify_observers('before', 'delete', $named_args);
+	 	 $this->dispatch_event($this->modelclass, ModelEventPhase::SOFT_DELETING, $named_args, resolve('request')->user);
 
 	 	 $response = $operation->update($pdo);
 	 	 $result = $response->row_count > 0 ? true : false;
 
 	 	 //send a post delete signal to observers
-	 	 $named_args['result'] = $result;
-	 	 $this->notify_observers('after', 'delete', $named_args);
+	 	 $this->dispatch_event($this->modelclass, ModelEventPhase::SOFT_DELETED, $named_args, resolve('request')->user, $result);
 
 	 	 return $result;
      }
@@ -135,13 +128,12 @@ class DeleteManager implements Observable, IOperationManager {
 
 	 	 //send a pre delete signal to observers
 	 	 $named_args = $this->get_named_args('delete', $sql_info);
-		 $this->notify_observers('before', 'delete', $named_args);
+	 	 $this->dispatch_event($this->modelclass, ModelEventPhase::DELETING, $named_args, resolve('request')->user);
 
 	 	 $result = $operation->delete($pdo);
 
 	 	 //send a post delete signal to observers
-	 	 $named_args['result'] = $result;
-	 	 $this->notify_observers('after', 'delete', $named_args);
+	 	 $this->dispatch_event($this->modelclass, ModelEventPhase::DELETED, $named_args, resolve('request')->user, $result);
 
 	 	 return $result;
      }

@@ -10,7 +10,8 @@ final class EventBus {
      ) {}
 
      public function dispatch(Event $event): void {
-         foreach ($this->registry->get_listeners($event::class) as $listener_class){
+         $key = $event instanceof GenericEvent ? $event->name : $event::class;
+         foreach ($this->registry->get_listeners($key) as $listener_class) {
              (new $listener_class)->handle($event);
          }
      }

@@ -3,8 +3,8 @@
 namespace SaQle\Core\Exceptions;
 
 use Throwable;
-use SaQle\Core\Http\DomainResult;
+use SaQle\Http\Response\HttpMessage;
 
 interface IExceptionMapper {
-    public function map(Throwable $exception): DomainResult;
+    public function map(Throwable $exception): HttpMessage;
 }

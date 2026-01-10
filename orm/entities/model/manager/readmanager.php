@@ -13,22 +13,18 @@
  use SaQle\Orm\Entities\Model\Manager\Modes\FetchMode;
  use SaQle\Orm\Entities\Model\TempId;
  use SaQle\Orm\Connection\Connection;
- use SaQle\Core\Observable\{Observable, ConcreteObservable};
  use SaQle\Core\FeedBack\FeedBack;
- use SaQle\Orm\Entities\Model\Observer\ModelObserver;
  use SaQle\Orm\Entities\Model\Interfaces\IOperationManager;
- use SaQle\Orm\Entities\Model\Manager\Utils\ObserverUtils;
+ use SaQle\Orm\Entities\Model\Manager\Utils\EventUtils;
+ use SaQle\Core\Events\ModelEventPhase;
  use Exception;
  use Closure;
 
-class ReadManager extends IReadManager implements Observable, IOperationManager {
-	 use DateUtils, UrlUtils, StringUtils, ObserverUtils, ConcreteObservable {
-		 ConcreteObservable::__construct as private __coConstruct;
-	 }
+class ReadManager extends IReadManager implements IOperationManager {
+	 use DateUtils, UrlUtils, StringUtils, EventUtils;
 
 	 public function __construct(){
 	 	 parent::__construct();
-	 	 $this->__coConstruct();
 	 }
 
 	 private function eager_load(){
@@ -415,7 +411,7 @@ class ReadManager extends IReadManager implements Observable, IOperationManager 
 
 	 	 //send pre select signal to observers
 	 	 $named_args = $this->get_named_args('select', $sql_info, $table_name, $model_instance::class);
-		 $this->notify_observers('before', 'select', $named_args, $model_instance::class);
+	 	 $this->dispatch_event($model_instance::class, ModelEventPhase::READING, $named_args, resolve('request')->user);
 
  	     //get rows
 	 	 $rows = $operation->select($pdo);
@@ -430,9 +426,7 @@ class ReadManager extends IReadManager implements Observable, IOperationManager 
 	 	 $result = $this->process_includes($model_instance, $rows, $tracker_active, $data_formatted);
 
 	 	 //send post select signal to observers
-	 	 $named_args['rows'] = $rows;
-	 	 $named_args['result'] = $result;
-	 	 $this->notify_observers('after', 'select', $named_args, $model_instance::class);
+	 	 $this->dispatch_event($model_instance::class, ModelEventPhase::READ, $named_args, resolve('request')->user, $result);
 
  	     return $result;
 	 }

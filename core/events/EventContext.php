@@ -6,11 +6,12 @@ use SaQle\Auth\Models\BaseUser;
 final class EventContext {
 
      public function __construct(
-         private object $service,
-         private string $method,
-         private array $args,
-         private mixed $result,
-         private ?BaseUser $user
+         private ?object $service = null,
+         private string $method = '',
+         private array $args = [],
+         private mixed $result = null,
+         private ?BaseUser $user = null,
+         public array $attrs = [], //extra attributes to pass along
      ) {}
 
      public function arg(string $name): mixed {
@@ -25,8 +26,16 @@ final class EventContext {
          return $this->result;
      }
 
-     public function user(): ?User {
+     public function user(): ?BaseUser {
          return $this->user;
+     }
+
+     public function attr(string $key): mixed {
+         return $this->attrs[$key] ?? null;
+     }
+
+     public function attrs(string $key): array {
+         return $this->attrs;
      }
 
      public function with_result(mixed $result): self {
@@ -35,7 +44,19 @@ final class EventContext {
              $this->method,
              $this->args,
              $result,
-             $this->user
+             $this->user,
+             $this->attrs
          );
      }
+
+     public function with_attrs(array $attrs): self {
+         return new self(
+            $this->service,
+            $this->method,
+            $this->args,
+            $this->result,
+            $this->user,
+            array_merge($this->attrs, $attrs)
+         );
+    }
 }

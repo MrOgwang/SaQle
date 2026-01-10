@@ -1,17 +1,23 @@
 <?php
 namespace SaQle\Core\Registries;
 
-final class EventRegistry {
+class EventRegistry {
 
-     private array $listeners = [];
+     protected array $listeners = [];
 
-     public function add(string $event_class, array $listener_classes): void {
+     public function add(string $key, array $listener_classes): void {
          foreach ($listener_classes as $listener_class) {
-             $this->listeners[$event_class][] = $listener_class;
+             $this->listeners[$key][] = $listener_class;
+             $this->listeners[$key] = array_unique($this->listeners[$key]);
          }
      }
 
-     public function get_listeners(string $event_class): array {
-         return $this->listeners[$event_class] ?? [];
+     public function get_listeners(string $key): array {
+         return $this->listeners[$key] ?? [];
+     }
+
+     //For caching support
+     public function get_all_listeners(): array {
+         return $this->listeners;
      }
 }

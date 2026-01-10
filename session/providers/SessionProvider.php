@@ -5,7 +5,7 @@ namespace SaQle\Session\Providers;
 use SaQle\Core\Config\Config;
 use SaQle\Core\Services\Providers\ServiceProvider;
 
-final class SessionProvider extends ServiceProvider{
+final class SessionProvider extends ServiceProvider {
      public function register(): void {
          //Apply session handler if configured
          $handler_class = SESSION_HANDLER;

@@ -5,7 +5,7 @@ use SaQle\Core\Exceptions\Base\FrameworkException;
 use SaQle\Http\Response\HttpMessage;
 use Throwable;
 
-class ExceptionMapper implements ExceptionMapper {
+class ExceptionMapper implements IExceptionMapper {
      public function map(Throwable $exception): HttpMessage {
 
          if ($exception instanceof FrameworkException) {

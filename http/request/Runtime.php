@@ -29,7 +29,7 @@ class Runtime {
          $time = date("g:i A", $timestamp);
          $logger->log_to_file($time." -- ".$e."\n\n");
 
-         $result = ExceptionMapper::map($e, $request);
+         $result = (new ExceptionMapper())->map($e, $request);
          $response = $this->resolve_response($request, $result);
          $response->send();
      }

@@ -43,7 +43,7 @@ final class WebResponseStrategy implements ResponseStrategy {
 
          if($result->code >= 400){
              //construct tree for error page
-             $tree = ErrorComponentTree::from_status($result->status);
+             //$tree = ErrorComponentTree::from_status($result->status);
          }else{
              $tree = new ComponentTreeBuilder()->build($request->route->compiled_target[0], $request->route->layout);
          }

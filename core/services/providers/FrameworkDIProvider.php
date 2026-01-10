@@ -25,7 +25,7 @@ use SaQle\Log\FileLogger;
 use SaQle\Auth\Models\Interfaces\SessionUser;
 use SaQle\Auth\Services\AuthService;
 use SaQle\Routes\Router;
-use SaQle\Core\Registries\{EventRegistry, RouteRegistry};
+use SaQle\Core\Registries\{EventRegistry, RouteRegistry, CachedEventRegistry};
 use SaQle\Core\Events\EventBus;
 
 class FrameworkDIProvider extends ServiceProvider {
@@ -77,9 +77,22 @@ class FrameworkDIProvider extends ServiceProvider {
          $this->app->container->bind(Router::class);
          $this->app->container->bind(RouteRegistry::class);
 
+         /*$this->app->container->singleton(EventRegistry::class, function (){
+             return new CachedEventRegistry();
+         });*/
+
+         /*if (env('APP_ENV') === 'production') {
+             $this->singleton(EventRegistry::class, function () {
+                 return new CachedEventRegistry();
+             });
+         }else{
+             $this->singleton(EventRegistry::class, EventRegistry::class);
+         }*/
+
          $this->app->container->bind(EventRegistry::class, fn () => $this->app->events);
+
          $this->app->container->bind(EventBus::class, fn () =>
-             new EventBus($this->app->container->get(EventRegistry::class))
+             new EventBus($this->app->container->resolve(EventRegistry::class))
          );
      }
 }

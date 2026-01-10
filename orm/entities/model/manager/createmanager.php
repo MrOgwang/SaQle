@@ -8,19 +8,15 @@ use SaQle\Orm\Operations\Crud\InsertOperation;
 use SaQle\Core\Assert\Assert;
 use SaQle\Orm\Connection\Connection;
 use SaQle\Image\Image;
-use SaQle\Core\Observable\{Observable, ConcreteObservable};
 use SaQle\Core\FeedBack\FeedBack;
 use SaQle\Orm\Entities\Model\Interfaces\IOperationManager;
-use SaQle\Orm\Entities\Model\Manager\Utils\{ObserverUtils, ImageUtils};
+use SaQle\Orm\Entities\Model\Manager\Utils\{EventUtils, ImageUtils};
+use SaQle\Core\Events\ModelEventPhase;
 use SaQle\Orm\Entities\Model\Schema\TableInfo;
 use Exception;
 
-class CreateManager implements Observable, IOperationManager {
-	 use ImageUtils, ObserverUtils;
-
-	 use ConcreteObservable{
-		 ConcreteObservable::__construct as private __coConstruct;
-	 }
+class CreateManager implements IOperationManager {
+	 use ImageUtils, EventUtils;
 
 	 private ?string $table = null {
 	 	 set(?string $value){
@@ -68,7 +64,6 @@ class CreateManager implements Observable, IOperationManager {
 	 	 $this->modelclass = $modelclass;
 	 	 $this->container  = new DataContainer();
 	 	 $this->set_data($data);
-	 	 $this->__coConstruct();
 	 }
 
      private function extract_row(array $row, int $index = 0){
@@ -127,7 +122,7 @@ class CreateManager implements Observable, IOperationManager {
 
 		 	 //send a pre insert signal to observers
 		 	 $named_args = $this->get_named_args('insert', $sql_info, null, null, $this->container->data, $this->container->files);
-		 	 $this->notify_observers('before', 'insert', $named_args);
+		 	 $this->dispatch_event($this->modelclass, ModelEventPhase::CREATING, $named_args, resolve('request')->user);
 
              //insert data
 		 	 $response = $operation->insert($pdo);
@@ -142,8 +137,7 @@ class CreateManager implements Observable, IOperationManager {
      	 	 $result = $this->container->multiple === true ? $created_rows : $created_rows[0];
 
              //send a post insert signal to observers
-             $named_args['result'] = $result;
-             $this->notify_observers('after', 'insert', $named_args);
+             $this->dispatch_event($this->modelclass, ModelEventPhase::CREATED, $named_args, resolve('request')->user, $result);
 
      	     return $result;
      	 }catch(Exception $ex){

@@ -63,7 +63,7 @@ final class TemplateCompiler {
      private static function compile_trail(array $trail){
          $all_css   = [];
          $all_js    = [];
-         $all_meta  = [];
+         $all_meta  = "";
          $all_title = "";
          $all_html  = "";
 
@@ -74,7 +74,7 @@ final class TemplateCompiler {
 
              $all_css   = array_merge($all_css, $css);
              $all_js    = array_merge($all_js, $js);
-             $all_meta  = array_merge($all_meta, $meta);
+             $all_meta  = $meta ? $meta : $all_meta;
              $all_title = $title ? $title : $all_title;
 
              $wrapped   = "<!--DYNAMIC:{$component_name}-->\n".$html."\n"."<!--END DYNAMIC-->";
@@ -113,7 +113,7 @@ final class TemplateCompiler {
                      'title'   => $all_title, 
                      'css'     => implode("\n", array_unique($all_css)), 
                      'js'      => implode("\n", array_unique($all_js)), 
-                     'meta'    => implode("\n", array_unique($all_meta))
+                     'meta'    => $all_meta
                  ], true);
 
                  $filename = $templatename.'.'.COMPONENT_TEMPLATE_EXT;
