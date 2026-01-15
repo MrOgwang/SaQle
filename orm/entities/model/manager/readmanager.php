@@ -406,7 +406,7 @@ class ReadManager extends IReadManager implements IOperationManager {
 	 	 if($this->is_custom_sql()){
 	 	 	 $sql_info = $this->get_sqlndata();
 	 	 }
-	 	 $pdo = resolve(Connection::class, DB_CONTEXT_CLASSES[$this->dbclass]);
+	 	 $pdo = resolve(Connection::class, config('db_context_classes')[$this->dbclass]);
 	 	 $operation = new SelectOperation(sql: $sql_info['sql'], data: $sql_info['data']);
 
 	 	 //send pre select signal to observers
@@ -433,7 +433,7 @@ class ReadManager extends IReadManager implements IOperationManager {
 
 	 public function total(){
 	 	 try{
-	 	 	 $pdo = resolve(Connection::class, DB_CONTEXT_CLASSES[$this->dbclass]);
+	 	 	 $pdo = resolve(Connection::class, config('db_context_classes')[$this->dbclass]);
 		 	 $operation = new TotalOperation(
 		 	 	 where_clause:  $this->wbuilder->get_where_clause($this->ctxtracker, $this->get_configurations()),
 		 	 	 join_clause:   $this->jbuilder->construct_join_clause($this->ctxtracker),

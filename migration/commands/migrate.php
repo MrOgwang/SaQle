@@ -162,13 +162,13 @@ class Migrate{
      private static function process_context($ctx, $file_name, $migration_name, $up_operations, $project_root){
          echo "Confirming context: {$ctx} is defined!\n";
 
-         $defined_context = DB_CONTEXT_CLASSES[$ctx] ?? null;
+         $defined_context = config('db_context_classes')[$ctx] ?? null;
          if(!$defined_context){
              echo "Context: {$ctx} not defined! Exiting!.\n";
              return;
          }
         
-         $databasename = DB_CONTEXT_CLASSES[$ctx]['name'];
+         $databasename = config('db_context_classes')[$ctx]['name'];
          echo "Context: {$ctx} found! Pinging database: {$databasename} for existance!\n";
 
          $dbmanager = (new DbManagerFactory(dbclass: $ctx))->manager();
@@ -227,15 +227,15 @@ class Migrate{
      public function execute(string $project_root){
          $app = App::init();
 
-         $migrations_folder      = $project_root."/migrations";
-         $migration_tracker_file = $project_root."/migrationstracker.bin";
+         $migrations_folder      = $project_root."/databases/migrations";
+         $migration_tracker_file = $project_root."/databases/migrationstracker.bin";
          $tracker                = $this->unserialize_from_file($migration_tracker_file);
          if(!$tracker){
              $tracker = new MigrationTracker();
          }
 
          $files                  = [];
-         if(app()->environment === 'development'){
+         if(config('environment') === 'development'){
              $files              = $tracker ? $tracker->get_migration_files() : [];
          }
 

@@ -11,8 +11,8 @@ class BasePermission extends Model{
 			 'permission_id'          => new Pk(),
 		     'permission_name'        => new TinyTextField(required: true, strict: false),
 		     'permission_description' => new TextField(required: false, strict: false),
-		     'roles'                  => new ManyToMany(fmodel: ROLE_MODEL_CLASS, pk: 'permission_id', fk: 'permission_id', through: ROLE_PERMISSION_MODEL_CLASS),
-		     'users'                  => new ManyToMany(fmodel: AUTH_MODEL_CLASS, pk: 'permission_id', fk: 'permission_id', through: USER_PERMISSION_MODEL_CLASS)
+		     'roles'                  => new ManyToMany(fmodel: config('role_model_class'), pk: 'permission_id', fk: 'permission_id', through: config('role_permission_model_class')),
+		     'users'                  => new ManyToMany(fmodel: config('auth_model_class'), pk: 'permission_id', fk: 'permission_id', through: config('user_permission_model_class'))
 		 ];
 	 }
 }

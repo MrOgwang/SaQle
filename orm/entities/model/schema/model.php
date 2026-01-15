@@ -161,7 +161,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 	 	  * The first database context will be picked as the default database context unless
 	 	  * the context class is passed to this method
 	 	  * */
-	 	 $dbclass = $dbclass ?? array_keys(DB_CONTEXT_CLASSES)[0];
+	 	 $dbclass = $dbclass ?? array_keys(config('db_context_classes'))[0];
  	 	 $models = new $dbclass()->get_models();
  	 	 $model_classes = array_values($models);
  	 	 if(in_array($current_model_name, $model_classes)){

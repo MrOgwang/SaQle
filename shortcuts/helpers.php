@@ -309,7 +309,7 @@ if(!function_exists('redirect')){
 
 if(!function_exists('import_routes')){
      function import_routes(string $app, string $type = 'web'){
-         $path = DOCUMENT_ROOT.'/apps/'.$app.'/routes/'.$type.'.php';
+         $path = config('base_path').'/apps/'.$app.'/routes/'.$type.'.php';
          if(file_exists($path)){
              return require $path;
          }

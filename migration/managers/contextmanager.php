@@ -53,7 +53,7 @@ class ContextManager implements IMigrationManager{
 
      private function get_context_classes($db_context){
          //There must exist at least one db context class
-         if(!DB_CONTEXT_CLASSES){
+         if(!config('db_context_classes')){
              throw new \Exception("The project has not declared any database context classes!");
          }
 
@@ -63,7 +63,7 @@ class ContextManager implements IMigrationManager{
           * 2. Confirm that the class actually exists.
           * */
          $context_classes = [];
-         $defined_classes = array_keys(DB_CONTEXT_CLASSES);
+         $defined_classes = array_keys(config('db_context_classes'));
          if($db_context){
              for($x = 0; $x < count($defined_classes); $x++){
                  if(str_contains($defined_classes[$x], $db_context) && class_exists($defined_classes[$x])){
@@ -88,7 +88,7 @@ class ContextManager implements IMigrationManager{
 
      private function get_snapshot($migration_name, $timestamp, $dirname, $ctxname, $project_root){
          $class_name  = "{$ctxname}_{$timestamp}_{$migration_name}";
-         $snap_folder = $dirname."/snapshots";
+         $snap_folder = dirname($dirname)."/snapshots";
          $file_name   = $snap_folder."/".$class_name.".php";
          if(!file_exists($file_name)){
             throw new \Exception("The snapshot file({$class_name}) cannot be located!");
@@ -284,7 +284,7 @@ class ContextManager implements IMigrationManager{
 
      private function write_database_snapshot($migration_name, $timestamp, $models, $unique_fields, $dirname, $ctxname, $project_root){
          $class_name  = "{$ctxname}_{$timestamp}_{$migration_name}";
-         $snap_folder = $dirname."/snapshots";
+         $snap_folder = driname($dirname)."/snapshots";
          $file_name   = $snap_folder."/".$class_name.".php";
 
          $models_template = "";
@@ -427,7 +427,7 @@ class ContextManager implements IMigrationManager{
              $filename = $a->getFileName();
              $dirname  = pathinfo($filename)['dirname'];
 
-             $connection_params = DB_CONTEXT_CLASSES[$ctx];
+             $connection_params = config('db_context_classes')[$ctx];
              $connection_params['name'] = ''; //we are connecting without a database, therefore set the database name to empty string
              $connection = resolve(Connection::class, $connection_params);
 
@@ -442,7 +442,7 @@ class ContextManager implements IMigrationManager{
 
              try{
                  $sql = "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?";
-                 $data = [DB_CONTEXT_CLASSES[$ctx]['name']];
+                 $data = [config('db_context_classes')[$ctx]['name']];
                  $statement = $this->execute($connection, $sql, $data)['statement'];
                  $object = $statement->fetchObject(); 
 
@@ -531,13 +531,13 @@ class ContextManager implements IMigrationManager{
      }
 
      public function seed_database($project_root){
-          if(DB_SEEDER !== ''){
-             $path = $this->get_path_from_namespace(DB_SEEDER, $project_root);
+         $db_seeder = config('db_seeder');
+         if($db_seeder !== ''){
+             $path = $this->get_path_from_namespace($db_seeder, $project_root);
              $pathparts = explode(DIRECTORY_SEPARATOR, $path);
              array_pop($pathparts);
              $path = implode(DIRECTORY_SEPARATOR, $pathparts);
-             $seeder = DB_SEEDER;
-             $seeds = $seeder::get_seeds();
+             $seeds = $db_seeder::get_seeds();
              foreach($seeds as $c => $seed){
                  $model = $seed['model'];
                  $file  = $path.DIRECTORY_SEPARATOR.$seed['file'];
@@ -547,11 +547,11 @@ class ContextManager implements IMigrationManager{
                  $seeded_data = $model::new($data)->save();
                  echo "Model: {$model} seeded!\n\n";
              }
-          }
+         }
      }
 
      public function reset_database($project_root){
-         foreach(DB_CONTEXT_CLASSES as $classname => $params){
+         foreach(config('db_context_classes') as $classname => $params){
              $classinstance = new $classname();
              $models = $classinstance->get_models();
              foreach($models as $table_name => $modelclass){
@@ -574,7 +574,7 @@ class ContextManager implements IMigrationManager{
      }
 
      public function make_superuser(string $project_root, $email, $password){
-         $model_class_schema = AUTH_MODEL_CLASS;
+         $model_class_schema = config('auth_model_class');
          $model_class        = $model_class_schema;
          $user               = (new $model_class(...[
             'username'       => $email,

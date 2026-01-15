@@ -15,7 +15,8 @@ class DirManager{
 	 const TEMPORARY = "{{ tenant_folder }}/tmp/";
 
 	 private function get_media_folder(){
-	 	 return HIDDEN_MEDIA_FOLDER ? dirname(DOCUMENT_ROOT).'/'.MEDIA_FOLDER.'/' : DOCUMENT_ROOT.'/'.MEDIA_FOLDER.'/';
+	 	 $media_folder = config('media_folder');
+	 	 return config('hidden_media_folder') ? config('base_path').'/'.$media_folder.'/' : config('document_root').'/'.$media_folder.'/';
 	 }
 
 	 protected function create_dir($dir = '', $root = null){

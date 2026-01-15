@@ -22,7 +22,7 @@ class StkPush{
 	  * Default timezone - if not provided, defaults to DEFAULT_TIMEZONE setting.
 	  * @var string
 	  * */
-	 private string $timezone = DEFAULT_TIMEZONE;
+	 private string $timezone = config('default_timezone');
 
 	 /**
 	  * Application consumer key as provided by safaricom on daraja portal - compulsory.

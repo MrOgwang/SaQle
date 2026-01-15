@@ -89,7 +89,7 @@ class ClassMapper{
           * */
          $components_dirs = [$this->projectroot.'/components'];
 
-         foreach(INSTALLED_APPS as $f){
+         foreach(config('installed_apps') as $f){
              $components_dirs[] = $this->projectroot."/apps/".$f."/components";
          }
 
@@ -155,7 +155,7 @@ class ClassMapper{
           * */
          $models_dirs = [$this->projectroot.'/models'];
 
-         foreach(INSTALLED_APPS as $f){
+         foreach(config('installed_apps') as $f){
              $models_dirs[] = $this->projectroot."/apps/".$f."/models";
          }
 

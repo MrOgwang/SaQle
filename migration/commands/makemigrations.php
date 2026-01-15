@@ -101,9 +101,9 @@ class MakeMigrations{
      public function execute($migration_name, $project_root, $app_name = null, $db_context = null){
          $timestamp  = date('YmdHis');
          $class_name = 'Migration_' . $timestamp . '_' . $migration_name;
-         $migrations_folder = $project_root."/migrations";
+         $migrations_folder = $project_root."/databases/migrations";
          $migration_filename = $migrations_folder."/".$class_name.".php";
-         $migration_tracker_filename = $project_root."/migrationstracker.bin";
+         $migration_tracker_filename = $project_root."/databases/migrationstracker.bin";
 
          $tracker = $this->unserialize_from_file($migration_tracker_filename);
          if(!$tracker){

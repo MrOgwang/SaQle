@@ -9,7 +9,7 @@ final class RouteRegistry {
 
      public static function all(): array{
          if (self::$routes === null) {
-             self::$routes = require DOCUMENT_ROOT.CLASS_MAPPINGS_DIR.'routes.php';
+             self::$routes = require config('base_path').config('class_mappings_dir').'routes.php';
          }
 
          return self::$routes;
@@ -24,12 +24,12 @@ final class RouteRegistry {
          "return ".$export.";\n";
 
          //write to the cache file
-         $mappings_folder = $project_root.CLASS_MAPPINGS_DIR;
+         $mappings_folder = $project_root.config('class_mappings_dir');
          if(!file_exists($mappings_folder)){
              mkdir($mappings_folder, 0777, true);
          }
 
-         $mappings_file = $project_root.CLASS_MAPPINGS_DIR."routes.php";
+         $mappings_file = $project_root.config('class_mappings_dir')."routes.php";
          file_put_contents($mappings_file, $php);
      }
 }

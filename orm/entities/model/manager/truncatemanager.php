@@ -54,7 +54,7 @@ class TruncateManager implements IOperationManager {
 
 	 public function now(){
 	 	 try{
-	 	 	 $pdo = resolve(Connection::class, DB_CONTEXT_CLASSES[$this->dbclass]);
+	 	 	 $pdo = resolve(Connection::class, config('db_context_classes')[$this->dbclass]);
 	 	     return $this->truncate($pdo);
 	 	 }catch(Exception $ex){
 	 	 	 throw $ex;
@@ -82,7 +82,7 @@ class TruncateManager implements IOperationManager {
      }
 
      public function get_sql_info(){
-	 	 $database     = DB_CONTEXT_CLASSES[$this->dbclass]['name'];
+	 	 $database     = config('db_context_classes')[$this->dbclass]['name'];
 	 	 $table        = $this->table;
 		 $sql          = "TRUNCATE TABLE {$database}.{$table}";
 

@@ -107,7 +107,7 @@ class CreateManager implements IOperationManager {
 	 
 	 public function save(){
 	 	 try{
-	 	 	 $pdo        = resolve(Connection::class, DB_CONTEXT_CLASSES[$this->dbclass]);
+	 	 	 $pdo        = resolve(Connection::class, config('db_context_classes')[$this->dbclass]);
 	 	 	 $modelclass = $this->modelclass;
 	 	 	 $model      = $modelclass::state();
 	 	 	 $modelmeta  = $model->meta;
@@ -158,7 +158,7 @@ class CreateManager implements IOperationManager {
 		 foreach($data as $row){
 			 $values[]  = array_values($row);
 		 }
-		 $database      = DB_CONTEXT_CLASSES[$this->dbclass]['name'];
+		 $database      = config('db_context_classes')[$this->dbclass]['name'];
 		 $table         = $this->table;
 		 $fieldstring   = implode(", ", $fields);
 		 $valstring     = str_repeat('?, ', count($fields) - 1). '?';

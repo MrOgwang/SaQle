@@ -30,7 +30,7 @@ class BuildProject{
 
          //check app folders
          foreach ($this->watch_dirs as $dir){
-             foreach(INSTALLED_APPS as $app){
+             foreach(config('installed_apps') as $app){
                  $this->scan_dir($project_root.DIRECTORY_SEPARATOR.'apps'.DIRECTORY_SEPARATOR.$app.DIRECTORY_SEPARATOR.$dir, $files, $dir, $changed, $app);
              }
          }

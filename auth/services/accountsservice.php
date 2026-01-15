@@ -115,7 +115,7 @@ abstract class AccountsService implements IService{
 	 }
 
 	 public function confirm_username($username){
-	 	 $usermodel = AUTH_MODEL_CLASS;
+	 	 $usermodel = config('auth_model_class');
 	 	 $user = $usermodel::get()->where('username__eq', $username)->first_or_default();
 		 if($user)
 		 	 bad_request_exception("This user name is taken!");

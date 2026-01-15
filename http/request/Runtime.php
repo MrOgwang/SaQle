@@ -10,7 +10,7 @@ use SaQle\Core\Exceptions\ExceptionMapper;
 
 class Runtime {
      private function bootstrap_request(Request $request) : Request {
-         date_default_timezone_set(DEFAULT_TIMEZONE);
+         date_default_timezone_set(config('default_timezone'));
          return (new MiddlewareGroup())->handle($request);
      }
 
@@ -24,7 +24,7 @@ class Runtime {
      }
 
      private function handle_exception(Throwable $e, Request $request): void {
-         $logger = new FileLogger(DOCUMENT_ROOT."/logs/errors.txt");
+         $logger = new FileLogger(config('base_path')."/logs/errors.txt");
          $timestamp = time();
          $time = date("g:i A", $timestamp);
          $logger->log_to_file($time." -- ".$e."\n\n");

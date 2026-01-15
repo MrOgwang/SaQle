@@ -74,7 +74,7 @@ class DeleteManager implements IOperationManager {
 	 	 $this->setup_ctxtracker(
 		 	 table_name:    $this->table,
 		 	 table_aliase:  "",
-		 	 database_name: DB_CONTEXT_CLASSES[$this->dbclass]['name'],
+		 	 database_name: config('db_context_classes')[$this->dbclass]['name'],
 		 	 field_list:    $meta->actual_column_names,
 		 	 ff_settings:   $meta->file_required_fields,
 		 	 table_ref:     ''
@@ -85,7 +85,7 @@ class DeleteManager implements IOperationManager {
 
 	 public function now(){
 	 	 try{
-	 	 	 $pdo = resolve(Connection::class, DB_CONTEXT_CLASSES[$this->dbclass]);
+	 	 	 $pdo = resolve(Connection::class, config('db_context_classes')[$this->dbclass]);
 	 	     return $this->permanently ? $this->hard_delete($pdo) : $this->soft_delete($pdo);
 	 	 }catch(Exception $ex){
 	 	 	 throw $ex;
@@ -178,7 +178,7 @@ class DeleteManager implements IOperationManager {
 	 private function get_update_sql_info(){
 	 	 $where_clause = $this->wbuilder->get_where_clause($this->ctxtracker, $this->get_configurations());
 	 	 $data = $where_clause->data ? array_merge([1], $where_clause->data) : [1];
-	 	 $database = DB_CONTEXT_CLASSES[$this->dbclass]['name'];
+	 	 $database = config('db_context_classes')[$this->dbclass]['name'];
 	 	 $table = $this->table;
 	 	 $fields = ['deleted'];
 	 	 $clause   = $where_clause->clause;
@@ -192,7 +192,7 @@ class DeleteManager implements IOperationManager {
      private function get_delete_sql_info(){
 	 	 $where_clause = $this->wbuilder->get_where_clause($this->ctxtracker, $this->get_configurations());
 	 	 $data         = $where_clause->data ?? null;
-	 	 $database     = DB_CONTEXT_CLASSES[$this->dbclass]['name'];
+	 	 $database     = config('db_context_classes')[$this->dbclass]['name'];
 	 	 $table        = $this->table;
 	 	 $clause       = $where_clause->clause;
 		 $sql          = "DELETE FROM {$database}.{$table}{$clause}";

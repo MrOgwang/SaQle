@@ -16,15 +16,13 @@ use SaQle\Core\Services\Providers\{
 };
 use SaQle\Http\Cors\CorsConfig;
 use SaQle\Core\Support\AppContext;
-use SaQle\Core\Config\{ConfigRepository, Config, ConfigDefaults, ConfigBridge};
+use SaQle\Core\Config\{ConfigRepository, Config, ConfigBridge};
 use SaQle\Http\Request\{Request, Runtime};
 use SaQle\Session\Providers\SessionProvider;
 use SaQle\Routes\Providers\RoutingProvider;
 use SaQle\Auth\Guards\GuardManager;
 
 final class App{
-     public readonly string $environment;
-     private array $config;
      public MiddlewareRegistry $middleware;
      public Container $container;
      public CorsConfig $cors;
@@ -34,16 +32,17 @@ final class App{
      public function __construct(private AppSetup $setup){
          $this->initialize();
 
-         $this->environment = $setup->environment;
+         $config = $setup->get_configurations();
+
          $this->middleware  = new MiddlewareRegistry();
          $this->cors        = new CorsConfig($setup->cors);
          $this->guards      = new GuardManager();
          $this->container   = new Container();
-         $this->events      = new CachedEventRegistry($this->config['document_root'], $this->config['class_mappings_dir']);
+         $this->events      = new CachedEventRegistry($config['document_root'], $config['class_mappings_dir']);
 
-         ConfigBridge::expose($this->config);
+         ConfigBridge::expose($config);
 
-         $this->boot();
+         $this->boot($config);
 
          AppContext::set($this);
      }
@@ -51,11 +50,10 @@ final class App{
      private function initialize() : void {
          require_once __DIR__.'/shortcuts/helpers.php';
          $this->load_environment();
-         $this->load_config();
      }
 
-     public function boot(): void {
-         $this->container->singleton(ConfigRepository::class, fn() => new ConfigRepository($this->config));
+     public function boot(array $config): void {
+         $this->container->singleton(ConfigRepository::class, fn() => new ConfigRepository($config));
          $this->register_middlewares();
          $this->register_providers();
      }
@@ -64,24 +62,6 @@ final class App{
          ($this->setup->environment_loader && is_callable($this->setup->environment_loader)) ? (
              ($this->setup->environment_loader)($this->setup->environment)
          ) : null;
-     }
-
-     private function load_config(): void{
-         if(!$this->setup->config_dir) {
-             return;
-         }
-
-         $files = ['app', 'auth', 'database', 'email', 'model', 'tenant', 'session'];
-         $config = [];
-
-         foreach ($files as $file) {
-             $path = $this->setup->config_dir."/{$file}.config.php";
-             if (file_exists($path)) {
-                 $config = array_replace($config, require $path);
-             }
-         }
-
-         $this->config = ConfigDefaults::merge($config);
      }
 
      private function register_middlewares(): void {

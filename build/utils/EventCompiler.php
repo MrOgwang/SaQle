@@ -8,11 +8,13 @@ use SaQle\Core\Registries\EventRegistry;
 final class EventCompiler {
 
      public static function compile() {
-         //get listener directories
-         $listener_dirs = [DOCUMENT_ROOT.'/listeners'];
+         $base_path = config('base_path');
 
-         foreach(INSTALLED_APPS as $app){
-             $listener_dirs[] = DOCUMENT_ROOT.'/apps/'.$app.'/listeners';
+         //get listener directories
+         $listener_dirs = [$base_path.'/listeners'];
+
+         foreach(config('installed_apps') as $app){
+             $listener_dirs[] = $base_path.'/apps/'.$app.'/listeners';
          }
 
          //Discover attributed listeners

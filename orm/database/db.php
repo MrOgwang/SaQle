@@ -19,7 +19,7 @@ class Db{
          try{
          	 Assert::allIsCallable($callbacks);
 
-		 	 $pdo = resolve(Connection::class, DB_CONTEXT_CLASSES[$this->dbclass]);
+		 	 $pdo = resolve(Connection::class, config('db_context_classes')[$this->dbclass]);
              if($pdo && !$pdo->inTransaction()){
                  $pdo->beginTransaction();
              }

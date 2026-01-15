@@ -11,7 +11,7 @@ final class ResourceRouteGenerator {
      public static function execute(string $projectroot){
 
          $model_dirs = [$projectroot.'/models'];
-         foreach(INSTALLED_APPS as $f){
+         foreach(config('installed_apps') as $f){
              $model_dirs[] = $projectroot."/apps/".$f."/models";
          }
          

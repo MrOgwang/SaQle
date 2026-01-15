@@ -55,8 +55,8 @@ final class ConfigDefaults{
 
              /**
               * The following flags will enable or disable multitenancy
-              * 1. TENANT_MODEL_CLASS  : the clas name of the tanant 
-              * 2. ENABLE_MULTITENANCY : Expliclty set this to enable multi tenancy
+              * 1. config('tenant_model_class')  : the clas name of the tanant 
+              * 2. config('enable_multitenancy') : Expliclty set this to enable multi tenancy
               * */
              'tenant_model_class' => BaseTenant::class,
              'enable_multitenancy' => false,
@@ -133,17 +133,17 @@ final class ConfigDefaults{
               * The settings below will enable automatic inclusion of these fields without explicitly defining them 
               * in all the models.
               * 
-              * MODEL_AUTO_CM_FIELDS
+              * config('model_auto_cm_fields')
               * - This flag tells the model to generate Created By and Modified By fields. The field type will be GUID or AUTO(INT)
               *   depending on what the PRIMARY_KEY_TYPE flag is set to.
               * - The specific names of the fields will be set by adding the flags MODEL_CREATED_BY_FIELD and MODEL_MODIFIED_BY_FIELD
               * 
-              * MODEL_AUTO_CMDT_FIELDS
+              * config('model_auto_cmdt_fields')
               * - This flag tells the model to generate Created At and Modified At date/datetime/time/timestamp fields. The field type will be derived from
               *   the DB_AUTO_CMDT_TYPE flag
               * - The specific names of the fields will be set by adding the flags MODEL_CREATED_AT_FIELD and MODEL_MODIFIED_AT_FIELD
               * 
-              * MODEL_SOFT_DELETE
+              * config('model_soft_delete')
               * - This flag tells the model to generate Is Deleted, Deleted By and Deleted At fields. The Deleted By type will
               *   deoend on the PRIMARY_KEY_TYPE flag and Deleted At type will depend on the DB_AUTO_CMDT_TYPE flag.
               * - The specific names of the fields will be set by adding the flags MODEL_DELETED_AT_FIELD and MODEL_DELETED_BY_FIELD and MODEL_DELETED_FIELD

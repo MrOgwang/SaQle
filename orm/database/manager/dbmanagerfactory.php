@@ -10,7 +10,7 @@ class DbManagerFactory{
 	 const POSTGRESS = 'pgsql';
 	 private $_manager;
 	 public function __construct(string $dbclass){
-	 	 $contextparams = DB_CONTEXT_CLASSES[$dbclass];
+	 	 $contextparams = config('db_context_classes')[$dbclass];
 		 switch($contextparams['type']->value){
 			 case self::MYSQL:
 			     $this->_manager = new MySQLDbManager($contextparams);

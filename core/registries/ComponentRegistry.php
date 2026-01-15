@@ -15,7 +15,7 @@ final class ComponentRegistry {
 
      public static function all(): array{
          if (self::$components === null) {
-             self::$components = require DOCUMENT_ROOT.CLASS_MAPPINGS_DIR.'components.php';
+             self::$components = require config('base_path').config('class_mappings_dir').'components.php';
          }
 
          return self::$components;
@@ -105,8 +105,10 @@ final class ComponentRegistry {
 
              $extension = pathinfo($template_path, PATHINFO_EXTENSION);
 
-             if (strtolower($extension) !== strtolower(COMPONENT_TEMPLATE_EXT)) {
-                 throw new InvalidArgumentException("Invalid template file type! Expected an .".COMPONENT_TEMPLATE_EXT." file.");
+             $template_ext = config('component_template_ext');
+
+             if (strtolower($extension) !== strtolower($template_ext)) {
+                 throw new InvalidArgumentException("Invalid template file type! Expected an .".$template_ext." file.");
              }
 
              $resolved_component[3] = $template_path;

@@ -165,7 +165,7 @@
 		 $this->register_to_context_tracker(
 		 	 table_name:    $table,
 		 	 table_aliase:  !is_null($as) ? $as : "",
-		 	 database_name: DB_CONTEXT_CLASSES[$this->dbclass]['name'],
+		 	 database_name: config('db_context_classes')[$this->dbclass]['name'],
 		 	 field_list:    $meta->actual_column_names,
 		 	 ff_settings:   $meta->file_required_fields,
 		 	 table_ref:     $tblref

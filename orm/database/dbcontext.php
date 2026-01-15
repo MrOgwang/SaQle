@@ -21,20 +21,20 @@ abstract class DbContext{
 	 	 	 'model_temp_ids' => TempId::class
 	 	 ]);
 
-	 	 if(ENABLE_RBAC && $this->include_rbac_models){
-	 	 	 $this->models['roles']           = ROLE_MODEL_CLASS;
-	 	 	 $this->models['permissions']     = PERMISSION_MODEL_CLASS;
-	 	 	 $this->models['userroles']       = USER_ROLE_MODEL_CLASS;
-	 	 	 $this->models['userpermissions'] = USER_PERMISSION_MODEL_CLASS;
-	 	 	 $this->models['rolepermissions'] = ROLE_PERMISSION_MODEL_CLASS;
+	 	 if(config('enable_rbac') && $this->include_rbac_models){
+	 	 	 $this->models['roles']           = config('role_model_class');
+	 	 	 $this->models['permissions']     = config('permission_model_class');
+	 	 	 $this->models['userroles']       = config('user_role_model_class');
+	 	 	 $this->models['userpermissions'] = config('user_permission_model_class');
+	 	 	 $this->models['rolepermissions'] = config('role_permission_model_class');
 	 	 }
 
-	 	 if(ENABLE_MULTITENANCY && $this->include_tenant_models){
-	 	 	 $this->models['tenants'] = TENANT_MODEL_CLASS;
+	 	 if(config('enable_multitenancy') && $this->include_tenant_models){
+	 	 	 $this->models['tenants'] = config('tenant_model_class');
 	 	 }
 
 	 	 if($this->include_auth_models){
-	 	 	 $this->models['users']             = AUTH_MODEL_CLASS;
+	 	 	 $this->models['users']             = config('auth_model_class');
 		     $this->models['sessions']          = Session::class;
 			 $this->models['logins']            = Login::class;
 			 $this->models['contacts']          = Contact::class;

@@ -11,8 +11,8 @@ class BaseRole extends Model{
 			 'role_id'          => new Pk(),
 		     'role_name'        => new TinyTextField(required: true, strict: false),
 		     'role_description' => new TextField(required: false, strict: false),
-		     'permissions'      => new ManyToMany(fmodel: PERMISSION_MODEL_CLASS, pk: 'role_id', fk: 'role_id', through: ROLE_PERMISSION_MODEL_CLASS),
-		     'users'            => new ManyToMany(fmodel: AUTH_MODEL_CLASS, pk: 'role_id', fk: 'role_id', through: USER_ROLE_MODEL_CLASS)
+		     'permissions'      => new ManyToMany(fmodel: config('permission_model_class'), pk: 'role_id', fk: 'role_id', through: config('role_permission_model_class')),
+		     'users'            => new ManyToMany(fmodel: config('auth_model_class'), pk: 'role_id', fk: 'role_id', through: config('user_role_model_class'))
 		];
 	 }
 }

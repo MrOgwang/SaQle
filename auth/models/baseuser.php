@@ -17,13 +17,13 @@ class BaseUser extends Model implements IUser {
 		     'password'   => new TinyTextField(required: true, strict: false),
 		 ];
 
-		 if(ENABLE_RBAC){
-			 $fields['roles'] = new ManyToMany(fmodel: ROLE_MODEL_CLASS, pk: 'user_id', fk: 'user_id', through: USER_ROLE_MODEL_CLASS);
-			 $fields['permissions'] = new ManyToMany(fmodel: PERMISSION_MODEL_CLASS, pk: 'user_id', fk: 'user_id', through: USER_PERMISSION_MODEL_CLASS);
+		 if(config('enable_rbac')){
+			 $fields['roles'] = new ManyToMany(fmodel: config('role_model_class'), pk: 'user_id', fk: 'user_id', through: config('user_role_model_class'));
+			 $fields['permissions'] = new ManyToMany(fmodel: config('permission_model_class'), pk: 'user_id', fk: 'user_id', through: config('user_permission_model_class'));
 		 }
 
-		 if(ENABLE_MULTITENANCY){
-			 $fields['tenants'] = new ManyToMany(fmodel: TENANT_MODEL_CLASS, pk: 'user_id', fk: 'user_id', through: TENANT_USER_MODEL_CLASS);
+		 if(config('enable_multitenancy')){
+			 $fields['tenants'] = new ManyToMany(fmodel: config('tenant_model_class'), pk: 'user_id', fk: 'user_id', through: config('tenant_user_model_class'));
 		 }
 
 		 $meta->fields = $fields;

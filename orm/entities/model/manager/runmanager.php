@@ -57,7 +57,7 @@ class RunManager{
 
 	 public function now(){
 	 	 try{
-	 	 	 $pdo = resolve(Connection::class, DB_CONTEXT_CLASSES[$this->dbclass]);
+	 	 	 $pdo = resolve(Connection::class, config('db_context_classes')[$this->dbclass]);
 	 	 	 $operation = new RunOperation(
 		 	 	 sql:       $this->sql,
 		 	 	 operation: $this->operation,

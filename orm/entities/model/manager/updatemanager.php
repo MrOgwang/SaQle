@@ -92,7 +92,7 @@ class UpdateManager implements IOperationManager{
 	 	 $this->setup_ctxtracker(
 		 	 table_name:    $this->table,
 		 	 table_aliase:  "",
-		 	 database_name: DB_CONTEXT_CLASSES[$this->dbclass]['name'],
+		 	 database_name: config('db_context_classes')[$this->dbclass]['name'],
 		 	 field_list:    $meta->actual_column_names,
 		 	 ff_settings:   $meta->file_required_fields,
 		 	 table_ref:     ''
@@ -103,7 +103,7 @@ class UpdateManager implements IOperationManager{
 
 	 public function update(bool $multiple = false){
 	 	 try{
-	 	 	 $pdo        = resolve(Connection::class, DB_CONTEXT_CLASSES[$this->dbclass]);
+	 	 	 $pdo        = resolve(Connection::class, config('db_context_classes')[$this->dbclass]);
 	 	 	 $modelclass = $this->modelclass;
 	 	 	 $model      = $modelclass::state();
 	 	 	 $modelmeta  = $model->meta;
@@ -190,7 +190,7 @@ class UpdateManager implements IOperationManager{
 	 	 }
 	 	 $where_clause = $this->wbuilder->get_where_clause($this->ctxtracker, $this->get_configurations());
 	 	 $data = $where_clause->data ? array_merge(array_values($clean_data), $where_clause->data) : array_values($clean_data);
-	 	 $database = DB_CONTEXT_CLASSES[$this->dbclass]['name'];
+	 	 $database = config('db_context_classes')[$this->dbclass]['name'];
 	 	 $table = $this->table;
 	 	 $fields = array_keys($clean_data);
 	 	 $clause   = $where_clause->clause;

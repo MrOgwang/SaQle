@@ -40,7 +40,7 @@ class AuthenticationProvider extends ServiceProvider {
           * */
          AuthManager::set_user_provider(function(string|int $id){
              //get and return the user here
-             $model = AUTH_MODEL_CLASS;
+             $model = config('auth_model_class');
              return $model::get()->where('user_id', $id)->first();
          });
 

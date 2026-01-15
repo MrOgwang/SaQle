@@ -42,7 +42,7 @@ trait EventUtils {
      	 	 'sql'           => $sql_info['sql'], 
      	 	 'prepared_data' => $sql_info['data'],
      	 	 'dbclass'       => $this->dbclass,
-     	 	 'db'            => DB_CONTEXT_CLASSES[$this->dbclass]['name'],
+     	 	 'db'            => config('db_context_classes')[$this->dbclass]['name'],
      	 	 'timestamp'     => time(),
      	 	 'model'         => $model ?? $this->modelclass
 	 	 ];
