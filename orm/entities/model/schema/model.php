@@ -590,7 +590,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 	 }
 
 	 /**
-	  * This save assumes the data was set via the model instructor.
+	  * This save assumes the data was set via the model constructor.
 	  * Notes on save:
 	  * 1. By default only simple values are saved or updated when save is called.
 	  * 2. Relation objects must already be existing in the database, as only their ids will be saved
@@ -918,5 +918,44 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 
      protected function on_model_validate(array &$kwargs){
      	 
+     }
+
+     public static function get_fillable_fields(){
+     	 $instance = self::state();
+     	 
+     	 /**
+     	  * Strip the actual colums of the following:
+     	  * 
+     	  * 1. Primary key name - must not be manually filled
+     	  * 2. Non defined field names - values will be added automatically
+     	  *
+     	  * */
+     	 $field_names = $instance->meta->defined_field_names;
+
+     	 //remove the primary key
+     	 $pk_index = array_search($instance->meta->pk_name, $field_names);
+     	 unset($field_names[$pk_index]);
+
+     	 //remove automaticly added fields
+	 	 foreach($instance->meta->non_defined_field_names as $ndfn){
+	 	 	 $ndf_index = array_search($ndfn, $field_names);
+	 	 	 unset($field_names[$ndf_index]);
+	 	 }
+
+	 	 //remove virtual fields
+	 	 foreach($instance->meta->virtual_field_names as $vfn){
+	 	 	 $vfn_index = array_search($vfn, $field_names);
+	 	 	 unset($field_names[$vfn_index]);
+	 	 }
+
+	 	 $fillable = [];
+
+	 	 foreach($instance->meta->fields as $field){
+	 	 	 if(in_array($field->field_name, $field_names)){
+	 	 	 	 $fillable[$field->field_name] = $field->default ?? null;
+	 	 	 }
+	 	 }
+
+     	 return $fillable;
      }
 }

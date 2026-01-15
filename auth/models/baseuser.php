@@ -1,7 +1,7 @@
 <?php
 namespace SaQle\Auth\Models;
 
-use SaQle\Orm\Entities\Field\Types\{Pk, TextField, OneToMany, ManyToMany};
+use SaQle\Orm\Entities\Field\Types\{Pk, TinyTextField, OneToMany, ManyToMany};
 use SaQle\Orm\Entities\Field\Interfaces\IField;
 use SaQle\Orm\Entities\Model\Schema\{Model, TableInfo};
 use SaQle\Auth\Models\Interfaces\IUser;
@@ -11,10 +11,10 @@ class BaseUser extends Model implements IUser {
 	 protected function model_setup(TableInfo $meta) : void{
 		 $fields = [
 		 	 'user_id'    => new Pk(),
-		     'first_name' => new TextField(required: true, strict: false),
-		     'last_name'  => new TextField(required: true, strict: false),
-		     'username'   => new TextField(required: true, strict: false),
-		     'password'   => new TextField(required: true, strict: false),
+		     'first_name' => new TinyTextField(required: true, strict: false),
+		     'last_name'  => new TinyTextField(required: true, strict: false),
+		     'username'   => new TinyTextField(required: true, strict: false),
+		     'password'   => new TinyTextField(required: true, strict: false),
 		 ];
 
 		 if(ENABLE_RBAC){
@@ -29,34 +29,14 @@ class BaseUser extends Model implements IUser {
 		 $meta->fields = $fields;
 	 }
 
-     //check if a user can perform an action
-	 public function can(string $action, ...$args) : bool {
-	 	 return Guard::allow($action, $this, ...$args);
+     //check if a user passes a guard
+	 public function check(string $action, ...$args) : bool {
+	 	 return Guard::check($action, $this, ...$args);
 	 }
 
-     //check if a user cannot perform an action
-	 public function cannot(string $action, ...$args) : bool {
-	 	 return !Guard::allow($action, $this, ...$args);
-	 }
-
-	 //check if a user has a certain role
-	 public function has(string $role, ...$args) : bool {
-	 	 return Guard::check($role, $this, ...$args);
-	 }
-
-     //check if a user doesn't have a certain role
-	 public function hasnot(string $role, ...$args) : bool {
-	 	 return !Guard::check($role, $this, ...$args);
-	 }
-
-	 //check if a user is of certain attribute
-	 public function is(string $attr, ...$args) : bool {
-	 	 return Guard::is($attr, $this, ...$args);
-	 }
-
-     //check if a user is not of a certain attribute
-	 public function isnot(string $attr, ...$args) : bool {
-	 	 return !Guard::is($attr, $this, ...$args);
+	 //check if a user passes a guard and throw an error
+	 public function authorize(string $role, ...$args) : bool {
+	 	 return Guard::authorize($role, $this, ...$args);
 	 }
 
 	 public function is_guest() : bool {

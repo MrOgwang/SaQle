@@ -12,6 +12,10 @@ final class EventBus {
      public function dispatch(Event $event): void {
          $key = $event instanceof GenericEvent ? $event->name : $event::class;
          foreach ($this->registry->get_listeners($key) as $listener_class) {
+             if($event->is_propagation_stopped()){
+                 break; // Stop dispatching further listeners
+             }
+
              (new $listener_class)->handle($event);
          }
      }

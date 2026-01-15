@@ -27,6 +27,8 @@ use SaQle\Auth\Services\AuthService;
 use SaQle\Routes\Router;
 use SaQle\Core\Registries\{EventRegistry, RouteRegistry, CachedEventRegistry};
 use SaQle\Core\Events\EventBus;
+use SaQle\Routes\Canonical\CanonicalUrlPolicy;
+use SaQle\Routes\Canonical\TrailingSlashPolicy;
 
 class FrameworkDIProvider extends ServiceProvider {
      public function register(): void {
@@ -77,23 +79,14 @@ class FrameworkDIProvider extends ServiceProvider {
          $this->app->container->bind(Router::class);
          $this->app->container->bind(RouteRegistry::class);
 
-         /*$this->app->container->singleton(EventRegistry::class, function (){
-             return new CachedEventRegistry();
-         });*/
-
-         /*if (env('APP_ENV') === 'production') {
-             $this->singleton(EventRegistry::class, function () {
-                 return new CachedEventRegistry();
-             });
-         }else{
-             $this->singleton(EventRegistry::class, EventRegistry::class);
-         }*/
-
          $this->app->container->bind(EventRegistry::class, fn () => $this->app->events);
 
          $this->app->container->bind(EventBus::class, fn () =>
              new EventBus($this->app->container->resolve(EventRegistry::class))
          );
+         $this->app->container->bind(CanonicalUrlPolicy::class, function(){
+             return new TrailingSlashPolicy();
+         });
      }
 }
 

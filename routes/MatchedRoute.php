@@ -25,6 +25,9 @@ final class MatchedRoute {
          //the route handler
          public array $compiled_target,
 
+         //the route handler
+         public ?string $model_class = null,
+
          //the layout wrappers
          public ?array $layout = null,
 

@@ -133,11 +133,25 @@ final class Route {
          get => $this->trail;
      }
 
+     /**
+      * The model class name for 
+      * a resource route
+      *
+      * */
+     public ?string $model_class = null {
+         set(?string $value){
+             $this->model_class = $value;
+         }
+
+         get => $this->model_class;
+     }
+
      //create a new route object
-	 public function __construct(string $method, string $url, string $target){
+	 public function __construct(string $method, string $url, string $target, ?string $model_class = null){
          $this->method = $method;
          $this->url    = $url;
          $this->target = $target;
+         $this->model_class = $model_class;
 
          //routes respond with html by default
          $this->restype = ['html'];

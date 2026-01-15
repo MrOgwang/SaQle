@@ -95,8 +95,17 @@ class Request implements MiddlewareRequestInterface{
          get => $this->route;
      }
 
-     //request type
-     public RequestIntent $intent = RequestIntent::WEB;
+     //the request intent(web, api, sse, ajax)
+     public RequestIntent $intent = RequestIntent::WEB {
+         set(RequestIntent $value){
+             $this->intent = $value;
+             if($this->intent === RequestIntent::WEB || $this->intent === RequestIntent::AJAX){
+                 $this->context->activate_session();
+             }
+         }
+
+         get => $this->intent;
+     }
 
      //prevent direct creation of request object
 	 private function __construct(){

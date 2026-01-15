@@ -37,7 +37,6 @@ final class ComponentRegistry {
 
      public static function get_definition(string $name): ComponentDefinition {
          $resolved_component = self::resolve_component($name, 'GET', 'layout');
-
          return new ComponentDefinition($resolved_component[0], $resolved_component[3], $resolved_component[1], $resolved_component[2]);
      }
 

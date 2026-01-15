@@ -274,6 +274,17 @@ class Config{
 	 	  * */
 	 	 define("COMPONENT_TEMPLATE_EXT", $settings['component_template_ext'] ?? 'html');
 
+	 	 /**
+	       * By default, components will be searched in the top level project directory, or inside
+	       * the individual app directories as listed in installed_apps. 
+	       * 
+	       * In cases where your components also exist in other places, list the directory
+	       * names here relative to the root directory.
+	     * */
+	     define("EXTRA_COMPONENTS_DIRS", $settings['extra_components_dirs'] ?? []);
+
+	     define("SAQLE_COMPONENTS_DIRS", [realpath(__DIR__.'/../../components')]);
+
 	 	 foreach($settings as $key => $val){
 		 	 $configname = strtoupper($key);
 		 	 if(!defined($configname)){

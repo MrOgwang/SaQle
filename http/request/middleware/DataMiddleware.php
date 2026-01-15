@@ -14,79 +14,103 @@ namespace SaQle\Http\Request\Middleware;
 use SaQle\Middleware\IMiddleware;
 use SaQle\Middleware\MiddlewareRequestInterface;
 
-class DataMiddleware extends IMiddleware{
+class DataMiddleware extends IMiddleware {
      public function handle(MiddlewareRequestInterface &$request){
          $data = [];
 
-         //merge get and post variables
-         $data = array_merge($data, $_GET, $_POST);
+         //1. Query parameters (GET)
+         if (!empty($_GET)) {
+             $data = array_merge($data, $_GET);
+         }
 
-         //merge session variables
-         /*if(session_status() === PHP_SESSION_ACTIVE) {
-             $data = array_merge($data, $_SESSION);
-         }*/
+         //2. Form submissions (POST) | - x-www-form-urlencoded | - multipart/form-data
+         if(!empty($_POST)) {
+             $data = array_merge($data, $_POST);
+         }
 
-         //merge files
-         if(!empty($_FILES)){
+         //3. Raw body (JSON / form-encoded) | Applies to POST, PUT, PATCH, DELETE
+         $method = strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
+
+         if(in_array($method, ['POST', 'PUT', 'PATCH', 'DELETE'])){
+             $raw = file_get_contents('php://input');
+
+             if($raw !== false && trim($raw) !== ''){
+                 $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
+
+                 //JSON payload
+                 if(str_contains($contentType, 'application/json')){
+                     $json = json_decode($raw, true);
+
+                     if (json_last_error() === JSON_ERROR_NONE && is_array($json)) {
+                         $data = array_merge($data, $json);
+                     }
+                 }
+                 // Form-encoded fallback
+                 else {
+                     $parsed = [];
+                     parse_str($raw, $parsed);
+
+                     if (!empty($parsed)) {
+                         $data = array_merge($data, $parsed);
+                     }
+                 }
+             }
+         }
+
+         //4. Files (normalized)
+         if (!empty($_FILES)) {
              $data = array_merge($data, $this->normalize_files($_FILES));
          }
 
-         $method = strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
-
-         //merge form submissions (application/x-www-form-urlencoded or multipart/form-data)
-         if(in_array($method, ['PUT', 'PATCH', 'DELETE'])){
-             $raw_input = file_get_contents('php://input');
-
-             //try JSON first
-             $json = json_decode($raw_input, true);
-
-             if(json_last_error() === JSON_ERROR_NONE && is_array($json)){
-                 $data = array_merge($data, $json);
-             }else{
-                 //Fallback: assume form-encoded
-                 $parsed = [];
-                 parse_str($raw_input, $parsed);
-                 if(is_array($parsed)){
-                     $data = array_merge($parsed, $json);
-                 }
-             }
-         }
-
-         foreach($data as $key => $value){
+         //5. Inject into request data bag
+         foreach ($data as $key => $value) {
              $request->data->set($key, $value);
          }
-         
-     	 parent::handle($request);
+
+         parent::handle($request);
      }
 
-     private function normalize_files(array $files){
-         $normalized_files = [];
-         foreach($files as $fkey => $fval){
-             $tmp_fval = [];
-             if(is_array($fval['name'])){
-                 foreach($fval['name'] as $i => $n){
-                     if($fval['error'][$i] == UPLOAD_ERR_OK){
-                        $tmp_fval['name'][]      = $fval['name'][$i];
-                        $tmp_fval['full_path'][] = $fval['full_path'][$i];
-                        $tmp_fval['type'][]      = $fval['type'][$i];
-                        $tmp_fval['tmp_name'][]  = $fval['tmp_name'][$i];
-                        $tmp_fval['error'][]     = $fval['error'][$i];
-                        $tmp_fval['size'][]      = $fval['size'][$i];
-                     }
-                 }
-             }else{
-                 if($fval['error'] == UPLOAD_ERR_OK){
-                    $tmp_fval['name']      = $fval['name'];
-                    $tmp_fval['full_path'] = $fval['full_path'];
-                    $tmp_fval['type']      = $fval['type'];
-                    $tmp_fval['tmp_name']  = $fval['tmp_name'];
-                    $tmp_fval['error']     = $fval['error'];
-                    $tmp_fval['size']      = $fval['size'];
-                 }
-             }
-             $normalized_files[$fkey] = $tmp_fval ? $tmp_fval : null;
+     //Normalize $_FILES into a predictable structure
+     private function normalize_files(array $files): array {
+        $normalized = [];
+
+         foreach ($files as $field => $info) {
+
+            // Multiple files
+            if (is_array($info['name'])) {
+                $normalized[$field] = [];
+
+                foreach ($info['name'] as $i => $name) {
+                    if ($info['error'][$i] === UPLOAD_ERR_OK) {
+                        $normalized[$field][] = [
+                            'name'      => $name,
+                            'full_path'=> $info['full_path'][$i] ?? null,
+                            'type'      => $info['type'][$i],
+                            'tmp_name'  => $info['tmp_name'][$i],
+                            'error'     => $info['error'][$i],
+                            'size'      => $info['size'][$i],
+                        ];
+                    }
+                }
+            }
+            // Single file
+            else {
+                if ($info['error'] === UPLOAD_ERR_OK) {
+                    $normalized[$field] = [
+                        'name'      => $info['name'],
+                        'full_path'=> $info['full_path'] ?? null,
+                        'type'      => $info['type'],
+                        'tmp_name'  => $info['tmp_name'],
+                        'error'     => $info['error'],
+                        'size'      => $info['size'],
+                    ];
+                } else {
+                    $normalized[$field] = null;
+                }
+            }
          }
 
-         return $normalized_files;
+         return $normalized;
      }
 }
+

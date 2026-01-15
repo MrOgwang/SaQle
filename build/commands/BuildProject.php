@@ -82,7 +82,7 @@ class BuildProject{
      private function filter_route_files($files){
          return array_filter($files, function($file){
              $filename = basename($file['path']);
-             return $file['dir'] === 'routes' && $file['type'] === 'modified' && $filename === 'routes.php';
+             return $file['dir'] === 'routes' && $file['type'] === 'modified' && ($filename === 'routes.php' || $filename === 'resources.php');
          });
      }
 
@@ -115,7 +115,7 @@ class BuildProject{
                  $this->load_files($route_files);
 
                  //compile routes
-                 RouteCompiler::compile(Router::all(), $project_root);
+                 RouteCompiler::compile($project_root);
 
                  //compile the templates
                  TemplateCompiler::compile($project_root);

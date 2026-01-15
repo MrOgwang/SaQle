@@ -8,23 +8,13 @@ class GuestUser implements IUser {
 	 public string $profilephoto = ROOT_DOMAIN.'static/images/layout/male.jpg';
 
      //check if a user can perform an action
-	 public function can(string $action) : bool {
+	 public function check(string $action) : bool {
 	 	 return false;
 	 }
 
      //check if a user cannot perform an action
-	 public function cannot(string $action) : bool {
-	 	 return true;
-	 }
-
-	 //check if a user is of a certain role
-	 public function is(string $role) : bool {
+	 public function authorize(string $action) : bool {
 	 	 return false;
-	 }
-
-     //check if a user is not of a certain role
-	 public function isnot(string $action) : bool {
-	 	 return true;
 	 }
 
 	 public function is_guest() : bool {

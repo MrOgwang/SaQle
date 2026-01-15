@@ -3,12 +3,19 @@ namespace SaQle\Http\Request\Middleware;
 
 use SaQle\Middleware\IMiddleware;
 use SaQle\Middleware\MiddlewareRequestInterface;
+use SaQle\Http\Request\RequestIntent;
+use SaQle\Middleware\Interface\ScopedMiddleware;
 
-class CsrfMiddleware extends IMiddleware{
+class CsrfMiddleware extends IMiddleware implements ScopedMiddleware{
      private static string $token_key      = 'csrf_token';
      private static array  $except_methods = ['GET', 'HEAD', 'OPTIONS'];
+
+     public static function scopes(): array {
+         return [RequestIntent::WEB, RequestIntent::AJAX];
+     }
+
      public function handle(MiddlewareRequestInterface &$request){
-         
+
          //Generate CSRF token if not set
          $token_key      = CsrfMiddleware::get_token_key();
          $except_methods = CsrfMiddleware::get_except_methods();
@@ -44,7 +51,7 @@ class CsrfMiddleware extends IMiddleware{
      public static function get_token(): string {
          $request = resolve('request');
          $token_key = CsrfMiddleware::get_token_key();
-         if(session_status() == PHP_SESSION_NONE){
+         if(session_status() === PHP_SESSION_NONE){
              session_start();
          }
          return $request->context->get($token_key, '');

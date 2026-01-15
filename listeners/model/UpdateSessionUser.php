@@ -6,16 +6,20 @@ use SaQle\Core\Events\GenericEvent;
 
 class UpdateSessionUser {
      public function handle(GenericEvent $event): void {
+         //print_r($event);
+
          $result = $event->context->result();
          $session_user = $event->context->user();
 
-         $user = is_array($result) ?  array_find($result, function($u){
-             return $u->user_id === $session_user->user_id;
-         }) : ($result->user_id === $session_user->user_id ? $result : null);
+         if($session_user){
+             $user = is_array($result) ?  array_find($result, function($u){
+                 return $u->user_id === $session_user->user_id;
+             }) : ($result->user_id === $session_user->user_id ? $result : null);
 
-         if($user){
-             $request = resolve('request');
-             new AuthenticationMiddleware()->handle($request);
+             if($user){
+                 $request = resolve('request');
+                 new AuthenticationMiddleware()->handle($request);
+             }
          }
      }
 }

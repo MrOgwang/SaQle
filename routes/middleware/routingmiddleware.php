@@ -21,13 +21,13 @@ namespace SaQle\Routes\Middleware;
 use SaQle\Middleware\MiddlewareRequestInterface;
 use SaQle\Middleware\IMiddleware;
 use SaQle\Routes\{Router, MatchedRoute};
-use SaQle\Http\Request\RequestIntentResolver;
 use SaQle\Core\Exceptions\Route\RouteNotFoundException;
+use SaQle\Core\Exceptions\Http\NotAcceptableException;
 
 class RoutingMiddleware extends IMiddleware{
      
      public function handle(MiddlewareRequestInterface &$request){
-
+         //find matching route
          $match = Router::find_matching_route($request->method(), $request->uri());
 
          if (!$match) throw new RouteNotFoundException(['url' => $request->uri()]);
@@ -38,13 +38,26 @@ class RoutingMiddleware extends IMiddleware{
              $match['path'], 
              $match['method'], 
              $match['route']['compiled_target'],
+             $match['route']['model_class'],
              $match['route']['layout'],
              $match['route']['guards'],
              $match['route']['restype'],
              $match['route']['trail'],
              $match['prefix']
          );
+
          $request->route = $matched_route;
+
+         //check that route supports response type
+         $response_type = match($request->intent->value){
+             'api', 'ajax' => 'json',
+             'web'         => 'html',
+             'sse'         => 'sse'
+         };
+
+         if(!$request->route->supports($response_type)){
+             throw new NotAcceptableException('The route '.$request->route->url.' does not support [ '.$response_type.' ] responses!');
+         }
 
          //set path params
          foreach($match['params'] as $pk => $pv){
@@ -53,11 +66,8 @@ class RoutingMiddleware extends IMiddleware{
 
          //set query params
          foreach($match['query'] as $qk => $qv){
-             $request->add_query_param($pk, $pv);
+             $request->add_query_param($qk, $qv);
          }
-
-         //set request intent
-         $request->intent = new RequestIntentResolver()->resolve($request);
 
      	 parent::handle($request);
      }

@@ -97,6 +97,10 @@ class ClassMapper{
              $components_dirs[] = $this->projectroot."/".$d;
          }
 
+         foreach(SAQLE_COMPONENTS_DIRS as $d){
+             $components_dirs[] = $d;
+         }
+
          /**
           * Iterate through each components directory, mapping 
           * components controllers and templates to componets names

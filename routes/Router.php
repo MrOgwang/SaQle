@@ -60,8 +60,8 @@ final class Router {
       * componentname         - just the component name, the method to excute will be determined automatically if a component has a controller
       * 
       * */
-     static public function get(string $url, string $target) : Router {
-         $route = new Route('get', $url, $target);
+     static public function get(string $url, string $target, ?string $model_class = null) : Router {
+         $route = new Route('get', $url, $target, $model_class);
 
          self::$routes[] = [$route];
 
@@ -71,8 +71,8 @@ final class Router {
      }
 
      //parameters as descirbed in get
-     static public function post(string $url, string $target) : Router {
-         $route = new Route('post', $url, $target);
+     static public function post(string $url, string $target, ?string $model_class = null) : Router {
+         $route = new Route('post', $url, $target, $model_class);
 
          self::$routes[] = [$route];
 
@@ -82,8 +82,8 @@ final class Router {
      }
 
      //parameters as descirbed in get
-     static public function patch(string $url, string $target) : Router {
-         $route = new Route('patch', $url, $target);
+     static public function patch(string $url, string $target, ?string $model_class = null) : Router {
+         $route = new Route('patch', $url, $target, $model_class);
 
          self::$routes[] = [$route];
 
@@ -93,8 +93,8 @@ final class Router {
      }
 
      //parameters as descirbed in get
-     static public function put(string $url, string $target) : Router {
-         $route = new Route('put', $url, $target);
+     static public function put(string $url, string $target, ?string $model_class = null) : Router {
+         $route = new Route('put', $url, $target, $model_class);
 
          self::$routes[] = [$route];
 
@@ -104,8 +104,8 @@ final class Router {
      }
 
      //parameters as descirbed in get
-     static public function delete(string $url, string $target) : Router {
-         $route = new Route('delete', $url, $target);
+     static public function delete(string $url, string $target, ?string $model_class = null) : Router {
+         $route = new Route('delete', $url, $target, $model_class);
 
          self::$routes[] = [$route];
 
@@ -133,10 +133,10 @@ final class Router {
       * componentname         - just the component name, the method to excute will be determined automatically if a component has a controller
       * 
       * */
-     static public function match(array $methods, string $url, string $target) : Router {
+     static public function match(array $methods, string $url, string $target, ?string $model_class = null) : Router {
          $routes = [];
          foreach($methods as $m){
-             $routes[] = new Route($m, $url, $target);
+             $routes[] = new Route($m, $url, $target, $model_class);
          }
 
          self::$routes[] = $routes;
@@ -309,25 +309,10 @@ final class Router {
         $prefix = $prefix_data['prefix'];           // matched prefix string (e.g., /api/v1)
         $path_without_prefix = $prefix_data['path']; // path after removing prefix
 
-        // Determine allowed restype if prefix matched
-        $allowed_restype = 'html';
-        if ($prefix) {
-            if (self::prefix_in_array($prefix, API_URL_PREFIXES)) {
-                $allowed_restype = 'json';
-            } elseif (self::prefix_in_array($prefix, SSE_URL_PREFIXES)) {
-                $allowed_restype = 'sse';
-            }
-        }
-
         // Iterate over compiled routes
         foreach ($compiled_routes as $route) {
             // HTTP method check
             if (strtoupper($route['method']) !== strtoupper($method)) continue;
-
-            // Check restype if prefix matched
-            if ($allowed_restype && !in_array($allowed_restype, $route['route']['restype'] ?? [])) {
-                 continue;
-            }
 
             // Match path regex
             if (preg_match($route['pattern'], $path_without_prefix, $matches)) {

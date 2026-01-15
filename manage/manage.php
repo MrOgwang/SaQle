@@ -3,6 +3,7 @@ namespace SaQle\Manage;
 
 use SaQle\Migration\Commands\{MakeMigrations, Migrate, MakeCollections, MakeModels, MakeThroughs, SeedDatabase, ResetDatabase, MakeSuperuser, StartProject, StartApps};
 use SaQle\Build\Commands\{BuildProject};
+use SaQle\Build\Utils\ResourceRouteGenerator;
 
 class Manage{
 	 private string $command      = '';
@@ -12,6 +13,7 @@ class Manage{
 	 	 $this->command = $args[1] ?? null;
 	 	 $this->arguments = match($this->command){
 	 	 	'make:migrations'  => $this->extract_makemigrations_args($args),
+	 	 	'make:resources'   => [],
 	 	 	'migrate'          => [],
 	 	 	'make:collections' => $this->extract_makemodels_args($args),
 	 	 	'make:models'      => $this->extract_makemodels_args($args),
@@ -134,6 +136,9 @@ class Manage{
 			 case 'build':
 			     $type = $this->arguments['type'] ?? 'all';
 			     resolve(BuildProject::class)->execute($this->project_root, $type);
+			 break;
+			 case 'make:resources':
+			     ResourceRouteGenerator::execute($this->project_root);
 			 break;
 			 default:
 			     throw new \Exception("Unknown command!");

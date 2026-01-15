@@ -7,7 +7,10 @@ use SaQle\Core\Registries\RouteRegistry;
 
 final class RouteCompiler {
 
-     public static function compile(array $routes, string $project_root) {
+     public static function compile(string $project_root) {
+        
+         $routes = Router::all();
+
          $compiled = [];
 
          foreach ($routes as $route){
@@ -35,6 +38,7 @@ final class RouteCompiler {
                  'url'             => $route->url,
                  'target'          => $route->target,
                  'compiled_target' => $route->compiled_target,
+                 'model_class'     => $route->model_class,
                  'guards'          => $route->guards,
                  'layout'          => $route->layout,
                  'restype'         => $route->restype,
