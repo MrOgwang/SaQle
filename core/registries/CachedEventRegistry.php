@@ -4,8 +4,11 @@ namespace SaQle\Core\Registries;
 final class CachedEventRegistry extends EventRegistry {
      private string $cache_path;
 
-     public function __construct(string $cache_path = DOCUMENT_ROOT.CLASS_MAPPINGS_DIR.'events.php') {
-         $this->cache_path = $cache_path;
+     public function __construct(
+         private string $document_root,
+         private string $class_mappings_dir
+     ){
+         $this->cache_path = $this->document_root.$this->class_mappings_dir."events.php";
          $this->load_from_cache();
      }
 

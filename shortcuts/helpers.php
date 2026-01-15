@@ -5,6 +5,7 @@ use SaQle\Http\Response\HttpMessage;
 use SaQle\Http\Response\Types\RedirectResponse;
 use SaQle\FeedBack\ExceptionFeedBack;
 use SaQle\Core\Exceptions\Http\{ProcessingException, OkException, CreatedException, NoContentException, BadRequestException, PartialContentException, MovedPermanentlyException, FoundException, UnauthorizedException, PaymentRequiredException, ForbiddenException, NotFoundException, MethodNotAllowedException, NotAcceptableException, RequestTimeoutException, ConflictException, TooManyRequestsException, InternalServerErrorException, ServiceUnavailableException};
+use SaQle\Core\Config\ConfigRepository;
 use SaQle\Core\FeedBack\FeedBack;
 use SaQle\Http\Request\Request;
 use SaQle\Core\Support\AppContext;
@@ -31,6 +32,26 @@ if(!function_exists('request')){
 if(!function_exists('file_logger')){
      function file_logger(){
         return resolve(FileLogger::class);
+     }
+}
+
+if(!function_exists('config')){
+     function config(string $key, mixed $default = null): mixed {
+         return app()->container->resolve(ConfigRepository::class)->get($key, $default);
+     }
+}
+
+if(!function_exists('with_config')){
+     function with_config(array $overrides, callback $callable): mixed {
+         $config = app()->container->resolve(ConfigRepository::class);
+
+         $config->push($overrides);
+
+         try{
+             return $callback();
+         }finally{
+             $config->pop();
+         }
      }
 }
 

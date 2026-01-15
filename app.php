@@ -16,7 +16,7 @@ use SaQle\Core\Services\Providers\{
 };
 use SaQle\Http\Cors\CorsConfig;
 use SaQle\Core\Support\AppContext;
-use SaQle\Core\Config\Config;
+use SaQle\Core\Config\{ConfigRepository, Config, ConfigDefaults, ConfigBridge};
 use SaQle\Http\Request\{Request, Runtime};
 use SaQle\Session\Providers\SessionProvider;
 use SaQle\Routes\Providers\RoutingProvider;
@@ -24,6 +24,7 @@ use SaQle\Auth\Guards\GuardManager;
 
 final class App{
      public readonly string $environment;
+     private array $config;
      public MiddlewareRegistry $middleware;
      public Container $container;
      public CorsConfig $cors;
@@ -35,10 +36,12 @@ final class App{
 
          $this->environment = $setup->environment;
          $this->middleware  = new MiddlewareRegistry();
-         $this->container   = new Container();
          $this->cors        = new CorsConfig($setup->cors);
          $this->guards      = new GuardManager();
-         $this->events      = new CachedEventRegistry();
+         $this->container   = new Container();
+         $this->events      = new CachedEventRegistry($this->config['document_root'], $this->config['class_mappings_dir']);
+
+         ConfigBridge::expose($this->config);
 
          $this->boot();
 
@@ -52,6 +55,7 @@ final class App{
      }
 
      public function boot(): void {
+         $this->container->singleton(ConfigRepository::class, fn() => new ConfigRepository($this->config));
          $this->register_middlewares();
          $this->register_providers();
      }
@@ -63,18 +67,21 @@ final class App{
      }
 
      private function load_config(): void{
-         if($this->setup->config_dir){
-             $files = ['app', 'auth', 'database', 'email', 'model', 'tenant', 'session'];
-             $configurations = [];
-             for($f = 0; $f < count($files); $f++){
-                 $file_name = $files[$f];
-                 $path = $this->setup->config_dir.'/'.$file_name.'.config.php';
-                 if(file_exists($path)){
-                     $configurations = array_merge($configurations, require $path);
-                 }
-             }
-             new Config(...$configurations);
+         if(!$this->setup->config_dir) {
+             return;
          }
+
+         $files = ['app', 'auth', 'database', 'email', 'model', 'tenant', 'session'];
+         $config = [];
+
+         foreach ($files as $file) {
+             $path = $this->setup->config_dir."/{$file}.config.php";
+             if (file_exists($path)) {
+                 $config = array_replace($config, require $path);
+             }
+         }
+
+         $this->config = ConfigDefaults::merge($config);
      }
 
      private function register_middlewares(): void {
