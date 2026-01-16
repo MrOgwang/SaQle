@@ -11,7 +11,7 @@ class EventServiceProvider extends ServiceProvider {
      }
 
      public function register(): void {
-         $this->app->events->add($this->get_model_name(AUTH_MODEL_CLASS)."::updated", [
+         $this->app->events->add($this->get_model_name(config('auth_model_class'))."::updated", [
              UpdateSessionUser::class
          ]);
      }

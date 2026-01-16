@@ -12,11 +12,11 @@ final class RequestIntentResolver{
          }
 
          //2. URL prefix intent (explicit contracts)
-         if($request->path_starts_with(SSE_URL_PREFIXES)){
+         if($request->path_starts_with(config('sse_url_prefixes'))){
              return RequestIntent::SSE;
          }
 
-         if($request->path_starts_with(API_URL_PREFIXES)) {
+         if($request->path_starts_with(config('api_url_prefixes'))) {
              return RequestIntent::API;
          }
 

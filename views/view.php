@@ -148,7 +148,7 @@ class View{
      }
 
      private function css_names_to_links(array $names){
-         $path  = ROOT_DOMAIN."static/css/";
+         $path  = config('root_domain')."static/css/";
          $links = [];
          foreach ($names as $n){
              $css_file_path = $path.$n.".css";
@@ -157,7 +157,7 @@ class View{
          return $links;
      }
      private function js_names_to_links(array $names){
-         $path = ROOT_DOMAIN."static/js/";
+         $path = config('root_domain')."static/js/";
          $links = [];
          foreach ($names as $n){
              $js_file_path = $path.$n.".js";

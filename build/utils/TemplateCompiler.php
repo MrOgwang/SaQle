@@ -116,8 +116,8 @@ final class TemplateCompiler {
                      'meta'    => $all_meta
                  ], true);
 
-                 $filename = $templatename.'.'.COMPONENT_TEMPLATE_EXT;
-                 $r['route']['templates'][$templatename] = $project_root.TEMPLATES_CACHE_DIR.$filename;
+                 $filename = $templatename.'.'.config('component_template_ext');
+                 $r['route']['templates'][$templatename] = $project_root.config('templates_cache_dir').$filename;
                  $templates_cache[$filename] = $compiled_template;
              }
 
@@ -130,13 +130,13 @@ final class TemplateCompiler {
 
      private static function cache_template_files(string $project_root, $templates_cache){
          //write to the cache file
-         $views_folder = $project_root.TEMPLATES_CACHE_DIR;
+         $views_folder = $project_root.config('templates_cache_dir');
          if(!file_exists($views_folder)){
              mkdir($views_folder, 0777, true);
          }
 
          foreach($templates_cache as $name => $content){
-             $cachefile = $project_root.TEMPLATES_CACHE_DIR.$name;
+             $cachefile = $project_root.config('templates_cache_dir').$name;
              file_put_contents($cachefile, $content);
          }
      }

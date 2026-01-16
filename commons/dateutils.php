@@ -2,19 +2,19 @@
 namespace SaQle\Commons;
 trait DateUtils{
 	 public static function current_date(){
-		 date_default_timezone_set(DEFAULT_TIMEZONE);
+		 date_default_timezone_set(config('default_timezone'));
          $current_date_time = new \DateTime();
-         $current_date = date(SYSTEM_DATE_FORMAT, $current_date_time->getTimestamp());
+         $current_date = date(config('system_date_format'), $current_date_time->getTimestamp());
          return $current_date;
 	 }
 	 public static function current_time(){
-         date_default_timezone_set(DEFAULT_TIMEZONE);
+         date_default_timezone_set(config('default_timezone'));
          $current_date_time =  new \DateTime();
          $current_time = date('h:i:s a', $current_date_time->getTimestamp());
          return $current_time;
 	 }
 	 private static function get_separator(){
-	 	return match(SYSTEM_DATE_FORMAT){
+	 	return match(config('system_date_format')){
 	 		'Y-m-d', 'Y-d-m', 'd-Y-m', 'd-m-Y', 'm-d-Y', 'm-Y-d' => '-',
 	 		'Y/m/d', 'Y/d/m', 'd/Y/m', 'd/m/Y', 'm/d/Y', 'm/Y/d' => '/'
 	 	};
@@ -22,7 +22,7 @@ trait DateUtils{
 	 private static function get_d_value($name, $current_date = null){
 	 	$current_date      = $current_date ?? self::current_date();
 	 	$date_parts        = explode(self::get_separator(), $current_date);
-	 	$date_format_parts = explode(self::get_separator(), SYSTEM_DATE_FORMAT);
+	 	$date_format_parts = explode(self::get_separator(), config('system_date_format'));
 	 	$index             = array_search($name, $date_format_parts);
 	 	return $date_parts[$index];
 	 }
@@ -48,24 +48,24 @@ trait DateUtils{
 		 return explode(":", $current_time)[2];
 	 }
 	 public static function convert_date_2_format(string $date, string $format, string $nformat = ""){
-	 	 $nformat = $nformat ? $nformat : SYSTEM_DATE_FORMAT;
+	 	 $nformat = $nformat ? $nformat : config('system_date_format');
          $res = date_create_from_format($format, $date);
          return date_format($res, $nformat);
      }
 	 public static function format_date($date = null, $format = null){
-	     date_default_timezone_set(DEFAULT_TIMEZONE);
-		 $format = $format ?? DATE_ADDED_FORMAT;
+	     date_default_timezone_set(config('default_timezone'));
+		 $format = $format ?? config('date_added_format');
 		 if(is_null($date))
 			 return date($format, time());
 		 $timestamp = is_string($date) ? mktime(0, 0 , 0, self::current_month($date), self::current_day($date), self::current_year($date)) : $date;
 		 return date($format, $timestamp);
 	 }
      public static function time_diff($time_one, $time_two){
-         date_default_timezone_set(DEFAULT_TIMEZONE);
+         date_default_timezone_set(config('default_timezone'));
 		 $first = new \DateTime("@".$time_one);
-		 $first->setTimezone(new \DateTimeZone(DEFAULT_TIMEZONE));
+		 $first->setTimezone(new \DateTimeZone(config('default_timezone')));
 		 $second = new \DateTime("@".$time_two);
-		 $second->setTimezone(new \DateTimeZone(DEFAULT_TIMEZONE));
+		 $second->setTimezone(new \DateTimeZone(config('default_timezone')));
 		 
 		 $diff = $second->diff($first);
 		 $weeks = floor($diff->format('%a') / 7);
@@ -341,7 +341,7 @@ trait DateUtils{
 		 return $today;
 	 }
 	 static public function current_date_details(){
-	     date_default_timezone_set(DEFAULT_TIMEZONE);
+	     date_default_timezone_set(config('default_timezone'));
 		 $date_details = new \stdClass();
 		 $current_date = new \DateTime(); //get the current date and time.
 		 $date_details->day_of_month = date('d', $current_date->getTimestamp());
@@ -354,7 +354,7 @@ trait DateUtils{
 		 return $date_details;
 	 }
 	 static public function express_datetime_relativetonow($string_date, $string_time){
-	     date_default_timezone_set(DEFAULT_TIMEZONE);
+	     date_default_timezone_set(config('default_timezone'));
 		 $expressed_time = self::format_date($string_date) ." ".$string_time;
 		 $current_datetimestamp = time();
 		 $entered_datetimestamp = $this->to_timestamp($string_date, $string_time);

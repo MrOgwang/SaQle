@@ -33,8 +33,8 @@ class TargetCompiler{
 
      public function __construct(string $projectroot){
          $this->projectroot = $projectroot;
-         $this->components = require_once $this->projectroot.CLASS_MAPPINGS_DIR."components.php";
-         $this->models = require_once $this->projectroot.CLASS_MAPPINGS_DIR."models.php";
+         $this->components = require_once $this->projectroot.config('class_mappings_dir')."components.php";
+         $this->models = require_once $this->projectroot.config('class_mappings_dir')."models.php";
      }
 
      private function get_component_name(string $target, bool $throw_error = true){
@@ -160,7 +160,7 @@ class TargetCompiler{
          if(!$templatename)
              return 'unknown.html';
 
-         return $templatename.'_'.$index.'.'.COMPONENT_TEMPLATE_EXT;
+         return $templatename.'_'.$index.'.'.config('component_template_ext');
      }
 
      public function compile($changed_files){
@@ -203,7 +203,7 @@ class TargetCompiler{
              $routes_cache[$r->url] = [
                  'trail' => $trail,
                  'uitree' => $ui_tree,
-                 'template_path' => $this->projectroot.TEMPLATES_CACHE_DIR.$templatename
+                 'template_path' => $this->projectroot.config('templates_cache_dir').$templatename
              ];
 
              $page = new View($this->components['page']['template_path']);
@@ -224,13 +224,13 @@ class TargetCompiler{
 
      private function cache_template_files($templates_cache){
          //write to the cache file
-         $views_folder = $this->projectroot.TEMPLATES_CACHE_DIR;
+         $views_folder = $this->projectroot.config('templates_cache_dir');
          if(!file_exists($views_folder)){
              mkdir($views_folder, 0777, true);
          }
 
          foreach($templates_cache as $name => $content){
-             $cachefile = $this->projectroot.TEMPLATES_CACHE_DIR.$name;
+             $cachefile = $this->projectroot.config('templates_cache_dir').$name;
              file_put_contents($cachefile, $content);
          }
      }
@@ -244,12 +244,12 @@ class TargetCompiler{
          "return " . $export . ";\n";
 
          //write to the cache file
-         $mappings_folder = $this->projectroot.CLASS_MAPPINGS_DIR;
+         $mappings_folder = $this->projectroot.config('class_mappings_dir');
          if(!file_exists($mappings_folder)){
              mkdir($mappings_folder, 0777, true);
          }
 
-         $mappings_file = $this->projectroot.CLASS_MAPPINGS_DIR."routes.php";
+         $mappings_file = $this->projectroot.config('class_mappings_dir')."routes.php";
          file_put_contents($mappings_file, $php);
      }
 }

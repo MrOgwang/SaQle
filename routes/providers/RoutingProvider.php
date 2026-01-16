@@ -9,6 +9,6 @@ use SaQle\Routes\Router;
 final class RoutingProvider extends ServiceProvider{
      public function register(): void {
          //add media url routing
-         Router::get(MEDIA_URL, 'mediacontroller');
+         Router::get(config('media_url'), 'mediacontroller');
      }
 }

@@ -182,8 +182,8 @@ abstract class Binary extends RealField{
          foreach($files as $file_name){
          	 $file_data['path'] = $path;
          	 $file_data['file_name'] = $file_name;
-         	 $url_token = $this->encrypt(json_encode($file_data), MEDIA_KEY, 'media-url-salt');
-	 		 $urls[] = $this->add_url_parameter(rtrim(ROOT_DOMAIN, '/').MEDIA_URL, 'token', $url_token);
+         	 $url_token = $this->encrypt(json_encode($file_data), config('media_key'), 'media-url-salt');
+	 		 $urls[] = $this->add_url_parameter(rtrim(config('root_domain'), '/').config('media_url'), 'token', $url_token);
 	 	 }
 
 	 	 return $this->multiple ? $urls : $urls[0];

@@ -8,8 +8,8 @@ class TimestampField extends TextType implements IField{
 		 $kwargs['column_type']    = "DATETIME";
 		 $kwargs['length']         = 30;
 		 $kwargs['maximum']        = 30;
-		 $kwargs['db_auto_init']   = $kwargs['db_auto_init'] ?? DB_AUTO_INIT_TIMESTAMP;
-		 $kwargs['db_auto_update'] = $kwargs['db_auto_update'] ?? DB_AUTO_UPDATE_TIMESTAMP;
+		 $kwargs['db_auto_init']   = $kwargs['db_auto_init'] ?? config('db_auto_init_timestamp');
+		 $kwargs['db_auto_update'] = $kwargs['db_auto_update'] ?? config('db_auto_update_timestamp');
 		 parent::__construct(...$kwargs);
 	 }
 }

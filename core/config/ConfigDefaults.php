@@ -185,12 +185,6 @@ final class ConfigDefaults{
              'db_seeder' => '',
 
              /**
-              * These models are resource models. Resource models are models that get
-              * automatic resource controllers, views and routes for add, edit, delete, view actions.
-              * */
-             'resource_models' => [],
-
-             /**
              * The directory in which class mappings will be cached. This is used by the framework and cannot be customized
              * at the moment
              * */

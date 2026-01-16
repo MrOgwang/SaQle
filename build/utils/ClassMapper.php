@@ -52,7 +52,7 @@ class ClassMapper{
 
      private function cache_mappings(array $items, string $type = 'components'): void {
          //create the components mappings dir
-         $mappings_folder = $this->projectroot.CLASS_MAPPINGS_DIR;
+         $mappings_folder = $this->projectroot.config('class_mappings_dir');
          if(!file_exists($mappings_folder)){
              mkdir($mappings_folder, 0777, true);
          }
@@ -93,11 +93,11 @@ class ClassMapper{
              $components_dirs[] = $this->projectroot."/apps/".$f."/components";
          }
 
-         foreach(EXTRA_COMPONENTS_DIRS as $d){
+         foreach(config('extra_components_dirs') as $d){
              $components_dirs[] = $this->projectroot."/".$d;
          }
 
-         foreach(SAQLE_COMPONENTS_DIRS as $d){
+         foreach(config('saqle_components_dirs') as $d){
              $components_dirs[] = $d;
          }
 
@@ -111,14 +111,14 @@ class ClassMapper{
              foreach($dir_iterator as $file){
                  if($file->isFile()){
                      $component_name = str_replace(".php", "", $file->getFilename());
-                     $component_name = str_replace(".".COMPONENT_TEMPLATE_EXT, "", $component_name);
+                     $component_name = str_replace(".".config('component_template_ext'), "", $component_name);
                      $path           = $file->getRealPath();
 
                      if(!isset($components[$component_name])){
                          $components[$component_name] = ['controller' => '', 'controller_path' => '', 'template_path' => ''];
                      }
 
-                     if($file->getExtension() === COMPONENT_TEMPLATE_EXT){
+                     if($file->getExtension() === config('component_template_ext')){
                          $components[$component_name]['template_path'] = $path;
                      }elseif($file->getExtension() === 'php'){
                          $components[$component_name]['controller_path'] = $path;
@@ -159,7 +159,7 @@ class ClassMapper{
              $models_dirs[] = $this->projectroot."/apps/".$f."/models";
          }
 
-         foreach(EXTRA_MODELS_DIRS as $d){
+         foreach(config('extra_models_dirs') as $d){
              $models_dirs[] = $this->projectroot."/".$d;
          }
 

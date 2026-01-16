@@ -9,7 +9,7 @@ class TempId extends TempModel {
 	 protected function model_setup(TableInfo $meta) : void {
 	 	 $meta->fields = [
 	 	 	 'id' => new Pk(),
-		     'id_value' => PRIMARY_KEY_TYPE === 'auto' ? 
+		     'id_value' => config('primary_key_type' )=== 'auto' ? 
 		                   new IntegerField(required: true, absolute: true, zero: false) : 
 		                   new TinyTextField(required: true, strict: false)
 	 	 ];

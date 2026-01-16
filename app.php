@@ -30,6 +30,33 @@ final class App{
      public CachedEventRegistry $events;
 
      public function __construct(private AppSetup $setup){
+         // 1. Expose app early
+         AppContext::set($this);
+
+         // 2. Initialize CORE infrastructure FIRST
+         $this->container  = new Container();
+         $this->middleware = new MiddlewareRegistry();
+         $this->guards     = new GuardManager();
+
+         // 3. Load environment & helpers
+         $this->initialize();
+
+         // 4. Load config
+         $config = $setup->get_configurations();
+         ConfigBridge::expose($config);
+
+         // 5. Remaining services
+         $this->cors   = new CorsConfig($setup->cors);
+         $this->events = new CachedEventRegistry(
+             $config['document_root'],
+             $config['class_mappings_dir']
+         );
+
+         // 6. Register framework + app providers
+         $this->boot($config);
+     }
+
+     /*public function __construct(private AppSetup $setup){
          $this->initialize();
 
          $config = $setup->get_configurations();
@@ -45,7 +72,7 @@ final class App{
          $this->boot($config);
 
          AppContext::set($this);
-     }
+     }*/
 
      private function initialize() : void {
          require_once __DIR__.'/shortcuts/helpers.php';

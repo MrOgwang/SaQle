@@ -41,7 +41,7 @@ class AuthenticationProvider extends ServiceProvider {
          AuthManager::set_user_provider(function(string|int $id){
              //get and return the user here
              $model = config('auth_model_class');
-             return $model::get()->where('user_id', $id)->first();
+             return $model::get()->where('user_id', $id)->first_or_default();
          });
 
          /**

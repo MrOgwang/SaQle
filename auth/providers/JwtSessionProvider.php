@@ -6,10 +6,10 @@ use SaQle\Auth\Providers\Interfaces\SessionProvider;
 
 class JwtSessionProvider implements SessionProvider{
      public function create_session(IUser $user): string{
-         $issuer     = JWT_ISS ? JWT_ISS : ROOT_DOMAIN; //the domain issuing the token
+         $issuer     = config('jwt_iss') ?? config('root_domain'); //the domain issuing the token
          $issued_at  = time();                          //the time issued in secends
          $not_before = time();                          //the time in seconds before which token is not valid
-         $expires_at = $issued_at + (JWT_TTL * 60);     //time to expire token
+         $expires_at = $issued_at + (config('jwt_ttl') * 60);     //time to expire token
          
          $payload = [
              'iat'       => $issued_at,
@@ -58,7 +58,7 @@ class JwtSessionProvider implements SessionProvider{
          $payload = json_encode($payload);
          $payload = $this->base64_url_encode($payload);
 
-         $signature = hash_hmac("sha256", $header.".".$payload, JWT_KEY, true);
+         $signature = hash_hmac("sha256", $header.".".$payload, config('jwt_key'), true);
          $signature = $this->base64_url_encode($signature);
          return $header.".".$payload.".".$signature;
      }
@@ -68,7 +68,7 @@ class JwtSessionProvider implements SessionProvider{
              throw new \Exception("invalid token format");
          }
 
-         $signature = hash_hmac("sha256", $matches["header"].".".$matches["payload"], JWT_KEY, true);
+         $signature = hash_hmac("sha256", $matches["header"].".".$matches["payload"], config('jwt_key'), true);
          $signature_from_token = $this->base64_url_decode($matches["signature"]);
 
          if(!hash_equals($signature, $signature_from_token)) {

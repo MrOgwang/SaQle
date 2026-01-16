@@ -26,19 +26,19 @@ class Email implements INotification{
 	 * Email host
 	 * @var string
 	 */
-	 private string $host = EMAIL_HOST;
+	 private string $host;
 	 
 	 /**
 	 * Email acc owner username
 	 * @var string
 	 */
-	 private string $username = EMAIL_USERNAME;
+	 private string $username;
 	 
 	 /**
 	 * Email acc owner password
 	 * @var string
 	 */
-	 private string $password = EMAIL_PASSWORD;
+	 private string $password;
 	 
 	 /**
 	 * Email host port
@@ -50,13 +50,13 @@ class Email implements INotification{
 	 * Email sender name and address
 	 * @var array
 	 */
-	 protected array $from_address = [EMAIL_SENDER_ADDRESS, EMAIL_SENDER_NAME];
+	 protected array $from_address;
 
 	 /**
 	 * Reply to name and address
 	 * @var array
 	 */
-	 protected array $reply_to_address = [EMAIL_SENDER_ADDRESS, EMAIL_SENDER_NAME];
+	 protected array $reply_to_address;
 
      /**
      * Email recipient name and address
@@ -99,7 +99,12 @@ class Email implements INotification{
      * @param array $configurations
      */
 	 public function __construct(...$configurations){
-	 	 $this->port = (int)EMAIL_PORT;
+	 	 $this->host = config('email_host');
+	 	 $this->username = config('username');
+	 	 $this->password = config('email_password');
+	 	 $this->from_address = [config('email_sender_address'), config('email_sender_name')];
+	 	 $this->reply_to_address = [config('email_sender_address'), config('email_sender_name')];
+	 	 $this->port = (int)config('email_port');
 		 $this->to_address  = [$configurations['rec_email'], $configurations['rec_name']];
 		 $this->subject     = $configurations['subject'];
 		 $this->body        = [

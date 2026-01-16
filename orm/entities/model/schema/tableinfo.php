@@ -7,6 +7,7 @@ use SaQle\Orm\Entities\Field\Types\{Pk, BooleanField, FileField, OneToOne, PhpTi
 
 class TableInfo{
      private bool $remove_fields = false;
+     private bool $initializing = false;
 
      //Whether this is a temporary table or not
      public bool $temporary = false {
@@ -75,7 +76,9 @@ class TableInfo{
      public bool $auto_cm = true {
          set(bool $value){
              $this->auto_cm = $value;
-             $this->toggle_cm_fields(switch: $value);
+             if(!$this->initializing){
+                 $this->toggle_cm_fields(switch: $value);
+             }
          }
 
          get => $this->auto_cm;
@@ -85,7 +88,9 @@ class TableInfo{
      public bool $auto_cmdt = true {
          set(bool $value){
              $this->auto_cmdt = $value;
-             $this->toggle_cmdt_fields(switch: $value);
+             if(!$this->initializing){
+                 $this->toggle_cmdt_fields(switch: $value);
+             }
          }
 
          get => $this->auto_cmdt;
@@ -113,7 +118,9 @@ class TableInfo{
      public bool $soft_delete = true {
          set(bool $value){
              $this->soft_delete = $value;
-             //$this->toggle_delete_fields(switch: $value);
+             if(!$this->initializing){
+                 $this->toggle_delete_fields(switch: $value);
+             }
          }
 
          get => $this->soft_delete;
@@ -195,7 +202,9 @@ class TableInfo{
      public bool $enable_multitenancy = false {
          set(bool $value){
              $this->enable_multitenancy = $value;
-             $this->toggle_tenant_field(switch: $value);
+             if(!$this->initializing){
+                 $this->toggle_tenant_field(switch: $value);
+             }
          }
 
          get => $this->enable_multitenancy;
@@ -363,6 +372,7 @@ class TableInfo{
                  }
              }
 
+
              $this->fields = !$this->remove_fields ? array_merge($this->fields, $value) : $value;
              $this->column_names = !$this->remove_fields ? array_merge($this->column_names, $column_names) : $column_names;
              $this->actual_column_names = !$this->remove_fields ? array_merge($this->actual_column_names, $actual_column_names) : $actual_column_names;
@@ -449,7 +459,7 @@ class TableInfo{
      }
 
      //add or remove the tenant field depending on the multitenancy setting
-     private function toggle_tenant_field(bool $switch = true, string $signal_type = 'pre') : void{
+     private function toggle_tenant_field(bool $switch = true) : void{
          $auto_fields = [];
          if($switch && config('tenant_model_class')){
              $auto_fields['tenant'] = new OneToOne(required: false, fmodel: config('tenant_model_class'), field: 'tenant', column_name: 'tenant_id');
@@ -463,7 +473,7 @@ class TableInfo{
      }
 
      //add or remove creator and modifier fields depending on auto_cm setting
-     private function toggle_cm_fields(bool $switch = true, string $signal_type = 'pre') : void{
+     private function toggle_cm_fields(bool $switch = true) : void{
          $auto_fields = [];
          if( $switch && config('auth_model_class') ){
              $auto_fields['author'] = new OneToOne(required: false, fmodel: config('auth_model_class'), field: 'author', fk: 'user_id', column_name: $this->created_by_field);
@@ -479,7 +489,7 @@ class TableInfo{
      }
 
      //add or remove created at and modified at date time stamps depending on auto_cmdt setting
-     private function toggle_cmdt_fields(bool $switch = true, string $signal_type = 'pre') : void{
+     private function toggle_cmdt_fields(bool $switch = true) : void{
          $auto_fields = [];
          if( $switch ){
              $auto_fields[$this->created_at_field] = match($this->cmdt_type){
@@ -507,7 +517,7 @@ class TableInfo{
      }
 
      //add or remove soft delete fields depending on soft_delete setting
-     private function toggle_delete_fields(bool $switch = true, string $signal_type = 'pre') : void{
+     private function toggle_delete_fields(bool $switch = true) : void{
          $auto_fields = [];
          if( $switch ){
              $auto_fields[$this->deleted_field] = new BooleanField(required: false, zero: true, absolute: true);
@@ -540,6 +550,7 @@ class TableInfo{
              $this->fields                  = $fields;
          }else{
              $this->non_defined_field_names = array_unique(array_diff($this->non_defined_field_names, array_keys($fields)));
+
              $new_field_names = array_unique(array_diff(array_keys($this->fields), array_keys($fields)));
              $to_remain_fields = [];
              foreach($new_field_names as $f){
@@ -552,6 +563,8 @@ class TableInfo{
      }
 
      private function set_defaults(){
+         $this->initializing = true;
+
          $this->pk_type = config('primary_key_type');
          $this->cmdt_type = config('db_auto_cmdt_type');
          $this->auto_cm = config('model_auto_cm_fields');
@@ -568,13 +581,16 @@ class TableInfo{
          $this->db_auto_init_timestamp = config('db_auto_init_timestamp');
          $this->db_auto_update_timestamp = config('db_auto_update_timestamp');
          $this->action_on_duplicate = config('model_action_on_duplicate');
+
+         $this->initializing = false;
      }
 
      public function __construct(){
          $this->set_defaults();
-         /*$this->toggle_tenant_field(switch: config('enable_multitenancy'));
+
+         $this->toggle_tenant_field(switch: config('enable_multitenancy'));
          $this->toggle_cm_fields(switch: config('model_auto_cm_fields'));
          $this->toggle_cmdt_fields(switch: config('model_auto_cmdt_fields'));
-         $this->toggle_delete_fields(switch: config('model_soft_delete'));*/
+         $this->toggle_delete_fields(switch: config('model_soft_delete'));
      }
 }
