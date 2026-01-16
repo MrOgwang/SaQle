@@ -1,11 +1,11 @@
 {
      "name": "mrogwang/saqle",
-     "description": "A php framework for rapid prototyping",
+     "description": "A component based, MVC php framework for rapid prototyping",
      "type": "library",
      "license": "MIT",
      "autoload": {
          "psr-4": {
-             "SaQle\\": "/"
+             "SaQle\\": ""
          }
      },
      "require": {
