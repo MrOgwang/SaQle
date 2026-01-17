@@ -16,7 +16,9 @@ class DirManager{
 
 	 private function get_media_folder(){
 	 	 $media_folder = config('media_folder');
-	 	 return config('hidden_media_folder') ? config('base_path').'/'.$media_folder.'/' : config('document_root').'/'.$media_folder.'/';
+	 	 return config('hidden_media_folder') ? 
+	 	 path_join([config('base_path'), $media_folder], true) : 
+	 	 path_join([config('document_root'), $media_folder], true);
 	 }
 
 	 protected function create_dir($dir = '', $root = null){

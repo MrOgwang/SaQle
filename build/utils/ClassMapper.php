@@ -25,12 +25,6 @@ use RecursiveDirectoryIterator;
 
 class ClassMapper{
 
-     protected string $projectroot;
-
-     public function __construct(string $projectroot){
-         $this->projectroot = $projectroot;
-     }
-
      private function get_model_classes_from_file(string $file): array {
          $declaredBefore = get_declared_classes();
 
@@ -52,12 +46,12 @@ class ClassMapper{
 
      private function cache_mappings(array $items, string $type = 'components'): void {
          //create the components mappings dir
-         $mappings_folder = $this->projectroot.config('class_mappings_dir');
+         $mappings_folder = path_join([config('base_path'), config('class_mappings_dir')]);
          if(!file_exists($mappings_folder)){
              mkdir($mappings_folder, 0777, true);
          }
 
-         $mappings_file = $mappings_folder.$type.".php";
+         $mappings_file = path_join([$mappings_folder, $type.".php"]);
 
          //convert array to a PHP array representation
          $exported_array = var_export($items, true);
@@ -87,14 +81,14 @@ class ClassMapper{
           * 2. App level components inside app directories
           * 2. Other components as listed in EXTRA_COMPONENTS_DIRS setting
           * */
-         $components_dirs = [$this->projectroot.'/components'];
+         $components_dirs = [path_join([config('base_path'), 'components'])];
 
          foreach(config('installed_apps') as $f){
-             $components_dirs[] = $this->projectroot."/apps/".$f."/components";
+             $components_dirs[] = path_join([config('base_path'), 'apps', $f, 'components']);
          }
 
          foreach(config('extra_components_dirs') as $d){
-             $components_dirs[] = $this->projectroot."/".$d;
+             $components_dirs[] = path_join([config('base_path'), $d]);
          }
 
          foreach(config('saqle_components_dirs') as $d){
@@ -106,6 +100,7 @@ class ClassMapper{
           * components controllers and templates to componets names
           * */
          $components = [];
+
          foreach($components_dirs as $dir){
              $dir_iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir));
              foreach($dir_iterator as $file){
@@ -153,14 +148,14 @@ class ClassMapper{
           * 2. App level models inside app directories
           * 2. Other models as listed in EXTRA_MODELS_DIRS setting
           * */
-         $models_dirs = [$this->projectroot.'/models'];
+         $models_dirs = [path_join([config('base_path'), 'models'])];
 
          foreach(config('installed_apps') as $f){
-             $models_dirs[] = $this->projectroot."/apps/".$f."/models";
+             $models_dirs[] = path_join([config('base_path'), 'apps', $f, 'models']);
          }
 
          foreach(config('extra_models_dirs') as $d){
-             $models_dirs[] = $this->projectroot."/".$d;
+             $models_dirs[] = path_join([config('base_path'), $d]);
          }
 
          /**

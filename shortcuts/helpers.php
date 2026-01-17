@@ -55,6 +55,31 @@ if(!function_exists('with_config')){
      }
 }
 
+if(!function_exists('path_join')){
+     function path_join(array $parts, bool $trailing_slash = false): string {
+         $separator = DIRECTORY_SEPARATOR;
+         $clean = [];
+
+         foreach($parts as $index => $part){
+             if($part === '' || $part === null) {
+                 continue;
+             }
+
+             $part = str_replace(['/', '\\'], $separator, $part);
+
+             if($index === 0){
+                 $clean[] = rtrim($part, $separator);
+             }else{
+                 $clean[] = trim($part, $separator);
+             }
+         }
+
+         $path = implode($separator, $clean);
+
+         return $trailing_slash ? rtrim($path, '/\\').$separator : $path;
+     }
+}
+
 /**
  * The following are shortcuts to http message responses/feedback
  * */

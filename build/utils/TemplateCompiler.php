@@ -5,7 +5,7 @@ namespace SaQle\Build\Utils;
 use SaQle\Core\Registries\RouteRegistry;
 use SaQle\Core\Registries\ComponentRegistry;
 use SaQle\Commons\StringUtils;
-use SaQle\Views\{AutoForm, View};
+use SaQle\Views\View;
 use RuntimeException;
 
 final class TemplateCompiler {
@@ -27,7 +27,6 @@ final class TemplateCompiler {
          $meta     = $view->get_meta();
          $title    = $view->get_title();
          $blocks   = $view->get_blocks();
-         $forms    = $view->get_forms();
 
          $context  = [];
          foreach($blocks as $b){
@@ -46,14 +45,6 @@ final class TemplateCompiler {
              $wrapped     = "<!--COMPONENT:{$b}-->\n".$block_html."\n"."<!--END COMPONENT-->";
              $context[$b] = $wrapped;
          } 
-
-         if($forms){
-             $auto_form = new AutoForm();
-             foreach($forms as $form){
-                 //generate a form view here!
-                 //$form_block = $auto_form->generate_form($form, $this->models);
-             }
-         }
 
          $html = self::set_template_context($view->get_template(), $context, true);
          
@@ -85,7 +76,7 @@ final class TemplateCompiler {
          return [$all_css, $all_js, $all_meta, $all_title, $all_html];
      }
 
-     public static function compile(string $project_root) {
+     public static function compile() {
 
          $routes = RouteRegistry::all();
          $new_routes = [];
@@ -117,26 +108,26 @@ final class TemplateCompiler {
                  ], true);
 
                  $filename = $templatename.'.'.config('component_template_ext');
-                 $r['route']['templates'][$templatename] = $project_root.config('templates_cache_dir').$filename;
+                 $r['route']['templates'][$templatename] = path_join([config('base_path'), config('templates_cache_dir'), $filename]);
                  $templates_cache[$filename] = $compiled_template;
              }
 
              $new_routes[] = $r;
          }
 
-         self::cache_template_files($project_root, $templates_cache);
-         RouteRegistry::cache_routes_mapping($new_routes, $project_root);
+         self::cache_template_files($templates_cache);
+         RouteRegistry::cache_routes_mapping($new_routes);
      }
 
-     private static function cache_template_files(string $project_root, $templates_cache){
+     private static function cache_template_files($templates_cache){
          //write to the cache file
-         $views_folder = $project_root.config('templates_cache_dir');
+         $views_folder = path_join([config('base_path'), config('templates_cache_dir')]);
          if(!file_exists($views_folder)){
              mkdir($views_folder, 0777, true);
          }
 
          foreach($templates_cache as $name => $content){
-             $cachefile = $project_root.config('templates_cache_dir').$name;
+             $cachefile = path_join([$views_folder, $name]);
              file_put_contents($cachefile, $content);
          }
      }

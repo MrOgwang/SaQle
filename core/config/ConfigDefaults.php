@@ -195,6 +195,7 @@ final class ConfigDefaults{
              * at the moment
              * */
              'templates_cache_dir' => '/storage/framework/build/cache/templates/',
+             'forms_cache_dir' => '/storage/framework/build/cache/forms/',
 
              //The extension for component templates
              'component_template_ext' => 'html',
@@ -208,7 +209,7 @@ final class ConfigDefaults{
              * */
              'extra_components_dirs' => [],
 
-             'saqle_components_dir' => [realpath(__DIR__.'/../../components')],
+             'saqle_components_dirs' => [realpath(__DIR__.'/../../components')],
          ];
      }
 }

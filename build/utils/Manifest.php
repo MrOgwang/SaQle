@@ -22,9 +22,9 @@ class Manifest{
 
      public array $data = [];
 
-     public function __construct(string $projectroot){
+     public function __construct(){
 
-         $this->file = $projectroot.'/storage/framework/build/manifest.json';
+         $this->file = path_join([config('base_path'), '/storage/framework/build/manifest.json']);
 
          //ensure directory exists
          if (!is_dir(dirname($this->file))){

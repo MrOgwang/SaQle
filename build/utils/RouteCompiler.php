@@ -7,7 +7,7 @@ use SaQle\Core\Registries\RouteRegistry;
 
 final class RouteCompiler {
 
-     public static function compile(string $project_root) {
+     public static function compile() {
         
          $routes = Router::all();
 
@@ -17,7 +17,7 @@ final class RouteCompiler {
              $compiled[] = self::compile_route($route);
          }
 
-         RouteRegistry::cache_routes_mapping($compiled, $project_root);
+         RouteRegistry::cache_routes_mapping($compiled, config('base_path'));
      }
 
      private static function compile_route(Route $route, ?Route $source = null): array{

@@ -24,7 +24,7 @@ class Runtime {
      }
 
      private function handle_exception(Throwable $e, Request $request): void {
-         $logger = new FileLogger(config('base_path')."/logs/errors.txt");
+         $logger = new FileLogger( path_join([config('base_path'), 'logs', 'errors.txt']) );
          $timestamp = time();
          $time = date("g:i A", $timestamp);
          $logger->log_to_file($time." -- ".$e."\n\n");

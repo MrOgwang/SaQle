@@ -15,7 +15,7 @@ final class ComponentRegistry {
 
      public static function all(): array{
          if (self::$components === null) {
-             self::$components = require config('base_path').config('class_mappings_dir').'components.php';
+             self::$components = require path_join([config('base_path'), config('class_mappings_dir'), 'components.php']);
          }
 
          return self::$components;

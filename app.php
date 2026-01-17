@@ -48,31 +48,13 @@ final class App{
          // 5. Remaining services
          $this->cors   = new CorsConfig($setup->cors);
          $this->events = new CachedEventRegistry(
-             $config['document_root'],
+             $config['base_path'],
              $config['class_mappings_dir']
          );
 
          // 6. Register framework + app providers
          $this->boot($config);
      }
-
-     /*public function __construct(private AppSetup $setup){
-         $this->initialize();
-
-         $config = $setup->get_configurations();
-
-         $this->middleware  = new MiddlewareRegistry();
-         $this->cors        = new CorsConfig($setup->cors);
-         $this->guards      = new GuardManager();
-         $this->container   = new Container();
-         $this->events      = new CachedEventRegistry($config['document_root'], $config['class_mappings_dir']);
-
-         ConfigBridge::expose($config);
-
-         $this->boot($config);
-
-         AppContext::set($this);
-     }*/
 
      private function initialize() : void {
          require_once __DIR__.'/shortcuts/helpers.php';

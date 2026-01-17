@@ -26,7 +26,7 @@ class Manage{
 	 	 	'build'            => $this->extract_build_args($args),
 	 	 	default            => throw new \Exception("Unknown command!")
 	 	 };
-	 	 $this->project_root = $args[ count($args) - 1];
+	 	 $this->project_root = config('base_path');
 	 }
 
 	 private function extract_args(array $expected_short, array $expected_long, array $args){
@@ -135,7 +135,7 @@ class Manage{
 			 break;
 			 case 'build':
 			     $type = $this->arguments['type'] ?? 'all';
-			     resolve(BuildProject::class)->execute($this->project_root, $type);
+			     resolve(BuildProject::class)->execute($type);
 			 break;
 			 case 'make:resources':
 			     ResourceRouteGenerator::execute($this->project_root);

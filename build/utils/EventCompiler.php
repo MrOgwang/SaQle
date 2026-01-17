@@ -11,10 +11,10 @@ final class EventCompiler {
          $base_path = config('base_path');
 
          //get listener directories
-         $listener_dirs = [$base_path.'/listeners'];
+         $listener_dirs = [path_join([$base_path, 'listeners'])];
 
          foreach(config('installed_apps') as $app){
-             $listener_dirs[] = $base_path.'/apps/'.$app.'/listeners';
+             $listener_dirs[] = path_join([$base_path, 'apps', $app, 'listeners']);
          }
 
          //Discover attributed listeners

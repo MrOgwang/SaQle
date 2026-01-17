@@ -5,10 +5,10 @@ final class CachedEventRegistry extends EventRegistry {
      private string $cache_path;
 
      public function __construct(
-         private string $document_root,
+         private string $project_root,
          private string $class_mappings_dir
      ){
-         $this->cache_path = $this->document_root.$this->class_mappings_dir."events.php";
+         $this->cache_path = path_join([$this->project_root, $this->class_mappings_dir, 'events.php']);
          $this->load_from_cache();
      }
 

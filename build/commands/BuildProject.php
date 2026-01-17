@@ -1,7 +1,8 @@
 <?php
 namespace SaQle\Build\Commands;
 
-use SaQle\Build\Utils\{Manifest, ClassMapper, TargetCompiler, RouteCompiler, TemplateCompiler, EventCompiler};
+use SaQle\Build\Utils\{Manifest, ClassMapper, RouteCompiler, TemplateCompiler, EventCompiler,
+ FormCompiler};
 use SaQle\Routes\Router;
 use RecursiveIteratorIterator;
 use RecursiveDirectoryIterator;
@@ -13,25 +14,23 @@ class BuildProject{
 
      protected ClassMapper $classmapper;
 
-     protected TargetCompiler $targetcompiler;
-
      protected array $watch_dirs = [
            'routes',
            'models'
      ];
 
-     protected function get_all_files(string $project_root, bool $changed = false){
+     protected function get_all_files(bool $changed = false){
          $files = [];
     
          //check project folder
          foreach ($this->watch_dirs as $dir){
-             $this->scan_dir($project_root.DIRECTORY_SEPARATOR.$dir, $files, $dir, $changed);
+             $this->scan_dir(path_join([config('base_path'), $dir]), $files, $dir, $changed);
          }
 
          //check app folders
          foreach ($this->watch_dirs as $dir){
              foreach(config('installed_apps') as $app){
-                 $this->scan_dir($project_root.DIRECTORY_SEPARATOR.'apps'.DIRECTORY_SEPARATOR.$app.DIRECTORY_SEPARATOR.$dir, $files, $dir, $changed, $app);
+                 $this->scan_dir( path_join([config('base_path'), 'apps', $app, $dir]), $files, $dir, $changed, $app);
              }
          }
 
@@ -94,19 +93,19 @@ class BuildProject{
          }
      }
 
-     public function execute(string $project_root, string $type = 'all'){
-         $this->manifest = new Manifest($project_root);
+     public function execute(string $type = 'all'){
+         $this->manifest = new Manifest();
 
          switch($type){
              case "all":
                  echo "Building everything!";
 
                  //map components
-                 $this->classmapper = new ClassMapper($project_root);
+                 $this->classmapper = new ClassMapper();
                  $this->classmapper->map();
 
                  //get modified files
-                 $files = $this->get_all_files($project_root);
+                 $files = $this->get_all_files();
 
                  //filter route files
                  $route_files = $this->filter_route_files($files);
@@ -115,17 +114,16 @@ class BuildProject{
                  $this->load_files($route_files);
 
                  //compile routes
-                 RouteCompiler::compile($project_root);
+                 RouteCompiler::compile();
 
                  //compile the templates
-                 TemplateCompiler::compile($project_root);
+                 TemplateCompiler::compile();
 
                  //compile events
                  EventCompiler::compile();
 
-                 //compile project routes and layoutes
-                 //$this->targetcompiler = new TargetCompiler($project_root);
-                 //$this->targetcompiler->compile($files);
+                 //compile auto forms
+                 FormCompiler::compile();
 
                  //save the updated build manifest
                  $this->manifest->save();
