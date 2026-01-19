@@ -5,7 +5,7 @@ namespace SaQle\Build\Utils;
 use SaQle\Core\Registries\RouteRegistry;
 use SaQle\Core\Registries\ComponentRegistry;
 use SaQle\Commons\StringUtils;
-use SaQle\Views\View;
+use SaQle\Core\Ui\View;
 use RuntimeException;
 
 final class TemplateCompiler {

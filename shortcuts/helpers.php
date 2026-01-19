@@ -3,6 +3,7 @@
 use SaQle\Log\FileLogger;
 use SaQle\Http\Response\HttpMessage;
 use SaQle\Http\Response\Types\RedirectResponse;
+use SaQle\Http\Request\Data\Session;
 use SaQle\FeedBack\ExceptionFeedBack;
 use SaQle\Core\Exceptions\Http\{ProcessingException, OkException, CreatedException, NoContentException, BadRequestException, PartialContentException, MovedPermanentlyException, FoundException, UnauthorizedException, PaymentRequiredException, ForbiddenException, NotFoundException, MethodNotAllowedException, NotAcceptableException, RequestTimeoutException, ConflictException, TooManyRequestsException, InternalServerErrorException, ServiceUnavailableException};
 use SaQle\Core\Config\ConfigRepository;
@@ -52,6 +53,12 @@ if(!function_exists('with_config')){
          }finally{
              $config->pop();
          }
+     }
+}
+
+if(!function_exists('session')){
+     function session(): Session {
+         return Request::get()->session();
      }
 }
 
@@ -324,8 +331,6 @@ if(!function_exists('service_unavailable_exception')){
      }
 }
 
-
-
 if(!function_exists('redirect')){
      function redirect(?string $url = null, int $status = HttpMessage::FOUND, mixed $data = null, ?string $message = null){
          return new RedirectResponse(url: $url, status: $status)->send();
@@ -343,22 +348,24 @@ if(!function_exists('import_routes')){
      }
 }
 
-if(!function_exists('to_context')){
-     function to_context(string $key, Closure $data_source, bool $session = false){
+if(!function_exists('to_session')){
+     function to_session(string $key, callable $data_source, bool $persistent = false){
          $data = $data_source();
-         $request = Request::init();
-         $request->context->set($key, $data, $session);
+
+         $request = Request::get();
+         $request->session->set($key, $data, $persistent);
+
          return $data;
      }
 }
 
-if(!function_exists('from_context')){
-     function from_context(string $key, ?Closure $data_source = null, bool $latest = false){
+if(!function_exists('from_session')){
+     function from_session(string $key, ?callable $data_source = null, bool $latest = false){
          $request = Request::init();
-         if(!$request->context->exists($key) || $latest)
+         if(!$request->session->exists($key) || $latest)
              return $data_source ? $data_source() : null;
 
-         return $request->context->get_or_fail($key);
+         return $request->session->get($key, null);
      }
 }
 

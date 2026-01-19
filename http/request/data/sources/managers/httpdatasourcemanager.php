@@ -2,8 +2,8 @@
 namespace SaQle\Http\Request\Data\Sources\Managers;
 
 use SaQle\Http\Request\Data\Sources\Managers\Interfaces\IHttpDataSourceManager;
-use SaQle\Http\Request\Data\Sources\{From, FromDb, FromContext, FromCookie, FromBody, FromForm, FromHeader, FromPath, FromQuery};
-use SaQle\Http\Request\Data\Sources\Managers\Types\{BodyDataSourceManager, CookieDataSourceManager, DbDataSourceManager, FormDataSourceManager, HeaderDataSourceManager, PathDataSourceManager, QueryDataSourceManager, ContextDataSourceManager};
+use SaQle\Http\Request\Data\Sources\{From, FromDb, FromSession, FromCookie, FromBody, FromForm, FromHeader, FromPath, FromQuery};
+use SaQle\Http\Request\Data\Sources\Managers\Types\{BodyDataSourceManager, CookieDataSourceManager, DbDataSourceManager, FormDataSourceManager, HeaderDataSourceManager, PathDataSourceManager, QueryDataSourceManager, SessionDataSourceManager};
 
 class HttpDataSourceManager implements IHttpDataSourceManager {
 
@@ -18,7 +18,7 @@ class HttpDataSourceManager implements IHttpDataSourceManager {
 	 	 	 FromHeader::class  => new HeaderDataSourceManager($from, ...$kwargs),
 	 	 	 FromPath::class    => new PathDataSourceManager($from, ...$kwargs),
 	 	 	 FromQuery::class   => new QueryDataSourceManager($from, ...$kwargs),
-	 	 	 FromContext::class => new ContextDataSourceManager($from, ...$kwargs)
+	 	 	 FromSession::class => new SessionDataSourceManager($from, ...$kwargs)
 	 	 };
 	 }
 

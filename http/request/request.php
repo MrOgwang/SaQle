@@ -16,7 +16,7 @@
  * */
 namespace SaQle\Http\Request;
 
-use SaQle\Http\Request\Data\{RequestContext, Data};
+use SaQle\Http\Request\Data\{Session, Data};
 use SaQle\Middleware\MiddlewareRequestInterface;
 use SaQle\Routes\MatchedRoute;
 use SaQle\Auth\Models\BaseUser;
@@ -35,12 +35,12 @@ class Request implements MiddlewareRequestInterface{
          get => $this->data;
      }
 
-     public ?RequestContext $context = null {
-         set(?RequestContext $value){
-             $this->context = $value;
+     public private(set) ?Session $session = null {
+         set(?Session $value){
+             $this->session = $value;
          }
 
-         get => $this->context;
+         get => $this->session;
      }
 
      //a wrapper around request headers
@@ -82,7 +82,7 @@ class Request implements MiddlewareRequestInterface{
      //the user who is currently logged in
      public ?BaseUser $user {
          get {
-            return $this->context->get('user', null);
+            return $this->session->get('user', null);
          }
      }
 
@@ -100,7 +100,7 @@ class Request implements MiddlewareRequestInterface{
          set(RequestIntent $value){
              $this->intent = $value;
              if($this->intent === RequestIntent::WEB || $this->intent === RequestIntent::AJAX){
-                 $this->context->activate_session();
+                 $this->session->activate_session();
              }
          }
 
@@ -114,7 +114,7 @@ class Request implements MiddlewareRequestInterface{
          $this->cookies = new Data();
          $this->queries = new Data();
          $this->params  = new Data();
-         $this->context = new RequestContext();
+         $this->session = new Session($this);
      }
 
      //prevent cloning and serialization of request object
@@ -122,17 +122,18 @@ class Request implements MiddlewareRequestInterface{
      public function __wakeup(){}
 
      //initialize a new request object
-     public static function init(){
-         if(self::$instance === null)
-             self::$instance = new self();
-         
+     public static function init() : Request {
+         return self::$instance ??= new self();
+     }
+
+     public static function get() : Request {
          return self::$instance;
      }
 
      //helper functions
 
      public function add_context(string $name, mixed $value, bool $session = false){
-         $this->context->set($name, $value, $session);
+         $this->session->set($name, $value, $session);
      }
 
      public function add_query_param(string $name, mixed $value){
@@ -188,5 +189,9 @@ class Request implements MiddlewareRequestInterface{
 
      public function is_web_request() : bool{
          return $this->intent === RequestIntent::WEB;
+     }
+
+     public function session() : Session {
+         return $this->session;
      }
 }

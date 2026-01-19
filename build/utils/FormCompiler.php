@@ -4,29 +4,75 @@ namespace SaQle\Build\Utils;
 
 use SaQle\Core\Assert\Assert;
 use SaQle\Orm\Entities\Model\Schema\Model;
-use SaQle\Views\AutoForm;
+use SaQle\Core\Forms\FormBlueprint;
+use SaQle\Orm\Entities\Field\Types\{OneToOne, OneToMany, ManyToMany, VirtualField, Pk};
 use RuntimeException;
 
 final class FormCompiler {
 
-     private static function cache_form(string $form_template, string $form_name){
+     private static function cache_blueprints(array $blueprints){
          //write to the cache file
          $folder = path_join([config('base_path'), config('forms_cache_dir')]);
          if(!is_dir($folder)){
              mkdir($folder, 0777, true);
          }
 
-         $file_name = path_join([$folder, $form_name.".".config('component_template_ext')]);
-         file_put_contents($file_name, $form_template);
+         foreach($blueprints as $name => $blueprint){
+             $file_name = path_join([$folder, $name.".php"]);
+
+             $contents =
+                "<?php\n".
+                "declare(strict_types=1);\n\n".
+                "return ".var_export($blueprint, true).";\n";
+
+             file_put_contents($file_name, $contents);
+         }
+     }
+
+     private static function derive_label(string $name): string {
+        // Replace snake_case underscores with spaces
+        $label = str_replace('_', ' ', $name);
+
+        // Split camelCase & PascalCase
+        // - FooBar → Foo Bar
+        // - fooBar → foo Bar
+        // - APIResponse → API Response
+        $label = preg_replace(
+            '/(?<=\p{Ll})(?=\p{Lu})|(?<=\p{Lu})(?=\p{Lu}\p{Ll})/u',
+            ' ',
+            $label
+        );
+
+        // Normalize spacing
+        $label = preg_replace('/\s+/', ' ', $label);
+
+        // Title case while preserving acronyms
+        $label = ucwords(strtolower($label));
+
+        // Restore common acronyms
+        $label = preg_replace_callback('/\b(Id|Api|Url|Uuid|Ip)\b/', function ($m) {
+            return strtoupper($m[0]);
+        }, $label);
+
+        return trim($label);
+     }
+
+
+     private static function skip_field(object $field): bool{
+         return $field instanceof OneToOne || $field instanceof OneToMany || $field instanceof ManyToMany || $field instanceof VirtualField || $field instanceof Pk;
      }
 
      public static function compile(){
          $auto_forms = config('auto_forms');
+         $field_templates = config('form_field_templates', []);
+
          if(!$auto_forms)
              return;
 
          //auto forms must be an associative array, where the keys are model classes
          Assert::isNonEmptyMap($auto_forms, "Invalid auto forms configuration!");
+
+         $blueprints = [];
 
          foreach($auto_forms as $model_class => $forms){
              //model_class must be a valid model
@@ -37,14 +83,25 @@ final class FormCompiler {
              }
 
              /**
-              * forms must be an associative array where
+              * forms is an array of form names. The form names are public methods defined on the model
               * 
-              * key   => the form name
-              * value => a config array
+              * Make sure forms in non empty string array
               * */
-             Assert::isNonEmptyMap($forms, "Invalid auto forms configuration!");
+             Assert::allStringNotEmpty($forms, "Invalid auto forms configuration!");
 
-             foreach($forms as $form_name => $form_config){
+             $model_instance = $model_class::state();
+             $model_fields = $model_instance->meta->fields;
+             $real_fields = $model_instance->meta->defined_field_names;
+             $pk_name = $model_instance->meta->pk_name;
+
+             foreach($forms as $form_name){
+                 //check that the form_name is a method defined in model
+                 if(!method_exists($model_class, $form_name)){
+                     throw new RuntimeException("The form: {$form_name} has not been defined in model: {$model_class}!");
+                 }
+
+                 $form_config = $model_instance->$form_name();
+
                  /**
                   * the form configuration must be an associative array must contain a key called mode
                   * 
@@ -56,16 +113,50 @@ final class FormCompiler {
                      throw new RuntimeException("Invalid auto forms configuration!");
                  }
 
-                 //now generate forms here.
-                 $form = (new AutoForm())->generate([
-                     'name'  => $form_name,
-                     'mode'  => $form_config['mode'],
-                     'model' => $model_class
-                 ]);
+                 $fields = [];
+                 $fillables = $form_config['fillable'] ?? [];
 
-                 //cache the generated form.
-                 self::cache_form($form, $form_name);
+                 foreach ($model_fields as $field){
+                     if (self::skip_field($field) || 
+                         !in_array($field->field_name, $real_fields) || 
+                         $field->field_name === $pk_name ) {
+                         continue;
+                     }
+
+                     if($fillables && !in_array($field->field_name, $fillables)){
+                         continue;
+                     }
+
+                     $control_attrs = array_filter($field->get_control_kwargs(), fn($v) => $v !== null);
+
+                     $template = $field_templates[$control_attrs['type']] ?? ($field_templates['default'] ?? realpath(__DIR__.'/../../templates/fields/default.html'));
+                     if(!$template){
+                         throw new RuntimeException("Invalid auto forms configuration. A field template was not provided!");
+                     }
+
+                     $fields[] = [
+                         'name'          => $control_attrs['name'],
+                         'type'          => $control_attrs['type'],
+                         'control_attrs' => $control_attrs,
+                         'field_attrs'   => [
+                             'label'        => self::derive_label($control_attrs['name']),
+                             'template'     => $template,
+                             'helper_text'  => $control_attrs['description'] ?? ''
+                        ]
+                     ];
+                 }
+
+                 $blueprints[$form_name] = new FormBlueprint(
+                     name: $form_name,
+                     model_class: $model_class,
+                     mode: $form_config['mode'],
+                     auto_wire: $form_config['auto_wire'],
+                     fields: $fields
+                 )->get();
              }
          }
+
+         //cache the generated blue prints
+         self::cache_blueprints($blueprints);
      }
 }

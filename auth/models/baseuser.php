@@ -1,7 +1,7 @@
 <?php
 namespace SaQle\Auth\Models;
 
-use SaQle\Orm\Entities\Field\Types\{Pk, TinyTextField, OneToMany, ManyToMany};
+use SaQle\Orm\Entities\Field\Types\{Pk, PasswordField, TinyTextField, OneToMany, ManyToMany};
 use SaQle\Orm\Entities\Field\Interfaces\IField;
 use SaQle\Orm\Entities\Model\Schema\{Model, TableInfo};
 use SaQle\Auth\Models\Interfaces\IUser;
@@ -14,7 +14,7 @@ class BaseUser extends Model implements IUser {
 		     'first_name' => new TinyTextField(required: true, strict: false),
 		     'last_name'  => new TinyTextField(required: true, strict: false),
 		     'username'   => new TinyTextField(required: true, strict: false),
-		     'password'   => new TinyTextField(required: true, strict: false),
+		     'password'   => new PasswordField(required: true, strict: false),
 		 ];
 
 		 if(config('enable_rbac')){

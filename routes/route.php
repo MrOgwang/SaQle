@@ -8,7 +8,6 @@ namespace SaQle\Routes;
 
 use SaQle\Core\Assert\Assert;
 use SaQle\Core\Registries\ComponentRegistry;
-use SaQle\Templates\Template;
 use InvalidArgumentException;
 use RuntimeException;
 

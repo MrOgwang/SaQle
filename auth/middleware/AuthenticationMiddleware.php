@@ -25,7 +25,7 @@ class AuthenticationMiddleware extends IMiddleware{
          $auth_service = resolve(AuthService::class);
          $user = $auth_service->resolve_user();
          if($user){
-             $request->context->set('user', $user, true);
+             $request->session->set('user', $user, true);
          }
          
          parent::handle($request);

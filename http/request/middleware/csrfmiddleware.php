@@ -19,9 +19,9 @@ class CsrfMiddleware extends IMiddleware implements ScopedMiddleware{
          //Generate CSRF token if not set
          $token_key      = CsrfMiddleware::get_token_key();
          $except_methods = CsrfMiddleware::get_except_methods();
-         $token          = $request->context->get($token_key);
+         $token          = $request->session->get($token_key);
          if(!$token){
-             $request->context->set($token_key, bin2hex(random_bytes(32)), true);
+             $request->session->set($token_key, bin2hex(random_bytes(32)), true);
          }
 
          //skip CSRF check for safe HTTP methods
@@ -54,6 +54,6 @@ class CsrfMiddleware extends IMiddleware implements ScopedMiddleware{
          if(session_status() === PHP_SESSION_NONE){
              session_start();
          }
-         return $request->context->get($token_key, '');
+         return $request->session->get($token_key, '');
      }
 }

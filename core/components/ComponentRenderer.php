@@ -2,12 +2,14 @@
 
 namespace SaQle\Core\Components;
 
-use SaQle\Core\Registries\ComponentRegistry;
+use SaQle\Core\Registries\{FormBlueprintRegistry, ComponentRegistry};
+use SaQle\Core\Forms\{FormRuntimeContext, AutoForm};
 use SaQle\Http\Response\HttpMessage;
 use SaQle\Http\Request\Execution\ActionExecutor;
 use SaQle\Http\Request\Request;
-use SaQle\Views\View;
+use SaQle\Core\Ui\View;
 use SaQle\Commons\StringUtils;
+use RuntimeException;
 
 class ComponentRenderer {
      use StringUtils;
@@ -61,7 +63,7 @@ class ComponentRenderer {
 
      private function inject_dynamic(string $html, ComponentNode $node): string {
          // Match <component:dynamic />, allowing arbitrary whitespace
-         $pattern = '/<component:dynamic\s*\/>/i';
+         $pattern = '/<component:slot\s*\/>/i';
 
          // If no dynamic slot exists, return early
          if (!preg_match($pattern, $html)) {
@@ -85,17 +87,45 @@ class ComponentRenderer {
 
      private function inject_inline_components(string $html, ComponentNode $node): string {
 
-         return preg_replace_callback(
-             '/<component:([\w\-]+)\s*\/>/',
-             function($matches) use ($node){
-                 $child = new ComponentNode(ComponentRegistry::get_definition($matches[1]));
+         // Regex matches either <component:block name='...'> or <component:form name='...'/>
+         $pattern = '/<component:(block|form)\s+name=[\'"]([\w\-]+)[\'"]\s*\/>/i';
+
+         return preg_replace_callback($pattern, function($matches) use ($node) {
+             
+             $type = strtolower($matches[1]);  // 'block' or 'form'
+             $name = $matches[2];               // component or form name
+
+             if($type === 'block'){
+                 //Resolve block from registry
+                 $def = ComponentRegistry::get_definition($name);
+                 if(!$def){
+                    return "<!-- Block '{$name}' not found -->";
+                 }
+
+                 $child = new ComponentNode($def);
                  $child->parent = $node;
 
                  return $this->render($child, $node->context);
-             },
+             }
 
-             $html
-         );
+             if($type === 'form') {
+                 //Resolve AutoForm blueprint
+                 try{
+                    $blueprint = FormBlueprintRegistry::get($name);
+                 }catch(RuntimeException $e){
+                     return "<!-- Form '{$name}' not found -->";
+                 }
+
+                 //Render form HTML using AutoForm
+                 $auto_form = AutoForm::from_blueprint($blueprint);
+                 $auto_form->bind(FormRuntimeContext::from_session($blueprint['name']));
+
+                 return $auto_form->render();
+             }
+
+             return '';
+
+         },  $html);
      }
 
      private function run_controller(?string $class = null, ?string $method = null): HttpMessage {

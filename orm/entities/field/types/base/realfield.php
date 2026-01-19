@@ -6,6 +6,15 @@ use SaQle\Orm\Entities\Field\Types\{Pk, TextType, NumberType, FileField, Timesta
 use SaQle\Orm\Entities\Field\Types\Base\Relation;
 
 abstract class RealField extends Simple{
+	 //the helper text
+	 public string $help = '' {
+	 	 set(string $value){
+	 	 	 $this->help = $value;
+	 	 }
+
+	 	 get => $this->help;
+	 }
+
 	 //the default value to use if the value is not provided
 	 public mixed $default = null {
 	 	 set(mixed $value){
@@ -275,6 +284,11 @@ abstract class RealField extends Simple{
 	 }
 
 	 //set whether compact or not
+	 public function compact(bool $compact){
+	 	 $this->compact = $compact;
+	 	 return $this;
+	 }
+
 	 public function compact(bool $compact){
 	 	 $this->compact = $compact;
 	 	 return $this;

@@ -12,9 +12,9 @@ class DbDataSourceManager extends DataSourceManager{
 
 	 private function get_refkey_val(){
 	 	 return match($this->from->source){
-	 	 	 'path' => $this->optional ? $this->request->route->params->get($this->from->refkey) : $this->request->route->params->get_or_fail($this->from->refkey),
+	 	 	 'path' => $this->optional ? $this->request->params->get($this->from->refkey) : $this->request->params->get_or_fail($this->from->refkey),
 	 	 	 'form', 'body' => $this->optional ? $this->request->data->get($this->from->refkey) : $this->request->data->get_or_fail($this->from->refkey),
-	 	 	 'query' => $this->optional ? $this->request->route->queries->get($this->from->refkey) : $this->request->route->queries->get_or_fail($this->from->refkey),
+	 	 	 'query' => $this->optional ? $this->request->queries->get($this->from->refkey) : $this->request->queries->get_or_fail($this->from->refkey),
 	 	 	 'header' => $this->optional ? $this->request->headers->get($this->from->refkey) : $this->request->headers->get_or_fail($this->from->refkey),
 	 	 	 'cookie' => $this->optional ? $this->request->cookies->get($this->from->refkey) : $this->request->cookies->get_or_fail($this->from->refkey)
 	 	 };

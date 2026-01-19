@@ -6,7 +6,7 @@ use SaQle\Http\Request\Request;
 use SaQle\Http\Response\{HttpResponse, HttpMessage};
 use SaQle\Http\Response\Types\HtmlResponse;
 use SaQle\Core\Components\{ComponentTreeBuilder, ComponentRenderer, ComponentContext};
-use SaQle\Templates\Template;
+use SaQle\Core\Ui\Template;
 use SaQle\Http\Request\Middleware\CsrfMiddleware;
 use SaQle\Auth\Models\GuestUser;
 

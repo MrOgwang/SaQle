@@ -3,7 +3,7 @@ namespace SaQle\Http\Request\Data\Sources\Managers\Types;
 
 use SaQle\Http\Request\Data\Sources\From;
 
-class QueryDataSourceManager extends DataSourceManager{
+class SessionDataSourceManager extends DataSourceManager{
 
 	 public function __construct(From $from, ...$kwargs){
 	 	 parent::__construct($from, ...$kwargs);
@@ -11,6 +11,7 @@ class QueryDataSourceManager extends DataSourceManager{
 
 	 public function get_value() : mixed {
 	 	 $this->is_valid();
-	 	 return $this->optional ? $this->request->queries->get($this->name) : $this->request->queries->get_or_fail($this->name);
+	 	 $refkey = $this->from->refkey ?? $this->name;
+	 	 return $this->optional ? $this->request->session->get($refkey) : $this->request->session->get_or_fail($refkey);
 	 }
 }
