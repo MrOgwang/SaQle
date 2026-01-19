@@ -60,4 +60,10 @@ class ChoiceField extends TinyTextField {
 	 	 $this->multiple = $multiple;
 	 	 return $this;
 	 }
+
+	  //set choices
+	 public function choices(array $choices){
+	 	 $this->choices = $choices;
+	 	 return $this;
+	 }
 }

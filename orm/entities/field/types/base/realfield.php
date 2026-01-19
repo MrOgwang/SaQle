@@ -288,9 +288,4 @@ abstract class RealField extends Simple{
 	 	 $this->compact = $compact;
 	 	 return $this;
 	 }
-
-	 public function compact(bool $compact){
-	 	 $this->compact = $compact;
-	 	 return $this;
-	 }
 }

@@ -39,4 +39,16 @@ class TextType extends RealField implements IField{
 	 	 	 'type' => 'text',
 	 	 ]);
 	 }
+
+	 //set strict
+	 public function strict(bool $strict = true){
+	 	 $this->strict = $strict;
+	 	 return $this;
+	 }
+
+	 //set empty
+	 public function empty(bool $empty = true){
+	 	 $this->empty = $empty;
+	 	 return $this;
+	 }
 }
