@@ -19,4 +19,5 @@ class BooleanField extends NumberType implements IField{
 	 	 	 'type' => 'checkbox',
 	 	 ]);
 	 }
+	 
 }

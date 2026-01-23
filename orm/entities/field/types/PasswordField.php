@@ -22,4 +22,5 @@ class PasswordField extends TinyTextField {
 	 	 	 'type' => $this->mask ? 'password' : 'text',
 	 	 ]);
 	 }
+	 
 }

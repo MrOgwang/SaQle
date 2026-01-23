@@ -13,4 +13,5 @@ class EmailField extends TinyTextField {
 	 	 	 'type' => 'email',
 	 	 ]);
 	 }
+	 
 }

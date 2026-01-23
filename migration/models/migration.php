@@ -9,9 +9,9 @@ class Migration extends Model{
 	protected function model_setup(TableInfo $meta) : void{
 	 	 $meta->fields = [
 		 	 'migration_id'        => new Pk(),
-		     'migration_name'      => new TextField(required: true, strict: false),
+		     'migration_name'      => new TextField(required: true),
 		     'migration_timestamp' => new BigIntegerField(required: true, absolute: true, zero: false),
-		     'is_migrated'         => new BooleanField(required: true, absolute: true, zero: true)
+		     'is_migrated'         => new BooleanField(required: true, absolute: true)
 		 ];
 
 		 $meta->auto_cm     = false;

@@ -7,12 +7,12 @@ use SaQle\Orm\Entities\Field\Types\Base\Relation;
 
 abstract class RealField extends Simple{
 	 //the helper text
-	 public string $help = '' {
+	 public string $help_text = '' {
 	 	 set(string $value){
-	 	 	 $this->help = $value;
+	 	 	 $this->help_text = $value;
 	 	 }
 
-	 	 get => $this->help;
+	 	 get => $this->help_text;
 	 }
 
 	 //the default value to use if the value is not provided
@@ -287,5 +287,10 @@ abstract class RealField extends Simple{
 	 public function compact(bool $compact){
 	 	 $this->compact = $compact;
 	 	 return $this;
+	 }
+
+	 //set the help text
+	 public function help_text(string $help_text){
+	 	 $this->help_text = $help_text;
 	 }
 }

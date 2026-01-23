@@ -20,4 +20,5 @@ class TimeField extends FormattedField {
 	 	 	 'type' => 'time',
 	 	 ]);
 	 }
+	 
 }

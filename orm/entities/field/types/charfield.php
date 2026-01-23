@@ -10,4 +10,5 @@ class CharField extends TextType implements IField{
 		 $kwargs['maximum']     = 1;
 		 parent::__construct(...$kwargs);
 	 }
+	 
 }

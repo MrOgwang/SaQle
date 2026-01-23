@@ -10,4 +10,5 @@ class DoubleField extends NumberType implements IField{
 		 $kwargs['length']         = null; #The number of digits to display
 		 parent::__construct(...$kwargs);
 	 }
+	 
 }

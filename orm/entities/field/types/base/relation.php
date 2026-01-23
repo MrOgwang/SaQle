@@ -11,10 +11,10 @@ abstract class Relation extends RealField implements IRelation{
 	 
 	 public function __construct(...$kwargs){
 	 	 $kwargs['column_type']     = config('primary_key_type') === "GUID" ? "VARCHAR" : "INT";
-		 $kwargs['validation_type'] = config('primary_key_type') ? "text"    : "number";
-		 $kwargs['primitive_type']  = config('primary_key_type') ? "string"  : "int";
-		 $kwargs['length']          = config('primary_key_type') ? 255       : 11;
-		 $kwargs['maximum']         = config('primary_key_type') ? 255       : 4294967295;
+		 $kwargs['validation_type'] = config('primary_key_type') === "GUID" ? "text"    : "number";
+		 $kwargs['primitive_type']  = config('primary_key_type') === "GUID" ? "string"  : "int";
+		 $kwargs['length']          = config('primary_key_type') === "GUID" ? 255       : 11;
+		 $kwargs['maximum']         = config('primary_key_type') === "GUID" ? 255       : 2000000000;
 
 		 if(config('primary_key_type') === "INT"){
 		 	 $kwargs['absolute'] = true;

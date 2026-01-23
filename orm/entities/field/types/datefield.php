@@ -20,4 +20,5 @@ class DateField extends FormattedField {
 	 	 	 'type' => 'date',
 	 	 ]);
 	 }
+	 
 }

@@ -8,8 +8,8 @@ class MediumIntegerField extends NumberType implements IField{
 		 $kwargs['column_type'] = "MEDIUMINT";
 		 $kwargs['length']      = 9; #The number of digits to display
 		 $absolute              = $kwargs['absolute'] ?? false;
-		 $kwargs['maximum']     = isset($kwargs['maximum']) ? $kwargs['maximum'] : ($absolute ? 16777215 : 8388607);
-		 $kwargs['minimum']     = isset($kwargs['minimum']) ? $kwargs['minimum'] : ($absolute ? 0 : -8388608);
+		 $kwargs['maximum']     = isset($kwargs['maximum']) ? $kwargs['maximum'] : ($absolute ? 1001 : 500);
+		 $kwargs['minimum']     = isset($kwargs['minimum']) ? $kwargs['minimum'] : ($absolute ? 0 : -501 );
 		 parent::__construct(...$kwargs);
 	 }
 }

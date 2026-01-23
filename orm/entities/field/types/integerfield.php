@@ -8,8 +8,8 @@ class IntegerField extends NumberType implements IField{
 		 $kwargs['column_type'] = "INT";
 		 $kwargs['length']      = 11; #The number of digits to display
 		 $absolute              = $kwargs['absolute'] ?? false;
-		 $kwargs['maximum']     = isset($kwargs['maximum']) ? $kwargs['maximum'] : ($absolute ? 4294967295 : 2147483647);
-		 $kwargs['minimum']     = isset($kwargs['minimum']) ? $kwargs['minimum'] : ($absolute ? 0 : -2147483648);
+		 $kwargs['maximum']     = isset($kwargs['maximum']) ? $kwargs['maximum'] : ($absolute ? 10001 : 5000 );
+		 $kwargs['minimum']     = isset($kwargs['minimum']) ? $kwargs['minimum'] : ($absolute ? 0 : -5001 );
 		 parent::__construct(...$kwargs);
 	 }
 }

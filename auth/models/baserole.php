@@ -9,8 +9,8 @@ class BaseRole extends Model{
 	 protected function model_setup(TableInfo $meta) : void{
 		$meta->fields = [
 			 'role_id'          => new Pk(),
-		     'role_name'        => new TinyTextField(required: true, strict: false),
-		     'role_description' => new TextField(required: false, strict: false),
+		     'role_name'        => new TinyTextField(required: true),
+		     'role_description' => new TextField(),
 		     'permissions'      => new ManyToMany(fmodel: config('permission_model_class'), pk: 'role_id', fk: 'role_id', through: config('role_permission_model_class')),
 		     'users'            => new ManyToMany(fmodel: config('auth_model_class'), pk: 'role_id', fk: 'role_id', through: config('user_role_model_class'))
 		];

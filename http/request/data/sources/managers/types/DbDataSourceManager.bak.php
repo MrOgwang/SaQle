@@ -18,7 +18,7 @@ class DbDataSourceManager extends DataSourceManager{
 	 	 foreach($sources as $s){
 	 	 	 $value = $this->request->$s->get($key);
              if($value !== null)
-             	 return $value;
+             	 $value;
          }
 
          return null;
@@ -38,9 +38,25 @@ class DbDataSourceManager extends DataSourceManager{
 
 	 	 $key_value = $this->get_key_val($key);
 
-	 	 return $this->optional ? 
-	 	 $class_name::get()->where($mapto, $key_value)->first_or_default() : 
-	 	 $class_name::get()->where($mapto, $key_value)->first();
+	 	 if(!$key_value && $this->optional)
+	 	 	 return null;
+
+
+
+	 	 if($refkey_value){
+	 	 	 $modelclass = $this->type === 'array' ? $this->from->model : $this->type;
+
+             $column_name = $this->from->field ?? $this->from->refkey;
+ 	 	     if($this->type === 'array'){
+ 	 	     	 return $modelclass::get()->where($column_name.'__in', is_array($refkey_value) ? $refkey_value : [$refkey_value])->all();
+ 	 	     }else{
+ 	 	     	 return $this->optional ? 
+	 	 	     $modelclass::get()->where($column_name, $refkey_value)->first_or_default() : 
+	 	 	     $modelclass::get()->where($column_name, $refkey_value)->first();
+ 	 	     }
+	 	 }
+
+	 	 return null;
 	 }
 
 }

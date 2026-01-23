@@ -2,11 +2,21 @@
 
 namespace SaQle\Http\Request\Execution;
 
+/**
+ * The ParameterResolver is responsible for automatically injecting parameters into
+ * controller methods.
+ * 
+ * Using reflection, the parameter resolver decides where to extract the values
+ * to inject into a controller method
+ * */
+
 use ReflectionMethod;
 use SaQle\Http\Request\Request;
-use SaQle\Http\Request\Data\Sources\From;
-use SaQle\Auth\Models\Attributes\AuthUser;
+use SaQle\Core\Support\BindFrom;
 use SaQle\Http\Request\Data\Sources\Managers\HttpDataSourceManager;
+use SaQle\Orm\Entities\Model\Schema\Model;
+use RuntimeException;
+use ReflectionType;
 
 final class ParameterResolver {
 
@@ -23,44 +33,54 @@ final class ParameterResolver {
          return $params;
      }
 
+     private function resolve_param_stepwise(string $type, string $name, bool $optional, ?ReflectionType $param_type, mixed $default = null){
+         $datasettings = ['name' => $name, 'type' => $param_type, 'default' => null, 'optional' => true];
+
+         $sources = $type === 'model' ? ['input', 'session'] : ['path', 'query', 'input', 'header', 'cookie', 'session'];
+
+         foreach($sources as $s){
+             $value = new HttpDataSourceManager(new BindFrom($s, $name), ...$datasettings)->get_value();
+             if($value !== null) {
+                 return [$name => $value];
+             }
+         }
+
+         if($optional){
+             return [$name => $default];
+         }
+
+         throw new RuntimeException("Missing required parameter: {$name}");
+     }
+
      private function resolve_param($param){
          $param_name   = $param->getName();
          $param_type   = $param->getType();
-         $param_type   = !is_null($param_type) ? str_replace('?', '', $param_type) : $param_type;
-         $default_val  = $param->isDefaultValueAvailable() ? $param->getDefaultValue() : null;
+         $default      = $param->isDefaultValueAvailable() ? $param->getDefaultValue() : null;
          $optional     = $param->isOptional();
-         $sourceattr   = $param->getAttributes()[0] ?? null;
-         $attrinstance = $sourceattr ? $sourceattr->newInstance() : null;
+         $sourceattr   = $param->getAttributes(BindFrom::class)[0] ?? null;
+         $datasettings = ['name' => $param_name, 'type' => $param_type, 'default' => $default, 'optional' => $optional];
 
-         if($attrinstance){
-             if($attrinstance instanceof From){
-                 return [$param_name => new HttpDataSourceManager(
-                     $attrinstance, ...['name' => $param_name, 'type' => $param_type, 'default' => $default_val, 'optional' => $optional]
-                 )->get_value()];
+         //if the BindFrom attribute exists, this is top priority
+         if($sourceattr){
+             $sourceinstance = $sourceattr->newInstance();
+             $sourceinstance->set_key($param_name);
+             return [$param_name => new HttpDataSourceManager($sourceinstance, ...$datasettings)->get_value()];
+         }
+
+         //if this is an object
+         if(TypeInspector::is_class_type($param_type)){
+             $class_name = TypeInspector::get_class_name($param_type);
+
+             //if its a model
+             if($class_name && is_subclass_of($class_name, Model::class)){
+                 return $this->resolve_param_stepwise('model', $param_name, $optional, $param_type, $default);
              }
 
-             if($attrinstance instanceof AuthUser){
-                 return [$param_name => $this->request->user];
-             }
+             //attempt to resolve any other object types from the container
+             return [$param_name => new HttpDataSourceManager(new BindFrom('di', $param_name), ...$datasettings)->get_value()];
          }
 
-         if($param_type && class_exists($param_type)){
-             return [$param_name = resolve($param_type)];
-         }
-
-         //check route params, then query, then data
-         $value = $this->request->params->get($param_name);
-         if(!is_null($value)){
-             return [$param_name = $value];
-         }
-
-         $value = $this->request->queries->get($param_name);
-         if(!is_null($value)){
-             return [$param_name = $value];
-         }
-
-         $value = $optional ? $this->request->data->get($param_name, $default_val) : $this->request->data->get_or_fail($param_name);
-
-         return [$param_name = $value];
+         //this is a simple param
+         return $this->resolve_param_stepwise('simple', $param_name, $optional, $param_type, $default);
      }
 }

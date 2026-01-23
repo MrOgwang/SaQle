@@ -14,4 +14,5 @@ class FileField extends Binary implements IField{
 	 	 	 'type' => 'file',
 	 	 ]);
 	 }
+	 
 }

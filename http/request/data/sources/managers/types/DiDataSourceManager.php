@@ -2,16 +2,16 @@
 namespace SaQle\Http\Request\Data\Sources\Managers\Types;
 
 use SaQle\Core\Support\BindFrom;
+use SaQle\Http\Request\Execution\TypeInspector;
 
-class QueryDataSourceManager extends DataSourceManager{
+class DiDataSourceManager extends DataSourceManager{
 
 	 public function __construct(BindFrom $from, ...$kwargs){
 	 	 parent::__construct($from, ...$kwargs);
 	 }
 
 	 public function get_value() : mixed {
-	 	 return $this->optional ? 
-	 	 $this->request->queries->get($this->from->key, $this->default) : 
-	 	 $this->request->queries->get_or_fail($this->from->key);
+	 	 $class_name = TypeInspector::get_class_name($this->type);
+	 	 return resolve($class_name);
 	 }
 }

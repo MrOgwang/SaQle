@@ -3,7 +3,7 @@
 namespace SaQle\Auth\Guards;
 
 use Closure;
-use SaQle\Auth\Guards\Exceptions\UnauthorizedException;
+use SaQle\Core\Exceptions\Http\UnauthorizedException;
 use SaQle\Core\FeedBack\FeedBack;
 
 final class Guard {

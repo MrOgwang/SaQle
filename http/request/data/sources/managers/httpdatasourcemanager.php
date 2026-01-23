@@ -2,23 +2,23 @@
 namespace SaQle\Http\Request\Data\Sources\Managers;
 
 use SaQle\Http\Request\Data\Sources\Managers\Interfaces\IHttpDataSourceManager;
-use SaQle\Http\Request\Data\Sources\{From, FromDb, FromSession, FromCookie, FromBody, FromForm, FromHeader, FromPath, FromQuery};
-use SaQle\Http\Request\Data\Sources\Managers\Types\{BodyDataSourceManager, CookieDataSourceManager, DbDataSourceManager, FormDataSourceManager, HeaderDataSourceManager, PathDataSourceManager, QueryDataSourceManager, SessionDataSourceManager};
+use SaQle\Core\Support\BindFrom;
+use SaQle\Http\Request\Data\Sources\Managers\Types\{CookieDataSourceManager, DbDataSourceManager, InputDataSourceManager, HeaderDataSourceManager, PathDataSourceManager, QueryDataSourceManager, SessionDataSourceManager, DiDataSourceManager};
 
 class HttpDataSourceManager implements IHttpDataSourceManager {
 
 	 private IHttpDataSourceManager $manager;
 
-	 public function __construct(From $from, ...$kwargs){
-	 	 $this->manager = match($from::class){
-	 	 	 FromDb::class      => new DbDataSourceManager($from, ...$kwargs),
-	 	 	 FromCookie::class  => new CookieDataSourceManager($from, ...$kwargs),
-	 	 	 FromBody::class    => new BodyDataSourceManager($from, ...$kwargs),
-	 	 	 FromForm::class    => new FormDataSourceManager($from, ...$kwargs),
-	 	 	 FromHeader::class  => new HeaderDataSourceManager($from, ...$kwargs),
-	 	 	 FromPath::class    => new PathDataSourceManager($from, ...$kwargs),
-	 	 	 FromQuery::class   => new QueryDataSourceManager($from, ...$kwargs),
-	 	 	 FromSession::class => new SessionDataSourceManager($from, ...$kwargs)
+	 public function __construct(BindFrom $from, ...$kwargs){
+	 	 $this->manager = match($from->from){
+	 	 	 'db', 'database'  => new DbDataSourceManager($from, ...$kwargs),
+	 	 	 'cookie'          => new CookieDataSourceManager($from, ...$kwargs),
+	 	 	 'input'           => new InputDataSourceManager($from, ...$kwargs),
+	 	 	 'header'          => new HeaderDataSourceManager($from, ...$kwargs),
+	 	 	 'path'            => new PathDataSourceManager($from, ...$kwargs),
+	 	 	 'query'           => new QueryDataSourceManager($from, ...$kwargs),
+	 	 	 'session'         => new SessionDataSourceManager($from, ...$kwargs),
+	 	 	 'di', 'container' => new DiDataSourceManager($from, ...$kwargs)
 	 	 };
 	 }
 

@@ -2,23 +2,34 @@
 namespace SaQle\Http\Request\Data\Sources\Managers\Types;
 
 use SaQle\Http\Request\Data\Sources\Managers\Interfaces\IHttpDataSourceManager;
-use SaQle\Http\Request\Data\Sources\From;
+use SaQle\Core\Support\BindFrom;
 use SaQle\Http\Request\Request;
+use ReflectionType;
 
 abstract class DataSourceManager implements IHttpDataSourceManager{
+	 //request contains data
+     protected Request $request;
 
-      protected Request $request;
-	 protected From    $from;
-	 protected string  $name;
-	 protected string  $type;
-	 protected mixed   $default;
-	 protected bool    $optional;
+     //which areas of the request to find data
+	 protected BindFrom $from;
 
-	 public function __construct(From $from, ...$kwargs){
+	 //the name of the parameter
+	 protected string $name;
+
+	 //the parameter type
+	 protected ?ReflectionType $type;
+
+	 //the default value of parameter
+	 protected mixed $default;
+
+	 //whether the parameter is optional
+	 protected bool $optional;
+
+	 public function __construct(BindFrom $from, ...$kwargs){
 	 	 $this->request  = resolve('request');
 	 	 $this->from     = $from;
 	 	 $this->name     = $kwargs['name'];
-	 	 $this->type     = $kwargs['type'];
+	 	 $this->type     = $kwargs['type'] ?? null;
 	 	 $this->default  = $kwargs['default'];
 	 	 $this->optional = $kwargs['optional'];
 	 }

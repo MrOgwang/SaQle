@@ -16,4 +16,5 @@ class FormattedField extends TextType implements IField{
 	 public function format(string $format){
 	 	 $this->format = $format;
 	 }
+	 
 }

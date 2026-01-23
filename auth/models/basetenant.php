@@ -9,7 +9,7 @@ class BaseTenant extends Model{
 	protected function model_setup(TableInfo $meta) : void{
 		$meta->fields = [
 			 'tenant_id'   => new Pk(),
-		     'tenant_name' => new TextField(required: true, strict: false),
+		     'tenant_name' => new TextField(required: true),
 		     'users'       => new ManyToMany(fmodel: config('auth_model_class'), pk: 'tenant_id', fk: 'tenant_id', through: config('tenant_user_model_class'))
 		];
 	}

@@ -5,7 +5,6 @@
 
  use SaQle\Orm\Entities\Model\Interfaces\ITableSchema;
  use SaQle\Orm\Database\Trackers\DbContextTracker;
- use SaQle\Orm\Database\Attributes\IDbContextOptions;
  use SaQle\Orm\Entities\Model\Manager\Modes\FetchMode;
  use SaQle\Orm\Query\Helpers\{JoinManager, FilterManager, LimitManager, OrderManager, SelectManager, GroupManager};
      

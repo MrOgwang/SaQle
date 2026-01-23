@@ -9,7 +9,7 @@ class Session extends Model{
 	 	 $meta->fields = [
 	 	 	 'id'            => new Pk(),
 		     'session_id'    => new TinyTextField(required: true, length: 100),
-		     'session_data'  => new TextField(required: false, strict: false)
+		     'session_data'  => new TextField()
 	 	 ];
 
 	 	 $meta->soft_delete         = false;

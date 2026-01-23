@@ -5,7 +5,6 @@ namespace SaQle\Orm\Database\Attributes;
 use SaQle\Orm\Database\DbTypes;
 use SaQle\Orm\Database\DbPorts;
 
-#[Attribute(Attribute::TARGET_CLASS)]
 class DbContextOptions extends IDbContextOptions{
 	public function __construct(
 		 private DbTypes $type, 

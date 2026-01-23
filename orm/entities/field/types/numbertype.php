@@ -39,4 +39,5 @@ class NumberType extends RealField  implements IField{
 	 	 	 'type' => 'number',
 	 	 ]);
 	 }
+	 
 }

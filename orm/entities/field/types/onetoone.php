@@ -10,7 +10,7 @@ class OneToOne extends Relation implements IField{
 		 parent::__construct(...$kwargs);
 	 }
 
-	  public function get_control_kwargs() : array{
+	  public function get_control_kwargs() : array {
 	 	 return array_merge(parent::get_control_kwargs(), [
 	 	 	 'type'       => 'select',
 	 	 	 'multiple'   =>  false,

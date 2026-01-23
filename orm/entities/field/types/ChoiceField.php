@@ -66,4 +66,5 @@ class ChoiceField extends TinyTextField {
 	 	 $this->choices = $choices;
 	 	 return $this;
 	 }
+	 
 }

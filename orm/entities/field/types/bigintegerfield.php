@@ -8,8 +8,9 @@ class BigIntegerField extends NumberType implements IField{
 	 	 $kwargs['column_type'] = "BIGINT";
 	 	 $kwargs['length']      = 20; #The number of digits to display
 	 	 $absolute              = $kwargs['absolute'] ?? false;
-	 	 $kwargs['maximum']     = isset($kwargs['maximum']) ? $kwargs['maximum'] : ($absolute ? 18446744073709551616 : 99223372036854775808);
-		 $kwargs['minimum']     = isset($kwargs['minimum']) ? $kwargs['minimum'] : ($absolute ? 0 : -72036854775808);
+	 	 $kwargs['maximum']     = isset($kwargs['maximum']) ? $kwargs['maximum'] : ($absolute ? 2000000001 : 1000000000 );
+		 $kwargs['minimum']     = isset($kwargs['minimum']) ? $kwargs['minimum'] : ($absolute ? 0 : -1000000001 );
 		 parent::__construct(...$kwargs);
 	 }
+	 
 }

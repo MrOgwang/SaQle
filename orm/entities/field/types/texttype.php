@@ -51,4 +51,5 @@ class TextType extends RealField implements IField{
 	 	 $this->empty = $empty;
 	 	 return $this;
 	 }
+	 
 }

@@ -11,5 +11,6 @@ class TimestampField extends TextType implements IField{
 		 $kwargs['db_auto_init']   = $kwargs['db_auto_init'] ?? config('db_auto_init_timestamp');
 		 $kwargs['db_auto_update'] = $kwargs['db_auto_update'] ?? config('db_auto_update_timestamp');
 		 parent::__construct(...$kwargs);
+		 
 	 }
 }

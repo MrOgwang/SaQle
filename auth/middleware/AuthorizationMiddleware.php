@@ -4,7 +4,7 @@ namespace SaQle\Auth\Middleware;
 use SaQle\Middleware\IMiddleware;
 use SaQle\Middleware\MiddlewareRequestInterface;
 use SaQle\Auth\Guards\AuthorizationEvaluator;
-use SaQle\Auth\Guards\Exceptions\UnauthorizedException;
+use SaQle\Core\Exceptions\Http\UnauthorizedException;
 /**
 * This middleware checks that all permissions defined on a controller are met.
 */

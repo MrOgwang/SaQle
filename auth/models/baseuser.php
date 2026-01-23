@@ -11,10 +11,10 @@ class BaseUser extends Model implements IUser {
 	 protected function model_setup(TableInfo $meta) : void{
 		 $fields = [
 		 	 'user_id'    => new Pk(),
-		     'first_name' => new TinyTextField(required: true, strict: false),
-		     'last_name'  => new TinyTextField(required: true, strict: false),
-		     'username'   => new TinyTextField(required: true, strict: false),
-		     'password'   => new PasswordField(required: true, strict: false),
+		     'first_name' => new TinyTextField(required: true),
+		     'last_name'  => new TinyTextField(required: true),
+		     'username'   => new TinyTextField(required: true),
+		     'password'   => new PasswordField(required: true),
 		 ];
 
 		 if(config('enable_rbac')){

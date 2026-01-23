@@ -9,4 +9,5 @@ class FloatField extends NumberType implements IField{
 		 $kwargs['primitive_type'] = "float";
 		 parent::__construct(...$kwargs);
 	 }
+	 
 }
