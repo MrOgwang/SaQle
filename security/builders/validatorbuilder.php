@@ -1,7 +1,7 @@
 <?php
 namespace SaQle\Security\Builders;
 
-use SaQle\Security\Validators\{IValidator, InputValidator, NullValidator, TypeValidator, ChoicesValidator, EmptyValidator, LengthValidator, MaxValidator, MinValidator, PatternValidator, StrictValidator, UploadValidator, ZeroValidator, SpecialValidator, AbsoluteValidator, EmailValidator, PhoneValidator,
+use SaQle\Security\Validation\{IValidator, InputValidator, NullValidator, TypeValidator, ChoicesValidator, EmptyValidator, LengthValidator, MaxValidator, MinValidator, PatternValidator, StrictValidator, UploadValidator, ZeroValidator, SpecialValidator, AbsoluteValidator, EmailValidator, PhoneValidator,
 UrlValidator, FormatValidator};
 
 class ValidatorBuilder{

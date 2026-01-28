@@ -3,7 +3,7 @@
 namespace SaQle\Core\Registries;
 
 use SaQle\Core\Assert\Assert;
-use SaQle\Http\Methods\Attributes\{HttpMethod, Index};
+use SaQle\Core\Support\{HttpMethod, Index};
 use SaQle\Core\Components\ComponentDefinition;
 use InvalidArgumentException;
 use ReflectionClass;

@@ -1,7 +1,7 @@
 <?php
 namespace SaQle\Core\Events;
 
-use SaQle\Core\Events\Attributes\Emits;
+use SaQle\Core\Support\Emits;
 use ReflectionMethod;
 
 final class EventMetadata {

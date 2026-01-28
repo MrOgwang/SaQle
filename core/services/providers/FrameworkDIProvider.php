@@ -3,7 +3,7 @@ namespace SaQle\Core\Services\Providers;
 
 use SaQle\Orm\Database\DbTypes;
 use SaQle\Orm\Database\DbPorts;
-use SaQle\Orm\Database\Attributes\DbContextOptions;
+use SaQle\Orm\Database\DbContextOptions;
 use SaQle\Orm\Database\Trackers\DbContextTracker;
 use SaQle\Orm\Query\Where\Aggregator;
 use SaQle\Orm\Query\Where\Translator;

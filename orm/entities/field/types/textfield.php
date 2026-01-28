@@ -1,20 +1,12 @@
 <?php
+
 namespace SaQle\Orm\Entities\Field\Types;
 
-use SaQle\Orm\Entities\Field\Interfaces\IField;
+use SaQle\Orm\Entities\Field\Types\Base\TextualField;
 
-class TextField extends TextType implements IField{
-	 public function __construct(...$kwargs){
-	 	 $kwargs['column_type'] = "TEXT";
-		 $kwargs['length']      = isset($kwargs['length']) ? $kwargs['length'] : 255;
-		 $kwargs['maximum']     = isset($kwargs['maximum']) ? $kwargs['maximum'] : 255;
-		 parent::__construct(...$kwargs);
-	 }
+class TextField extends TextualField {
+	 //the minimum length allowed
+	 protected string $size = 'regular'; //big, small, medium, tiny, regular
 
-	 public function get_control_kwargs() : array{
-	 	 return array_merge(parent::get_control_kwargs(), [
-	 	 	 'type' => 'textarea',
-	 	 ]);
-	 }
-	 
 }
+

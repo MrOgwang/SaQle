@@ -4,7 +4,7 @@ namespace SaQle\Core\Events;
 use ReflectionClass;
 use RecursiveIteratorIterator;
 use RecursiveDirectoryIterator;
-use SaQle\Core\Events\Attributes\Listens;
+use SaQle\Core\Support\Listens;
 use SaQle\Core\Registries\EventRegistry;
 
 final class EventDiscoverer {

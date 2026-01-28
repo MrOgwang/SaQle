@@ -1,14 +1,13 @@
 <?php
+
 namespace SaQle\Orm\Entities\Field\Types;
 
-use SaQle\Orm\Entities\Field\Interfaces\IField;
+use SaQle\Orm\Entities\Field\Types\Base\TextualField;
 
-class CharField extends TextType implements IField{
+class CharField extends TextualField {
 	 public function __construct(...$kwargs){
-		 $kwargs['column_type'] = "CHAR";
-		 $kwargs['length']      = 1;
-		 $kwargs['maximum']     = 1;
-		 parent::__construct(...$kwargs);
+	 	 $kwargs['max_length'] = $kwargs['max_length'] ?? 100;
+	 	 parent::__construct(...$kwargs);
 	 }
-	 
 }
+

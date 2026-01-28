@@ -1,6 +1,6 @@
 <?php
 namespace SaQle\Orm\Connection;
-use SaQle\Orm\Database\Attributes\IDbContextOptions;
+use SaQle\Orm\Database\IDbContextOptions;
 use SaQle\Orm\Connection\Interfaces\IConnection;
 ob_start();
 class Connection implements IConnection{

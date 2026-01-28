@@ -7,12 +7,14 @@ use SaQle\Core\Services\Container\Container;
 use SaQle\Core\Registries\{
     MiddlewareRegistry,
     EventRegistry,
-    CachedEventRegistry
+    CachedEventRegistry,
+    RuleHandlerRegistry
 };
 use SaQle\Core\Services\Providers\{
      FrameworkDIProvider, 
      EventServiceProvider, 
-     AuthenticationProvider
+     AuthenticationProvider,
+     RuleHandlerServiceProvider
 };
 use SaQle\Http\Cors\CorsConfig;
 use SaQle\Core\Support\AppContext;
@@ -28,6 +30,7 @@ final class App{
      public CorsConfig $cors;
      public GuardManager $guards;
      public CachedEventRegistry $events;
+     public RuleHandlerRegistry $rules;
 
      public function __construct(private AppSetup $setup){
          // 1. Expose app early
@@ -37,6 +40,7 @@ final class App{
          $this->container  = new Container();
          $this->middleware = new MiddlewareRegistry();
          $this->guards     = new GuardManager();
+         $this->rules      = new RuleHandlerRegistry();
 
          // 3. Load environment & helpers
          $this->initialize();
@@ -85,6 +89,7 @@ final class App{
              EventServiceProvider::class,
              AuthenticationProvider::class,
              SessionProvider::class,
+             RuleHandlerServiceProvider::class
              //RoutingProvider::class
          ];
 

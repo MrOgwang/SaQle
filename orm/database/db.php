@@ -5,7 +5,7 @@ namespace SaQle\Orm\Database;
 
 use SaQle\Core\Assert\Assert;
 use SaQle\Orm\Connection\Connection;
-use SaQle\Orm\Database\Attributes\TransactionOutput;
+use SaQle\Core\Support\TransactionOutput;
 use ReflectionFunction;
 use Exception;
 

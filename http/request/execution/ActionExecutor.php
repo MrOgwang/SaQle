@@ -6,7 +6,7 @@ use Throwable;
 use ReflectionMethod;
 use SaQle\Http\Request\Request;
 use SaQle\Http\Response\HttpMessage;
-use SaQle\Auth\Guards\Attributes\Allow;
+use SaQle\Core\Support\Allow;
 
 final class ActionExecutor {
      public function execute(Request $request, ?string $controller = null, ?string $method = null): HttpMessage {

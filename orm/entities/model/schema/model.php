@@ -14,7 +14,7 @@ use SaQle\Orm\Entities\Model\Interfaces\{IModel, ITableSchema};
 use SaQle\Orm\Entities\Model\Collection\ModelCollection;
 use SaQle\Core\Exceptions\Model\{UndefinedFieldException, MissingRequiredFieldsException};
 use SaQle\Orm\Database\Db;
-use SaQle\Orm\Database\Attributes\TransactionOutput;
+use SaQle\Core\Support\TransactionOutput;
 use Exception;
 use JsonSerializable;
 
