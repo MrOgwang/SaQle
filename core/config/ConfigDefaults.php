@@ -113,15 +113,6 @@ final class ConfigDefaults{
              'db_auto_update_timestamp' => true,
 
              /**
-              * 1. Set which type of time and/or date entry you want for created and modified at field for your models.
-              * 2. This flag can also be set on a model's meta array, and if that's the case, will override the value set here.
-              * Options: DATE, DATETIME, TIME, TIMESTAMP, PHPTIMESTAMP.
-              * 
-              * Defaults to PHPTIMESTAMP
-              * */
-             'db_auto_cmdt_type' => 'PHPTIMESTAMP',
-
-             /**
               * When creating models, usually you want to keep track of 
               * 1. Who added a row
               * 2. Who modified a row

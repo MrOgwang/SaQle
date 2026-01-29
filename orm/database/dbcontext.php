@@ -3,7 +3,7 @@ declare(strict_types = 1);
 
 namespace SaQle\Orm\Database;
 
-use SaQle\Migration\Models\Migration;
+use SaQle\Core\Migration\Models\Migration;
 use SaQle\Auth\Models\{Login, Contact, Vercode};
 use SaQle\Session\Models\Session;
 use SaQle\Orm\Entities\Model\TempId;

@@ -22,5 +22,10 @@ class TextualField extends Field {
 
 	 //whether to allow blank or not
 	 protected bool $blank = true;
+
+	 public function __construct(...$kwargs){
+	 	$kwargs['type'] = "string";
+	 	parent::__construct(...$kwargs);
+	 }
 }
 

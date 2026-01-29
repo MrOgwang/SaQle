@@ -3,8 +3,7 @@ declare(strict_types = 1);
 
 namespace SaQle\Orm\Database\Trackers;
 
-use SaQle\Orm\Database\Trackers\Exceptions\TableNotFoundException;
-use SaQle\Orm\Database\Trackers\Exceptions\DatabaseNotFoundException;
+use SaQle\Core\Exceptions\{TableNotFoundException, DatabaseNotFoundException};
 
 class DbContextTracker{
 

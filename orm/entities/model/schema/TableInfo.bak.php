@@ -105,6 +105,15 @@ class TableInfo{
          get => $this->format_cmdt;
      }
 
+     //the type for auto cmdt
+     public string $cmdt_type = '' {
+         set(string $value){
+             $this->cmdt_type = $value;
+         }
+
+         get => $this->cmdt_type;
+     }
+
      //whether to automatically include a deleted field in the model
      public bool $soft_delete = true {
          set(bool $value){
@@ -467,8 +476,8 @@ class TableInfo{
      private function toggle_cm_fields(bool $switch = true) : void{
          $auto_fields = [];
          if( $switch && config('auth_model_class') ){
-             $auto_fields[$this->created_by_field] = new OneToOne(required: false, fmodel: config('auth_model_class'), field: 'author', fk: 'user_id');
-             $auto_fields[$this->modified_by_field] = new OneToOne(required: false, fmodel: config('auth_model_class'), field: 'modifier', fk: 'user_id');
+             $auto_fields['author'] = new OneToOne(required: false, fmodel: config('auth_model_class'), field: 'author', fk: 'user_id', column_name: $this->created_by_field);
+             $auto_fields['modifier'] = new OneToOne(required: false, fmodel: config('auth_model_class'), field: 'modifier', fk: 'user_id', column_name: $this->modified_by_field);
              $this->update_field_names($auto_fields, 'add', 'cm');
              return;
          }
@@ -483,8 +492,20 @@ class TableInfo{
      private function toggle_cmdt_fields(bool $switch = true) : void{
          $auto_fields = [];
          if( $switch ){
-             $auto_fields[$this->created_at_field] = new DateTimeField();
-             $auto_fields[$this->modified_at_field] = new DateTimeField();
+             $auto_fields[$this->created_at_field] = match($this->cmdt_type){
+                'PHPTIMESTAMP' => new PhpTimestampField(required: false, zero: false, absolute: true),
+                'DATE'         => new DateField(required: false, strict: false),
+                'DATETIME'     => new DateTimeField(required: false, strict: false),
+                'TIME'         => new TimeField(required: false, strict: false),
+                'TIMESTAMP'    => new TimestampField(required: false, strict: false)
+             };
+             $auto_fields[$this->modified_at_field] = match($this->cmdt_type){
+                'PHPTIMESTAMP' => new PhpTimestampField(required: false, zero: false, absolute: true),
+                'DATE'         => new DateField(required: false, strict: false),
+                'DATETIME'     => new DateTimeField(required: false, strict: false),
+                'TIME'         => new TimeField(required: false, strict: false),
+                'TIMESTAMP'    => new TimestampField(required: false, strict: false)
+             };
              $this->update_field_names($auto_fields, 'add', 'cmdt');
              return;
          }
@@ -503,7 +524,14 @@ class TableInfo{
              if(config('auth_model_class')){
                  $auto_fields['remover'] = new OneToOne(required: false, fmodel: config('auth_model_class'), field: 'remover', fk: 'user_id', column_name: $this->deleted_by_field);
              }
-             $auto_fields[$this->deleted_at_field] = new DateTimeField();
+             $auto_fields[$this->deleted_at_field] = match($this->cmdt_type){
+                'PHPTIMESTAMP' => new PhpTimestampField(required: false, zero: false, absolute: true),
+                'DATE'         => new DateField(required: false, strict: false),
+                'DATETIME'     => new DateTimeField(required: false, strict: false),
+                'TIME'         => new TimeField(required: false, strict: false),
+                'TIMESTAMP'    => new TimestampField(required: false, strict: false),
+                //'TIMEDIFF'     => new TimeDifferenceField(required: false, strict: false)
+             };
              $this->update_field_names($auto_fields, 'add', 'delete');
              return;
          }
@@ -538,6 +566,7 @@ class TableInfo{
          $this->initializing = true;
 
          $this->pk_type = config('primary_key_type');
+         $this->cmdt_type = config('db_auto_cmdt_type');
          $this->auto_cm = config('model_auto_cm_fields');
          $this->auto_cmdt = config('model_auto_cmdt_fields');
          $this->soft_delete = config('model_soft_delete');

@@ -8,5 +8,9 @@ class IntegerField extends NumericField {
 	 //the minimum length allowed
 	 protected string $size = 'regular'; //big, small, medium, tiny, regular
 
+	 public function __construct(...$kwargs){
+	 	 $kwargs['type'] = "integer";
+	 	 parent::__construct(...$kwargs);
+	 }
 }
 

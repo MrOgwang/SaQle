@@ -18,9 +18,7 @@ use SaQle\Orm\Query\Select\SelectBuilder;
 use SaQle\Orm\Query\Group\GroupBuilder;
 use SaQle\Security\Security;
 use SaQle\Http\Request\Request;
-use SaQle\Migration\Managers\{ContextManager, Manager};
-use SaQle\Migration\Commands\{MakeMigrations, Migrate, MakeCollections, MakeModels, MakeThroughs, SeedDatabase, MakeSuperuser, StartApps, StartProject};
-use SaQle\Migration\Managers\Interfaces\IMigrationManager;
+use SaQle\Build\Commands\{MakeMigrations, Migrate, MakeCollections, MakeModels, MakeThroughs, SeedDatabase, MakeSuperuser, StartApps, StartProject, MakeResources};
 use SaQle\Log\FileLogger;
 use SaQle\Auth\Models\Interfaces\SessionUser;
 use SaQle\Auth\Services\AuthService;
@@ -50,9 +48,6 @@ class FrameworkDIProvider extends ServiceProvider {
          $this->app->container->bind(LimitBuilder::class);
          $this->app->container->bind(DataFormatter::class);
          $this->app->container->bind(Security::class);
-         $this->app->container->bind(ContextManager::class);
-         $this->app->container->bind(IMigrationManager::class, ContextManager::class);
-         $this->app->container->bind(Manager::class);
          $this->app->container->bind(MakeMigrations::class);
          $this->app->container->bind(Migrate::class);
          $this->app->container->bind(MakeCollections::class);
@@ -61,6 +56,7 @@ class FrameworkDIProvider extends ServiceProvider {
          $this->app->container->bind(SeedDatabase::class);
          $this->app->container->bind(MakeSuperuser::class);
          $this->app->container->bind(StartApps::class);
+         $this->app->container->bind(MakeResources::class);
          $this->app->container->bind(StartProject::class);
          $this->app->container->bind(DbContextOptions::class, function($c, $name, $type, $port, $username, $password){
              return new DbContextOptions(name: $name, type: $type, port: $port, username: $username, password: $password);

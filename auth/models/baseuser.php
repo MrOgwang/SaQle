@@ -1,7 +1,7 @@
 <?php
 namespace SaQle\Auth\Models;
 
-use SaQle\Orm\Entities\Field\Types\{Pk, PasswordField, TinyTextField, OneToMany, ManyToMany};
+use SaQle\Orm\Entities\Field\Types\{Pk, PasswordField, CharField, OneToMany, ManyToMany};
 use SaQle\Orm\Entities\Field\Interfaces\IField;
 use SaQle\Orm\Entities\Model\Schema\{Model, TableInfo};
 use SaQle\Auth\Models\Interfaces\IUser;
@@ -11,9 +11,9 @@ class BaseUser extends Model implements IUser {
 	 protected function model_setup(TableInfo $meta) : void{
 		 $fields = [
 		 	 'user_id'    => new Pk(),
-		     'first_name' => new TinyTextField(required: true),
-		     'last_name'  => new TinyTextField(required: true),
-		     'username'   => new TinyTextField(required: true),
+		     'first_name' => new CharField(required: true),
+		     'last_name'  => new CharField(required: true),
+		     'username'   => new CharField(required: true),
 		     'password'   => new PasswordField(required: true),
 		 ];
 

@@ -5,7 +5,7 @@ namespace SaQle\Orm\Entities\Field\Types\Base;
 use SaQle\Orm\Entities\Field\Types\{Pk, TextType, NumberType, FileField, TimestampField};
 use SaQle\Orm\Entities\Field\Types\Base\Relation;
 
-abstract class RealField extends Simple{
+abstract class RealField extends Simple {
 	 //the helper text
 	 public string $help_text = '' {
 	 	 set(string $value){
