@@ -122,10 +122,15 @@
 
      //get a single model object from name
      protected function get_model(string $name) : ITableSchema {
+     	 $model_class = $this->get_model_class($name);
+     	 return $model_class::make();
+     }
+     
+     //get model class from name
+     protected function get_model_class(string $name) : string {
      	 $dbclass = $this->dbclass;
      	 $refs = new $dbclass()->get_models();
-     	 $model_class = $refs[$name];
-     	 return $model_class::state();
+     	 return $refs[$name];
      }
 
      //Initilialize a read manager
@@ -160,13 +165,13 @@
 	 * @param string $as:    the aliase name of the joining table.
 	 */
 	 public function register_joining_model(string $table, ?string $tblref = null, ?string $as = null){
-	 	 $meta = $this->get_model($table)->meta;
+	 	 $modelclass = $this->get_model($table);
 		 $this->register_to_context_tracker(
 		 	 table_name:    $table,
 		 	 table_aliase:  !is_null($as) ? $as : "",
 		 	 database_name: config('db_context_classes')[$this->dbclass]['name'],
-		 	 field_list:    $meta->actual_column_names,
-		 	 ff_settings:   $meta->file_required_fields,
+		 	 field_list:    $modelclass::get_actual_column_names(),
+		 	 ff_settings:   $modelclass::get_file_required_fields(),
 		 	 table_ref:     $tblref
 		 );
 	 }

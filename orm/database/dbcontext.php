@@ -29,7 +29,7 @@ abstract class DbContext{
 	 	 	 $this->models['rolepermissions'] = config('role_permission_model_class');
 	 	 }
 
-	 	 if(config('enable_multitenancy') && $this->include_tenant_models){
+	 	 if(config('with_multitenancy') && $this->include_tenant_models){
 	 	 	 $this->models['tenants'] = config('tenant_model_class');
 	 	 }
 

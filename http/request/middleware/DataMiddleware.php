@@ -13,6 +13,7 @@ namespace SaQle\Http\Request\Middleware;
 
 use SaQle\Middleware\IMiddleware;
 use SaQle\Middleware\MiddlewareRequestInterface;
+use SaQle\Core\Files\UploadedFile;
 
 class DataMiddleware extends IMiddleware {
      public function handle(MiddlewareRequestInterface &$request){
@@ -72,42 +73,31 @@ class DataMiddleware extends IMiddleware {
 
      //Normalize $_FILES into a predictable structure
      private function normalize_files(array $files): array {
-        $normalized = [];
+         $normalized = [];
 
-         foreach ($files as $field => $info) {
+         foreach ($files as $field => $info){
 
-            // Multiple files
-            if (is_array($info['name'])) {
-                $normalized[$field] = [];
+             if(is_array($info['name'])){ //multiple files were uploaded
+                 $normalized[$field] = [];
 
-                foreach ($info['name'] as $i => $name) {
-                    if ($info['error'][$i] === UPLOAD_ERR_OK) {
-                        $normalized[$field][] = [
-                            'name'      => $name,
-                            'full_path'=> $info['full_path'][$i] ?? null,
-                            'type'      => $info['type'][$i],
-                            'tmp_name'  => $info['tmp_name'][$i],
-                            'error'     => $info['error'][$i],
-                            'size'      => $info['size'][$i],
-                        ];
-                    }
-                }
-            }
-            // Single file
-            else {
-                if ($info['error'] === UPLOAD_ERR_OK) {
-                    $normalized[$field] = [
-                        'name'      => $info['name'],
-                        'full_path'=> $info['full_path'] ?? null,
-                        'type'      => $info['type'],
-                        'tmp_name'  => $info['tmp_name'],
-                        'error'     => $info['error'],
-                        'size'      => $info['size'],
-                    ];
-                } else {
-                    $normalized[$field] = null;
-                }
-            }
+                 foreach ($info['name'] as $i => $name){
+                     $normalized[$field][] = new UploadedFile(
+                         name:     $name,
+                         tmp_name: $info['tmp_name'][$i],
+                         size:     $info['size'][$i],
+                         error:    $info['error'][$i],
+                         type:     $info['type'][$i]
+                     );
+                 }
+             }else{ //a single file was uploaded
+                 $normalized[$field] = new UploadedFile(
+                     name:     $info['name'],
+                     tmp_name: $info['tmp_name'],
+                     size:     $info['size'],
+                     error:    $info['error'],
+                     type:     $info['type']
+                 );
+             }
          }
 
          return $normalized;

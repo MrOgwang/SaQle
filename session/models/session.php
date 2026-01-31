@@ -12,9 +12,9 @@ class Session extends Model{
 		     'session_data'  => new TextField()
 	 	 ];
 
-	 	 $meta->soft_delete         = false;
-	 	 $meta->auto_cm             = false;
-	 	 $meta->auto_cmdt           = false;
-	 	 $meta->enable_multitenancy = false;
+	 	 $meta->with_soft_delete  = false;
+	 	 $meta->with_user_audit   = false;
+	 	 $meta->with_timestamps   = false;
+	 	 $meta->with_multitenancy = false;
 	 }
 }

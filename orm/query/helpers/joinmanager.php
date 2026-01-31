@@ -48,7 +48,7 @@ trait JoinManager{
      	 $database = $database ?: $this->ctxtracker->find_database_name(0);
          $ptable   = $this->ctxtracker->find_table_name(0);
      	 $model    = $this->get_model($ptable);
-		 $pkname   = $model->meta->pk_name;
+		 $pkname   = $model->get_pk_name();
      	 $from     = $from ?: $pkname;
      	 $to       = $to   ?: $pkname;
      	 $this->jbuilder->add_join(type: $type, table: $table, from: $from, to: $to, as: $as, ref: $ref, database: $database, query: $q);

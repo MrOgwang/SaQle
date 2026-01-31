@@ -129,7 +129,7 @@ class ReadManager extends IReadManager implements IOperationManager {
          if($through){
          	 if(!$selected_fields){
          	 	 $through_model   = $through[1];
-         	     $through_columns = array_values($through_model::state()->meta->actual_column_names);
+         	     $through_columns = array_values($through_model::make()->get_actual_column_names());
          	 }
 
          	 $throughtablename = $through[0];
@@ -200,8 +200,8 @@ class ReadManager extends IReadManager implements IOperationManager {
          $ismanytomany           = false;
          if( isset($existing_relations[$exr_last_index]) ){
          	 $relation           = $existing_relations[$exr_last_index];
-         	 $former_rel_field   = $relation->field;
-         	 $former_ref_key     = $relation->fk;
+         	 $former_rel_field   = $relation->get_field();
+         	 $former_ref_key     = $relation->get_foreign_key();
          	 if($relation instanceof Many2Many){
          	 	 $through        = $relation->get_through_model();
          	 	 $former_ref_key = $through[3];
@@ -228,8 +228,8 @@ class ReadManager extends IReadManager implements IOperationManager {
 
      private function get_auto_includes(Model $model){
 	 	$auto_includes = [];
-	 	foreach($model->meta->fields as $fn => $fv){
-	 		if($fv instanceof Relation && $fv->eager){
+	 	foreach($model->get_fields() as $fn => $fv){
+	 		if($fv instanceof Relation && $fv->is_eager()){
 	 			$auto_includes[] = ['relation' => $fv->get_relation(), 'with' => '', 'tuning' => null];
 	 		}
 	 	}
@@ -309,10 +309,10 @@ class ReadManager extends IReadManager implements IOperationManager {
      }
 
      private function process_include($ins, $with, $tuning, $data){
-     	 $fmodel       = $ins->fmodel;
- 	 	 $pkey         = $ins->pk;
- 	 	 $pointerkey   = $ins->fk;
-	 	 $fkey         = $ins->fk;
+     	 $fmodel       = $ins->get_related_model();
+ 	 	 $pkey         = $ins->get_local_key();
+ 	 	 $pointerkey   = $ins->get_foreign_key();
+	 	 $fkey         = $ins->get_foreign_key();
 	 	 $through      = null;
 	 	 $pkey_values  = $this->extrct_primarykey_values($pkey, $data);
 
@@ -321,22 +321,22 @@ class ReadManager extends IReadManager implements IOperationManager {
 	 	 	 $pointerkey = $through[3];
 	 	 }
 	 
-	 	 $raw_data     = $this->fetch_related_data($fmodel, $fkey, $pkey_values, $ins->field, $with, $tuning, $through);
+	         $field        = $ins->get_field();
+	 	 $raw_data     = $this->fetch_related_data($fmodel, $fkey, $pkey_values, $field, $with, $tuning, $through);
 	 	 $rel_data     = []; 
-	 	 $field        = $ins->field;
 	 	 foreach($raw_data as $rd){
 	 	 	 $pointer_value            = $rd->$pointerkey;
 	 	 	 $the_rows                 = !is_array($rd->$field) ? json_decode(preg_replace('/,(\s*])/', '$1', $rd->$field)) : $rd->$field;
 	 	 	 if(!is_array($rd->$field))
 	 	 	 	 $the_rows             = $this->format_get_data($fmodel,  $the_rows);
-	 	 	 $rel_data[$pointer_value] = $ins->multiple ? $the_rows : ($the_rows[0] ?? null);
+	 	 	 $rel_data[$pointer_value] = $ins->get_many() ? $the_rows : ($the_rows[0] ?? null);
 	 	 }
 	 	 return [
 	 	 	'ref_key'     => $pkey,
 	 	 	'raw_data'    => $raw_data,
 	 	 	'rel_data'    => $rel_data,
 	 	 	'rel_field'   => $field,
-	 	 	'is_multiple' => $ins->multiple
+	 	 	'is_multiple' => $ins->get_many()
 	 	 ];
      }
 
@@ -393,7 +393,7 @@ class ReadManager extends IReadManager implements IOperationManager {
 	 	 $tracker->add_model($model_instance::class);
 
 	 	 #if soft delete is available, apply the fetch mode
-	 	 /*if($model_instance->meta->soft_delete){
+	 	 /*if($model_instance::class::has_soft_delete()){
 	 	 	 $mode = $this->fetch_mode();
 	 	 	 if($mode === FetchMode::NON_DELETED){
 	 	 	 	 $this->where($table_name.'.deleted__eq', 0);

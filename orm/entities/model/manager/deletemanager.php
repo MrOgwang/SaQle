@@ -69,14 +69,13 @@ class DeleteManager implements IOperationManager {
 	 	 $this->table      = $table;
 	 	 $this->dbclass    = $dbclass;
 	 	 $this->modelclass = $modelclass;
-
-         $meta = $modelclass::state()->meta;
+	 	 
 	 	 $this->setup_ctxtracker(
 		 	 table_name:    $this->table,
 		 	 table_aliase:  "",
 		 	 database_name: config('db_context_classes')[$this->dbclass]['name'],
-		 	 field_list:    $meta->actual_column_names,
-		 	 ff_settings:   $meta->file_required_fields,
+		 	 field_list:    $modelclass::get_actual_column_names(),
+		 	 ff_settings:   $modelclass::get_file_required_fields(),
 		 	 table_ref:     ''
 		 );
 

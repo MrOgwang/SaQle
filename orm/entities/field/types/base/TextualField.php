@@ -27,5 +27,14 @@ class TextualField extends Field {
 	 	$kwargs['type'] = "string";
 	 	parent::__construct(...$kwargs);
 	 }
+
+	 public function length(int $length){
+	 	 $this->length = $length;
+	 	 return $this;
+	 }
+
+	 public function get_length(){
+	 	 return $this->length;
+	 }
 }
 

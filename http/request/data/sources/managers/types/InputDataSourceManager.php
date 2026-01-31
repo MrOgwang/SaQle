@@ -148,8 +148,8 @@ class InputDataSourceManager extends DataSourceManager{
 	 }
 
 	 private function get_flat_keys(string $class_name) : array {
- 	 	 $model_fields = $class_name::state()->meta->defined_field_names;
- 	 	 $model_columns = $class_name::state()->meta->column_names;
+ 	 	 $model_fields = $class_name::make()->get_defined_field_names();
+ 	 	 $model_columns = $class_name::make()->get_column_names();
  	 	 $flipped_model_columns = array_flip($model_columns);
  	 	 $object = [];
 

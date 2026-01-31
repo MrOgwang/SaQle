@@ -24,7 +24,7 @@ class ValidatorManager {
 			 'pattern'  => new PatternValidator(),
 			 'strict'   => new StrictValidator(),
 			 'zero'     => new ZeroValidator(),
-			 'absolute' => new AbsoluteValidator(),
+			 'unsigned' => new AbsoluteValidator(),
 			 'email'    => new EmailValidator(),
 			 'phone'    => new PhoneValidator(),
 			 'url'      => new UrlValidator(),

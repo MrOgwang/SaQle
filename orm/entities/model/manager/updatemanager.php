@@ -88,13 +88,12 @@ class UpdateManager implements IOperationManager{
          $this->container  = new DataContainer();
 	 	 $this->container->data = $data;
 
-	 	 $meta = $modelclass::state()->meta;
 	 	 $this->setup_ctxtracker(
 		 	 table_name:    $this->table,
 		 	 table_aliase:  "",
 		 	 database_name: config('db_context_classes')[$this->dbclass]['name'],
-		 	 field_list:    $meta->actual_column_names,
-		 	 ff_settings:   $meta->file_required_fields,
+		 	 field_list:    $modelclass::get_actual_column_names(),
+		 	 ff_settings:   $modelclass::get_file_required_fields(),
 		 	 table_ref:     ''
 		 );
 
@@ -105,8 +104,7 @@ class UpdateManager implements IOperationManager{
 	 	 try{
 	 	 	 $pdo        = resolve(Connection::class, config('db_context_classes')[$this->dbclass]);
 	 	 	 $modelclass = $this->modelclass;
-	 	 	 $model      = $modelclass::state();
-	 	 	 $modelmeta  = $model->meta;
+	 	 	 $model      = $modelclass::make();
 	 	 	 $table      = $this->table;
      	     [$clean_data, $file_data] = $model->get_update_data($this->container->data, resolve('request'), $this->datastate);
      	     $this->container->files = [$file_data];
@@ -185,7 +183,7 @@ class UpdateManager implements IOperationManager{
 	 private function get_sql_info(?array $clean_data = null){
 	 	 if(!$clean_data){
 	 	 	 $modelclass = $this->modelclass;
-	 	 	 $model      = $modelclass::state();
+	 	 	 $model      = $modelclass::make();
      	     [$clean_data, $file_data] = $model->get_update_data($this->container->data, resolve('request'), $this->datastate);
 	 	 }
 	 	 $where_clause = $this->wbuilder->get_where_clause($this->ctxtracker, $this->get_configurations());

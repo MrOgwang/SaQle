@@ -14,6 +14,10 @@ final class EventContext {
          public array $attrs = [], //extra attributes to pass along
      ) {}
 
+     public function service(){
+         return $this->service;
+     }
+
      public function arg(string $name): mixed {
          return $this->args[$name] ?? null;
      }

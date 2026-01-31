@@ -7,6 +7,7 @@ use SaQle\Orm\Connection\Connection;
 
 class MySQLDbManager extends DbManager{
 	 protected array $tempparams;
+
 	 public function __construct(array $params){
 	 	 $this->connection_params = $params;
 	 	 $this->tempparams = $params;
@@ -47,9 +48,9 @@ class MySQLDbManager extends DbManager{
       * Create a new database table.
       * */
      public function create_table($table, $model_class, $temporary = false){
-     	 $model = $model_class::state();
-     	 $unique_fields = $model->meta->unique_fields; 
-     	 $unique_together = $model->meta->unique_together;
+     	 $model = $model_class::make();
+     	 $unique_fields = $model->get_unique_fields(); 
+     	 $unique_together = $model->is_unique_together();
      	 $defs  = $model->get_field_definitions();
 
      	 $operation = new TableCreateOperation(

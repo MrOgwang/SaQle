@@ -56,10 +56,12 @@ final class ConfigDefaults{
              /**
               * The following flags will enable or disable multitenancy
               * 1. config('tenant_model_class')  : the clas name of the tanant 
-              * 2. config('enable_multitenancy') : Expliclty set this to enable multi tenancy
+              * 2. config('with_multitenancy') : Expliclty set this to enable multi tenancy
+              * 3. config('tenant_field') : The name of the tenant tracking field
               * */
              'tenant_model_class' => BaseTenant::class,
-             'enable_multitenancy' => false,
+             'with_multitenancy' => false,
+             'tenant_field' => 'tenant_id',
 
              //The name of the root media folder. This is where all uploads will be saved to.
              'media_folder' => 'media',
@@ -106,13 +108,6 @@ final class ConfigDefaults{
              'system_admin_name' => '',
 
              /**
-              * 1. Handling db column of type timestamp
-              * 2. These flags can also be set on a model's meta array, and if that's the case, will override the values set here
-              * */
-             'db_auto_init_timestamp' => true,
-             'db_auto_update_timestamp' => true,
-
-             /**
               * When creating models, usually you want to keep track of 
               * 1. Who added a row
               * 2. Who modified a row
@@ -124,17 +119,17 @@ final class ConfigDefaults{
               * The settings below will enable automatic inclusion of these fields without explicitly defining them 
               * in all the models.
               * 
-              * config('model_auto_cm_fields')
+              * config('with_user_audit')
               * - This flag tells the model to generate Created By and Modified By fields. The field type will be GUID or AUTO(INT)
               *   depending on what the PRIMARY_KEY_TYPE flag is set to.
               * - The specific names of the fields will be set by adding the flags MODEL_CREATED_BY_FIELD and MODEL_MODIFIED_BY_FIELD
               * 
-              * config('model_auto_cmdt_fields')
+              * config('with_timestamps')
               * - This flag tells the model to generate Created At and Modified At date/datetime/time/timestamp fields. The field type will be derived from
               *   the DB_AUTO_CMDT_TYPE flag
               * - The specific names of the fields will be set by adding the flags MODEL_CREATED_AT_FIELD and MODEL_MODIFIED_AT_FIELD
               * 
-              * config('model_soft_delete')
+              * config('with_soft_delete')
               * - This flag tells the model to generate Is Deleted, Deleted By and Deleted At fields. The Deleted By type will
               *   deoend on the PRIMARY_KEY_TYPE flag and Deleted At type will depend on the DB_AUTO_CMDT_TYPE flag.
               * - The specific names of the fields will be set by adding the flags MODEL_DELETED_AT_FIELD and MODEL_DELETED_BY_FIELD and MODEL_DELETED_FIELD
@@ -142,18 +137,18 @@ final class ConfigDefaults{
               * All the flags below have model specific equivalents that can be used to override behavior from model to model
               * if that need arises.
               * */
-             'model_auto_cm_fields' => false,
-             'model_created_by_field' => 'added_by',
-             'model_modified_by_field' => 'modified_by',
+             'with_user_audit' => false,
+             'created_by_field' => 'added_by',
+             'modified_by_field' => 'modified_by',
 
-             'model_auto_cmdt_fields' => false,
-             'model_created_at_field' => 'date_added',
-             'model_modified_at_field' => 'last_modified',
+             'with_timestamps' => false,
+             'created_at_field' => 'date_added',
+             'modified_at_field' => 'last_modified',
 
-             'model_soft_delete' => false,
-             'model_deleted_at_field' => 'deleted_at',
-             'model_deleted_by_field' => 'deleted_by',
-             'model_deleted_field' => 'deleted',
+             'with_soft_delete' => false,
+             'deleted_at_field' => 'deleted_at',
+             'deleted_by_field' => 'deleted_by',
+             'deleted_field' => 'deleted',
 
              /**
               * What happens when duplicate data is encountered during insert or update operations.
@@ -170,7 +165,7 @@ final class ConfigDefaults{
               * Defaults to ABORT_WITH_ERROR
               * 
               * */
-             'model_action_on_duplicate' => 'ABORT_WITH_ERROR',
+             'action_on_duplicate' => 'ABORT_WITH_ERROR',
 
              //During migrations, this class will be used to seed the database.
              'db_seeder' => '',

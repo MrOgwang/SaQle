@@ -129,7 +129,7 @@ trait FileUtils{
 	 * @param string $path The target directory path
 	 * @param bool $reverse Whether to sort in reverse date order (oldest first)
 	 * @param array $exts If set, only find files with these extensions
-	 * @return array A sorted array of absolute filesystem paths
+	 * @return array A sorted array of absolut filesystem paths
 	 */
 	 public static function scandir_chrono(string $path, bool $reverse = false, ?array $exts = []): array {
 

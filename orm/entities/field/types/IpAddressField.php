@@ -3,7 +3,6 @@
 namespace SaQle\Orm\Entities\Field\Types;
 
 use SaQle\Orm\Entities\Field\Types\CharField;
-use SaQle\Core\Support\CharSet;
 
 class IpAddressField extends CharField {
 	 protected string $version = 'IPv4';

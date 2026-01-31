@@ -4,8 +4,14 @@ namespace SaQle\Listeners\Model;
 use SaQle\Auth\Middleware\AuthenticationMiddleware;
 use SaQle\Core\Events\GenericEvent;
 
-class UpdateSessionUser {
+/**
+ * Save file uploads after a model is created in the database
+ * */
+class SaveUploadedFiles {
      public function handle(GenericEvent $event): void {
+         $model_instance = $event->context->service();
+         $files          = $event->context->arg('files') ?? [];
+
          $result = $event->context->result();
          $session_user = $event->context->user();
 

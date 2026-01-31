@@ -89,10 +89,10 @@ final class FormCompiler {
               * */
              Assert::allStringNotEmpty($forms, "Invalid auto forms configuration!");
 
-             $model_instance = $model_class::state();
-             $model_fields = $model_instance->meta->fields;
-             $real_fields = $model_instance->meta->defined_field_names;
-             $pk_name = $model_instance->meta->pk_name;
+             $model_instance = $model_class::make();
+             $model_fields = $model_instance->get_fields();
+             $real_fields = $model_instance->get_defined_field_names();
+             $pk_name = $model_instance->get_pk_name();
 
              foreach($forms as $form_name){
                  //check that the form_name is a method defined in model

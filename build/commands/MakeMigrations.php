@@ -105,7 +105,8 @@ class MakeMigrations {
                  continue;
 
              $model_fields[$n] = []; //all the fields defined on the model.
-             $mfields = $m::state()->meta->fields;
+             $mfields = $m::get_fields();
+
              foreach($mfields as $mfn => $mfv){
                  $mfvdef = $mfv->get_field_definition();
                  if($mfvdef){
@@ -123,8 +124,8 @@ class MakeMigrations {
              if(!MigrationUtils::is_model_defined($m, $project_root))
                  continue;
 
-             $mi = $m::state();
-             $unique_fields[$n] = ['unique_together' => $mi->meta->unique_together, 'fields' => $mi->meta->unique_fields];
+             $mi = $m::make();
+             $unique_fields[$n] = ['unique_together' => $mi->is_unique_together(), 'fields' => $mi->get_unique_fields()];
          }
 
          return $unique_fields;
@@ -140,7 +141,7 @@ class MakeMigrations {
          foreach($models as $n => $m){
              if(MigrationUtils::is_model_defined($m, $project_root)){
                  $models_template .= "\t\t\t'".$n."' => '".$m."',\n";
-                 $mfields = $m::state()->meta->fields;
+                 $mfields = $m::make()->get_fields();
                  $fields_template.= "\t\t\t'".$n."' => [\n";
                  foreach($mfields as $mfn => $mfv){
                      $db_col_name = $mfv->column_name;
@@ -232,7 +233,7 @@ class MakeMigrations {
          file_put_contents($file_name, $template);
      }
 
-     private function execute($pdo, $sql, $data = null){
+     private function execute_pdo($pdo, $sql, $data = null){
          $statement = $pdo->prepare($sql);
          $response  = $statement->execute($data);
          return ['statement' => $statement, 'response' => $response];
@@ -287,7 +288,7 @@ class MakeMigrations {
              //Acquire model fields for models registered with db context.
              $model_fields = $this->extract_model_fields($models, $project_root);
 
-             //acquire unique fields
+             /*/acquire unique fields
              $unique_fields = $this->extract_unique_fields($models, $project_root);
              $last_unique_fields = [];
              
@@ -311,7 +312,7 @@ class MakeMigrations {
              try{
                  $sql = "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?";
                  $data = [config('db_context_classes')[$ctx]['name']];
-                 $statement = $this->execute($connection, $sql, $data)['statement'];
+                 $statement = $this->execute_pdo($connection, $sql, $data)['statement'];
                  $object = $statement->fetchObject(); 
 
                  if($object){
@@ -372,7 +373,7 @@ class MakeMigrations {
 
              $context_snapshot[$ctx]['tables'] = [$added_models, $removed_models, $maintained_models];
              $context_snapshot[$ctx]['columns'] = [$added_columns, $removed_columns];
-             $context_snapshot[$ctx]['unique'] = [$unique_fields, $last_unique_fields];
+             $context_snapshot[$ctx]['unique'] = [$unique_fields, $last_unique_fields];*/
          }
 
          return $context_snapshot;
@@ -409,8 +410,7 @@ class MakeMigrations {
             'tracker'        => $tracker
          ]);
 
-         echo "Making {$migration_name} migrations now!\n";
-         [$up_models, $down_models, $touched_contexts] = $this->get_model_operations($snapshot);
+         /*[$up_models, $down_models, $touched_contexts] = $this->get_model_operations($snapshot);
          
          $template = "<?php\n";
          $template .= "use SaQle\\Migration\\Base\\BaseMigration;\n\n";
@@ -448,6 +448,6 @@ class MakeMigrations {
 
              $tracker->add_migration((Object)['file' => $class_name.".php", 'is_migrated' => false]);
              $this->serialize_to_file($migration_tracker_filename, $tracker);
-         }
+         }*/
      }
 }

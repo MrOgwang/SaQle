@@ -2,8 +2,6 @@
 
 namespace SaQle\Orm\Entities\Field\Types\Base;
 
-use SaQle\Core\Support\CharSet;
-
 class TemporalField extends Field {
 	 //the format 
 	 protected ?string $format = null;

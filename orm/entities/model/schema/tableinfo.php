@@ -2,13 +2,11 @@
 namespace SaQle\Orm\Entities\Model\Schema;
 
 use SaQle\Core\Assert\Assert;
-use SaQle\Orm\Entities\Field\Types\Base\{Simple, Relation};
+use SaQle\Orm\Entities\Field\Interfaces\IField;
 use SaQle\Orm\Entities\Field\Types\{Pk, BooleanField, FileField, OneToOne, PhpTimestampField, DateField, DateTimeField, TimeField, TimestampField, VirtualField};
 
 class TableInfo{
-     private bool $remove_fields = false;
-     private bool $initializing = false;
-
+     
      //Whether this is a temporary table or not
      public bool $temporary = false {
          set(bool $value){
@@ -73,31 +71,25 @@ class TableInfo{
      }
 
      //whether to automatically include created by and modified by fields in the model
-     public bool $auto_cm = true {
+     public bool $with_user_audit = false {
          set(bool $value){
-             $this->auto_cm = $value;
-             if(!$this->initializing){
-                 $this->toggle_cm_fields(switch: $value);
-             }
+             $this->with_user_audit = $value;
          }
 
-         get => $this->auto_cm;
+         get => $this->with_user_audit;
      }
 
      //whether to automatically incude created at and modified at fields in the model
-     public bool $auto_cmdt = true {
+     public bool $with_timestamps = false {
          set(bool $value){
-             $this->auto_cmdt = $value;
-             if(!$this->initializing){
-                 $this->toggle_cmdt_fields(switch: $value);
-             }
+             $this->with_timestamps = $value;
          }
 
-         get => $this->auto_cmdt;
+         get => $this->with_timestamps;
      }
 
      //whether to format php timestamps in auto cmdt fields to human readable format
-     public bool $format_cmdt = true {
+     public bool $format_cmdt = false {
          set(bool $value){
              $this->format_cmdt = $value;
          }
@@ -106,15 +98,12 @@ class TableInfo{
      }
 
      //whether to automatically include a deleted field in the model
-     public bool $soft_delete = true {
+     public bool $with_soft_delete = false {
          set(bool $value){
-             $this->soft_delete = $value;
-             if(!$this->initializing){
-                 $this->toggle_delete_fields(switch: $value);
-             }
+             $this->with_soft_delete = $value;
          }
 
-         get => $this->soft_delete;
+         get => $this->with_soft_delete;
      }
 
      //an array of all the names of the navigation fields
@@ -190,15 +179,12 @@ class TableInfo{
      }
 
      //whether to enable multitenancy for this model or not
-     public bool $enable_multitenancy = false {
+     public bool $with_multitenancy = false {
          set(bool $value){
-             $this->enable_multitenancy = $value;
-             if(!$this->initializing){
-                 $this->toggle_tenant_field(switch: $value);
-             }
+             $this->with_multitenancy = $value;
          }
 
-         get => $this->enable_multitenancy;
+         get => $this->with_multitenancy;
      }
 
      //the name of the deleted field
@@ -228,22 +214,13 @@ class TableInfo{
          get => $this->deleted_by_field;
      }
 
-     //whether to auto initialize database timestamps
-     public bool $db_auto_init_timestamp = true {
-         set(bool $value){
-             $this->db_auto_init_timestamp = $value;
+     //the name of the deleted by field
+     public string $tenant_field = '' {
+         set(string $value){
+             $this->tenant_field = $value;
          }
 
-         get => $this->db_auto_init_timestamp;
-     }
-
-     //whether to auto update database timestamps
-     public bool $db_auto_update_timestamp = true {
-         set(bool $value){
-             $this->db_auto_update_timestamp = $value;
-         }
-
-         get => $this->db_auto_update_timestamp;
+         get => $this->tenant_field;
      }
 
      /**
@@ -259,7 +236,7 @@ class TableInfo{
       * 
       * RETURN_EXISTING - Return existing record(s) as it is. (alongside newly added ones if multiple records are being inserted)
       * 
-      * Defaults to the value set using config('model_action_on_duplicate') constant in app config, which defaults to ABORT_WITH_ERROR
+      * Defaults to the value set using config('action_on_duplicate') constant in app config, which defaults to ABORT_WITH_ERROR
       * 
       * */
      public string $action_on_duplicate = '' {
@@ -301,7 +278,6 @@ class TableInfo{
          get => $this->unique_fields;
      }
 
-
      /**
       * When you have provided more than one unique field,
       * tell the model whether you want to have them be unique together
@@ -316,7 +292,7 @@ class TableInfo{
      }
 
      //an array of the fields defined in the model
-     public array $fields = [] {
+     public array $fields = []{
          set(array $value){
 
              //make sure $value is an non empty associative array
@@ -332,47 +308,50 @@ class TableInfo{
 
              foreach($value as $n => $v){
                  //make sure each element is a Field instance
-                 Assert::isInstanceOf($v, Simple::class, $n.' is not a field instance!');
+                 Assert::isInstanceOf($v, IField::class, $n.' is not a field instance!');
 
-                 $v->field_name = $n;
+                 //resolve the primary key
+                 if($v instanceof Pk){
+                     $v = $v->resolve();
+                     $this->pk_name = $n;
+                 }
 
-                 $column_names[$n] = $v->column_name;
+                 $v->name($n);
+
+                 $column_names[$n] = $v->get_column();
 
                  $navigation = false;
                  $virtual = false;
                  if($v instanceof FileField){
                      $file_field_names[] = $n;
-                     $file_required_fields[$n] = $v->required_fields;
+                     $file_required_fields[$n] = $v->get_depends_on();
                  }elseif($v instanceof Relation){
-                     $v->pmodel = $this->model_class;
-                     if($v->navigation){
+                     $v->local_model($this->model_class);
+                     if($v->is_navigation()){
                          $nav_field_names[] = $n;
                          $navigation = true;
                      }else{
                          $fk_field_names[] = $n;
                      }
-                 }elseif($v instanceof Pk){
-                     $this->pk_name = $n;
                  }elseif($v instanceof VirtualField){
                      $virtual_field_names[] = $n;
                      $virtual = true;
                  }
 
                  if(!$navigation && !$virtual){
-                     $actual_column_names[$n] = $v->column_name;
+                     $actual_column_names[$n] = $v->get_column();
                  }
              }
 
-
-             $this->fields = !$this->remove_fields ? array_merge($this->fields, $value) : $value;
-             $this->column_names = !$this->remove_fields ? array_merge($this->column_names, $column_names) : $column_names;
-             $this->actual_column_names = !$this->remove_fields ? array_merge($this->actual_column_names, $actual_column_names) : $actual_column_names;
-             $this->file_field_names = !$this->remove_fields ? array_merge($this->file_field_names, $file_field_names) : $file_field_names;
-             $this->file_required_fields = !$this->remove_fields ? array_merge($this->file_required_fields, $file_required_fields) : $file_required_fields;
-             $this->nav_field_names = !$this->remove_fields ? array_merge($this->nav_field_names, $nav_field_names) : $nav_field_names;
-             $this->fk_field_names = !$this->remove_fields ? array_merge($this->fk_field_names, $fk_field_names) : $fk_field_names;
+             $this->fields = $value;
+             $this->column_names = $column_names;
+             $this->actual_column_names = $actual_column_names;
+             $this->file_field_names = $file_field_names;
+             $this->file_required_fields = $file_required_fields;
+             $this->nav_field_names = $nav_field_names;
+             $this->fk_field_names = $fk_field_names;
              $this->virtual_field_names = $virtual_field_names;
-             $this->defined_field_names = array_diff(array_keys($this->fields), $this->non_defined_field_names, $virtual_field_names);
+             $this->defined_field_names = array_diff(array_keys($this->fields), $this->audit_field_names, $virtual_field_names);
          }
 
          get => $this->fields;
@@ -388,12 +367,12 @@ class TableInfo{
      }
 
      //an array of the names of the fields not defined in the model
-     public array $non_defined_field_names = [] {
+     public array $audit_field_names = [] {
          set(array $value){
-             $this->non_defined_field_names = $value;
+             $this->audit_field_names = $value;
          }
 
-         get => $this->non_defined_field_names;
+         get => $this->audit_field_names;
      }
 
      //an array of the names of all the virtual fields
@@ -427,141 +406,122 @@ class TableInfo{
      }
 
      /**
-      * this is a property used to override the auto added fields from auto_cm, auto_cmdt and soft_delete settings.
+      * this is a property used to override the auto added fields from with_user_audit, with_timestamps and with_soft_delete settings.
       * Instead of the default field types provided, provide a field name with a different field type
       * to override the default ones.
       *
       * */
-     public array $auto_fields = [] {
+     public array $audit_fields_override = []{
          set(array $value){
-             $this->auto_fields = $value;
-             $clean_auto_fields = [];
-             //change the auto fields types here.
-             foreach($this->auto_fields as $afk => $afv){
-                 if(array_key_exists($afk, $this->fields) && in_array($afk, $this->non_defined_field_names)) {
-                     $clean_auto_fields[$afk] = $afv;
-                 }
-             }
-             $this->remove_fields = false;
-             $this->fields = $clean_auto_fields;
+             $this->audit_fields_override = $value;
          }
 
-         get => $this->auto_fields;
+         get => $this->audit_fields_override;
+     }
+
+     private function assert_model_exists(string $model_class){
+         if($model_class && class_exists($model_class) && is_subclass_of($model_class, Model::class)){
+             return true;
+         }
+
+         return false;
      }
 
      //add or remove the tenant field depending on the multitenancy setting
-     private function toggle_tenant_field(bool $switch = true) : void{
-         $auto_fields = [];
-         if($switch && config('tenant_model_class')){
-             $auto_fields['tenant'] = new OneToOne(required: false, fmodel: config('tenant_model_class'), field: 'tenant', column_name: 'tenant_id');
-             $this->update_field_names($auto_fields, 'add', 'tenant');
-             return;
-         }
-
-         $auto_fields['tenant'] = true;
-         $this->update_field_names($auto_fields, 'remove', 'tenant');
-         return;
-     }
-
-     //add or remove creator and modifier fields depending on auto_cm setting
-     private function toggle_cm_fields(bool $switch = true) : void{
-         $auto_fields = [];
-         if( $switch && config('auth_model_class') ){
-             $auto_fields[$this->created_by_field] = new OneToOne(required: false, fmodel: config('auth_model_class'), field: 'author', fk: 'user_id');
-             $auto_fields[$this->modified_by_field] = new OneToOne(required: false, fmodel: config('auth_model_class'), field: 'modifier', fk: 'user_id');
-             $this->update_field_names($auto_fields, 'add', 'cm');
-             return;
-         }
-
-         $auto_fields['author'] = true;
-         $auto_fields['modifier'] = true;
-         $this->update_field_names($auto_fields, 'remove', 'cm');
-         return;
-     }
-
-     //add or remove created at and modified at date time stamps depending on auto_cmdt setting
-     private function toggle_cmdt_fields(bool $switch = true) : void{
-         $auto_fields = [];
-         if( $switch ){
-             $auto_fields[$this->created_at_field] = new DateTimeField();
-             $auto_fields[$this->modified_at_field] = new DateTimeField();
-             $this->update_field_names($auto_fields, 'add', 'cmdt');
-             return;
-         }
-
-         $auto_fields[$this->created_at_field] = true;
-         $auto_fields[$this->modified_at_field] = true;
-         $this->update_field_names($auto_fields, 'remove', 'cmdt');
-         return;
-     }
-
-     //add or remove soft delete fields depending on soft_delete setting
-     private function toggle_delete_fields(bool $switch = true) : void{
-         $auto_fields = [];
-         if( $switch ){
-             $auto_fields[$this->deleted_field] = new BooleanField(required: false, zero: true, absolute: true);
-             if(config('auth_model_class')){
-                 $auto_fields['remover'] = new OneToOne(required: false, fmodel: config('auth_model_class'), field: 'remover', fk: 'user_id', column_name: $this->deleted_by_field);
+     public function get_tenant_fields() : array {
+         if($this->with_multitenancy){
+             $tenant_model_class = config('tenant_model_class');
+             if($this->assert_model_exists($tenant_model_class)){
+                 return [
+                     $this->tenant_field => $this->audit_fields_override[$this->tenant_field] ?? new OneToOne(related_model: $tenant_model_class)
+                 ];
              }
-             $auto_fields[$this->deleted_at_field] = new DateTimeField();
-             $this->update_field_names($auto_fields, 'add', 'delete');
-             return;
          }
 
-         $auto_fields[$this->deleted_field] = true;
-         $auto_fields[$this->deleted_at_field] = true;
-         $auto_fields['remover'] = true;
-         $this->update_field_names($auto_fields, 'remove', 'delete');
-         return;
+         return [];
      }
 
-     private function update_field_names(array $fields = [], string $option = 'add', string $where = ''){
-         if($option === 'add'){
-             $this->non_defined_field_names = array_unique(array_merge($this->non_defined_field_names, array_keys($fields)));
-             $this->remove_fields           = false;
-             $this->fields                  = $fields;
-         }else{
-             $this->non_defined_field_names = array_unique(array_diff($this->non_defined_field_names, array_keys($fields)));
+     //add or remove creator and modifier fields depending on with_user_audit setting
+     private function get_user_audit_fields(bool $switch = true) : array {
+         if($this->with_user_audit){
+             $auth_model_class = config('auth_model_class');
+             if($this->assert_model_exists($auth_model_class)){
+                 return [
+                     $this->created_by_field => $this->audit_fields_override[$this->created_by_field] ??  
+                     new OneToOne(related_model: $auth_model_class, foreign_key: $auth_model_class::get_pk_name()),
 
-             $new_field_names = array_unique(array_diff(array_keys($this->fields), array_keys($fields)));
-             $to_remain_fields = [];
-             foreach($new_field_names as $f){
-                 $to_remain_fields[$f] = $this->fields[$f];
+                     $this->modified_by_field => $this->audit_fields_override[$this->modified_by_field] ?? 
+                     new OneToOne(related_model: $auth_model_class, foreign_key: $auth_model_class::get_pk_name())
+                 ];
+             }
+         }
+
+         return [];
+     }
+
+     //add or remove created at and modified at date time stamps depending on with_timestamps setting
+     private function get_timestamp_fields(bool $switch = true) : array {
+         if($this->with_timestamps){
+             return [
+                 $this->created_at_field => $this->audit_fields_override[$this->created_at_field] ?? new DateTimeField(),
+                 $this->modified_at_field => $this->audit_fields_override[$this->modified_at_field] ?? new DateTimeField()
+             ];
+         }
+
+         return [];
+     }
+
+     //add or remove soft delete fields depending on with_soft_delete setting
+     private function get_delete_fields(bool $switch = true) : array {
+         if($this->with_soft_delete){
+             $fields = [
+                 $this->deleted_field => $this->audit_fields_override[$this->deleted_field] ?? new BooleanField(),
+                 $this->deleted_at_field => $this->audit_fields_override[$this->deleted_at_field] ?? new DateTimeField()
+             ];
+
+             $auth_model_class = config('auth_model_class');
+             if($this->assert_model_exists($auth_model_class)){
+                $fields[$this->deleted_by_field] = $this->audit_fields_override[$this->deleted_by_field] ?? 
+                new OneToOne(related_model: $auth_model_class, foreign_key: $auth_model_class::get_pk_name());
              }
 
-             $this->remove_fields = true;
-             $this->fields        = $to_remain_fields;
+             return $fields;
          }
+
+         return [];
      }
 
-     private function set_defaults(){
-         $this->initializing = true;
+     public function add_audit_fields(){
+         $audit_fields = array_merge(
+             $this->get_tenant_fields(),
+             $this->get_user_audit_fields(),
+             $this->get_timestamp_fields(),
+             $this->get_delete_fields()
+         );
 
+         $this->audit_field_names = array_keys($audit_fields);
+
+         $this->fields = array_merge($this->fields, $audit_fields);
+     }
+
+     public function initialize_model_meta($table_name, $database_context, $model_class){
+         $this->db_table = $table_name;
+         $this->db_class = $database_context;
+         $this->model_class = $model_class;
          $this->pk_type = config('primary_key_type');
-         $this->auto_cm = config('model_auto_cm_fields');
-         $this->auto_cmdt = config('model_auto_cmdt_fields');
-         $this->soft_delete = config('model_soft_delete');
-         $this->created_at_field = config('model_created_at_field');
-         $this->created_by_field = config('model_created_by_field');
-         $this->modified_at_field = config('model_modified_at_field');
-         $this->modified_by_field = config('model_modified_by_field');
-         $this->enable_multitenancy = config('enable_multitenancy');
-         $this->deleted_field = config('model_deleted_field');
-         $this->deleted_at_field = config('model_deleted_at_field');
-         $this->deleted_by_field = config('model_deleted_by_field');
-         $this->db_auto_init_timestamp = config('db_auto_init_timestamp');
-         $this->db_auto_update_timestamp = config('db_auto_update_timestamp');
-         $this->action_on_duplicate = config('model_action_on_duplicate');
-
-         $this->initializing = false;
+         $this->with_user_audit = config('with_user_audit');
+         $this->with_timestamps = config('with_timestamps');
+         $this->with_soft_delete = config('with_soft_delete');
+         $this->created_at_field = config('created_at_field');
+         $this->created_by_field = config('created_by_field');
+         $this->modified_at_field = config('modified_at_field');
+         $this->modified_by_field = config('modified_by_field');
+         $this->with_multitenancy = config('with_multitenancy');
+         $this->tenant_field = config('tenant_field');
+         $this->deleted_field = config('deleted_field');
+         $this->deleted_at_field = config('deleted_at_field');
+         $this->deleted_by_field = config('deleted_by_field');
+         $this->action_on_duplicate = config('action_on_duplicate');
      }
 
-     public function __construct(){
-         $this->set_defaults();
-
-         $this->toggle_tenant_field(switch: config('enable_multitenancy'));
-         $this->toggle_cm_fields(switch: config('model_auto_cm_fields'));
-         $this->toggle_cmdt_fields(switch: config('model_auto_cmdt_fields'));
-         $this->toggle_delete_fields(switch: config('model_soft_delete'));
-     }
 }

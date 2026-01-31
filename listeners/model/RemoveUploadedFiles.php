@@ -4,8 +4,10 @@ namespace SaQle\Listeners\Model;
 use SaQle\Auth\Middleware\AuthenticationMiddleware;
 use SaQle\Core\Events\GenericEvent;
 
-class UpdateSessionUser {
+class RemoveUploadedFiles {
      public function handle(GenericEvent $event): void {
+         $model_instance = $event->context->service();
+         
          $result = $event->context->result();
          $session_user = $event->context->user();
 

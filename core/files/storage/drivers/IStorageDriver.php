@@ -3,7 +3,7 @@
 namespace SaQle\Core\Files\Storage\Drivers;
 
 interface IStorageDriver {
-     public function put(string $path, mixed $contents, array $options = []): void;
+     public function put(string $path, mixed $contents): void;
 
      public function exists(string $path): bool;
 

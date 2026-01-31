@@ -2,7 +2,10 @@
 
 namespace SaQle\Orm\Entities\Field\Types\Base;
 
-class Field {
+use Closure;
+use SaQle\Orm\Entities\Field\Interfaces\IField;
+
+class Field implements IField {
 
 	 //the logical field name on the model
 	 protected string $name;
@@ -40,9 +43,23 @@ class Field {
 	 //whether this is a primary key field
 	 protected bool $primary = false;
 
+	 //the render callback is used to change how the value is presented
+	 protected ?Closure $render_callback = null;
+
+	 //initialize a new field
+	 public function __construct(...$kwargs){
+	 	 foreach($kwargs as $k => $v){
+	 	 	 $this->$k = $v;
+	 	 }
+	 }
+
 	 public function name(string $name){
 	 	 $this->name = $name;
 	 	 return $this;
+	 }
+
+	 public function get_name(){
+	 	 return $this->name;
 	 }
 
 	 public function column(string $column){
@@ -50,9 +67,17 @@ class Field {
 	 	 return $this;
 	 }
 
+	 public function get_column(){
+	 	 return $this->column;
+	 }
+
 	 public function value(mixed $value){
 	 	 $this->value = $value;
 	 	 return $this;
+	 }
+
+	 public function get_value(){
+	 	 return $this->value;
 	 }
 
 	 public function type(string $type){
@@ -60,9 +85,17 @@ class Field {
 	 	 return $this;
 	 }
 
+	 public function get_type(){
+	 	 return $this->type;
+	 }
+
 	 public function default(mixed $default){
 	 	 $this->default = $default;
 	 	 return $this;
+	 }
+
+	 public function get_default(){
+	 	 return $this->default;
 	 }
 
 	 public function required(bool $required = true){
@@ -70,9 +103,17 @@ class Field {
 	 	 return $this;
 	 }
 
+	 public function is_required(){
+	 	 return $this->required;
+	 }
+
 	 public function nullable(bool $nullable = true){
 	 	 $this->nullable = $nullable;
 	 	 return $this;
+	 }
+
+	 public function is_nullable(){
+	 	 return $this->nullable;
 	 }
 
 	 public function virtual(bool $virtual = true){
@@ -80,9 +121,17 @@ class Field {
 	 	 return $this;
 	 }
 
+	 public function is_virtual(){
+	 	 return $this->virtual;
+	 }
+
 	 public function unique(bool $unique = true){
 	 	 $this->unique = $unique;
 	 	 return $this;
+	 }
+
+	 public function is_unique(){
+	 	 return $this->unique;
 	 }
 
 	 public function index(bool $index = true){
@@ -90,9 +139,26 @@ class Field {
 	 	 return $this;
 	 }
 
+	 public function is_index(){
+	 	 return $this->index;
+	 }
+
 	 public function primary(bool $primary = true){
 	 	 $this->primary = $primary;
 	 	 return $this;
+	 }
+
+	 public function is_primary(){
+	 	 return $this->primary;
+	 }
+
+	 public function render_callback(callable $callback){
+	 	 $this->render_callback = $callback;
+	 	 return $this;
+	 }
+
+	 public function get_render_callback(){
+	 	 return $this->render_callback;
 	 }
 }
 

@@ -72,7 +72,7 @@ class ValidatorBuilder{
 		return $this;
 	}
 
-	public function absolute(){
+	public function unsigned(){
 		$this->validator = new AbsoluteValidator($this->validator);
 		return $this;
 	}

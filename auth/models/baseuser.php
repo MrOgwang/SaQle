@@ -2,7 +2,6 @@
 namespace SaQle\Auth\Models;
 
 use SaQle\Orm\Entities\Field\Types\{Pk, PasswordField, CharField, OneToMany, ManyToMany};
-use SaQle\Orm\Entities\Field\Interfaces\IField;
 use SaQle\Orm\Entities\Model\Schema\{Model, TableInfo};
 use SaQle\Auth\Models\Interfaces\IUser;
 use SaQle\Auth\Guards\Guard;
@@ -18,12 +17,12 @@ class BaseUser extends Model implements IUser {
 		 ];
 
 		 if(config('enable_rbac')){
-			 $fields['roles'] = new ManyToMany(fmodel: config('role_model_class'), pk: 'user_id', fk: 'user_id', through: config('user_role_model_class'));
-			 $fields['permissions'] = new ManyToMany(fmodel: config('permission_model_class'), pk: 'user_id', fk: 'user_id', through: config('user_permission_model_class'));
+			 $fields['roles'] = new ManyToMany(related_model: config('role_model_class'), local_key: 'user_id', foreign_key: 'user_id', through: config('user_role_model_class'));
+			 $fields['permissions'] = new ManyToMany(related_model: config('permission_model_class'), local_key: 'user_id', foreign_key: 'user_id', through: config('user_permission_model_class'));
 		 }
 
-		 if(config('enable_multitenancy')){
-			 $fields['tenants'] = new ManyToMany(fmodel: config('tenant_model_class'), pk: 'user_id', fk: 'user_id', through: config('tenant_user_model_class'));
+		 if(config('with_multitenancy')){
+			 $fields['tenants'] = new ManyToMany(related_model: config('tenant_model_class'), local_key: 'user_id', foreign_key: 'user_id', through: config('tenant_user_model_class'));
 		 }
 
 		 $meta->fields = $fields;

@@ -1,4 +1,3 @@
-
 <?php
 
 namespace SaQle\Security\Validation\Types;

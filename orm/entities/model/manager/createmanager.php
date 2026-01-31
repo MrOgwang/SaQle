@@ -71,11 +71,10 @@ class CreateManager implements IOperationManager {
 
          $modelclass = $this->modelclass;
 	 	 $model = new $modelclass(...$row);
- 	 	 $modelmeta = $model->meta;
  	 	 [$clean_data, $file_data] = $model->get_insert_data(resolve('request'));
          $entry_key = spl_object_hash((object)$clean_data).$index;
 
-         return [$entry_key, $clean_data, $file_data, $clean_data[$modelmeta->pk_name]];
+         return [$entry_key, $clean_data, $file_data, $clean_data[$modelclass::get_pk_name()]];
      }
 
 	 private function set_data(array $data){
@@ -109,10 +108,10 @@ class CreateManager implements IOperationManager {
 	 	 try{
 	 	 	 $pdo        = resolve(Connection::class, config('db_context_classes')[$this->dbclass]);
 	 	 	 $modelclass = $this->modelclass;
-	 	 	 $model      = $modelclass::state();
+	 	 	 $model      = $modelclass::make();
 	 	 	 $modelmeta  = $model->meta;
  	     	 $sql_info   = $this->get_sql_info($modelmeta);
- 	     	 $pk_type    = $modelmeta->pk_type;
+ 	     	 $pk_type    = $modelclass::get_pk_type();
  	     	 $operation  = new InsertOperation( 
  	     	 	 prmkeytype: $pk_type,
 		 	 	 table:      $this->table,
@@ -126,6 +125,7 @@ class CreateManager implements IOperationManager {
 
              //insert data
 		 	 $response = $operation->insert($pdo);
+             
              //save files if any
 		 	 $this->auto_save_files(array_values($this->container->files));
 		 	 //get inserted data
@@ -148,7 +148,7 @@ class CreateManager implements IOperationManager {
 	 public function get_sql_info(?TableInfo $modelmeta = null){
 	 	 if(!$modelmeta){
 	 	 	 $modelclass = $this->modelclass;
-	 	 	 $model      = $modelclass::state();
+	 	 	 $model      = $modelclass::make();
 	 	 	 $modelmeta  = $model->meta;
 	 	 }
      	 $fields        = array_keys(array_values($this->container->data)[0]);
@@ -163,49 +163,49 @@ class CreateManager implements IOperationManager {
 		 $fieldstring   = implode(", ", $fields);
 		 $valstring     = str_repeat('?, ', count($fields) - 1). '?';
          $prepared_data = array_merge(...$values);
-		 if($modelmeta->action_on_duplicate === 'ABORT_WITH_ERROR'){
+		 if($this->modelclass::get_action_on_duplicate() === 'ABORT_WITH_ERROR'){
 		     $sql = "INSERT INTO {$database}.{$table} ({$fieldstring}) VALUES ".str_repeat("($valstring), ", $row_count - 1). "($valstring)";
-		 }elseif($modelmeta->action_on_duplicate === 'INSERT_MINUS_DUPLICATE'){
+		 }elseif($this->modelclass::get_action_on_duplicate() === 'INSERT_MINUS_DUPLICATE'){
 		 	 $sql = "INSERT IGNORE INTO {$database}.{$table} ({$fieldstring}) VALUES ".str_repeat("($valstring), ", $row_count - 1)."($valstring)";
-		 }elseif($modelmeta->action_on_duplicate === 'UPDATE_ON_DUPLICATE'){
-		 	 $exclude = array_merge($modelmeta->unique_fields, [$modelmeta->pk_name]);
+		 }elseif($this->modelclass::get_action_on_duplicate() === 'UPDATE_ON_DUPLICATE'){
+		 	 $exclude = array_merge($modelclass::get_unique_fields(), [$modelclass::get_pk_name()]);
 		 	 $toupdate = array_map(function($f){
 		 	 	 return "$f = VALUES($f)";
 		 	 }, array_diff($fields, $exclude));
 		 	 $sql = "INSERT INTO {$database}.{$table} ({$fieldstring}) VALUES ".str_repeat("($valstring), ", $row_count - 1)."($valstring) ON DUPLICATE KEY UPDATE ".implode(', ', $toupdate);
-		 }elseif($modelmeta->action_on_duplicate === 'RETURN_EXISTING'){
-		 	 $sql = "INSERT INTO {$database}.{$table} ({$fieldstring}) VALUES ".str_repeat("($valstring), ", $row_count - 1)."($valstring) ON DUPLICATE KEY UPDATE {$modelmeta->pk_name} = {$modelmeta->pk_name}";
+		 }elseif($this->modelclass::get_action_on_duplicate() === 'RETURN_EXISTING'){
+		 	 $sql = "INSERT INTO {$database}.{$table} ({$fieldstring}) VALUES ".str_repeat("($valstring), ", $row_count - 1)."($valstring) ON DUPLICATE KEY UPDATE {$modelclass::get_pk_name()} = {$modelclass::get_pk_name()}";
 		 }
          return ['sql' => $sql, 'data' => $prepared_data];
      }
 
      private function get_created_rows($last_insert_id, $row_count, $modelmeta){
      	 $modelclass    = $this->modelclass;
-	 	 $model         = $modelclass::state();
+	 	 $model         = $modelclass::make();
      	 $modelmeta     = $model->meta;
 
-     	 if(!empty($modelmeta->unique_fields)){
+     	 if(!empty($modelclass::get_unique_fields())){
      	 	 $unique_values = [];
-     	 	 foreach($modelmeta->unique_fields as $uf){
+     	 	 foreach($modelclass::get_unique_fields() as $uf){
      	 	 	 $unique_values[$uf] = array_column($this->container->data, $uf);
      	 	 }
 
      	 	 $readmanager = $modelclass::get();
-     	 	 foreach($modelmeta->unique_fields as $uf){
+     	 	 foreach($modelclass::get_unique_fields() as $uf){
      	 	 	 $readmanager->where($uf."__in", $unique_values[$uf]);
      	 	 }
 
      	 	 return $readmanager->all();
      	 }else{
      	 	 $pkvalues = [];
-     	 	 if($modelmeta->pk_type === 'GUID'){
+     	 	 if($modelclass::get_pk_type() === 'GUID'){
 		 	 	 $pkvalues = array_values($this->container->pkvalues);
 		 	 }else{
 				 for($i = 0; $i < $row_count; $i++){
 				     $pkvalues[] = $last_insert_id + $i;
 				 }
 		 	 }
-		 	 return $modelclass::get()->where($modelmeta->pk_name."__in", $pkvalues)->all();
+		 	 return $modelclass::get()->where($modelclass::get_pk_name()."__in", $pkvalues)->all();
      	 }
      }
 }

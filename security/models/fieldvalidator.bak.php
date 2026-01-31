@@ -55,7 +55,7 @@ class FieldValidator{
 			'pattern'                  => $builder->pattern(),
 			'strict'                   => $builder->strict(),
 			'zero'                     => $builder->zero(),
-			'absolute'                 => $builder->absolute(),
+			'unsigned'                 => $builder->unsigned(),
 			'email'                    => $builder->email(),
 			'phone'                    => $builder->phone(),
 			'url'                      => $builder->url(),

@@ -18,7 +18,7 @@ trait EventUtils {
 
 	 protected function dispatch_event(string $model, string $phase, array $named_args, ?BaseUser $user = null, mixed $result = null){
 	 	 $context = new EventContext(
-             service : null,
+             service : $model::make(),
              method  : $phase,
              args    : $named_args,
              result  : null,
@@ -30,10 +30,25 @@ trait EventUtils {
          	 $context = $context->with_result($result);
          }
 
-         $event = GenericEvent::named($this->get_model_name($model)."::".$phase, $context);
+         /**
+          * Two events are dispatched:
+          * 
+          * 1. One event dispatched specifically for this model and for this action. 
+          * Example, when updating a user, the event will be, User::updating or User::updated
+          * 
+          * Listeners attached to these events will only handle them when this model and this action happens
+          * 
+          * 2. One event that is attached to this action.
+          * Example, when updating any model, the event will be, ::updating or ::updated
+          * 
+          * Listerners attached to these event will handle updates on any model
+          * */
+         $event_one = GenericEvent::named($this->get_model_name($model)."::".$phase, $context);
+         $event_two = GenericEvent::named("::".$phase, $context);
 	 	 
 	 	 //Dispatch events (from registry or static)
-	 	 (new EventBus(resolve(EventRegistry::class)))->dispatch($event);
+	 	 (new EventBus(resolve(EventRegistry::class)))->dispatch($event_one);
+	 	 (new EventBus(resolve(EventRegistry::class)))->dispatch($event_two);
 	 }
 
 	 protected function get_named_args(string $operation, array $sql_info, ?string $table = null, ?string $model = null, ?array $data = null, ?array $files = null){

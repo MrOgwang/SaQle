@@ -1,9 +1,8 @@
-
 <?php
 
 namespace SaQle\Security\Validation\Handlers\Max;
 
-use SaQle\Security\Validation\Interfaces\IRuleHdnadler;
+use SaQle\Security\Validation\Interfaces\IRuleHandler;
 
 class FileMaxHandler implements IRuleHandler {
 

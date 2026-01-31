@@ -19,5 +19,10 @@ class ChoiceField extends CharField {
 	 public function __construct(...$kwargs){
 	 	parent::__construct(...$kwargs);
 	 }
+
+	 public function choices(array $choices){
+	 	 $this->choices = $choices;
+	 	 return $this;
+	 }
 }
 

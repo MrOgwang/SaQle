@@ -12,9 +12,7 @@ class StorageServiceProvider extends ServiceProvider {
          foreach($config as $name => $storage){
              $driver_class = $storage['driver'];
 
-             $driver = new $driver_class(
-                ...array_values(array_diff_key($storage, ['driver' => true]))
-             );
+             $driver = new $driver_class($storage);
 
              $this->app->disks->add($name, new Storage($driver));
          }
