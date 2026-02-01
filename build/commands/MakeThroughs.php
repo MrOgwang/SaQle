@@ -72,7 +72,6 @@ class MakeThroughs{
          $template .= "\t\t\t'".$pmodel_name."' => new OneToOne(related_model: ".$o_pmodel_name."::class, local_key: '".$pmodel_name."_id', foreign_key: '".$pmodel_pk."', column: '".$pmodel_name."_id'),\n";
          $template .= "\t\t\t'".$fmodel_name."' => new OneToOne(related_model: ".$o_fmodel_name."::class, local_key: '".$fmodel_name."_id', foreign_key: '".$fmodel_pk."', column: '".$fmodel_name."_id')\n";
          $template .= "\t\t];\n\n";
-         $template .= "\t\t$"."meta->unique_fields   = ['".$pmodel_name."', '".$fmodel_name."'];\n";
          $template .= "\t\t$"."meta->unique_together = true;\n";
          $template .= "\t}\n\n";
 

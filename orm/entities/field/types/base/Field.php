@@ -4,6 +4,9 @@ namespace SaQle\Orm\Entities\Field\Types\Base;
 
 use Closure;
 use SaQle\Orm\Entities\Field\Interfaces\IField;
+use SaQle\Orm\Database\FieldDefinition;
+use SaQle\Orm\Entities\Field\Types\Base\RelationField;
+use SaQle\Orm\Database\ColumnType;
 
 class Field implements IField {
 
@@ -20,7 +23,7 @@ class Field implements IField {
 	 protected mixed $value = null;
 
 	 //the primitive type of the field
-	 protected string $type;
+	 protected ColumnType $type;
 
 	 //the default value or callable
 	 protected mixed $default = null;
@@ -78,11 +81,6 @@ class Field implements IField {
 
 	 public function get_value(){
 	 	 return $this->value;
-	 }
-
-	 public function type(string $type){
-	 	 $this->type = $type;
-	 	 return $this;
 	 }
 
 	 public function get_type(){
@@ -160,5 +158,30 @@ class Field implements IField {
 	 public function get_render_callback(){
 	 	 return $this->render_callback;
 	 }
+
+	 public function get_definition(): ?FieldDefinition {
+	 	 $is_field = $this instanceof RelationField && $this->navigation ? false : true;
+	     if (!$is_field) {
+	         return null;
+	     }
+
+         $def = new FieldDefinition();
+         $def->name = $this->column;
+         $def->type = $this->type;
+         $def->length = $this->length ?? null;
+         $def->nullable = !$this->required;
+         $def->primary = $this->primary;
+         $def->auto_increment = $this->auto ?? false;
+         $def->auto_init_timestamp = $this->auto_now_add ?? false;
+         $def->auto_update_timestamp = $this->auto_now ?? false;
+         $def->default = $this->default;
+
+         return $def;
+     }
+
+     public function is_state_valid(){
+     	 return true;
+     }
+
 }
 

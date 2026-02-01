@@ -3,14 +3,11 @@ declare(strict_types = 0);
 
 namespace SaQle\Orm\Database;
 
-use SaQle\Orm\Database\DbTypes;
-use SaQle\Orm\Database\DbPorts;
-
 class DbContextOptions extends IDbContextOptions{
 	public function __construct(
-		 private DbTypes $type, 
+		 private string  $type, 
 		 private string  $name, 
-		 private DbPorts $port, 
+		 private int     $port, 
 		 private string  $username = '', 
 		 private string  $password = '', 
 		 private string  $host = 'localhost', 

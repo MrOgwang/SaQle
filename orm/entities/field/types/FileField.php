@@ -3,6 +3,7 @@
 namespace SaQle\Orm\Entities\Field\Types;
 
 use SaQle\Orm\Entities\Field\Types\Base\Field;
+use SaQle\Orm\Database\ColumnType;
 use Closure;
 
 class FileField extends Field {
@@ -69,6 +70,7 @@ class FileField extends Field {
 	 protected ?array $mime_types = null;
 
 	 public function __construct(...$kwargs){
+	 	 $kwargs['type'] = $kwargs['type'] ?? ColumnType::CHAR;
 	 	 parent::__construct(...$kwargs);
 	 }
 

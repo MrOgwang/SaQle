@@ -129,7 +129,7 @@ class ReadManager extends IReadManager implements IOperationManager {
          if($through){
          	 if(!$selected_fields){
          	 	 $through_model   = $through[1];
-         	     $through_columns = array_values($through_model::make()->get_actual_column_names());
+         	     $through_columns = array_values($through_model::get_table_column_names());
          	 }
 
          	 $throughtablename = $through[0];

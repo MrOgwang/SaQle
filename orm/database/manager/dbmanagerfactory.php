@@ -2,14 +2,15 @@
 namespace SaQle\Orm\Database\Manager;
 
 use SaQle\Orm\Database\Manager\Base\DbManager;
-use SaQle\Orm\Database\DbTypes;
-use SaQle\Orm\Database\DbPorts;
 
-class DbManagerFactory{
+class DbManagerFactory {
+
 	 const MYSQL = 'mysql';
 	 const POSTGRESS = 'pgsql';
+
 	 private $_manager;
-	 public function __construct(string $dbclass){
+
+	 public function __construct(string $db_type){
 	 	 $contextparams = config('db_context_classes')[$dbclass];
 		 switch($contextparams['type']->value){
 			 case self::MYSQL:

@@ -9,7 +9,7 @@ class Pk implements IField {
 
      protected string $strategy = 'AUTO';
 
-     public function __construct(string $strategy = 'AUTO'){
+     public function __construct(string $strategy = 'AUTO') {
          $this->strategy = strtoupper($strategy);
      }
 
@@ -32,7 +32,6 @@ class Pk implements IField {
      protected function build_uuid(): UuidField {
          return new UuidField(
              primary: true,
-             auto: true,  // generated in app, not DB
              required: true
          );
      }

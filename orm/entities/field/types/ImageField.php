@@ -5,6 +5,7 @@ namespace SaQle\Orm\Entities\Field\Types;
 use SaQle\Core\Support\CropMode;
 
 class ImageField extends MediaField {
+	
 	 /**
 	  * an array of image resize rules. Contains the following keys
 	  * 

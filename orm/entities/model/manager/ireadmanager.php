@@ -170,7 +170,7 @@
 		 	 table_name:    $table,
 		 	 table_aliase:  !is_null($as) ? $as : "",
 		 	 database_name: config('db_context_classes')[$this->dbclass]['name'],
-		 	 field_list:    $modelclass::get_actual_column_names(),
+		 	 field_list:    $modelclass::get_table_column_names(),
 		 	 ff_settings:   $modelclass::get_file_required_fields(),
 		 	 table_ref:     $tblref
 		 );

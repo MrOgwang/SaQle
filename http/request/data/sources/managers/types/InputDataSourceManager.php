@@ -148,27 +148,13 @@ class InputDataSourceManager extends DataSourceManager{
 	 }
 
 	 private function get_flat_keys(string $class_name) : array {
- 	 	 $model_fields = $class_name::make()->get_defined_field_names();
- 	 	 $model_columns = $class_name::make()->get_column_names();
- 	 	 $flipped_model_columns = array_flip($model_columns);
+ 	 	 $model_field_names = $class_name::get_defined_field_names();
  	 	 $object = [];
-
- 	 	 foreach($model_fields as $f){
- 	 	 	 $field_name  = '';
- 	 	 	 $column_name = '';
- 	 	 	 if(array_key_exists($f, $model_columns)){
- 	 	 	 	 $field_name  = $f;
- 	 	 	     $column_name = $model_columns[$f];
- 	 	 	 }elseif(array_key_exists($f, $flipped_model_columns)){
- 	 	 	 	 $field_name  = $flipped_model_columns[$f];
- 	 	 	     $column_name = $f;
- 	 	 	 }
-
- 	 	 	 if($field_name && $column_name){
- 	 	 	     $pv = $this->request->data->get($field_name, $this->request->data->get($column_name));
-	 	 	 	 if($pv){
-	 	 	 	 	 $object[$f] = $pv;
-	 	 	 	 }
+ 	 	 
+ 	 	 foreach($model_field_names as $name){
+ 	 	 	 $pv = $this->request->data->get($name);
+ 	 	 	 if($pv){
+ 	 	 	 	 $object[$name] = $pv;
  	 	 	 }
  	 	 }
 

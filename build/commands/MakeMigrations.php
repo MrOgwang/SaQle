@@ -33,8 +33,8 @@ class MakeMigrations {
              $maintained_models = $sv['tables'][2];
              $added_columns = $sv['columns'][0] ?? [];
              $removed_columns = $sv['columns'][1] ?? [];
-             $unique_fields = $sv['unique'][0];
-             $last_unique_fields = $sv['unique'][1];
+             $unique_field_names = $sv['unique'][0];
+             $last_unique_field_names = $sv['unique'][1];
 
              $up .= "\t\t\t'".$sk."' => [\n";
              $down .= "\t\t\t'".$sk."' => [\n";
@@ -63,10 +63,10 @@ class MakeMigrations {
                  $down .= "\t\t\t\t['action' => 'add_columns', 'params' => ['name' => '".$rcv['name']."', 'model' => '".$rcv['model']."', 'columns' => [\n".$columns_def."\t\t\t\t]]],\n";
              }
              foreach($maintained_models as $an => $am){
-                 $ut  = array_key_exists($an, $unique_fields) ? ($unique_fields[$an]['unique_together'] ? 'true' : 'false') : 'false';
-                 $uf  = array_key_exists($an, $unique_fields) ? $unique_fields[$an]['fields'] : []; 
-                 $last_ut = array_key_exists($an, $last_unique_fields) ? ($last_unique_fields[$an]['unique_together'] ? 'true' : 'false') : 'false';
-                 $last_uf  = array_key_exists($an, $last_unique_fields) ? $last_unique_fields[$an]['fields'] : [];
+                 $ut  = array_key_exists($an, $unique_field_names) ? ($unique_field_names[$an]['unique_together'] ? 'true' : 'false') : 'false';
+                 $uf  = array_key_exists($an, $unique_field_names) ? $unique_field_names[$an]['fields'] : []; 
+                 $last_ut = array_key_exists($an, $last_unique_field_names) ? ($last_unique_field_names[$an]['unique_together'] ? 'true' : 'false') : 'false';
+                 $last_uf  = array_key_exists($an, $last_unique_field_names) ? $last_unique_field_names[$an]['fields'] : [];
 
                  //something has changed
                  if(!$this->arrays_are_equal($uf, $last_uf)){
@@ -108,30 +108,32 @@ class MakeMigrations {
              $mfields = $m::get_fields();
 
              foreach($mfields as $mfn => $mfv){
-                 $mfvdef = $mfv->get_field_definition();
+                 $mfvdef = $mfv->get_definition();
+
                  if($mfvdef){
-                     $db_col_name = $mfv->column_name;
-                     $model_fields[$n][$db_col_name] = ['field' => $mfv::class, 'params' => $mfv->get_kwargs(), 'def' => $mfvdef];
+                     $db_col_name = $mfv->get_column();
+                     $model_fields[$n][$db_col_name] = ['field' => $mfv::class, 'params' => [], 'def' => $mfvdef];
                  }
              }
          }
+
          return $model_fields;
      }
 
-     private function extract_unique_fields($models, $project_root){
-         $unique_fields = [];
+     private function extract_unique_field_names($models, $project_root){
+         $unique_field_names = [];
          foreach($models as $n => $m){
              if(!MigrationUtils::is_model_defined($m, $project_root))
                  continue;
 
              $mi = $m::make();
-             $unique_fields[$n] = ['unique_together' => $mi->is_unique_together(), 'fields' => $mi->get_unique_fields()];
+             $unique_field_names[$n] = ['unique_together' => $mi->is_unique_together(), 'fields' => $mi->get_unique_field_names()];
          }
 
-         return $unique_fields;
+         return $unique_field_names;
      }
 
-     private function write_database_snapshot($migration_name, $timestamp, $models, $unique_fields, $dirname, $ctxname, $project_root){
+     private function write_database_snapshot($migration_name, $timestamp, $models, $unique_field_names, $dirname, $ctxname, $project_root, $db_type){
          $class_name  = "{$ctxname}_{$timestamp}_{$migration_name}";
          $snap_folder = dirname($dirname)."/snapshots";
          $file_name   = $snap_folder."/".$class_name.".php";
@@ -141,16 +143,16 @@ class MakeMigrations {
          foreach($models as $n => $m){
              if(MigrationUtils::is_model_defined($m, $project_root)){
                  $models_template .= "\t\t\t'".$n."' => '".$m."',\n";
-                 $mfields = $m::make()->get_fields();
+                 $mfields = $m::get_fields();
                  $fields_template.= "\t\t\t'".$n."' => [\n";
                  foreach($mfields as $mfn => $mfv){
                      $db_col_name = $mfv->column_name;
                      $fields_template .= "\t\t\t\t'".$db_col_name."' => [\n";
                      $fields_template .= "\t\t\t\t\t'field' => '".$mfv::class."',\n";
-                     $fields_template .= "\t\t\t\t\t'def' => '".$mfv->get_field_definition()."',\n";
+                     //$fields_template .= "\t\t\t\t\t'def' => '".$mfv->get_definition()."',\n";
                      $fields_template .= "\t\t\t\t\t'params' => [\n"; 
 
-                     $params = $mfv->get_kwargs();
+                     $params = [];
                      foreach($params as $pk => $pv){
                          if(is_array($pv)){
                             $pvv = array_map(function($_pv){
@@ -170,7 +172,7 @@ class MakeMigrations {
          }
 
          $uniques_template = "";
-         foreach($unique_fields as $n => $u){
+         foreach($unique_field_names as $n => $u){
              $ut = $u['unique_together'] ? 'true' : 'false';
 
              $uniques_template .= "\t\t\t'".$n."' => [\n";
@@ -199,7 +201,7 @@ class MakeMigrations {
          $template .= "* \n";
          $template .= "* A database snapshot keeps a record of the database, tables and columns structures as at the time makemigrations is run.\n";
          $template .= "* */\n\n";
-         $template .= "use SaQle\\Migration\\Base\\DbSnapshot;\n\n";
+         $template .= "use SaQle\\Core\Migration\\Base\\DbSnapshot;\n\n";
          $template .= "class {$class_name} extends DbSnapshot{\n";
          
          //get the models.
@@ -217,7 +219,7 @@ class MakeMigrations {
          $template .= "\t}\n\n";
 
          //get unique fields.
-         $template .= "\tpublic function get_unique_fields(){\n";
+         $template .= "\tpublic function get_unique_field_names(){\n";
          $template .= "\t\treturn [\n";
          $template .= $uniques_template;
          $template .= "\t\t];\n";
@@ -252,7 +254,7 @@ class MakeMigrations {
          $instance      = new $class_name();
          $raw_models    = $instance->get_models();
          $raw_fields    = $instance->get_model_fields();
-         $unique_fields = $instance->get_unique_fields();
+         $unique_field_names = $instance->get_unique_field_names();
 
          $clean_models   = [];
          $clean_fields   = [];
@@ -269,7 +271,7 @@ class MakeMigrations {
              }
          }
 
-         return [$clean_models, $clean_fields, $unique_fields];
+         return [$clean_models, $clean_fields, $unique_field_names];
      }
 
      private function get_context_snapshot($project_root, $app_name, $db_context, $timestamp, $migration_name, $tracker){
@@ -288,9 +290,9 @@ class MakeMigrations {
              //Acquire model fields for models registered with db context.
              $model_fields = $this->extract_model_fields($models, $project_root);
 
-             /*/acquire unique fields
-             $unique_fields = $this->extract_unique_fields($models, $project_root);
-             $last_unique_fields = [];
+             //acquire unique fields
+             $unique_field_names = $this->extract_unique_field_names($models, $project_root);
+             $last_unique_field_names = [];
              
              $a        = new ReflectionClass($ctx);
              $filename = $a->getFileName();
@@ -300,9 +302,9 @@ class MakeMigrations {
              $connection_params['name'] = ''; //we are connecting without a database, therefore set the database name to empty string
              $connection = resolve(Connection::class, $connection_params);
 
-             $this->write_database_snapshot($migration_name, $timestamp, $models, $unique_fields, $dirname, $ctxname, $project_root);
+             $this->write_database_snapshot($migration_name, $timestamp, $models, $unique_field_names, $dirname, $ctxname, $project_root);
 
-             $added_models    = $models;
+             /*$added_models    = $models;
              $removed_models  = [];
              $maintained_models = [];
 
@@ -323,7 +325,7 @@ class MakeMigrations {
                      ->first_or_default();
                      if($last_migration){
 
-                         [$last_models, $last_model_fields, $last_unique_fields] = $this->get_snapshot(
+                         [$last_models, $last_model_fields, $last_unique_field_names] = $this->get_snapshot(
                             $last_migration->migration_name, 
                             $last_migration->migration_timestamp, 
                             $dirname, 
@@ -373,7 +375,7 @@ class MakeMigrations {
 
              $context_snapshot[$ctx]['tables'] = [$added_models, $removed_models, $maintained_models];
              $context_snapshot[$ctx]['columns'] = [$added_columns, $removed_columns];
-             $context_snapshot[$ctx]['unique'] = [$unique_fields, $last_unique_fields];*/
+             $context_snapshot[$ctx]['unique'] = [$unique_field_names, $last_unique_field_names];*/
          }
 
          return $context_snapshot;

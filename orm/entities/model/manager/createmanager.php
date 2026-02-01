@@ -168,7 +168,7 @@ class CreateManager implements IOperationManager {
 		 }elseif($this->modelclass::get_action_on_duplicate() === 'INSERT_MINUS_DUPLICATE'){
 		 	 $sql = "INSERT IGNORE INTO {$database}.{$table} ({$fieldstring}) VALUES ".str_repeat("($valstring), ", $row_count - 1)."($valstring)";
 		 }elseif($this->modelclass::get_action_on_duplicate() === 'UPDATE_ON_DUPLICATE'){
-		 	 $exclude = array_merge($modelclass::get_unique_fields(), [$modelclass::get_pk_name()]);
+		 	 $exclude = array_merge($modelclass::get_unique_field_names(), [$modelclass::get_pk_name()]);
 		 	 $toupdate = array_map(function($f){
 		 	 	 return "$f = VALUES($f)";
 		 	 }, array_diff($fields, $exclude));
@@ -184,14 +184,14 @@ class CreateManager implements IOperationManager {
 	 	 $model         = $modelclass::make();
      	 $modelmeta     = $model->meta;
 
-     	 if(!empty($modelclass::get_unique_fields())){
+     	 if(!empty($modelclass::get_unique_field_names())){
      	 	 $unique_values = [];
-     	 	 foreach($modelclass::get_unique_fields() as $uf){
+     	 	 foreach($modelclass::get_unique_field_names() as $uf){
      	 	 	 $unique_values[$uf] = array_column($this->container->data, $uf);
      	 	 }
 
      	 	 $readmanager = $modelclass::get();
-     	 	 foreach($modelclass::get_unique_fields() as $uf){
+     	 	 foreach($modelclass::get_unique_field_names() as $uf){
      	 	 	 $readmanager->where($uf."__in", $unique_values[$uf]);
      	 	 }
 

@@ -48,5 +48,68 @@ class MediaField extends FileField {
 	 public function get_default_url(){
 	 	 return $this->default_url;
 	 }
+
+	 public function max_width(mixed $max_width){
+	 	 $this->max_width = $max_width;
+	 	 return $this;
+	 }
+
+	 public function min_width(mixed $min_width){
+	 	 $this->min_width = $min_width;
+	 	 return $this;
+	 }
+
+	 public function width(mixed $width){
+	 	 $this->width = $width;
+	 	 return $this;
+	 }
+
+	 public function max_height(mixed $max_height){
+	 	 $this->max_height = $max_height;
+	 	 return $this;
+	 }
+
+	 public function min_height(mixed $min_height){
+	 	 $this->min_height = $min_height;
+	 	 return $this;
+	 }
+
+	 public function height(mixed $height){
+	 	 $this->height = $height;
+	 	 return $this;
+	 }
+
+	 public function aspect_ratio(array $aspect_ratio){
+	 	 $this->aspect_ratio = $aspect_ratio;
+	 	 return $this;
+	 }
+
+	 public function get_max_width(){
+	 	 return $this->max_width;
+	 }
+
+	 public function get_min_width(){
+	 	 return $this->min_width;
+	 }
+
+	 public function get_width(){
+	 	 return $this->width;
+	 }
+
+	 public function get_max_height(){
+	 	 return $this->max_height;
+	 }
+
+	 public function get_min_height(){
+	 	 return $this->min_height;
+	 }
+
+	 public function get_height(){
+	 	 return $this->height;
+	 }
+
+	 public function get_aspect_ratio(){
+	 	 return $this->aspect_ratio;
+	 }
 }
 

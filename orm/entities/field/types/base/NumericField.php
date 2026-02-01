@@ -26,5 +26,54 @@ class NumericField extends Field {
 	 	 $this->auto = $auto;
 	 	 return $this;
 	 }
+
+	 public function min(mixed $min){
+	 	 $this->min = $min;
+	 	 return $this;
+	 }
+
+	 public function max(mixed $max){
+	 	 $this->max = $max;
+	 	 return $this;
+	 }
+
+	 public function unsigned(bool $unsigned = true){
+	 	 $this->unsigned = $unsigned;
+	 	 return $this;
+	 }
+
+	 public function step(mixed $step){
+	 	 $this->step = $step;
+	 	 return $this;
+	 }
+
+	 public function format(string $format){
+	 	 $this->format = $format;
+	 	 return $this;
+	 }
+
+	 public function get_auto(){
+	 	 return $this->auto;
+	 }
+
+	 public function get_min(){
+	 	 return $this->min;
+	 }
+
+	 public function get_max(){
+	 	 return $this->max;
+	 }
+
+	 public function get_unsigned(){
+	 	 return $this->unsigned;
+	 }
+
+	 public function get_step(){
+	 	 return $this->step;
+	 }
+
+	 public function get_format(){
+	 	 return $this->format;
+	 }
 }
 

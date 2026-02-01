@@ -49,7 +49,7 @@ class MySQLDbManager extends DbManager{
       * */
      public function create_table($table, $model_class, $temporary = false){
      	 $model = $model_class::make();
-     	 $unique_fields = $model->get_unique_fields(); 
+     	 $unique_field_names = $model->get_unique_field_names(); 
      	 $unique_together = $model->is_unique_together();
      	 $defs  = $model->get_field_definitions();
 
@@ -61,8 +61,8 @@ class MySQLDbManager extends DbManager{
 	 	 $tblcreated = $operation->create($this->connection);
 
 	 	 //add unique constraints
-	 	 if(!empty($unique_fields)){
-	 	 	 $this->add_unique_columns($table, $unique_fields, $unique_together);
+	 	 if(!empty($unique_field_names)){
+	 	 	 $this->add_unique_columns($table, $unique_field_names, $unique_together);
 	 	 }
 
 	 	 return $tblcreated;
@@ -157,7 +157,6 @@ class MySQLDbManager extends DbManager{
      	 	 return true;
      	 }
      }
-     
 }
 
 

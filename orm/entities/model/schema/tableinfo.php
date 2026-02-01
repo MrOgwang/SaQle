@@ -4,8 +4,10 @@ namespace SaQle\Orm\Entities\Model\Schema;
 use SaQle\Core\Assert\Assert;
 use SaQle\Orm\Entities\Field\Interfaces\IField;
 use SaQle\Orm\Entities\Field\Types\{Pk, BooleanField, FileField, OneToOne, PhpTimestampField, DateField, DateTimeField, TimeField, TimestampField, VirtualField};
+use SaQle\Orm\Entities\Field\Types\Base\RelationField;
+use RuntimeException;
 
-class TableInfo{
+final class TableInfo{
      
      //Whether this is a temporary table or not
      public bool $temporary = false {
@@ -88,15 +90,6 @@ class TableInfo{
          get => $this->with_timestamps;
      }
 
-     //whether to format php timestamps in auto cmdt fields to human readable format
-     public bool $format_cmdt = false {
-         set(bool $value){
-             $this->format_cmdt = $value;
-         }
-
-         get => $this->format_cmdt;
-     }
-
      //whether to automatically include a deleted field in the model
      public bool $with_soft_delete = false {
          set(bool $value){
@@ -107,40 +100,27 @@ class TableInfo{
      }
 
      //an array of all the names of the navigation fields
-     public array $nav_field_names = [] {
-         set(array $value){
-             $this->nav_field_names = $value;
-         }
-
-         get => $this->nav_field_names;
-     }
+     public array $nav_field_names = [];
 
      //an array of the names of the foreign key fields
-     public array $fk_field_names = [] {
-         set(array $value){
-             $this->fk_field_names = $value;
-         }
+     public array $fk_field_names = [];
 
-         get => $this->fk_field_names;
-     }
+     /**
+      * When declaring fields on the model, the field names may be different from
+      * the column names to be used in the database. 
+      * 
+      * This array keeps a reference of all the field names and their respective column names
+      * as key => value pairs, where the key is the field name and the value is the column name.
+      * */
+     public array $field_column_refs = [];
 
-     //all the table column names as they have been defined in the model, inluding navigation column names
-     public private(set) array $column_names = [] {
-         set(array $value){
-             $this->column_names = $value;
-         }
-
-         get => $this->column_names;
-     }
-
-     //all the table column names as they have been defined in the model, excluding navigation and virtual column names
-     public private(set) array $actual_column_names = [] {
-         set(array $value){
-             $this->actual_column_names = $value;
-         }
-
-         get => $this->actual_column_names;
-     }
+     /**
+      * These are all the table column names as they will appear
+      * in the actual database table.
+      * 
+      * Navigation and Virtual Field column names are not here!
+      * */
+     public array $table_column_names = [];
 
      //the name of the created at field
      public string $created_at_field = '' {
@@ -244,7 +224,7 @@ class TableInfo{
              //ensure action is among the valid options
              $actions = ['ABORT_WITH_ERROR', 'INSERT_MINUS_DUPLICATE', 'UPDATE_ON_DUPLICATE', 'RETURN_EXISTING'];
              if(!in_array($value, $actions)){
-                 throw new \Exception('The duplicate action provided is not valid. Valid duplicate actions are: '.implode(',', $actions));
+                 throw new RuntimeException('The duplicate action provided is not valid. Valid duplicate actions are: '.implode(',', $actions));
              }
              $this->action_on_duplicate = $value;
          }
@@ -257,26 +237,7 @@ class TableInfo{
       * it defaults to an empty array to indicate that rows in this table can contain duplicate
       * data.
       * */
-     public array $unique_fields = [] {
-         set(array $value){
-             //confirm that all the fields provided exists.
-             foreach($value as $v){
-                 if(!array_key_exists($v, $this->column_names) && !array_key_exists($v, array_flip($this->column_names))){
-                     throw new \Exception($v." is listed as a unique field but is not defined on this model!");
-                 }
-             }
-
-             //store unique fields using db column names instead of field names
-             $unique_columns = [];
-             foreach($value as $v){
-                 $unique_columns[] = $this->column_names[$v] ?? $v;
-             }
-
-             $this->unique_fields = $unique_columns;
-         }
-
-         get => $this->unique_fields;
-     }
+     public array $unique_field_names = [];
 
      /**
       * When you have provided more than one unique field,
@@ -291,67 +252,57 @@ class TableInfo{
          get => $this->unique_together;
      }
 
-     //an array of the fields defined in the model
-     public array $fields = []{
+     /**
+      * The final model fields after state validation happens.
+      * 
+      * Note: Model state validation is not the same as model data validation. State validation
+      * ensures that all fields defined for a model are correctly defined!
+      * */
+     public protected(set) array $clean_fields = [] {
          set(array $value){
 
-             //make sure $value is an non empty associative array
-             Assert::isMap($value, 'Fields must be an associative array where the keys are field names and the values are field instances');
-             
-             $column_names = [];
-             $actual_column_names = [];
-             $file_field_names = [];
-             $nav_field_names = [];
-             $fk_field_names = [];
-             $file_required_fields = [];
-             $virtual_field_names = [];
-
              foreach($value as $n => $v){
-                 //make sure each element is a Field instance
-                 Assert::isInstanceOf($v, IField::class, $n.' is not a field instance!');
+                 $has_table_column = true;
+                 $this->field_column_refs[$n] = $v->get_column();
 
-                 //resolve the primary key
-                 if($v instanceof Pk){
-                     $v = $v->resolve();
-                     $this->pk_name = $n;
-                 }
-
-                 $v->name($n);
-
-                 $column_names[$n] = $v->get_column();
-
-                 $navigation = false;
-                 $virtual = false;
                  if($v instanceof FileField){
-                     $file_field_names[] = $n;
-                     $file_required_fields[$n] = $v->get_depends_on();
+                     $this->file_field_names[] = $n;
+                     $this->file_required_fields[$n] = $v->get_depends_on();
                  }elseif($v instanceof Relation){
-                     $v->local_model($this->model_class);
                      if($v->is_navigation()){
-                         $nav_field_names[] = $n;
-                         $navigation = true;
+                         $this->nav_field_names[] = $n;
+                         $has_table_column = false;
                      }else{
-                         $fk_field_names[] = $n;
+                         $this->fk_field_names[] = $n;
                      }
                  }elseif($v instanceof VirtualField){
-                     $virtual_field_names[] = $n;
-                     $virtual = true;
+                     $this->virtual_field_names[] = $n;
+                     $has_table_column = false;
                  }
 
-                 if(!$navigation && !$virtual){
-                     $actual_column_names[$n] = $v->get_column();
+                 if($has_table_column){
+                     $this->table_column_names[$n] = $v->get_column();
+                     if($v->is_unique()){
+                         $this->unique_field_names[] = $n;
+                     }
                  }
              }
 
+             $this->defined_field_names = array_diff(array_keys($this->clean_fields), $this->audit_field_names, $this->virtual_field_names);
+
+             $this->clean_fields = $value;
+         }
+
+         get => $this->clean_fields;
+     }
+
+     /**
+      * Fields defined on a model pending state validation. These are used only internally
+      *
+      * */
+     public array $fields = []{
+         set(array $value){
              $this->fields = $value;
-             $this->column_names = $column_names;
-             $this->actual_column_names = $actual_column_names;
-             $this->file_field_names = $file_field_names;
-             $this->file_required_fields = $file_required_fields;
-             $this->nav_field_names = $nav_field_names;
-             $this->fk_field_names = $fk_field_names;
-             $this->virtual_field_names = $virtual_field_names;
-             $this->defined_field_names = array_diff(array_keys($this->fields), $this->audit_field_names, $virtual_field_names);
          }
 
          get => $this->fields;
@@ -376,34 +327,16 @@ class TableInfo{
      }
 
      //an array of the names of all the virtual fields
-     public array $virtual_field_names = [] {
-         set(array $value){
-             $this->virtual_field_names = $value;
-         }
-
-         get => $this->virtual_field_names;
-     }
+     public array $virtual_field_names = [];
 
      //an array of the names of the file fields defined in the model
-     public private(set) array $file_field_names = [] {
-         set(array $value){
-             $this->file_field_names = $value;
-         }
-
-         get => $this->file_field_names;
-     }
+     public array $file_field_names = [];
 
      /**
       * an array of all the field names that must be included in select clause 
       * to support file fields callback path, rename, url and default_path functions
       * */
-     public private(set) array $file_required_fields = [] {
-         set(array $value){
-             $this->file_required_fields = $value;
-         }
-
-         get => $this->file_required_fields;
-     }
+     public array $file_required_fields = [];
 
      /**
       * this is a property used to override the auto added fields from with_user_audit, with_timestamps and with_soft_delete settings.
@@ -524,4 +457,38 @@ class TableInfo{
          $this->action_on_duplicate = config('action_on_duplicate');
      }
 
+     public function clean_model_fields(){
+         $clean_fields = [];
+
+         foreach($this->fields as $n => $v){
+
+             //assert field instance
+             Assert::isInstanceOf($v, IField::class, $n.' is not a field instance!');
+
+             //resolve field if pk
+             $field = $v instanceof Pk ? $v->resolve() : $v;
+
+             //set the field name
+             $field->name($n);
+
+             //set column name
+             if(!$field->get_column()){
+                 $field->column($n);
+             }
+
+             //set local model for relation fields
+             if($v instanceof RelationField){
+                 $field->local_model($this->model_class);
+             } 
+
+             //each field knows to validate its own state
+             if(!$field->is_state_valid()){
+                 throw new RuntimeException("The field: {$n} defined on the model: {$this->model_class} is not correctly defined!");
+             }
+
+             $clean_fields[$n] = $field;
+         }
+
+         $this->clean_fields = $clean_fields;
+     }
 }

@@ -74,7 +74,7 @@ class DeleteManager implements IOperationManager {
 		 	 table_name:    $this->table,
 		 	 table_aliase:  "",
 		 	 database_name: config('db_context_classes')[$this->dbclass]['name'],
-		 	 field_list:    $modelclass::get_actual_column_names(),
+		 	 field_list:    $modelclass::get_table_column_names(),
 		 	 ff_settings:   $modelclass::get_file_required_fields(),
 		 	 table_ref:     ''
 		 );

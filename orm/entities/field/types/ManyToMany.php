@@ -3,6 +3,7 @@
 namespace SaQle\Orm\Entities\Field\Types;
 
 use SaQle\Orm\Entities\Field\Types\Base\RelationField;
+use SaQle\Orm\Database\ColumnType;
 
 class ManyToMany extends RelationField {
 	 //the class name for the through model for many to many relations
@@ -10,6 +11,7 @@ class ManyToMany extends RelationField {
 
 	 public function __construct(...$kwargs){
 		 $kwargs['navigation'] = true;
+		 $kwargs['type'] = ColumnType::CHAR;
 		 parent::__construct(...$kwargs);
 	 }
 

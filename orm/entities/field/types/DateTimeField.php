@@ -3,6 +3,7 @@
 namespace SaQle\Orm\Entities\Field\Types;
 
 use SaQle\Orm\Entities\Field\Types\Base\TemporalField;
+use SaQle\Orm\Database\ColumnType;
 
 class DateTimeField extends TemporalField {
 
@@ -22,7 +23,35 @@ class DateTimeField extends TemporalField {
 	 protected string $storage = "unix";
 
 	 public function __construct(...$kwargs){
+         $kwargs['type'] = ColumnType::DATETIME;
 	 	 parent::__construct(...$kwargs);
 	 }
+
+     public function min_datetime(mixed $min_datetime){
+         $this->min_datetime = $min_datetime;
+         return $this;
+     }
+
+     public function get_min_datetime(){
+         return $this->min_datetime;
+     }
+
+     public function max_datetime(mixed $max_datetime){
+         $this->max_datetime = $max_datetime;
+         return $this;
+     }
+
+     public function get_max_datetime(){
+         return $this->max_datetime;
+     }
+
+     public function storage(string $storage){
+         $this->storage = $storage;
+         return $this;
+     }
+
+     public function get_storage(){
+         return $this->storage;
+     }
 }
 
