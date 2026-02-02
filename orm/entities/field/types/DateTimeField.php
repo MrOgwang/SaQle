@@ -4,6 +4,7 @@ namespace SaQle\Orm\Entities\Field\Types;
 
 use SaQle\Orm\Entities\Field\Types\Base\TemporalField;
 use SaQle\Orm\Database\ColumnType;
+use SaQle\Orm\Entities\Field\Attributes\FieldDefinition;
 
 class DateTimeField extends TemporalField {
 
@@ -20,6 +21,7 @@ class DateTimeField extends TemporalField {
       * 1so       - A textual representation of date + time: e.g 2026-01-28T14:45:00Z
       * unix      - An integer representing seconds (or milliseconds)
       * */
+     #[FieldDefinition()]
 	 protected string $storage = "unix";
 
 	 public function __construct(...$kwargs){

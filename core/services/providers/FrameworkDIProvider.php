@@ -56,11 +56,11 @@ class FrameworkDIProvider extends ServiceProvider {
          $this->app->container->bind(StartApps::class);
          $this->app->container->bind(MakeResources::class);
          $this->app->container->bind(StartProject::class);
-         $this->app->container->bind(DbContextOptions::class, function($c, $name, $type, $port, $username, $password){
-             return new DbContextOptions(name: $name, type: $type, port: $port, username: $username, password: $password);
+         $this->app->container->bind(DbContextOptions::class, function($c, ...$connection_params){
+             return new DbContextOptions(...$connection_params);
          });
-         $this->app->container->bind(Connection::class, function($c, $name, $type, $port, $username, $password){
-             return Connection::make($c->resolve(DbContextOptions::class,  [$name, $type, $port, $username, $password]));
+         $this->app->container->bind(Connection::class, function($c, ...$connection_params){
+             return Connection::make($c->resolve(DbContextOptions::class, $connection_params));
          });
          $this->app->container->bind(FileLogger::class, function($c, $path, $mode){
              return new FileLogger(file_path: $path, file_mode: $mode);

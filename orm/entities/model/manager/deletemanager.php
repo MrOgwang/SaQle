@@ -11,6 +11,7 @@ use SaQle\Core\FeedBack\FeedBack;
 use SaQle\Orm\Entities\Model\Interfaces\IOperationManager;
 use SaQle\Orm\Entities\Model\Manager\Utils\EventUtils;
 use SaQle\Core\Events\ModelEventPhase;
+use SaQle\Orm\Entities\Model\Schema\Model;
 use Exception;
 
 class DeleteManager implements IOperationManager {
@@ -20,62 +21,18 @@ class DeleteManager implements IOperationManager {
 
 	 use EventUtils;
 
-	 private bool $permanently = false {
-	 	 set(bool $value){
-	 	 	 $this->permanently = $value;
-	 	 }
+	 private Model $model;
+	 private bool $permanently = false;
+	 private ?DbContextTracker $ctxtracker = null;
 
-	 	 get => $this->permanently;
-	 }
-
-	 private ?string $table = null {
-	 	 set(?string $value){
-	 	 	 $this->table = $value;
-	 	 }
-
-	 	 get => $this->table;
-	 }
-
-	 private ?string $dbclass = null {
-	 	 set(?string $value){
-	 	 	 $this->dbclass = $value;
-	 	 }
-
-	 	 get => $this->dbclass;
-	 }
-
-	 private ?string $modelclass = null {
-	 	 set(?string $value){
-	 	 	 $this->modelclass = $value;
-	 	 }
-
-	 	 get => $this->modelclass;
-	 }
-
-	 private ?DbContextTracker $ctxtracker = null {
-	 	 set(?DbContextTracker $value){
-	 	 	 $this->ctxtracker = $value;
-	 	 }
-
-	 	 get => $this->ctxtracker;
-	 }
-
-	 public function __construct(string $modelclass){
-	 	 [$dbclass, $table] = $modelclass::get_table_n_dbcontext();
-	 	 
-	 	 if(!$table || !$dbclass || !$modelclass)
-	 	 	 throw new \Exception('Cannot instantiate delete manager! Unknown model.');
-
-	 	 $this->table      = $table;
-	 	 $this->dbclass    = $dbclass;
-	 	 $this->modelclass = $modelclass;
-	 	 
+	 public function __construct(Model $model){
+	 	 $this->model = $model;
 	 	 $this->setup_ctxtracker(
-		 	 table_name:    $this->table,
+		 	 table_name:    $model->meta->table_name,
 		 	 table_aliase:  "",
-		 	 database_name: config('db_context_classes')[$this->dbclass]['name'],
-		 	 field_list:    $modelclass::get_table_column_names(),
-		 	 ff_settings:   $modelclass::get_file_required_fields(),
+		 	 database_name: config('connections')[$model->meta->connection_name]['database'],
+		 	 field_list:    $model->meta->table_column_names,
+		 	 ff_settings:   $model->meta->file_required_fields,
 		 	 table_ref:     ''
 		 );
 
@@ -84,7 +41,7 @@ class DeleteManager implements IOperationManager {
 
 	 public function now(){
 	 	 try{
-	 	 	 $pdo = resolve(Connection::class, config('db_context_classes')[$this->dbclass]);
+	 	 	 $pdo = resolve(Connection::class, config('connections')[$this->model->meta->connection_name]);
 	 	     return $this->permanently ? $this->hard_delete($pdo) : $this->soft_delete($pdo);
 	 	 }catch(Exception $ex){
 	 	 	 throw $ex;
@@ -101,18 +58,18 @@ class DeleteManager implements IOperationManager {
 	 	 $operation = new UpdateOperation(
 	 	 	 sql:   $sql_info['sql'],
 	 	 	 data:  $sql_info['data'],
-	 	 	 table: $this->table
+	 	 	 table: $this->model->meta->table_name
 	 	 );
 
 	 	 //send a pre delete signal to observers
 	 	 $named_args = $this->get_named_args('delete', $sql_info);
-	 	 $this->dispatch_event($this->modelclass, ModelEventPhase::SOFT_DELETING, $named_args, resolve('request')->user);
+	 	 $this->dispatch_event($this->model::class, ModelEventPhase::SOFT_DELETING, $named_args, resolve('request')->user);
 
 	 	 $response = $operation->update($pdo);
 	 	 $result = $response->row_count > 0 ? true : false;
 
 	 	 //send a post delete signal to observers
-	 	 $this->dispatch_event($this->modelclass, ModelEventPhase::SOFT_DELETED, $named_args, resolve('request')->user, $result);
+	 	 $this->dispatch_event($this->model::class, ModelEventPhase::SOFT_DELETED, $named_args, resolve('request')->user, $result);
 
 	 	 return $result;
      }
@@ -122,17 +79,17 @@ class DeleteManager implements IOperationManager {
 	 	 $operation = new DeleteOperation(
 	 	 	 sql:   $sql_info['sql'],
 	 	 	 data:  $sql_info['data'],
-	 	 	 table: $this->table
+	 	 	 table: $this->model->meta->table_name
 	 	 );
 
 	 	 //send a pre delete signal to observers
 	 	 $named_args = $this->get_named_args('delete', $sql_info);
-	 	 $this->dispatch_event($this->modelclass, ModelEventPhase::DELETING, $named_args, resolve('request')->user);
+	 	 $this->dispatch_event($this->model::class, ModelEventPhase::DELETING, $named_args, resolve('request')->user);
 
 	 	 $result = $operation->delete($pdo);
 
 	 	 //send a post delete signal to observers
-	 	 $this->dispatch_event($this->modelclass, ModelEventPhase::DELETED, $named_args, resolve('request')->user, $result);
+	 	 $this->dispatch_event($this->model::class, ModelEventPhase::DELETED, $named_args, resolve('request')->user, $result);
 
 	 	 return $result;
      }
@@ -177,8 +134,8 @@ class DeleteManager implements IOperationManager {
 	 private function get_update_sql_info(){
 	 	 $where_clause = $this->wbuilder->get_where_clause($this->ctxtracker, $this->get_configurations());
 	 	 $data = $where_clause->data ? array_merge([1], $where_clause->data) : [1];
-	 	 $database = config('db_context_classes')[$this->dbclass]['name'];
-	 	 $table = $this->table;
+	 	 $database = config('connections')[$this->model->meta->connection_name]['database'];
+	 	 $table = $this->model->meta->table_name;
 	 	 $fields = ['deleted'];
 	 	 $clause   = $where_clause->clause;
 		 $fieldstring = implode(" = ?, ", $fields)." = ?";
@@ -191,8 +148,8 @@ class DeleteManager implements IOperationManager {
      private function get_delete_sql_info(){
 	 	 $where_clause = $this->wbuilder->get_where_clause($this->ctxtracker, $this->get_configurations());
 	 	 $data         = $where_clause->data ?? null;
-	 	 $database     = config('db_context_classes')[$this->dbclass]['name'];
-	 	 $table        = $this->table;
+	 	 $database     = config('connections')[$this->model->meta->connection_name]['database'];
+	 	 $table        = $this->model->meta->table_name;
 	 	 $clause       = $where_clause->clause;
 		 $sql          = "DELETE FROM {$database}.{$table}{$clause}";
 

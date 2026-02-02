@@ -139,7 +139,7 @@ trait JoinManager{
       * @param string $model: the class name of model
       * */
      private function get_table_n_database(string $model){
-     	 [$db_class, $table_name] = $model::get_table_n_dbcontext();
+     	 [$db_class, $table_name] = $model::get_table_and_connection();
 	 	 $database_name = config('db_context_classes')[$this->dbclass]['name'];
 	 	 return [$table_name, $database_name];
      }

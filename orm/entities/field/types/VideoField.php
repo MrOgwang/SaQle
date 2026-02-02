@@ -3,6 +3,7 @@
 namespace SaQle\Orm\Entities\Field\Types;
 
 use SaQle\Core\Support\CropMode;
+use SaQle\Orm\Entities\Field\Attributes\FieldDefinition;
 
 class VideoField extends MediaField {
 

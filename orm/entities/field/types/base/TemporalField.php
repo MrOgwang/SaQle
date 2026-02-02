@@ -2,14 +2,18 @@
 
 namespace SaQle\Orm\Entities\Field\Types\Base;
 
+use SaQle\Orm\Entities\Field\Attributes\FieldDefinition;
+
 class TemporalField extends Field {
 	 //the format 
 	 protected ?string $format = null;
 
 	 //set to current date on save
+	 #[FieldDefinition()]
 	 protected bool $auto_now = false;
 
 	 //set to current date on creation
+	 #[FieldDefinition()]
 	 protected bool $auto_now_add = false;
 
 	 //Whether to store with timezone

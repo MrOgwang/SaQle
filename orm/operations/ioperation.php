@@ -1,9 +1,7 @@
 <?php
 namespace SaQle\Orm\Operations;
 
-use SaQle\Orm\Connection\Interfaces\IConnection;
-
-abstract class IOperation{
+abstract class IOperation {
 
 	 protected $settings;
 

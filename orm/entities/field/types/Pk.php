@@ -4,6 +4,7 @@ namespace SaQle\Orm\Entities\Field\Types;
 
 use SaQle\Orm\Entities\Field\Interfaces\IField;
 use SaQle\Orm\Entities\Field\Types\Base\Field;
+use SaQle\Orm\Entities\Field\Attributes\FieldDefinition;
 
 class Pk implements IField {
 

@@ -3,6 +3,7 @@
 namespace SaQle\Orm\Entities\Field\Types\Base;
 
 use SaQle\Core\Support\CharSet;
+use SaQle\Orm\Entities\Field\Attributes\FieldDefinition;
 
 class TextualField extends Field {
 	//the minimum length allowed
@@ -12,6 +13,7 @@ class TextualField extends Field {
 	 protected ?int $max_length = null;
 
 	 //the exact length allowed
+	 #[FieldDefinition()]
 	 protected ?int $length = null;
 
 	 //the regex pattern to match

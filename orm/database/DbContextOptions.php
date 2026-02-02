@@ -5,8 +5,8 @@ namespace SaQle\Orm\Database;
 
 class DbContextOptions extends IDbContextOptions{
 	public function __construct(
-		 private string  $type, 
-		 private string  $name, 
+		 private string  $driver, 
+		 private string  $database, 
 		 private int     $port, 
 		 private string  $username = '', 
 		 private string  $password = '', 
@@ -16,11 +16,11 @@ class DbContextOptions extends IDbContextOptions{
 		 private string  $collation = 'utf8_general_ci')
 	{}
 
-	public function get_name(){
-		return $this->name;
+	public function get_database(){
+		return $this->database;
 	}
-	public function get_type(){
-		return $this->type;
+	public function get_driver(){
+		return $this->driver;
 	}
 	public function get_charset(){
 		return $this->charset;

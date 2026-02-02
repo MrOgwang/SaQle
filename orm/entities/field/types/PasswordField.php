@@ -3,6 +3,7 @@
 namespace SaQle\Orm\Entities\Field\Types;
 
 use SaQle\Orm\Entities\Field\Types\CharField;
+use SaQle\Orm\Entities\Field\Attributes\FieldDefinition;
 
 class PasswordField extends CharField {
 	 //the miminum strength

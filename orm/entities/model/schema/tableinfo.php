@@ -55,21 +55,21 @@ final class TableInfo{
      }
 
      //the name of the database table associated with this model
-     public string $db_table {
+     public string $table_name {
          set(string $value){
-             $this->db_table = $value;
+             $this->table_name = $value;
          }
 
-         get => $this->db_table;
+         get => $this->table_name;
      }
 
-     //the name of the database context class this model is defined
-     public string $db_class {
+     //the connection name to use for this model
+     public string $connection_name {
          set(string $value){
-             $this->db_class = $value;
+             $this->connection_name = $value;
          }
 
-         get => $this->db_class;
+         get => $this->connection_name;
      }
 
      //whether to automatically include created by and modified by fields in the model
@@ -238,19 +238,7 @@ final class TableInfo{
       * data.
       * */
      public array $unique_field_names = [];
-
-     /**
-      * When you have provided more than one unique field,
-      * tell the model whether you want to have them be unique together
-      * or unique individually. Defaults to false
-      * */
-     public bool $unique_together = false {
-         set(bool $value){
-             $this->unique_together = $value;
-         }
-
-         get => $this->unique_together;
-     }
+     public array $unique_fields = [];
 
      /**
       * The final model fields after state validation happens.
@@ -352,6 +340,8 @@ final class TableInfo{
          get => $this->audit_fields_override;
      }
 
+     public array $unique_constraints = [];
+
      private function assert_model_exists(string $model_class){
          if($model_class && class_exists($model_class) && is_subclass_of($model_class, Model::class)){
              return true;
@@ -437,9 +427,9 @@ final class TableInfo{
          $this->fields = array_merge($this->fields, $audit_fields);
      }
 
-     public function initialize_model_meta($table_name, $database_context, $model_class){
-         $this->db_table = $table_name;
-         $this->db_class = $database_context;
+     public function initialize_model_meta($table_name, $connection_name, $model_class){
+         $this->table_name = $table_name;
+         $this->connection_name = $connection_name;
          $this->model_class = $model_class;
          $this->pk_type = config('primary_key_type');
          $this->with_user_audit = config('with_user_audit');
@@ -490,5 +480,35 @@ final class TableInfo{
          }
 
          $this->clean_fields = $clean_fields;
+     }
+
+     public function get_unique_constraints(){
+         return $this->unique_constraints;
+     }
+
+     public function set_unique_constraints(){
+         $constraints = [];
+         $model_name = strtolower(array_slice(explode('\\', $this->model_class), -1)[0]);
+
+         foreach($this->unique_field_names as $name){
+             $unique_constraint_name = "{$model_name}_{$name}_unique";
+             $column_name = $this->clean_fields[$name]->get_column();
+             $constraints[$unique_constraint_name] = [$column_name];
+         }
+         
+         foreach($this->unique_fields as $ucn => $unq_fields){
+             $constraints[$ucn] = [];
+             foreach($unq_fields as $uf){
+                 $column_name = $this->clean_fields[$uf]->get_column();
+                 $constraints[$ucn][] = $column_name;
+             }
+         }
+
+         $this->unique_constraints = $constraints;
+     }
+
+     public function set_table_and_connection(string $table_name, string $connection_name){
+         $this->table_name = $table_name;
+         $this->connection_name = $connection_name;
      }
 }

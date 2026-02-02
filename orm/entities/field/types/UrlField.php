@@ -2,6 +2,8 @@
 
 namespace SaQle\Orm\Entities\Field\Types;
 
+use SaQle\Orm\Entities\Field\Attributes\FieldDefinition;
+
 class UrlField extends CharField {
 	 
 	 //Allowed schemes (http, https)

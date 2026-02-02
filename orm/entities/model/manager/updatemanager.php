@@ -14,6 +14,7 @@ use SaQle\Core\FeedBack\FeedBack;
 use SaQle\Orm\Entities\Model\Interfaces\IOperationManager;
 use SaQle\Orm\Entities\Model\Manager\Utils\{EventUtils, ImageUtils};
 use SaQle\Core\Events\ModelEventPhase;
+use SaQle\Orm\Entities\Model\Schema\Model;
 use Exception;
 
 class UpdateManager implements IOperationManager{
@@ -23,77 +24,25 @@ class UpdateManager implements IOperationManager{
 		 FilterManager::__construct as private __filterConstruct;
 	 }
 
-	 private ?string $table = null {
-	 	 set(?string $value){
-	 	 	 $this->table = $value;
-	 	 }
+	 private Model $model;
+	 private DataContainer $container;
+     //when an update is done from an object instead of update manager, the object state is tracked here
+	 private array $datastate = [];
+	 private ?DbContextTracker $ctxtracker = null;
 
-	 	 get => $this->table;
-	 }
-
-	 private ?string $dbclass = null {
-	 	 set(?string $value){
-	 	 	 $this->dbclass = $value;
-	 	 }
-
-	 	 get => $this->dbclass;
-	 }
-
-	 private ?string $modelclass = null {
-	 	 set(?string $value){
-	 	 	 $this->modelclass = $value;
-	 	 }
-
-	 	 get => $this->modelclass;
-	 }
-
-	 private DataContainer $container {
-	 	 set(DataContainer $value){
-	 	 	 $this->container = $value;
-	 	 }
-
-	 	 get => $this->container;
-	 }
-
-     /**
-      * when an update is done from an object instead of update manager, the object state is tracked here
-      * */
-	 private array $datastate = [] {
-	 	 set(array $value){
-	 	 	 $this->datastate = $value;
-	 	 }
-
-	 	 get => $this->datastate;
-	 }
-
-	 private ?DbContextTracker $ctxtracker = null {
-	 	 set(?DbContextTracker $value){
-	 	 	 $this->ctxtracker = $value;
-	 	 }
-
-	 	 get => $this->ctxtracker;
-	 }
-
-	 public function __construct(string $modelclass, array $data){
+	 public function __construct(Model $model, array $data){
 	 	 Assert::isNonEmptyMap($data, "The data to update is not properly defined!");
 
-	 	 [$dbclass, $table] = $modelclass::get_table_n_dbcontext();
-	 	 
-	 	 if(!$table || !$dbclass || !$modelclass)
-	 	 	 throw new \Exception('Cannot instantiate update manager! Unknown model.');
-
-	 	 $this->table      = $table;
-	 	 $this->dbclass    = $dbclass;
-	 	 $this->modelclass = $modelclass;
+	 	 $this->model = $model;
          $this->container  = new DataContainer();
 	 	 $this->container->data = $data;
 
 	 	 $this->setup_ctxtracker(
 		 	 table_name:    $this->table,
 		 	 table_aliase:  "",
-		 	 database_name: config('db_context_classes')[$this->dbclass]['name'],
-		 	 field_list:    $modelclass::get_table_column_names(),
-		 	 ff_settings:   $modelclass::get_file_required_fields(),
+		 	 database_name: config('connections')[$this->model->meta->connection_name]['database'],
+		 	 field_list:    $this->model->meta->table_column_names,
+		 	 ff_settings:   $this->model->meta->file_required_fields,
 		 	 table_ref:     ''
 		 );
 
@@ -102,22 +51,19 @@ class UpdateManager implements IOperationManager{
 
 	 public function update(bool $multiple = false){
 	 	 try{
-	 	 	 $pdo        = resolve(Connection::class, config('db_context_classes')[$this->dbclass]);
-	 	 	 $modelclass = $this->modelclass;
-	 	 	 $model      = $modelclass::make();
-	 	 	 $table      = $this->table;
-     	     [$clean_data, $file_data] = $model->get_update_data($this->container->data, resolve('request'), $this->datastate);
+	 	 	 $pdo = resolve(Connection::class, config('connections')[$this->model->meta->connection_name]);
+     	     [$clean_data, $file_data] = $this->model->get_update_data($this->container->data, resolve('request'), $this->datastate);
      	     $this->container->files = [$file_data];
      	     $sql_info  = $this->get_sql_info($clean_data);
      	     $operation = new UpdateOperation(
 		 	 	 sql:   $sql_info['sql'],
-		 	 	 table: $this->table,
+		 	 	 table: $this->model->meta->table_name,
 		 	 	 data:  $sql_info['data']
 		 	 );
 
 		 	 //send a pre update signal to observers
 		 	 $named_args = $this->get_named_args('update', $sql_info, null, null, $clean_data, $file_data);
-	 	     $this->dispatch_event($modelclass, ModelEventPhase::UPDATING, $named_args, resolve('request')->user);
+	 	     $this->dispatch_event($this->model::class, ModelEventPhase::UPDATING, $named_args, resolve('request')->user);
 
 	 	     //update data
 		 	 $response = $operation->update($pdo);
@@ -126,16 +72,12 @@ class UpdateManager implements IOperationManager{
 		 	 $result = $multiple ? $updateddata : ($updateddata[0] ?? false);
 
 		 	 //send a post update signal to observers
-		 	 $this->dispatch_event($modelclass, ModelEventPhase::UPDATED, $named_args, resolve('request')->user, $result);
+		 	 $this->dispatch_event($this->model::class, ModelEventPhase::UPDATED, $named_args, resolve('request')->user, $result);
 
 	 	     return $result;
      	 }catch(Exception $ex){
      	 	 throw $ex;
      	 }
-	 }
-
-	 public function transaction_save(){
-
 	 }
 
      public function set_data_state(array $datastate){
@@ -180,16 +122,11 @@ class UpdateManager implements IOperationManager{
 	 	  ];
 	 }
 
-	 private function get_sql_info(?array $clean_data = null){
-	 	 if(!$clean_data){
-	 	 	 $modelclass = $this->modelclass;
-	 	 	 $model      = $modelclass::make();
-     	     [$clean_data, $file_data] = $model->get_update_data($this->container->data, resolve('request'), $this->datastate);
-	 	 }
+	 private function get_sql_info(array $clean_data){
 	 	 $where_clause = $this->wbuilder->get_where_clause($this->ctxtracker, $this->get_configurations());
 	 	 $data = $where_clause->data ? array_merge(array_values($clean_data), $where_clause->data) : array_values($clean_data);
-	 	 $database = config('db_context_classes')[$this->dbclass]['name'];
-	 	 $table = $this->table;
+	 	 $database = config('connections')[$this->model->meta->connection_name]['database'];
+	 	 $table = $this->model->meta->table_name;
 	 	 $fields = array_keys($clean_data);
 	 	 $clause   = $where_clause->clause;
 		 $fieldstring = implode(" = ?, ", $fields)." = ?";

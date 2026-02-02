@@ -9,26 +9,21 @@ abstract class TempModel extends Model implements ITempModel{
 
 	 abstract protected function model_setup(TableInfo $meta): void;
 
-	 public static function drop(?string $dbclass = null) : bool {
-	 	 [$dbclass, $table] = get_called_class()::get_table_n_dbcontext($dbclass);
-
-	 	 if(!$table || !$dbclass)
-	 	 	 throw new \Exception('Cannot drop temporary table! Model not registsred with any databases contexts.');
-
-	 	 $dbmanager = (new DbManagerFactory(dbclass: $dbclass))->manager();
+	 private function get_db_manager(?string $connection = null){
+	 	 [$connection, $table] = get_called_class()::get_table_and_connection($connection);
+	 	 $dbmanager = (new DbManagerFactory(connection: $connection))->manager();
  	 	 $dbmanager->connect();
+
+ 	 	 return [$dbmanager, $table];
+	 }
+
+	 public static function drop(?string $connection = null) : bool {
+	 	 [$dbmanager, $table] = $this->get_db_manager($connection);
  	 	 return $dbmanager->drop_table($table);
 	 }
 
 	 public static function create(?string $dbclass = null) : bool {
-	 	 $modelclass = get_called_class();
-	 	 [$dbclass, $table] = $modelclass::get_table_n_dbcontext($dbclass);
-
-	 	 if(!$table || !$dbclass)
-	 	 	 throw new \Exception('Cannot create temporary table! Model not registsred with any databases contexts.');
-
-	 	 $dbmanager = (new DbManagerFactory(dbclass: $dbclass))->manager();
- 	 	 $dbmanager->connect();
+	 	 [$dbmanager, $table] = $this->get_db_manager($connection);
  	 	 return $dbmanager->create_table($table, $modelclass, true);
 	 }
 }

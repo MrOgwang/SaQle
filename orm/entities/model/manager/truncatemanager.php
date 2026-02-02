@@ -10,51 +10,21 @@ use SaQle\Core\FeedBack\FeedBack;
 use SaQle\Orm\Entities\Model\Interfaces\IOperationManager;
 use SaQle\Orm\Entities\Model\Manager\Utils\EventUtils;
 use SaQle\Core\Events\ModelEventPhase;
+use SaQle\Orm\Entities\Model\Schema\Model;
 use Exception;
 
 class TruncateManager implements IOperationManager {
 	 use EventUtils;
 
-	 private ?string $table = null {
-	 	 set(?string $value){
-	 	 	 $this->table = $value;
-	 	 }
+	 private Model $model;
 
-	 	 get => $this->table;
-	 }
-
-	 private ?string $dbclass = null {
-	 	 set(?string $value){
-	 	 	 $this->dbclass = $value;
-	 	 }
-
-	 	 get => $this->dbclass;
-	 }
-
-	 private ?string $modelclass = null {
-	 	 set(?string $value){
-	 	 	 $this->modelclass = $value;
-	 	 }
-
-	 	 get => $this->modelclass;
-	 }
-
-	 public function __construct(string $modelclass){
-	 	 [$dbclass, $table] = $modelclass::get_table_n_dbcontext();
-	 	 
-	 	 if(!$table || !$dbclass || !$modelclass)
-	 	 	 throw new \Exception('Cannot instantiate delete manager! Unknown model.');
-
-	 	 $this->table      = $table;
-	 	 $this->dbclass    = $dbclass;
-	 	 $this->modelclass = $modelclass;
-
-		 $this->__coConstruct();
+	 public function __construct(Model $model){
+	 	 $this->model = $model;
 	 }
 
 	 public function now(){
 	 	 try{
-	 	 	 $pdo = resolve(Connection::class, config('db_context_classes')[$this->dbclass]);
+	 	 	 $pdo = resolve(Connection::class, config('connections')[$this->model->meta->connection_name]);
 	 	     return $this->truncate($pdo);
 	 	 }catch(Exception $ex){
 	 	 	 throw $ex;
@@ -66,24 +36,24 @@ class TruncateManager implements IOperationManager {
 	 	 $operation = new DeleteOperation(
 	 	 	 sql:   $sql_info['sql'],
 	 	 	 data:  null,
-	 	 	 table: $this->table
+	 	 	 table: $this->model->meta->table_name
 	 	 );
 
 	 	 //send a pre truncate signal to observers
 	 	 $named_args = $this->get_named_args('truncate', $sql_info);
-	 	 $this->dispatch_event($this->modelclass, ModelEventPhase::TRUNCATING, $named_args, resolve('request')->user);
+	 	 $this->dispatch_event($this->model::class, ModelEventPhase::TRUNCATING, $named_args, resolve('request')->user);
 
 	 	 $result = $operation->delete($pdo);
 
 	 	 //send a post delete signal to observers
-	 	 $this->dispatch_event($this->modelclass, ModelEventPhase::TRUNCATED, $named_args, resolve('request')->user, $result);
+	 	 $this->dispatch_event($this->model::class, ModelEventPhase::TRUNCATED, $named_args, resolve('request')->user, $result);
 
 	 	 return $result;
      }
 
      public function get_sql_info(){
-	 	 $database     = config('db_context_classes')[$this->dbclass]['name'];
-	 	 $table        = $this->table;
+	 	 $database     = config('connections')[$this->model->meta->connection_name]['database'];
+	 	 $table        = $this->model->meta->table_name;
 		 $sql          = "TRUNCATE TABLE {$database}.{$table}";
 
          return ['sql' => $sql, 'data' => null];

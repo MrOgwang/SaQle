@@ -1,9 +1,10 @@
 <?php
 namespace SaQle\Orm\Connection;
 use SaQle\Orm\Database\IDbContextOptions;
-use SaQle\Orm\Connection\Interfaces\IConnection;
+
 ob_start();
-class Connection implements IConnection{
+
+class Connection {
 	 private static $connection = null;
 	 private static $last_connection_string = "";
 
@@ -26,7 +27,7 @@ class Connection implements IConnection{
 
      //Construct a connection string from the database context options
 	 private static function get_connection_string(IDbContextOptions $context){
-		 return $context->get_type()->value.":host=".$context->get_host().";port=".$context->get_port()->value.";dbname=".$context->get_name().";";
+		 return $context->get_driver().":host=".$context->get_host().";port=".$context->get_port().";dbname=".$context->get_database().";";
 	 }
 
 	 //Create the pdo connection object

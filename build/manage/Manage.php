@@ -5,6 +5,7 @@ use SaQle\Build\Commands\{MakeMigrations, Migrate, MakeCollections, MakeModels,
 	MakeThroughs, SeedDatabase, ResetDatabase, MakeSuperuser, StartProject, 
 	StartApps, MakeResources, BuildProject
 };
+use SaQle\Build\Utils\MigrationUtils;
 use Exception;
 
 
@@ -49,8 +50,8 @@ class Manage{
 	 }
 
 	 private function extract_makemigrations_args(array $args){
-	 	 $expected_short = ['-n', '-c', '-a'];
-	 	 $expected_long  = ['--name', '--context', '--app'];
+	 	 $expected_short = ['-n', '-s'];
+	 	 $expected_long  = ['--name', '--schema'];
 	 	 return $this->extract_args($expected_short, $expected_long, $args);
 	 }
 
@@ -87,14 +88,18 @@ class Manage{
 	 public function __invoke(){
 		 switch ($this->command){
 		     case 'make:migrations':
-	             $migration_name = $this->arguments['name']    ?? null;
-	             $app_name       = $this->arguments['app']     ?? null;
-	             $db_context     = $this->arguments['context'] ?? null;
-		         if ($migration_name){
-		             resolve(MakeMigrations::class)->execute($migration_name, $this->project_root, $app_name, $db_context);
-		         }else{
-		             throw new Exception("Please provide a migration name!");
-		         }
+	             $migration_name = $this->arguments['name'] ?? null;
+	             $schema_name = $this->arguments['schema'] ?? null;
+
+	             if(!$migration_name){
+	             	 throw new Exception("Please provide a migration name!");
+	             }
+
+	             if($schema_name && !MigrationUtils::is_schema_defined($schema_name)){
+	             	 throw new Exception("The database schema [{$schema_name}] provided does not exist or is not defined correctly!");
+	             }
+
+	             resolve(MakeMigrations::class)->execute($migration_name, $this->project_root, $schema_name);
 			 break;
 			 case 'migrate':
 			     resolve(Migrate::class)->execute($this->project_root);

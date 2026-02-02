@@ -2,6 +2,8 @@
 
 namespace SaQle\Orm\Entities\Field\Types\Base;
 
+use SaQle\Orm\Entities\Field\Attributes\FieldDefinition;
+
 class RelationField extends Field {
 
 	 //the class name of the foreign key model

@@ -2,6 +2,8 @@
 
 namespace SaQle\Orm\Entities\Field\Types\Base;
 
+use SaQle\Orm\Entities\Field\Attributes\FieldDefinition;
+
 class NumericField extends Field {
 
 	 //the minimum value allowed
@@ -20,6 +22,7 @@ class NumericField extends Field {
 	 protected ?string $format = null;
 
 	 //whether to auto incerement
+	 #[FieldDefinition()]
 	 protected bool $auto = false;
 
 	 public function auto(bool $auto = true){

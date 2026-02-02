@@ -6,6 +6,8 @@ use SaQle\Commons\FileUtils;
 use SaQle\Core\Migration\Models\Migration;
 use SaQle\Build\Utils\MigrationUtils;
 use SaQle\Orm\Connection\Connection;
+use SaQle\Orm\Database\Manager\DbManagerFactory;
+use SaQle\Orm\Entities\Field\Attributes\FieldDefinition;
 use ReflectionClass;
 use Exception;
 
@@ -98,7 +100,7 @@ class MakeMigrations {
          return [$up, $down, $touched];
      }
 
-     private function extract_model_fields($models, $project_root){
+     private function extract_model_fields($models, $project_root, $dbmanager){
          $model_fields = [];
          foreach($models as $n => $m){
              if(!MigrationUtils::is_model_defined($m, $project_root))
@@ -108,7 +110,7 @@ class MakeMigrations {
              $mfields = $m::get_fields();
 
              foreach($mfields as $mfn => $mfv){
-                 $mfvdef = $mfv->get_definition();
+                 $mfvdef = $dbmanager->translate_field_definition($mfv->get_definition(FieldDefinition::class));
 
                  if($mfvdef){
                      $db_col_name = $mfv->get_column();
@@ -120,21 +122,21 @@ class MakeMigrations {
          return $model_fields;
      }
 
-     private function extract_unique_field_names($models, $project_root){
-         $unique_field_names = [];
+     private function extract_unique_constraints($models, $project_root){
+         $unique_constraints = [];
          foreach($models as $n => $m){
              if(!MigrationUtils::is_model_defined($m, $project_root))
                  continue;
 
              $mi = $m::make();
-             $unique_field_names[$n] = ['unique_together' => $mi->is_unique_together(), 'fields' => $mi->get_unique_field_names()];
+             $unique_constraints[$n] = $mi::get_unique_constraints();
          }
 
-         return $unique_field_names;
+         return $unique_constraints;
      }
 
-     private function write_database_snapshot($migration_name, $timestamp, $models, $unique_field_names, $dirname, $ctxname, $project_root, $db_type){
-         $class_name  = "{$ctxname}_{$timestamp}_{$migration_name}";
+     private function write_schema_snapshot($migration_name, $timestamp, $models, $unique_constraints, $dirname, $schema_class, $project_root, $dbmanager){
+         $class_name  = "{$schema_class}_{$timestamp}_{$migration_name}";
          $snap_folder = dirname($dirname)."/snapshots";
          $file_name   = $snap_folder."/".$class_name.".php";
 
@@ -146,10 +148,10 @@ class MakeMigrations {
                  $mfields = $m::get_fields();
                  $fields_template.= "\t\t\t'".$n."' => [\n";
                  foreach($mfields as $mfn => $mfv){
-                     $db_col_name = $mfv->column_name;
+                     $db_col_name = $mfv->get_column();
                      $fields_template .= "\t\t\t\t'".$db_col_name."' => [\n";
                      $fields_template .= "\t\t\t\t\t'field' => '".$mfv::class."',\n";
-                     //$fields_template .= "\t\t\t\t\t'def' => '".$mfv->get_definition()."',\n";
+                     $fields_template .= "\t\t\t\t\t'def' => '".$dbmanager->translate_field_definition($mfv->get_definition(FieldDefinition::class))."',\n";
                      $fields_template .= "\t\t\t\t\t'params' => [\n"; 
 
                      $params = [];
@@ -172,16 +174,15 @@ class MakeMigrations {
          }
 
          $uniques_template = "";
-         foreach($unique_field_names as $n => $u){
-             $ut = $u['unique_together'] ? 'true' : 'false';
-
+         foreach($unique_constraints as $n => $constraints){
              $uniques_template .= "\t\t\t'".$n."' => [\n";
-             $uniques_template .= "\t\t\t\t'unique_together' => ".$ut.",\n";
-             $uniques_template .= "\t\t\t\t'fields' => [\n";
-             foreach($u['fields'] as $uf){
-                 $uniques_template .= "\t\t\t\t\t'".$uf."',\n"; 
+             foreach($constraints as $constraint_name => $constraint_fields){
+                 $uniques_template .= "\t\t\t\t'".$constraint_name."' => [\n";
+                 foreach($constraint_fields as $uf){
+                     $uniques_template .= "\t\t\t\t\t'".$uf."',\n"; 
+                 }
+                 $uniques_template .= "\t\t\t\t]\n";
              }
-             $uniques_template .= "\t\t\t\t]\n";
              $uniques_template .= "\t\t\t],\n";
          }
 
@@ -219,7 +220,7 @@ class MakeMigrations {
          $template .= "\t}\n\n";
 
          //get unique fields.
-         $template .= "\tpublic function get_unique_field_names(){\n";
+         $template .= "\tpublic function get_unique_constraints(){\n";
          $template .= "\t\treturn [\n";
          $template .= $uniques_template;
          $template .= "\t\t];\n";
@@ -274,37 +275,51 @@ class MakeMigrations {
          return [$clean_models, $clean_fields, $unique_field_names];
      }
 
-     private function get_context_snapshot($project_root, $app_name, $db_context, $timestamp, $migration_name, $tracker){
+     private function get_schema_snapshot($project_root, $schema_name, $timestamp, $migration_name, $tracker){
 
-         $context_classes = MigrationUtils::get_context_classes($db_context);
-         $context_snapshot = [];
+         $schemas = config('schemas', []);
+         if($schema_name){
+             $schemas = [$schema_name => $schemas[$schema_name]];
+         }
 
-         foreach($context_classes as $ctx){
-             $context_snapshot[$ctx] = [];
-             $ctxparts = explode("\\", $ctx);
-             $ctxname  = end($ctxparts);
+         $schema_snapshot = [];
+
+         foreach($schemas as $s_name => $s_class){
+             $dbmanager = (new DbManagerFactory(connection: $s_name))->manager();
+             
+             /**
+              * If a specific schema name was provided, it has been vallidated by the time
+              * it reaches here, if not, must validate
+              * */
+             if(!$schema_name && !MigrationUtils::is_schema_defined($s_name)){
+                 throw new Exception("The database schema [{$s_name}] provided does not exist or is not defined correctly!");
+             }
+
+             $schema_snapshot[$s_name] = [];
+             $schema_class = MigrationUtils::get_class_name($s_class);
 
              //Acquire models registered with db context
-             $models   = new $ctx()->get_permanent_models();
+             $models = new $s_class()->get_permanent_models();
 
              //Acquire model fields for models registered with db context.
-             $model_fields = $this->extract_model_fields($models, $project_root);
+             $model_fields = $this->extract_model_fields($models, $project_root, $dbmanager);
 
              //acquire unique fields
-             $unique_field_names = $this->extract_unique_field_names($models, $project_root);
-             $last_unique_field_names = [];
+             $unique_constraints = $this->extract_unique_constraints($models, $project_root);
+             $last_unique_constraints = [];
              
-             $a        = new ReflectionClass($ctx);
+             $a        = new ReflectionClass($s_class);
              $filename = $a->getFileName();
              $dirname  = pathinfo($filename)['dirname'];
 
-             $connection_params = config('db_context_classes')[$ctx];
-             $connection_params['name'] = ''; //we are connecting without a database, therefore set the database name to empty string
+             $connection_params = config('connections')[$s_name];
+             $connection_params['database'] = ''; //we are connecting without a database, therefore set the database name to empty string
+
              $connection = resolve(Connection::class, $connection_params);
 
-             $this->write_database_snapshot($migration_name, $timestamp, $models, $unique_field_names, $dirname, $ctxname, $project_root);
+             $this->write_schema_snapshot($migration_name, $timestamp, $models, $unique_constraints, $dirname, $schema_class, $project_root, $dbmanager);
 
-             /*$added_models    = $models;
+             $added_models    = $models;
              $removed_models  = [];
              $maintained_models = [];
 
@@ -313,7 +328,7 @@ class MakeMigrations {
 
              try{
                  $sql = "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?";
-                 $data = [config('db_context_classes')[$ctx]['name']];
+                 $data = [config('connections')[$s_name]['database']];
                  $statement = $this->execute_pdo($connection, $sql, $data)['statement'];
                  $object = $statement->fetchObject(); 
 
@@ -323,9 +338,9 @@ class MakeMigrations {
                      ->order(fields: ['migration_timestamp'], direction: 'DESC')
                      ->limit(page: 1, records: 1)
                      ->first_or_default();
-                     if($last_migration){
+                     /*if($last_migration){
 
-                         [$last_models, $last_model_fields, $last_unique_field_names] = $this->get_snapshot(
+                         [$last_models, $last_model_fields, $last_unique_constraints] = $this->get_snapshot(
                             $last_migration->migration_name, 
                             $last_migration->migration_timestamp, 
                             $dirname, 
@@ -367,21 +382,21 @@ class MakeMigrations {
                                  $removed_columns[] = $removed_settings;
                              }
                          }
-                     }
+                     }*/
                  }
              }catch(Exception $ignore){
                  
              }
 
-             $context_snapshot[$ctx]['tables'] = [$added_models, $removed_models, $maintained_models];
-             $context_snapshot[$ctx]['columns'] = [$added_columns, $removed_columns];
-             $context_snapshot[$ctx]['unique'] = [$unique_field_names, $last_unique_field_names];*/
+             $schema_snapshot[$s_name]['tables'] = [$added_models, $removed_models, $maintained_models];
+             $schema_snapshot[$s_name]['columns'] = [$added_columns, $removed_columns];
+             $schema_snapshot[$s_name]['unique'] = [$unique_constraints, $last_unique_constraints];
          }
 
-         return $context_snapshot;
+         return $schema_snapshot;
      }
 
-     public function execute($migration_name, $project_root, $app_name = null, $db_context = null){
+     public function execute($migration_name, $project_root, $schema_name = null){
          $timestamp  = date('YmdHis');
          $class_name = 'Migration_' . $timestamp . '_' . $migration_name;
          $migrations_folder = $project_root."/databases/migrations";
@@ -403,16 +418,15 @@ class MakeMigrations {
          }
 
          echo "Making {$migration_name} migrations now!\n";
-         $snapshot = $this->get_context_snapshot(...[
-            'project_root'   => $project_root, 
-            'app_name'       => $app_name, 
-            'db_context'     => $db_context,
+         $snapshot = $this->get_schema_snapshot(...[
+            'project_root'   => $project_root,
+            'schema_name'    => $schema_name,
             'timestamp'      => $timestamp,
             'migration_name' => $migration_name,
             'tracker'        => $tracker
          ]);
 
-         /*[$up_models, $down_models, $touched_contexts] = $this->get_model_operations($snapshot);
+         [$up_models, $down_models, $touched_contexts] = $this->get_model_operations($snapshot);
          
          $template = "<?php\n";
          $template .= "use SaQle\\Migration\\Base\\BaseMigration;\n\n";
@@ -450,6 +464,6 @@ class MakeMigrations {
 
              $tracker->add_migration((Object)['file' => $class_name.".php", 'is_migrated' => false]);
              $this->serialize_to_file($migration_tracker_filename, $tracker);
-         }*/
+         }
      }
 }

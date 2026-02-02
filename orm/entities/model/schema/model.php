@@ -14,10 +14,9 @@ use SaQle\Orm\Entities\Model\Collection\ModelCollection;
 use SaQle\Core\Exceptions\Model\{UndefinedFieldException, MissingRequiredFieldsException};
 use SaQle\Orm\Database\Db;
 use SaQle\Core\Support\TransactionOutput;
+use SaQle\Build\Utils\MigrationUtils;
 use Exception;
 use JsonSerializable;
-
-use Booibo\Apps\Account\Models\IndustriesLabel;
 
 abstract class Model implements ITableSchema, IModel, JsonSerializable{
 	 use StringUtils;
@@ -106,16 +105,17 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
      }
 
      //method to ensure shared meta per class
-     private function get_shared_meta(string $class_name) {
+     private function get_shared_meta(string $class_name){
          //Check if meta already exists for this class
-         if(!isset(self::$shared_meta[$class_name])) {
+         if(!isset(self::$shared_meta[$class_name])){
              $table_info = new TableInfo();
-             [$db_class, $table_name] = self::get_table_n_dbcontext();
-             $table_info->initialize_model_meta($table_name, $db_class, $this::class);
+             [$connection_name, $table_name] = self::get_table_and_connection();
+             $table_info->initialize_model_meta($table_name, $connection_name, $this::class);
              $this->model_setup($table_info);
              self::$shared_meta[$class_name] = $table_info;
              $table_info->add_audit_fields();
              $table_info->clean_model_fields();
+             $table_info->set_unique_constraints();
          }
 
          //return the shared meta for this class
@@ -148,30 +148,27 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
          return $model;
      }
 
-	 public static function get_table_n_dbcontext(?string $dbclass = null){
-	 	 $table = null;
-	 	 $current_model_name = get_called_class();
-	 	 
-	 	 /**
-	 	  * Note:
-	 	  * All models must be registered with one or more database context classes,
-	 	  * whether they are temporary, through or regular models
-	 	  * 
-	 	  * The first database context will be picked as the default database context unless
-	 	  * the context class is passed to this method
-	 	  * */
-	 	 $dbclass = $dbclass ?? array_keys(config('db_context_classes'))[0];
- 	 	 $models = new $dbclass()->get_models();
- 	 	 $model_classes = array_values($models);
- 	 	 if(in_array($current_model_name, $model_classes)){
- 	 		 $table = array_keys($models)[array_search($current_model_name, $model_classes)];
- 	 	 }
+     public function set_table_and_connection(string $table_name, string $connection_name){
+     	 $this->meta->set_table_and_connection($table_name, $connection_name);
+     }
 
-	 	 if(!$dbclass || !$table){
-	 	 	 throw new Exception($current_model_name.": Model not registered with any db contexts!");
+	 public static function get_table_and_connection(?string $connection = null){
+	 	 
+	 	 $connection = $connection ?? config('default_connection');
+	 	 if(!$connection || !MigrationUtils::is_schema_defined($connection)){
+	 	 	 throw new Exception("Please provide a valid database connection name!");
 	 	 }
 
-	 	 return [$dbclass, $table];
+         $schema = $schema = config('schemas')[$connection];
+         $schema_instance = new $schema();
+         $models = $schema_instance->get_models();
+         $model_classes = array_values($models);
+         $index = array_search(static::class, $model_classes, true);
+         if($index === false){
+             throw new Exception(static::class . ": Not registered in '{$connection}' schema.");
+         }
+
+         return [$connection, array_keys($models)[$index]];
 	 }
 
      public function get_validation_configurations(?array $field_names = null){
@@ -744,9 +741,18 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 	 	 return [$data, $file_data];
 	 }
 
+     //change the connection right before an operation
+	 public static function using(string $connection): ModelProxy {
+	 	 [$connection_name, $table_name] = self::get_table_and_connection($connection);
+	 	 $model_instance = self::make();
+	 	 $model_instance->set_table_and_connection($table_name, $connection_name);
+         return new ModelProxy($model_instance);
+     }
+
      //add new row(s) to database or batch create new instances
-	 public static function new(array $data){
-	 	 return new CreateManager(get_called_class(), $data);
+	 public static function new(array $data) : CreateManager {
+	 	 $model_instance = self::make();
+	 	 return new CreateManager($model_instance, $data);
 	 }
 
 	 //update exisitng rows (s)
@@ -767,7 +773,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 	 //get one or more rows
 	 public static function get($tablealiase = null, $tableref = null){
 	 	 $calledclass = get_called_class();
-	 	 [$dbclass, $tablename] = $calledclass::get_table_n_dbcontext();
+	 	 [$dbclass, $tablename] = $calledclass::get_table_and_connection();
 
 	 	 return self::init_readmanager($tablename, $dbclass, $tablealiase, $tableref);
 	 }
@@ -902,11 +908,6 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
      	 return self::get_model_setup()->unique_field_names;
      }
 	 
-	 //return unique together
-	 public static function is_unique_together(){
-	     return self::get_model_setup()->unique_together;
-	 }
-	 
 	 //return navigation field names
 	 public static function get_nav_field_names(){
 	     return self::get_model_setup()->nav_field_names;
@@ -930,5 +931,18 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 	 //get file required fileds
 	 public static function get_file_required_fields(){
 	 	 return self::get_model_setup()->file_required_fields;
+	 }
+
+	 //get unique constraints
+	 public static function get_unique_constraints(){
+	 	 return self::get_model_setup()->get_unique_constraints();
+	 }
+
+	 public function get_connection_name(){
+	 	 return $this->meta->connection_name;
+	 }
+
+	 public function get_table_name(){
+	 	 return $this->meta->table_name;
 	 }
 }

@@ -4,6 +4,7 @@ namespace SaQle\Orm\Entities\Field\Types;
 
 use SaQle\Orm\Database\ColumnType;
 use RuntimeException;
+use SaQle\Orm\Entities\Field\Attributes\FieldDefinition;
 
 class ChoiceField extends CharField {
 	 //the choices to pick from

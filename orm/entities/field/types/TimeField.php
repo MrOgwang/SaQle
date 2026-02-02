@@ -4,6 +4,7 @@ namespace SaQle\Orm\Entities\Field\Types;
 
 use SaQle\Orm\Entities\Field\Types\Base\TemporalField;
 use SaQle\Orm\Database\ColumnType;
+use SaQle\Orm\Entities\Field\Attributes\FieldDefinition;
 
 class TimeField extends TemporalField {
 

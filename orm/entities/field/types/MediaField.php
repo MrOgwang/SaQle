@@ -4,6 +4,7 @@ namespace SaQle\Orm\Entities\Field\Types;
 
 use SaQle\Core\Support\CropMode;
 use Closure;
+use SaQle\Orm\Entities\Field\Attributes\FieldDefinition;
 
 class MediaField extends FileField {
 	 

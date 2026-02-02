@@ -13,63 +13,28 @@ use SaQle\Orm\Entities\Model\Interfaces\IOperationManager;
 use SaQle\Orm\Entities\Model\Manager\Utils\{EventUtils, ImageUtils};
 use SaQle\Core\Events\ModelEventPhase;
 use SaQle\Orm\Entities\Model\Schema\TableInfo;
+use SaQle\Orm\Entities\Model\Schema\Model;
 use Exception;
 
 class CreateManager implements IOperationManager {
 	 use ImageUtils, EventUtils;
 
-	 private ?string $table = null {
-	 	 set(?string $value){
-	 	 	 $this->table = $value;
-	 	 }
+	 private Model $model;
+	 private DataContainer $container; 
 
-	 	 get => $this->table;
-	 }
-
-	 private ?string $dbclass = null {
-	 	 set(?string $value){
-	 	 	 $this->dbclass = $value;
-	 	 }
-
-	 	 get => $this->dbclass;
-	 }
-
-	 private ?string $modelclass = null {
-	 	 set(?string $value){
-	 	 	 $this->modelclass = $value;
-	 	 }
-
-	 	 get => $this->modelclass;
-	 }
-
-	 private DataContainer $container {
-	 	 set(DataContainer $value){
-	 	 	 $this->container = $value;
-	 	 }
-
-	 	 get => $this->container;
-	 }
-
-	 public function __construct(string $modelclass, array $data){
+	 public function __construct(Model $model, array $data){
 	 	 if(empty($data))
-	 	 	 throw new \Exception('You did not pass in data to add!');
+	 	 	 throw new Exception('You did not pass in data to add!');
 
-	 	 [$dbclass, $table] = $modelclass::get_table_n_dbcontext();
-
-	 	 if(!$table || !$dbclass || !$modelclass)
-	 	 	 throw new \Exception('Cannot instantiate create manager! Unknown model.');
-
-	 	 $this->table      = $table;
-	 	 $this->dbclass    = $dbclass;
-	 	 $this->modelclass = $modelclass;
-	 	 $this->container  = new DataContainer();
+	 	 $this->model = $model;
+	 	 $this->container = new DataContainer();
 	 	 $this->set_data($data);
 	 }
 
      private function extract_row(array $row, int $index = 0){
      	 Assert::isNonEmptyMap($row, "The data in one or more rows is not properly defined!");
 
-         $modelclass = $this->modelclass;
+         $modelclass = $this->model::class;
 	 	 $model = new $modelclass(...$row);
  	 	 [$clean_data, $file_data] = $model->get_insert_data(resolve('request'));
          $entry_key = spl_object_hash((object)$clean_data).$index;
@@ -78,7 +43,6 @@ class CreateManager implements IOperationManager {
      }
 
 	 private function set_data(array $data){
-	 	 $modelclass = $this->modelclass;
 	 	 $pkvalues   = [];
 	 	 $files      = [];
 	 	 $insertdata = [];
@@ -106,22 +70,18 @@ class CreateManager implements IOperationManager {
 	 
 	 public function save(){
 	 	 try{
-	 	 	 $pdo        = resolve(Connection::class, config('db_context_classes')[$this->dbclass]);
-	 	 	 $modelclass = $this->modelclass;
-	 	 	 $model      = $modelclass::make();
-	 	 	 $modelmeta  = $model->meta;
- 	     	 $sql_info   = $this->get_sql_info($modelmeta);
- 	     	 $pk_type    = $modelclass::get_pk_type();
+	 	 	 $pdo        = resolve(Connection::class, config('connections')[$this->model->meta->connection_name]);
+ 	     	 $sql_info   = $this->get_sql_info($this->model->meta);
  	     	 $operation  = new InsertOperation( 
- 	     	 	 prmkeytype: $pk_type,
-		 	 	 table:      $this->table,
+ 	     	 	 prmkeytype: $this->model->meta->pk_type,
+		 	 	 table:      $this->model->meta->table_name,
 		 	 	 sql:        $sql_info['sql'],
 		 	 	 data:       $sql_info['data']
 		 	 );
 
 		 	 //send a pre insert signal to observers
 		 	 $named_args = $this->get_named_args('insert', $sql_info, null, null, $this->container->data, $this->container->files);
-		 	 $this->dispatch_event($this->modelclass, ModelEventPhase::CREATING, $named_args, resolve('request')->user);
+		 	 $this->dispatch_event($this->model::class, ModelEventPhase::CREATING, $named_args, resolve('request')->user);
 
              //insert data
 		 	 $response = $operation->insert($pdo);
@@ -129,7 +89,7 @@ class CreateManager implements IOperationManager {
              //save files if any
 		 	 $this->auto_save_files(array_values($this->container->files));
 		 	 //get inserted data
-		 	 $created_rows = $this->get_created_rows($response->last_insert_id, $response->row_count, $modelmeta);
+		 	 $created_rows = $this->get_created_rows($response->last_insert_id, $response->row_count, $this->model->meta);
 
 		 	 if(!$created_rows)
      	 	     throw new Exception("Could not create rows!");
@@ -137,7 +97,7 @@ class CreateManager implements IOperationManager {
      	 	 $result = $this->container->multiple === true ? $created_rows : $created_rows[0];
 
              //send a post insert signal to observers
-             $this->dispatch_event($this->modelclass, ModelEventPhase::CREATED, $named_args, resolve('request')->user, $result);
+             $this->dispatch_event($this->model::class, ModelEventPhase::CREATED, $named_args, resolve('request')->user, $result);
 
      	     return $result;
      	 }catch(Exception $ex){
@@ -145,12 +105,7 @@ class CreateManager implements IOperationManager {
      	 }
 	 }
 
-	 public function get_sql_info(?TableInfo $modelmeta = null){
-	 	 if(!$modelmeta){
-	 	 	 $modelclass = $this->modelclass;
-	 	 	 $model      = $modelclass::make();
-	 	 	 $modelmeta  = $model->meta;
-	 	 }
+	 private function get_sql_info(TableInfo $modelmeta){
      	 $fields        = array_keys(array_values($this->container->data)[0]);
 		 $data          = array_values($this->container->data);
 		 $values        = [];
@@ -158,23 +113,23 @@ class CreateManager implements IOperationManager {
 		 foreach($data as $row){
 			 $values[]  = array_values($row);
 		 }
-		 $database      = config('db_context_classes')[$this->dbclass]['name'];
-		 $table         = $this->table;
+		 $database      = config('connections')[$modelmeta->connection_name]['database'];
+		 $table         = $modelmeta->table_name;
 		 $fieldstring   = implode(", ", $fields);
 		 $valstring     = str_repeat('?, ', count($fields) - 1). '?';
          $prepared_data = array_merge(...$values);
-		 if($this->modelclass::get_action_on_duplicate() === 'ABORT_WITH_ERROR'){
+		 if($modelmeta->action_on_duplicate === 'ABORT_WITH_ERROR'){
 		     $sql = "INSERT INTO {$database}.{$table} ({$fieldstring}) VALUES ".str_repeat("($valstring), ", $row_count - 1). "($valstring)";
-		 }elseif($this->modelclass::get_action_on_duplicate() === 'INSERT_MINUS_DUPLICATE'){
+		 }elseif($modelmeta->action_on_duplicate === 'INSERT_MINUS_DUPLICATE'){
 		 	 $sql = "INSERT IGNORE INTO {$database}.{$table} ({$fieldstring}) VALUES ".str_repeat("($valstring), ", $row_count - 1)."($valstring)";
-		 }elseif($this->modelclass::get_action_on_duplicate() === 'UPDATE_ON_DUPLICATE'){
+		 }elseif($modelmeta->action_on_duplicate === 'UPDATE_ON_DUPLICATE'){
 		 	 $exclude = array_merge($modelclass::get_unique_field_names(), [$modelclass::get_pk_name()]);
 		 	 $toupdate = array_map(function($f){
 		 	 	 return "$f = VALUES($f)";
 		 	 }, array_diff($fields, $exclude));
 		 	 $sql = "INSERT INTO {$database}.{$table} ({$fieldstring}) VALUES ".str_repeat("($valstring), ", $row_count - 1)."($valstring) ON DUPLICATE KEY UPDATE ".implode(', ', $toupdate);
-		 }elseif($this->modelclass::get_action_on_duplicate() === 'RETURN_EXISTING'){
-		 	 $sql = "INSERT INTO {$database}.{$table} ({$fieldstring}) VALUES ".str_repeat("($valstring), ", $row_count - 1)."($valstring) ON DUPLICATE KEY UPDATE {$modelclass::get_pk_name()} = {$modelclass::get_pk_name()}";
+		 }elseif($modelmeta->action_on_duplicate === 'RETURN_EXISTING'){
+		 	 $sql = "INSERT INTO {$database}.{$table} ({$fieldstring}) VALUES ".str_repeat("($valstring), ", $row_count - 1)."($valstring) ON DUPLICATE KEY UPDATE {$modelmeta->pk_name} = {$modelmeta->pk_name}";
 		 }
          return ['sql' => $sql, 'data' => $prepared_data];
      }

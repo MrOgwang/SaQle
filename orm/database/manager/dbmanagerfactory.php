@@ -10,9 +10,9 @@ class DbManagerFactory {
 
 	 private $_manager;
 
-	 public function __construct(string $db_type){
-	 	 $contextparams = config('db_context_classes')[$dbclass];
-		 switch($contextparams['type']->value){
+	 public function __construct(string $connection){
+	 	 $contextparams = config('connections')[$connection];
+		 switch($contextparams['driver']){
 			 case self::MYSQL:
 			     $this->_manager = new MySQLDbManager($contextparams);
 			 break;

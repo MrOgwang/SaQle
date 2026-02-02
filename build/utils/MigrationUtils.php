@@ -1,7 +1,25 @@
 <?php
 namespace SaQle\Build\Utils;
 
+use SaQle\Orm\Database\Schema;
+
 class MigrationUtils {
+
+     public static function is_schema_defined(string $schema_name){
+
+         $schema = config('schemas', [])[$schema_name] ?? null;
+
+         if(!$schema){
+             return false;
+         }
+
+         if(!class_exists($schema) || !is_subclass_of($schema, Schema::class)){
+             return false;
+         }
+         
+         return true;
+     }
+
 	 public static function get_context_classes($db_context){
          //There must exist at least one db context class
          if(!config('db_context_classes')){
