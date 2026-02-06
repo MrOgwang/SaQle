@@ -166,28 +166,6 @@ class Field implements IField {
 	 	 return $this->render_callback;
 	 }
 
-	 /*public function get_definition(){
-	 	 $is_field = $this instanceof VirtualField || ($this instanceof RelationField && $this->navigation) ? false : true;
-	     if (!$is_field) {
-	         return null;
-	     }
-
-         $def = new FieldDefinition();
-         $def->name = $this->column;
-         $def->type = $this->type;
-         $def->unique = $this->unique;
-         $def->index = $this->index;
-         $def->length = $this->length ?? null;
-         $def->nullable = !$this->required;
-         $def->primary = $this->primary;
-         $def->auto_increment = $this->auto ?? false;
-         $def->auto_init_timestamp = $this->auto_now_add ?? false;
-         $def->auto_update_timestamp = $this->auto_now ?? false;
-         $def->default = $this->default;
-
-         return $def;
-     }*/
-
 	 function get_definition(string $attribute_class): ?object {
 	 	 $is_field = $this instanceof VirtualField || ($this instanceof RelationField && $this->navigation) ? false : true;
 	     if (!$is_field) {

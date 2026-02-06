@@ -64,10 +64,6 @@ abstract class ICollection implements IteratorAggregate, ArrayAccess, Countable{
         
     }
 
-    /*public function count(): int{
-        return count($this->elements);
-    }*/
-
     public function isEmpty(): bool{
         return empty($this->elements);
     }

@@ -38,7 +38,7 @@ trait SelectManager{
      }
 
      protected function get_selected(){
-         $selected = $this->sbuilder->get_selected($this->ctxtracker, ...$this->configurations);
+         $selected = $this->sbuilder->get_selected($this->query_reference_map, ...$this->configurations);
          if($this->callback){
              $fn = $this->callback;
              return $fn($selected);
@@ -46,7 +46,7 @@ trait SelectManager{
          return implode(", ", $selected);
      }
 
-     protected function get_selected_fields(){
-         return $this->sbuilder->get_selected($this->ctxtracker, ...$this->configurations);
+     public function get_selected_fields(){
+         return $this->sbuilder->get_selected($this->query_reference_map, ...$this->configurations);
      }
 }

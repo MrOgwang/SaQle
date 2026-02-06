@@ -6,7 +6,7 @@ namespace SaQle\Orm\Entities\Model\Manager;
 use SaQle\Orm\Query\Helpers\FilterManager;
 use SaQle\Orm\Operations\Crud\{UpdateOperation, DeleteOperation};
 use SaQle\Orm\Connection\Connection;
-use SaQle\Orm\Database\Trackers\DbContextTracker;
+use SaQle\Orm\Query\References\QueryReferenceMap;
 use SaQle\Core\FeedBack\FeedBack;
 use SaQle\Orm\Entities\Model\Interfaces\IOperationManager;
 use SaQle\Orm\Entities\Model\Manager\Utils\EventUtils;
@@ -23,11 +23,11 @@ class DeleteManager implements IOperationManager {
 
 	 private Model $model;
 	 private bool $permanently = false;
-	 private ?DbContextTracker $ctxtracker = null;
+	 private ?QueryReferenceMap $query_reference_map = null;
 
 	 public function __construct(Model $model){
 	 	 $this->model = $model;
-	 	 $this->setup_ctxtracker(
+	 	 $this->setup_query_reference_map(
 		 	 table_name:    $model->meta->table_name,
 		 	 table_aliase:  "",
 		 	 database_name: config('connections')[$model->meta->connection_name]['database'],
@@ -94,14 +94,14 @@ class DeleteManager implements IOperationManager {
 	 	 return $result;
      }
 
-     private function setup_ctxtracker(string $table_name, string $table_aliase, string $database_name, array $field_list, array $ff_settings, ?string $table_ref = null){
-     	 $this->ctxtracker             = new DbContextTracker();
-	 	 $this->ctxtracker->tables     = array_merge($this->ctxtracker->tables,     [$table_name]);
-	 	 $this->ctxtracker->aliases    = array_merge($this->ctxtracker->aliases,    [$table_aliase]);
-	 	 $this->ctxtracker->tablerefs  = array_merge($this->ctxtracker->tablerefs,  [$table_ref]);
-	 	 $this->ctxtracker->databases  = array_merge($this->ctxtracker->databases,  [$database_name]);
-	 	 $this->ctxtracker->fieldrefs  = array_merge($this->ctxtracker->fieldrefs,  [$field_list]);
-	 	 $this->ctxtracker->ffsettings = array_merge($this->ctxtracker->ffsettings, [$ff_settings]);
+     private function setup_query_reference_map(string $table_name, string $table_aliase, string $database_name, array $field_list, array $ff_settings, ?string $table_ref = null){
+     	 $this->query_reference_map             = new QueryReferenceMap();
+	 	 $this->query_reference_map->tables     = array_merge($this->query_reference_map->tables,     [$table_name]);
+	 	 $this->query_reference_map->aliases    = array_merge($this->query_reference_map->aliases,    [$table_aliase]);
+	 	 $this->query_reference_map->tablerefs  = array_merge($this->query_reference_map->tablerefs,  [$table_ref]);
+	 	 $this->query_reference_map->databases  = array_merge($this->query_reference_map->databases,  [$database_name]);
+	 	 $this->query_reference_map->fieldrefs  = array_merge($this->query_reference_map->fieldrefs,  [$field_list]);
+	 	 $this->query_reference_map->ffsettings = array_merge($this->query_reference_map->ffsettings, [$ff_settings]);
 	 }
 
 	 private function get_configurations(){
@@ -132,7 +132,7 @@ class DeleteManager implements IOperationManager {
 	 }
 
 	 private function get_update_sql_info(){
-	 	 $where_clause = $this->wbuilder->get_where_clause($this->ctxtracker, $this->get_configurations());
+	 	 $where_clause = $this->wbuilder->get_where_clause($this->query_reference_map, $this->get_configurations());
 	 	 $data = $where_clause->data ? array_merge([1], $where_clause->data) : [1];
 	 	 $database = config('connections')[$this->model->meta->connection_name]['database'];
 	 	 $table = $this->model->meta->table_name;
@@ -146,7 +146,7 @@ class DeleteManager implements IOperationManager {
      }
 
      private function get_delete_sql_info(){
-	 	 $where_clause = $this->wbuilder->get_where_clause($this->ctxtracker, $this->get_configurations());
+	 	 $where_clause = $this->wbuilder->get_where_clause($this->query_reference_map, $this->get_configurations());
 	 	 $data         = $where_clause->data ?? null;
 	 	 $database     = config('connections')[$this->model->meta->connection_name]['database'];
 	 	 $table        = $this->model->meta->table_name;

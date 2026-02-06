@@ -8,7 +8,7 @@ use SaQle\Orm\Operations\Crud\UpdateOperation;
 use SaQle\Core\Assert\Assert;
 use SaQle\Orm\Connection\Connection;
 use SaQle\Image\Image;
-use SaQle\Orm\Database\Trackers\DbContextTracker;
+use SaQle\Orm\Query\References\QueryReferenceMap;
 use SaQle\Orm\Query\Helpers\FilterManager;
 use SaQle\Core\FeedBack\FeedBack;
 use SaQle\Orm\Entities\Model\Interfaces\IOperationManager;
@@ -28,7 +28,7 @@ class UpdateManager implements IOperationManager{
 	 private DataContainer $container;
      //when an update is done from an object instead of update manager, the object state is tracked here
 	 private array $datastate = [];
-	 private ?DbContextTracker $ctxtracker = null;
+	 private ?QueryReferenceMap $query_reference_map = null;
 
 	 public function __construct(Model $model, array $data){
 	 	 Assert::isNonEmptyMap($data, "The data to update is not properly defined!");
@@ -37,7 +37,7 @@ class UpdateManager implements IOperationManager{
          $this->container  = new DataContainer();
 	 	 $this->container->data = $data;
 
-	 	 $this->setup_ctxtracker(
+	 	 $this->setup_query_reference_map(
 		 	 table_name:    $this->table,
 		 	 table_aliase:  "",
 		 	 database_name: config('connections')[$this->model->meta->connection_name]['database'],
@@ -85,14 +85,14 @@ class UpdateManager implements IOperationManager{
      	 return $this;
      }
 
-     private function setup_ctxtracker(string $table_name, string $table_aliase, string $database_name, array $field_list, array $ff_settings, ?string $table_ref = null){
-     	 $this->ctxtracker             = new DbContextTracker();
-	 	 $this->ctxtracker->tables     = array_merge($this->ctxtracker->tables,     [$table_name]);
-	 	 $this->ctxtracker->aliases    = array_merge($this->ctxtracker->aliases,    [$table_aliase]);
-	 	 $this->ctxtracker->tablerefs  = array_merge($this->ctxtracker->tablerefs,  [$table_ref]);
-	 	 $this->ctxtracker->databases  = array_merge($this->ctxtracker->databases,  [$database_name]);
-	 	 $this->ctxtracker->fieldrefs  = array_merge($this->ctxtracker->fieldrefs,  [$field_list]);
-	 	 $this->ctxtracker->ffsettings = array_merge($this->ctxtracker->ffsettings, [$ff_settings]);
+     private function setup_query_reference_map(string $table_name, string $table_aliase, string $database_name, array $field_list, array $ff_settings, ?string $table_ref = null){
+     	 $this->query_reference_map             = new QueryReferenceMap();
+	 	 $this->query_reference_map->tables     = array_merge($this->query_reference_map->tables,     [$table_name]);
+	 	 $this->query_reference_map->aliases    = array_merge($this->query_reference_map->aliases,    [$table_aliase]);
+	 	 $this->query_reference_map->tablerefs  = array_merge($this->query_reference_map->tablerefs,  [$table_ref]);
+	 	 $this->query_reference_map->databases  = array_merge($this->query_reference_map->databases,  [$database_name]);
+	 	 $this->query_reference_map->fieldrefs  = array_merge($this->query_reference_map->fieldrefs,  [$field_list]);
+	 	 $this->query_reference_map->ffsettings = array_merge($this->query_reference_map->ffsettings, [$ff_settings]);
 	 }
 
 	 private function get_configurations(){
@@ -123,7 +123,7 @@ class UpdateManager implements IOperationManager{
 	 }
 
 	 private function get_sql_info(array $clean_data){
-	 	 $where_clause = $this->wbuilder->get_where_clause($this->ctxtracker, $this->get_configurations());
+	 	 $where_clause = $this->wbuilder->get_where_clause($this->query_reference_map, $this->get_configurations());
 	 	 $data = $where_clause->data ? array_merge(array_values($clean_data), $where_clause->data) : array_values($clean_data);
 	 	 $database = config('connections')[$this->model->meta->connection_name]['database'];
 	 	 $table = $this->model->meta->table_name;

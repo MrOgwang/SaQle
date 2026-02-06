@@ -37,9 +37,10 @@ class CreateManager implements IOperationManager {
          $modelclass = $this->model::class;
 	 	 $model = new $modelclass(...$row);
  	 	 [$clean_data, $file_data] = $model->get_insert_data(resolve('request'));
+
          $entry_key = spl_object_hash((object)$clean_data).$index;
 
-         return [$entry_key, $clean_data, $file_data, $clean_data[$modelclass::get_pk_name()]];
+         return [$entry_key, $clean_data, $file_data, $clean_data[$this->model->meta->pk_name]];
      }
 
 	 private function set_data(array $data){
@@ -135,33 +136,19 @@ class CreateManager implements IOperationManager {
      }
 
      private function get_created_rows($last_insert_id, $row_count, $modelmeta){
-     	 $modelclass    = $this->modelclass;
+     	 $modelclass    = $this->model::class;
 	 	 $model         = $modelclass::make();
      	 $modelmeta     = $model->meta;
 
-     	 if(!empty($modelclass::get_unique_field_names())){
-     	 	 $unique_values = [];
-     	 	 foreach($modelclass::get_unique_field_names() as $uf){
-     	 	 	 $unique_values[$uf] = array_column($this->container->data, $uf);
-     	 	 }
-
-     	 	 $readmanager = $modelclass::get();
-     	 	 foreach($modelclass::get_unique_field_names() as $uf){
-     	 	 	 $readmanager->where($uf."__in", $unique_values[$uf]);
-     	 	 }
-
-     	 	 return $readmanager->all();
-     	 }else{
-     	 	 $pkvalues = [];
-     	 	 if($modelclass::get_pk_type() === 'GUID'){
-		 	 	 $pkvalues = array_values($this->container->pkvalues);
-		 	 }else{
-				 for($i = 0; $i < $row_count; $i++){
-				     $pkvalues[] = $last_insert_id + $i;
-				 }
-		 	 }
-		 	 return $modelclass::get()->where($modelclass::get_pk_name()."__in", $pkvalues)->all();
-     	 }
+     	 $pkvalues = [];
+ 	 	 if($modelclass::get_pk_type() === 'GUID'){
+	 	 	 $pkvalues = array_values($this->container->pkvalues);
+	 	 }else{
+			 for($i = 0; $i < $row_count; $i++){
+			     $pkvalues[] = $last_insert_id + $i;
+			 }
+	 	 }
+	 	 return $modelclass::using($this->model->meta->connection_name)->get()->where($modelclass::get_pk_name()."__in", $pkvalues)->all();
      }
 }
 

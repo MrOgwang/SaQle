@@ -3,7 +3,7 @@ namespace SaQle\Build\Manage;
 
 use SaQle\Build\Commands\{MakeMigrations, Migrate, MakeCollections, MakeModels, 
 	MakeThroughs, SeedDatabase, ResetDatabase, MakeSuperuser, StartProject, 
-	StartApps, MakeResources, BuildProject
+	StartApps, MakeResources, BuildProject, TestModel
 };
 use SaQle\Build\Utils\MigrationUtils;
 use Exception;
@@ -28,6 +28,7 @@ class Manage{
 	 	 	'start:project'    => $this->extract_startproject_args($args),
 	 	 	'start:apps'       => $this->extract_startapps_args($args),
 	 	 	'build'            => $this->extract_build_args($args),
+	 	 	'model:test'       => [],
 	 	 	default            => throw new \Exception("Unknown command!")
 	 	 };
 	 	 $this->project_root = config('base_path');
@@ -147,6 +148,9 @@ class Manage{
 			 break;
 			 case 'make:resources':
 			     MakeResources::execute($this->project_root);
+			 break;
+			 case 'model:test':
+			     TestModel::execute($this->project_root);
 			 break;
 			 default:
 			     throw new Exception("Unknown command!");

@@ -31,7 +31,7 @@ trait OrderManager{
          return $this;
      }
      
-     protected function get_order_clause(){
+     public function get_order_clause(){
          return $this->obuilder->construct_order_clause();
      }
 }

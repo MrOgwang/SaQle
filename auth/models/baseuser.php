@@ -15,16 +15,7 @@ class BaseUser extends Model implements IUser {
 		     'username'   => new CharField(required: true),
 		     'password'   => new PasswordField(required: true),
 		 ];
-
-		 if(config('enable_rbac')){
-			 $fields['roles'] = new ManyToMany(related_model: config('role_model_class'), local_key: 'user_id', foreign_key: 'user_id', through: config('user_role_model_class'));
-			 $fields['permissions'] = new ManyToMany(related_model: config('permission_model_class'), local_key: 'user_id', foreign_key: 'user_id', through: config('user_permission_model_class'));
-		 }
-
-		 if(config('with_multitenancy')){
-			 $fields['tenants'] = new ManyToMany(related_model: config('tenant_model_class'), local_key: 'user_id', foreign_key: 'user_id', through: config('tenant_user_model_class'));
-		 }
-
+		 
 		 $meta->fields = $fields;
 	 }
 

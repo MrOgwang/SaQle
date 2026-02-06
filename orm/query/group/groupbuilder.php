@@ -1,7 +1,7 @@
 <?php
 namespace SaQle\Orm\Query\Group;
 
-use SaQle\Orm\Database\Trackers\DbContextTracker;
+use SaQle\Orm\Query\References\QueryReferenceMap;
 
 class GroupBuilder{
 
@@ -14,17 +14,17 @@ class GroupBuilder{
 	 	 get => $this->fields;
 	 }
 
-	 public function get_groupby(DbContextTracker $ctx, ...$config){
+	 public function get_groupby(QueryReferenceMap $query_reference_map, ...$config){
 	 	if(!$this->fields)
 	 		return [];
 
 	 	if($config['fnqm'] === 'N-QUALIFY')
      	 	return $this->fields;
 
-	 	$tables    = $ctx->tables;
-	 	$aliases   = $ctx->aliases;
-	 	$databases = $ctx->databases;
-	 	$fieldrefs = $ctx->fieldrefs;
+	 	$tables    = $query_reference_map->tables;
+	 	$aliases   = $query_reference_map->aliases;
+	 	$databases = $query_reference_map->databases;
+	 	$fieldrefs = $query_reference_map->fieldrefs;
 	 	
 	 	$tmp_fields = $this->fields;
 	 	$group_by_fields = [];

@@ -9,6 +9,7 @@ use SaQle\Orm\Entities\Field\Attributes\FieldDefinition;
 class OneToMany extends RelationField {
 	 public function __construct(...$kwargs){
 	 	 $kwargs['type'] = ColumnType::CHAR;
+	 	 $kwargs['many'] = true;
 	 	 parent::__construct(...$kwargs);
 	 }
 }

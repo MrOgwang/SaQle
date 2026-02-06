@@ -31,7 +31,7 @@ trait GroupManager{
      }
 
      protected function get_groupby_clause(){
-         $fields = $this->gbuilder->get_groupby($this->ctxtracker, ...$this->configurations);
+         $fields = $this->gbuilder->get_groupby($this->query_reference_map, ...$this->configurations);
          return $fields ? ' GROUP BY '.implode(", ", $fields) : "";
      }
 }

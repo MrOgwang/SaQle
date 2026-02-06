@@ -55,8 +55,8 @@ final class TableInfo{
      }
 
      //the name of the database table associated with this model
-     public string $table_name {
-         set(string $value){
+     public ?string $table_name = null {
+         set(?string $value){
              $this->table_name = $value;
          }
 
@@ -64,8 +64,8 @@ final class TableInfo{
      }
 
      //the connection name to use for this model
-     public string $connection_name {
-         set(string $value){
+     public ?string $connection_name = null {
+         set(?string $value){
              $this->connection_name = $value;
          }
 
@@ -158,15 +158,6 @@ final class TableInfo{
          get => $this->modified_by_field;
      }
 
-     //whether to enable multitenancy for this model or not
-     public bool $with_multitenancy = false {
-         set(bool $value){
-             $this->with_multitenancy = $value;
-         }
-
-         get => $this->with_multitenancy;
-     }
-
      //the name of the deleted field
      public string $deleted_field = '' {
          set(string $value){
@@ -192,15 +183,6 @@ final class TableInfo{
          }
 
          get => $this->deleted_by_field;
-     }
-
-     //the name of the deleted by field
-     public string $tenant_field = '' {
-         set(string $value){
-             $this->tenant_field = $value;
-         }
-
-         get => $this->tenant_field;
      }
 
      /**
@@ -248,7 +230,6 @@ final class TableInfo{
       * */
      public protected(set) array $clean_fields = [] {
          set(array $value){
-
              foreach($value as $n => $v){
                  $has_table_column = true;
                  $this->field_column_refs[$n] = $v->get_column();
@@ -256,7 +237,7 @@ final class TableInfo{
                  if($v instanceof FileField){
                      $this->file_field_names[] = $n;
                      $this->file_required_fields[$n] = $v->get_depends_on();
-                 }elseif($v instanceof Relation){
+                 }elseif($v instanceof RelationField){
                      if($v->is_navigation()){
                          $this->nav_field_names[] = $n;
                          $has_table_column = false;
@@ -274,9 +255,13 @@ final class TableInfo{
                          $this->unique_field_names[] = $n;
                      }
                  }
+
+                 if($v->is_primary()){
+                    $this->pk_name = $v->get_name();
+                 }
              }
 
-             $this->defined_field_names = array_diff(array_keys($this->clean_fields), $this->audit_field_names, $this->virtual_field_names);
+             $this->defined_field_names = array_diff(array_keys($value), $this->audit_field_names, $this->virtual_field_names);
 
              $this->clean_fields = $value;
          }
@@ -350,20 +335,6 @@ final class TableInfo{
          return false;
      }
 
-     //add or remove the tenant field depending on the multitenancy setting
-     public function get_tenant_fields() : array {
-         if($this->with_multitenancy){
-             $tenant_model_class = config('tenant_model_class');
-             if($this->assert_model_exists($tenant_model_class)){
-                 return [
-                     $this->tenant_field => $this->audit_fields_override[$this->tenant_field] ?? new OneToOne(related_model: $tenant_model_class)
-                 ];
-             }
-         }
-
-         return [];
-     }
-
      //add or remove creator and modifier fields depending on with_user_audit setting
      private function get_user_audit_fields(bool $switch = true) : array {
          if($this->with_user_audit){
@@ -416,7 +387,6 @@ final class TableInfo{
 
      public function add_audit_fields(){
          $audit_fields = array_merge(
-             $this->get_tenant_fields(),
              $this->get_user_audit_fields(),
              $this->get_timestamp_fields(),
              $this->get_delete_fields()
@@ -427,9 +397,7 @@ final class TableInfo{
          $this->fields = array_merge($this->fields, $audit_fields);
      }
 
-     public function initialize_model_meta($table_name, $connection_name, $model_class){
-         $this->table_name = $table_name;
-         $this->connection_name = $connection_name;
+     public function set_meta_defaults($model_class){
          $this->model_class = $model_class;
          $this->pk_type = config('primary_key_type');
          $this->with_user_audit = config('with_user_audit');
@@ -439,8 +407,6 @@ final class TableInfo{
          $this->created_by_field = config('created_by_field');
          $this->modified_at_field = config('modified_at_field');
          $this->modified_by_field = config('modified_by_field');
-         $this->with_multitenancy = config('with_multitenancy');
-         $this->tenant_field = config('tenant_field');
          $this->deleted_field = config('deleted_field');
          $this->deleted_at_field = config('deleted_at_field');
          $this->deleted_by_field = config('deleted_by_field');

@@ -20,41 +20,6 @@ class MigrationUtils {
          return true;
      }
 
-	 public static function get_context_classes($db_context){
-         //There must exist at least one db context class
-         if(!config('db_context_classes')){
-             throw new \Exception("The project has not declared any database context classes!");
-         }
-
-         /**
-          * If a db context is provided, 
-          * 1. Confirm that it exists in the db context classes list,
-          * 2. Confirm that the class actually exists.
-          * */
-         $context_classes = [];
-         $defined_classes = array_keys(config('db_context_classes'));
-         if($db_context){
-             for($x = 0; $x < count($defined_classes); $x++){
-                 if(str_contains($defined_classes[$x], $db_context) && class_exists($defined_classes[$x])){
-                     $context_classes[] = $defined_classes[$x];
-                     break;
-                 }
-             }
-         }else{
-             for($x = 0; $x < count($defined_classes); $x++){
-                 if( class_exists($defined_classes[$x]) ){
-                     $context_classes[] = $defined_classes[$x];
-                 }
-             }
-         }
-
-         if(!$context_classes){
-                throw new \Exception("Ensure there is at least one defined database context!");
-         }
-
-         return $context_classes;
-     }
-
      public static function is_model_defined($model_class, $project_root){
          $mnparts = explode("\\", $model_class);
          $root = array_shift($mnparts);

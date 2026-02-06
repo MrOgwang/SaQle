@@ -2,7 +2,8 @@
 
 namespace SaQle\Core\Config;
 
-use SaQle\Auth\Models\{BaseRole, BasePermission, BaseTenant, BaseUser};
+use SaQle\Auth\Models\BaseUser;
+use SaQle\Auth\Services\AuthService;
 
 final class ConfigDefaults{
      public static function merge(array $config): array {
@@ -11,17 +12,17 @@ final class ConfigDefaults{
 
      private static function defaults(): array {
          return [
-             //Enable role based accesscontrol with the following flags.
-             'enable_rbac' => false,
+             //default connection name
+             'default_connection' => '',
 
-             //the model for roles
-             'role_model_class' => BaseRole::class,
-
-             //the model for permissions
-             'permission_model_class' => BasePermission::class,
+             //connection used by framework models
+             'framework_connection' => '',
 
              //an array of database context classes
-             'db_context_classes' => [],
+             'connections' => [],
+
+             //all the database schema definitions
+             'schemas' => [],
 
              //display error settings
              'display_errors' => 0,
@@ -53,15 +54,8 @@ final class ConfigDefaults{
              * */
              'auth_model_class' => BaseUser::class,
 
-             /**
-              * The following flags will enable or disable multitenancy
-              * 1. config('tenant_model_class')  : the clas name of the tanant 
-              * 2. config('with_multitenancy') : Expliclty set this to enable multi tenancy
-              * 3. config('tenant_field') : The name of the tenant tracking field
-              * */
-             'tenant_model_class' => BaseTenant::class,
-             'with_multitenancy' => false,
-             'tenant_field' => 'tenant_id',
+             //This is the service class that is responsible for authentication.
+             'auth_backend_class' => AuthService::class,
 
              //The name of the root media folder. This is where all uploads will be saved to.
              'media_folder' => 'media',

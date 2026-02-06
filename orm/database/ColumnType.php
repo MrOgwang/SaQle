@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace SaQle\Orm\Database;
 
 enum ColumnType: string {
-
+     
      //textual types
      case CHAR = 'char'; // fixed-length string
      case TEXT = 'text'; // other text

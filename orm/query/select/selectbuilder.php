@@ -1,7 +1,7 @@
 <?php
 namespace SaQle\Orm\Query\Select;
 
-use SaQle\Orm\Database\Trackers\DbContextTracker;
+use SaQle\Orm\Query\References\QueryReferenceMap;
 
 class SelectBuilder{
 	 /**
@@ -63,12 +63,12 @@ class SelectBuilder{
 		 }, $fields);
 	 }
 
-	 public function get_selected(DbContextTracker $ctx, ...$config){
-	 	 $tables     = $ctx->tables;
- 	     $aliases    = $ctx->aliases;
- 	     $databases  = $ctx->databases;
- 	     $fieldrefs  = $ctx->fieldrefs;
- 	     $ffsettings = $ctx->ffsettings;
+	 public function get_selected(QueryReferenceMap $query_reference_map, ...$config){
+	 	 $tables     = $query_reference_map->tables;
+ 	     $aliases    = $query_reference_map->aliases;
+ 	     $databases  = $query_reference_map->databases;
+ 	     $fieldrefs  = $query_reference_map->fieldrefs;
+ 	     $ffsettings = $query_reference_map->ffsettings;
 
 	 	 if(!$this->selected){
 	 		 $this->selected = [];

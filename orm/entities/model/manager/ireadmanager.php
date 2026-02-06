@@ -4,11 +4,12 @@
  namespace SaQle\Orm\Entities\Model\Manager;
 
  use SaQle\Orm\Entities\Model\Interfaces\ITableSchema;
- use SaQle\Orm\Database\Trackers\DbContextTracker;
+ use SaQle\Orm\Query\References\QueryReferenceMap;
  use SaQle\Orm\Entities\Model\Manager\Modes\FetchMode;
  use SaQle\Orm\Query\Helpers\{JoinManager, FilterManager, LimitManager, OrderManager, SelectManager, GroupManager};
+ use SaQle\Orm\Entities\Model\Schema\Model;
      
- abstract class IReadManager{
+ abstract class IReadManager {
  	 use JoinManager{
  	 	 JoinManager::__construct as private __joinConstruct;
  	 }
@@ -56,31 +57,31 @@
  		 'ftqm' => 'F-QUALIFY'
  	 ];
 
- 	/**
+ 	 /**
  	 * Sometimes you have an sql and data that you want to execute instead of constructing one via the manager.
  	 * When this is set, it overrides the one automatically constructed via the model manager.
  	 * */
- 	private array $sqldata = [
+ 	 private array $sqldata = [
  		'sql' => '',
  		'data' => null
- 	];
+ 	 ];
 
- 	 //the db context class being manipulated
- 	 protected string $dbclass;
+ 	 //the db connection
+ 	 protected Model $model;
 
  	 //The fetch mode: whether to fetch deleted rows only, non deleted rows only or both
  	 protected FetchMode $fetchmode = FetchMode::NON_DELETED;
 
- 	 protected DbContextTracker $ctxtracker {
- 	 	 set(DbContextTracker $value){
- 		 	 $this->ctxtracker = $value;
+ 	 protected QueryReferenceMap $query_reference_map {
+ 	 	 set(QueryReferenceMap $value){
+ 		 	 $this->query_reference_map = $value;
  		 }
 
- 		 get => $this->ctxtracker;
+ 		 get => $this->query_reference_map;
  	 }
 
 	 public function __construct(){
-	 	 $this->ctxtracker = new DbContextTracker();
+	 	 $this->query_reference_map = new QueryReferenceMap();
 	 	 $this->__orderConstruct();
 	 	 $this->__joinConstruct();
 	 	 $this->__filterConstruct();
@@ -116,29 +117,23 @@
      }
 
 	 //Get the database context tracker
-	 public function get_context_tracker() : DbContextTracker{
-	 	 return $this->ctxtracker;
+	 public function get_query_reference_map() : QueryReferenceMap {
+	 	 return $this->query_reference_map;
 	 }
 
      //get a single model object from name
      protected function get_model(string $name) : ITableSchema {
-     	 $model_class = $this->get_model_class($name);
+     	 $sibling_models = $this->model->get_sibling_models();
+     	 $model_class = $sibling_models[$name];
      	 return $model_class::make();
-     }
-     
-     //get model class from name
-     protected function get_model_class(string $name) : string {
-     	 $dbclass = $this->dbclass;
-     	 $refs = new $dbclass()->get_models();
-     	 return $refs[$name];
      }
 
      //Initilialize a read manager
      public function initialize(
-     	 string  $table, ?string $dbclass = null, ?string $tablealiase = null, ?string $tableref = null
+     	 Model $model, ?string $tablealiase = null, ?string $tableref = null
      ){
-     	 $this->dbclass = $dbclass;
-     	 $this->register_joining_model(table: $table, tblref: $tableref, as: $tablealiase);
+     	 $this->model = $model;
+     	 $this->register_joining_model(table: $model->meta->table_name, tblref: $tableref, as: $tablealiase);
      }
 
      /**
@@ -149,12 +144,12 @@
      * @param array  $field_list
      */
      public function register_to_context_tracker(string $table_name, string $table_aliase, string $database_name, array $field_list, array $ff_settings, ?string $table_ref = null){
-	 	 $this->ctxtracker->tables     = array_merge($this->ctxtracker->tables,     [$table_name]);
-	 	 $this->ctxtracker->aliases    = array_merge($this->ctxtracker->aliases,    [$table_aliase]);
-	 	 $this->ctxtracker->tablerefs  = array_merge($this->ctxtracker->tablerefs,  [$table_ref]);
-	 	 $this->ctxtracker->databases  = array_merge($this->ctxtracker->databases,  [$database_name]);
-	 	 $this->ctxtracker->fieldrefs  = array_merge($this->ctxtracker->fieldrefs,  [$field_list]);
-	 	 $this->ctxtracker->ffsettings = array_merge($this->ctxtracker->ffsettings, [$ff_settings]);
+	 	 $this->query_reference_map->tables     = array_merge($this->query_reference_map->tables,     [$table_name]);
+	 	 $this->query_reference_map->aliases    = array_merge($this->query_reference_map->aliases,    [$table_aliase]);
+	 	 $this->query_reference_map->tablerefs  = array_merge($this->query_reference_map->tablerefs,  [$table_ref]);
+	 	 $this->query_reference_map->databases  = array_merge($this->query_reference_map->databases,  [$database_name]);
+	 	 $this->query_reference_map->fieldrefs  = array_merge($this->query_reference_map->fieldrefs,  [$field_list]);
+	 	 $this->query_reference_map->ffsettings = array_merge($this->query_reference_map->ffsettings, [$ff_settings]);
 	 }
 
 	 /**
@@ -165,20 +160,22 @@
 	 * @param string $as:    the aliase name of the joining table.
 	 */
 	 public function register_joining_model(string $table, ?string $tblref = null, ?string $as = null){
-	 	 $modelclass = $this->get_model($table);
+	 	 $model = $this->get_model($table);
 		 $this->register_to_context_tracker(
 		 	 table_name:    $table,
 		 	 table_aliase:  !is_null($as) ? $as : "",
-		 	 database_name: config('db_context_classes')[$this->dbclass]['name'],
-		 	 field_list:    $modelclass::get_table_column_names(),
-		 	 ff_settings:   $modelclass::get_file_required_fields(),
+		 	 database_name: config('connections')[$this->model->meta->connection_name]['database'],
+		 	 field_list:    $model->meta->table_column_names,
+		 	 ff_settings:   $model->meta->file_required_fields,
 		 	 table_ref:     $tblref
 		 );
+
+		 return $model;
 	 }
 
      public function get_sql_info(){
-	 	 $where_clause = $this->wbuilder->get_where_clause($this->ctxtracker, $this->get_configurations());
-	 	 $join_clause  = $this->jbuilder->construct_join_clause($this->ctxtracker);
+	 	 $where_clause = $this->wbuilder->get_where_clause($this->query_reference_map, $this->get_configurations());
+	 	 $join_clause  = $this->jbuilder->construct_join_clause($this->query_reference_map);
 
      	 $data         = null;
      	 if($where_clause->data || $join_clause->data){
@@ -188,10 +185,10 @@
      	 }
 
 		 $select       = $this->get_selected();
-		 $database     = $this->ctxtracker->find_database_name(0);
-		 $table        = $this->ctxtracker->find_table_name(0);
-		 $table_aka    = $this->ctxtracker->find_table_aliase(0);
-		 $table_ref    = $this->ctxtracker->find_table_refernce(0);
+		 $database     = $this->query_reference_map->find_database_name(0);
+		 $table        = $this->query_reference_map->find_table_name(0);
+		 $table_aka    = $this->query_reference_map->find_table_aliase(0);
+		 $table_ref    = $this->query_reference_map->find_table_refernce(0);
          
          $sql          = "SELECT {$select} FROM ";
          $from_ref     = "";

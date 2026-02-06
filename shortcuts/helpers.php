@@ -394,3 +394,8 @@ if(!function_exists('env')){
      }
 }
 
+if(!function_exists('cli_log')){
+     function cli_log(string $message): void {
+         fwrite(STDERR, $message . PHP_EOL);
+     }
+}

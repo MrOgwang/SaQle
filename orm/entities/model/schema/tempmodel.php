@@ -3,27 +3,27 @@ namespace SaQle\Orm\Entities\Model\Schema;
 
 use SaQle\Orm\Entities\Model\Interfaces\ITempModel;
 use SaQle\Orm\Entities\Model\Schema\{Model, TableInfo};
-use SaQle\Orm\Database\Manager\DbManagerFactory;
+use SaQle\Orm\Database\Db;
 
 abstract class TempModel extends Model implements ITempModel{
 
 	 abstract protected function model_setup(TableInfo $meta): void;
 
-	 private function get_db_manager(?string $connection = null){
+	 private static function get_db_driver(?string $connection = null){
 	 	 [$connection, $table] = get_called_class()::get_table_and_connection($connection);
-	 	 $dbmanager = (new DbManagerFactory(connection: $connection))->manager();
- 	 	 $dbmanager->connect();
+	 	 $dbdriver = Db::driver(connection: $connection);
+ 	 	 $dbdriver->connect_with_database();
 
- 	 	 return [$dbmanager, $table];
+ 	 	 return [$dbdriver, $table];
 	 }
 
 	 public static function drop(?string $connection = null) : bool {
-	 	 [$dbmanager, $table] = $this->get_db_manager($connection);
- 	 	 return $dbmanager->drop_table($table);
+	 	 [$dbdriver, $table] = self::get_db_driver($connection);
+ 	 	 return $dbdriver->drop_table($table);
 	 }
 
-	 public static function create(?string $dbclass = null) : bool {
-	 	 [$dbmanager, $table] = $this->get_db_manager($connection);
- 	 	 return $dbmanager->create_table($table, $modelclass, true);
+	 public static function create(?string $connection = null) : bool {
+	 	 [$dbdriver, $table] = self::get_db_driver($connection);
+ 	 	 return $dbdriver->create_table_from_model($table, get_called_class(), true);
 	 }
 }

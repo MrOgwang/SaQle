@@ -15,6 +15,5 @@ class Session extends Model{
 	 	 $meta->with_soft_delete  = false;
 	 	 $meta->with_user_audit   = false;
 	 	 $meta->with_timestamps   = false;
-	 	 $meta->with_multitenancy = false;
 	 }
 }

@@ -43,15 +43,15 @@ trait JoinManager{
      	 ?Q      $q        = null,
      	 ?string $database = null
      ){
-     	 $this->register_joining_model(table: $table, tblref: $ref, as: $as);
+     	 $joining_model = $this->register_joining_model(table: $table, tblref: $ref, as: $as);
 
-     	 $database = $database ?: $this->ctxtracker->find_database_name(0);
-         $ptable   = $this->ctxtracker->find_table_name(0);
+     	 $database = $database ?: $this->query_reference_map->find_database_name(0);
+         $ptable   = $this->query_reference_map->find_table_name(0);
      	 $model    = $this->get_model($ptable);
 		 $pkname   = $model->get_pk_name();
      	 $from     = $from ?: $pkname;
      	 $to       = $to   ?: $pkname;
-     	 $this->jbuilder->add_join(type: $type, table: $table, from: $from, to: $to, as: $as, ref: $ref, database: $database, query: $q);
+     	 $this->jbuilder->add_join(type: $type, table: $table, from: $from, to: $to, as: $as, ref: $ref, database: $database, query: $q, model: $joining_model::class);
      }
 
      /**
@@ -140,7 +140,7 @@ trait JoinManager{
       * */
      private function get_table_n_database(string $model){
      	 [$db_class, $table_name] = $model::get_table_and_connection();
-	 	 $database_name = config('db_context_classes')[$this->dbclass]['name'];
+	 	 $database_name = config('connections')[$this->model->meta->connection_name]['database'];
 	 	 return [$table_name, $database_name];
      }
 

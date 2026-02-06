@@ -53,13 +53,13 @@ trait EventUtils {
 
 	 protected function get_named_args(string $operation, array $sql_info, ?string $table = null, ?string $model = null, ?array $data = null, ?array $files = null){
 	 	 $named_args = [
-	 	 	 'table'         => $table ?? $this->table, 
+	 	 	 'table'         => $table ?? $this->model->meta->table_name, 
      	 	 'sql'           => $sql_info['sql'], 
      	 	 'prepared_data' => $sql_info['data'],
-     	 	 'dbclass'       => $this->dbclass,
-     	 	 'db'            => config('db_context_classes')[$this->dbclass]['name'],
+     	 	 'connection'    => $this->model->meta->connection_name,
+     	 	 'db'            => config('connections')[$this->model->meta->connection_name]['database'],
      	 	 'timestamp'     => time(),
-     	 	 'model'         => $model ?? $this->modelclass
+     	 	 'model'         => $model ?? $this->model::class
 	 	 ];
 
 	 	 if($operation === 'insert' || $operation === 'update'){

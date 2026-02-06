@@ -1,66 +1,30 @@
 <?php
 declare(strict_types = 1);
 
-namespace SaQle\Orm\Database\Trackers;
+namespace SaQle\Orm\Query\References;
 
 use SaQle\Core\Exceptions\{TableNotFoundException, DatabaseNotFoundException};
 
-class DbContextTracker{
+class QueryReferenceMap {
 
      //a list of all the table names that will be rerenced in this query.
-	 public array $tables = [] {
-	 	 set(array $value){
-	 	 	$this->tables = $value;
-	 	 }
-
-	 	 get => $this->tables;
-	 }
+      public array $tables = [];
 
      //a list of all the table name aliases that will be refenced in this query.
-	 public array $aliases = [] {
-	 	 set(array $value){
-	 	 	$this->aliases = $value;
-	 	 }
-
-	 	 get => $this->aliases;
-	 }
+	 public array $aliases = [];
 
      //in saql statatements, this will be prefered over the table name
-	 public array $tablerefs = [] {
-	 	 set(array $value){
-	 	 	$this->tablerefs = $value;
-	 	 }
-
-	 	 get => $this->tablerefs;
-	 }
+	 public array $tablerefs = [];
 
      //a list of all the databases that will be refenced in this query.
-	 public array $databases = [] {
-	 	 set(array $value){
-	 	 	$this->databases = $value;
-	 	 }
-
-	 	 get => $this->databases;
-	 }
+	 public array $databases = [];
 
      //an array of all tables and respective fields as referenced in this query.
-	 public array $fieldrefs = [] {
-	 	 set(array $value){
-	 	 	$this->fieldrefs = $value;
-	 	 }
-
-	 	 get => $this->fieldrefs;
-	 }
+	 public array $fieldrefs = [];
 
      //file field settings
-	 public array $ffsettings = [] {
-	 	 set(array $value){
-	 	 	$this->ffsettings = $value;
-	 	 }
-
-	 	 get => $this->ffsettings;
-	 }
-
+	 public array $ffsettings = [];
+	 
 	 /*
 	     - given a table name and a field name, find the index of that table in the tracker
 	     @param string field_name, 

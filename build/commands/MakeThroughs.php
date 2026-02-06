@@ -135,11 +135,11 @@ class MakeThroughs{
       }
 
       private function make_throughs(string $project_root, $app_name = null, $db_context = null){
-         $context_classes = MigrationUtils::get_context_classes($db_context);
+         $schemas = config('schemas');
          $manytomany_throughs = [];
-         
-         foreach($context_classes as $ctx){
-             $models = new $ctx()->get_permanent_models();
+
+         foreach($schemas as $schema_name => $schema_class){
+             $models = new $schema_class()->get_permanent_models(); 
              $this->extract_through_models($models, $project_root, $manytomany_throughs);
          }
       }

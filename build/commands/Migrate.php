@@ -1,7 +1,7 @@
 <?php
 namespace SaQle\Build\Commands;
 
-use SaQle\Orm\Database\Manager\DbManagerFactory;
+use SaQle\Orm\Database\Db;
 use SaQle\Commons\FileUtils;
 use SaQle\Core\Migration\Models\Migration;
 use SaQle\Core\Migration\Tracker\MigrationTracker;
@@ -18,64 +18,48 @@ class Migrate{
              return;
          }
 
-         echo "Scanning file {$file_name} for changes!\n";
+         cli_log("Scanning file {$file_name} for changes!\n");
          require_once $file_path;
          $class_instance = new $file_name();
-         echo "Getting affected database contexts!\n";
-         $touched_contexts = $class_instance->touched_contexts();
-         if(!$touched_contexts){
-             echo "No database context was affected by this migration! Exiting scan.\n";
+         cli_log("Getting affected database contexts!\n");
+         $touched_snapshots = $class_instance->snapshots();
+         if(!$touched_snapshots){
+             cli_log("No database context was affected by this migration! Exiting scan.\n");
              return;
          }
 
-         echo "Affected contexts found!\n";
-         print_r($touched_contexts);
+         cli_log("Affected contexts found!\n");
+         print_r($touched_snapshots);
          
          $up_operations = $class_instance->up();
-         $ctx_results = array_map(fn($ctx) => self::process_context($ctx, $file_name, $file_name_parts[2], $up_operations, $project_root), $touched_contexts);
 
+         foreach($touched_snapshots as $snapshot_name => $snapshot_location){
+             self::process_context($snapshot_name, $snapshot_location, $file_name, $file_name_parts[2], $up_operations, $project_root);
+         }
+        
          return;
      }
 
-     private static function create_table($op, $project_root, $dbmanager){
+     private static function create_table($op, $project_root, $dbdriver){
          $table_name = $op['params']['name'];
-         echo "Attempting to create table: {$table_name}!\n";
          $model_class = $op['params']['model'];
-         $mnparts = explode("\\", $model_class);
-         $root = array_shift($mnparts);
-         $root = strtolower($root);
 
-         $model_file_path = strtolower(implode(DIRECTORY_SEPARATOR, $mnparts)).".php";
-         if($root == "saqle"){
-             $project_root_parts = explode(DIRECTORY_SEPARATOR, $project_root);
-             array_pop($project_root_parts);
-             $saqle_root = strtolower(implode(DIRECTORY_SEPARATOR, $project_root_parts))."/saqle";
-             $model_file_path = $saqle_root."/".$model_file_path;
-         }else{
-             $model_file_path = $project_root."/".$model_file_path;
-         }
-
-         if(!file_exists($model_file_path)){
-             echo "The schema: {$model_class} for table: {$table_name} has not been defined. Jumping over!\n";
-             return;
-         }
-
-         echo "The schema: {$model_class} for table: {$table_name} exists!\n";
-         $tblcreated = $dbmanager->create_table($table_name, $model_class);
+         cli_log("Attempting to create table: {$table_name}!\n");
+         $tblcreated = $dbdriver->create_table_from_migration($table_name, $model_class);
 
          if(!$tblcreated){
-             echo "Table {$table_name} creation failed!\n";
+             cli_log("Table {$table_name} creation failed!\n");
              return;
          }
 
-         echo "Table {$table_name} created!\n";
+         cli_log("Table {$table_name} created!\n");
          return;
      }
 
-     private static function drop_table($op, $dbmanager){
+     private static function drop_table($op, $dbdriver){
          $table_name = $op['params']['name'];
          echo "Attempting to drop table: {$table_name}!\n";
-         $tbldropped = $dbmanager->drop_table($table_name);
+         $tbldropped = $dbdriver->drop_table($table_name);
 
          if(!$tbldropped){
              echo "Table {$table_name} deletion failed!\n";
@@ -86,10 +70,10 @@ class Migrate{
          return;
      }
 
-     private static function add_columns($op, $dbmanager){
+     private static function add_columns($op, $dbdriver){
          $table_name = $op['params']['name'];
          echo "Attempting to add new columns table: {$table_name}!\n";
-         $colsadded = $dbmanager->add_columns($table_name, $op['params']['columns']);
+         $colsadded = $dbdriver->add_columns($table_name, $op['params']['columns']);
 
          if(!$colsadded){
              echo "Columns addition to table {$table_name} failed!\n";
@@ -100,10 +84,10 @@ class Migrate{
          return;
      }
 
-     private static function drop_columns($op, $dbmanager){
+     private static function drop_columns($op, $dbdriver){
          $table_name = $op['params']['name'];
          echo "Attempting to delete columns from table: {$table_name}!\n";
-         $colsdropped = $dbmanager->drop_columns($table_name, $op['params']['columns']);
+         $colsdropped = $dbdriver->drop_columns($table_name, $op['params']['columns']);
 
          if(!$colsdropped){
              echo "Column deletion from table {$table_name} failed!\n";
@@ -114,11 +98,11 @@ class Migrate{
          return;
      }
 
-     private static function add_unique($op, $dbmanager){
+     private static function add_unique($op, $dbdriver){
          $table_name = $op['params']['name'];
          $columns    = explode(",", $op['unique']);
          echo "Attempting to add unique fields to table: {$table_name}!\n";
-         $uniqueadded = $dbmanager->add_unique_columns($table_name, $columns, $op['unique_together']);
+         $uniqueadded = $dbdriver->add_unique_constraints($table_name, $columns, $op['unique_together']);
 
          if(!$uniqueadded){
              echo "Failed to set unique columns (".$op['unique'].") on table {$table_name}!\n";
@@ -129,11 +113,11 @@ class Migrate{
          return;
      }
 
-     private static function drop_unique($op, $dbmanager){
+     private static function drop_unique($op, $dbdriver){
          $table_name = $op['params']['name'];
          $columns    = explode(",", $op['unique']);
          echo "Attempting to drop unique fields from table table: {$table_name}!\n";
-         $uniqueadded = $dbmanager->drop_unique_columns($table_name, $columns, $op['unique_together']);
+         $uniqueadded = $dbdriver->drop_unique_constraints($table_name, $columns, $op['unique_together']);
 
          if(!$uniqueadded){
              echo "Failed to drop unique columns (".$op['unique'].") from table {$table_name}!\n";
@@ -144,47 +128,61 @@ class Migrate{
          return;
      }
 
-     private static function process_up_operation($op, $project_root, $dbmanager){
+     private static function process_up_operation($op, $project_root, $dbdriver){
          return match($op['action']){
-             'create_table' => self::create_table($op, $project_root, $dbmanager),
-             'drop_table'   => self::drop_table($op, $dbmanager),
-             'add_columns'  => self::add_columns($op, $dbmanager),
-             'drop_columns' => self::drop_columns($op, $dbmanager),
-             'add_unique'   => self::add_unique($op, $dbmanager),
-             'drop_unique'  => self::drop_unique($op, $dbmanager),
+             'create_table' => self::create_table($op, $project_root, $dbdriver),
+             'drop_table'   => self::drop_table($op, $dbdriver),
+             'add_columns'  => self::add_columns($op, $dbdriver),
+             'drop_columns' => self::drop_columns($op, $dbdriver),
+             'add_unique'   => self::add_unique($op, $dbdriver),
+             'drop_unique'  => self::drop_unique($op, $dbdriver),
          };
      }
 
-     private static function process_context($ctx, $file_name, $migration_name, $up_operations, $project_root){
-         echo "Confirming context: {$ctx} is defined!\n";
+     private static function extract_snapshot_field_definitions(array $schema, string $table): array {
+         if (!isset($schema[$table])) {
+             return [];
+         }
 
-         $defined_context = config('db_context_classes')[$ctx] ?? null;
+         return array_map(fn($field) => $field['def'], $schema[$table]);
+     }
+
+     private static function process_context($snapshot_name, $snapshot_location, $file_name, $migration_name, $up_operations, $project_root){
+         $snapshot_path = $snapshot_location['path'];
+         $snapshot_class = $snapshot_location['name'];
+
+         echo "Confirming connection: {$snapshot_name} is defined!\n";
+
+         $defined_context = config('connections')[$snapshot_name] ?? null;
          if(!$defined_context){
-             echo "Context: {$ctx} not defined! Exiting!.\n";
+             echo "Connection: {$snapshot_name} not defined! Exiting!.\n";
              return;
          }
-        
-         $databasename = config('db_context_classes')[$ctx]['name'];
-         echo "Context: {$ctx} found! Pinging database: {$databasename} for existance!\n";
 
-         $dbmanager = (new DbManagerFactory(dbclass: $ctx))->manager();
+         require_once $snapshot_path;
+         $snapshot = new $snapshot_class();
+        
+         $databasename = config('connections')[$snapshot_name]['database'];
+         echo "Connection: {$snapshot_name} found! Pinging database: {$databasename} for existance!\n";
+
+         $dbdriver = Db::driver(connection: $snapshot_name);
          $isdbnew = false;
-         if(!$dbmanager->check_database_exists($ctx)){
+         if(!$dbdriver->check_database_exists()){
              echo "Database {$databasename} not found. Attempting to create database {$databasename}\n";
-             if(!$dbmanager->create_database()){
+             if(!$dbdriver->create_database()){
                  echo "Database {$databasename} could not be created! Exiting!\n";
                  return; 
              }
              $isdbnew = true;
          }
 
-         $dbmanager->connect();
-         echo "We have connected!\n";
+         $dbdriver->connect_with_database();
+         cli_log("We have connected!\n");
 
-         if($isdbnew){
-             echo "Creating migrations table!\n";
-             $dbmanager->create_table('migrations', Migration::class);
-         }
+         cli_log("Creating migrations table!\n");
+         $migration_field_defs = self::extract_snapshot_field_definitions($snapshot->get_model_fields(), 'migrations');
+         $unique_constraint_defs = $dbdriver->get_unique_constraint_sqls($snapshot->get_unique_constraints()['migrations'] ?? []);
+         $dbdriver->create_table_from_migration('migrations', $migration_field_defs, $unique_constraint_defs);
 
          //record this migration in db
          $fn_parts = explode("_", $file_name);
@@ -197,9 +195,9 @@ class Migrate{
             return;
 
          #Get and execute the up operations.
-         $ctx_up_operations = $up_operations[$ctx];
+         $ctx_up_operations = $up_operations[$snapshot_name];
 
-         $op_results = array_map(fn($op) => self::process_up_operation($op, $project_root, $dbmanager), $ctx_up_operations);
+         //$op_results = array_map(fn($op) => self::process_up_operation($op, $project_root, $dbdriver), $ctx_up_operations);
 
          #mark current migration file as having been migrated
          Migration::set(['is_migrated' => 1])->where('migration_id', $recorded->migration_id)->update();
@@ -221,8 +219,6 @@ class Migrate{
      }
      
      public function execute(string $project_root){
-         $app = App::init();
-
          $migrations_folder      = $project_root."/databases/migrations";
          $migration_tracker_file = $project_root."/databases/migrationstracker.bin";
          $tracker                = $this->unserialize_from_file($migration_tracker_file);
@@ -246,11 +242,11 @@ class Migrate{
              $migration_file_names = array_values($files);
          }
 
-         echo "Starting migrations!\n";
+         cli_log("Starting migrations!\n");
          array_map(fn($file) => self::process_migration_file($file, $migrations_folder, $project_root), $migration_file_names);
 
-         $tracker->set_migrated($migration_file_names);
-         $this->serialize_to_file($migration_tracker_file, $tracker);
+         /*$tracker->set_migrated($migration_file_names);
+         $this->serialize_to_file($migration_tracker_file, $tracker);*/
          return;
      }
 }

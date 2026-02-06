@@ -1,84 +1,48 @@
 <?php
-namespace SaQle\Orm\Database\Manager;
+namespace SaQle\Orm\Database\Drivers;
 
-use SaQle\Orm\Database\Manager\Base\DbManager;
+use SaQle\Orm\Database\Config\ConnectionConfig;
 use SaQle\Orm\Operations\Crud\TableCreateOperation;
 use SaQle\Orm\Connection\Connection;
 use SaQle\Orm\Database\ColumnType;
+use SaQle\Orm\Entities\Field\Attributes\FieldDefinition;
 
-class MySQLDbManager extends DbManager{
-	 protected array $tempparams;
-
-	 public function __construct(array $params){
-	 	 $this->connection_params = $params;
-	 	 $this->tempparams = $params;
-	 	 $this->tempparams['database'] = ''; //connect without a database, hence name is empty
-	 	 $this->connection = resolve(Connection::class, $this->tempparams);
+class MySqlDriver extends DbDriver {
+	 
+	 public function __construct(ConnectionConfig $config){
+	 	 parent::__construct($config);
 	 }
 
-	 public function connect(){
-	 	 $this->connection = resolve(Connection::class, $this->connection_params);
-	 }
-
-	 private function execute($sql, $data = null){
-	 	 $statement = $this->connection->prepare($sql);
-	     $response  = $statement->execute($data);
-	     return ['statement' => $statement, 'response' => $response];
-	 }
-
-	 public function check_database_exists($ctx){
+	 public function check_database_exists() : bool {
          $sql = "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?";
-         $data = [$this->connection_params['database']];
-
+         $data = [$this->config->get_database()];
          $statement = $this->execute($sql, $data)['statement'];
-         
          $object = $statement->fetchObject(); 
+
          return $object ? true : false;
      }
 
 	 public function create_database(){
-		 $char_set = $this->connection_params['char_set'] ?? 'utf8';
-		 $collation = $this->connection_params['collation'] ?? $this->charset_and_collations['utf8']['collations'][0];
-		 $db_name = $this->connection_params['database'];
+		 $char_set = $this->config->get_charset();
+		 $collation = $this->config->get_collation();
+		 $db_name = $this->config->get_database();
 		 $sql = "CREATE DATABASE IF NOT EXISTS $db_name CHARACTER SET $char_set COLLATE $collation";
-		 $data = []; //[$db_name, $char_set, $collation];
-		 return $this->execute($sql, $data)['response'];
+
+		 return $this->execute($sql)['response'];
 	 }
 
-	 /**
-      * Create a new database table.
-      * */
-     public function create_table($table, $model_class, $temporary = false){
-     	 $model = $model_class::make();
-     	 $unique_field_names = $model->get_unique_field_names(); 
-     	 $defs  = $model->get_field_definitions();
-
-     	 $operation = new TableCreateOperation(
-	 	 	 table:  $table,
-	 	 	 fields: implode(", ", $defs),
-	 	 	 temporary: $temporary
-	 	 );
-	 	 $tblcreated = $operation->create($this->connection);
-
-	 	 //add unique constraints
-	 	 if(!empty($unique_field_names)){
-	 	 	 $this->add_unique_columns($table, $unique_field_names, true);
-	 	 }
-
-	 	 return $tblcreated;
-     }
-
-     public function drop_table($table){
+	 public function drop_table(string $table){
      	 $sql = "DROP TABLE IF EXISTS $table";
-		 $data = null;
-		 return $this->execute($sql, $data)['response'];
+		 
+		 return $this->execute($sql)['response'];
      }
 
-     private function table_column_exists($table, $column){
+     protected function check_column_exists(string $table, string $column) : bool {
      	 $sql = "SELECT IF(count(*) = 1, 'Exist','Not Exist') AS result FROM information_schema.columns WHERE table_schema = ? AND table_name = ? AND column_name = ?";
-         $data = [$this->connection_params['database'], $table, $column];
+         $data = [$this->config->get_database(), $table, $column];
          $statement = $this->execute($sql, $data)['statement'];
          $object = $statement->fetchObject(); 
+         
          return $object->result == "Exist" ? true : false;
      }
 
@@ -86,13 +50,13 @@ class MySQLDbManager extends DbManager{
       * Columns here comes in the form of associative array where column name is the key and column definition is the value.
       * Example: ['user_id' => 'user_id TEXT NOT NULL']
       * */
-     public function add_columns($table, $columns){
+     public function add_columns(string $table, array $columns){
      	 /**
      	  * Only add columns that are not presently existing on this table.
      	  * */
      	 $columns_to_add = [];
      	 foreach($columns as $col_name => $col_def){
-     	 	if(!$this->table_column_exists($table, $col_name)){
+     	 	if(!$this->check_column_exists($table, $col_name)){
      	 		$columns_to_add[] = $col_def;
      	 	}
      	 }
@@ -111,13 +75,13 @@ class MySQLDbManager extends DbManager{
       * Columns here comes in the form of associative array where column name is the key and column definition is the value.
       * Example: ['user_id' => 'user_id TEXT NOT NULL']
       * */
-     public function drop_columns($table, $columns){
+     public function drop_columns(string $table, array $columns){
      	 /**
      	  * Only drop columns that are presently existing on this table.
      	  * */
      	 $columns_to_drop = [];
      	 foreach($columns as $col_name => $col_def){
-     	 	if($this->table_column_exists($table, $col_name)){
+     	 	if($this->check_column_exists($table, $col_name)){
      	 		$columns_to_drop[] = $col_name;
      	 	}
      	 }
@@ -132,33 +96,37 @@ class MySQLDbManager extends DbManager{
 		 return $this->execute($sql, $data)['response'];
      }
 
-     public function add_unique_columns($table, $columns, $together){
-     	 if($together){
-     	     $sql = "ALTER TABLE $table ADD CONSTRAINT unique_".implode('_', $columns)." UNIQUE (".implode(", ", $columns).")";
-     	     return $this->execute($sql)['response'];
-     	 }else{
-     	 	 foreach($columns as $c){
-     	 	 	 $sql = "ALTER TABLE $table ADD CONSTRAINT unique_".$c." UNIQUE (".$c.")";
-     	 	 	 $ua = $this->execute($sql)['response'];
-     	 	 }
-     	 	 return true;
+     /**
+      * Add unique constrains to the table. Constraints is an associative array where the key is the constraint name
+      * and the value is an array of columns that are unique.
+      * */
+     public function add_unique_constraints(string $table, array $new_constraints, array $previous_constraints = []){
+     	 
+     	 //first remove previous constraints
+     	 $this->drop_unique_constraints($table, $previous_constraints);
+
+     	 foreach($new_constraints as $name => $columns){
+     	 	 $sql = "ALTER TABLE $table ADD CONSTRAINT ".$name." UNIQUE (".implode(", ", $columns).")";
+     	 	 $this->execute($sql);
      	 }
      }
 
-     public function drop_unique_columns($table, $columns, $together){
-     	 if($together){
-     	     $sql = "ALTER TABLE $table DROP INDEX unique_".implode('_', $columns);
-     	     return $this->execute($sql)['response'];
-     	 }else{
-     	 	 foreach($columns as $c){
-     	 	 	 $sql = "ALTER TABLE $table DROP INDEX unique_".$c;
-     	 	 	 $ua = $this->execute($sql)['response'];
-     	 	 }
-     	 	 return true;
+     /**
+      * Drop unique constrains from the table. Constraints is an associative array where the key is the constraint name
+      * and the value is an array of columns that are unique.
+      * */
+     public function drop_unique_constraints(string $table, array $constraints = []){
+     	 foreach($constraints as $name => $columns){
+     	 	 $sql = "ALTER TABLE $table DROP INDEX ".$name;
+     	 	 $this->execute($sql);
      	 }
      }
 
-     private function get_db_column_type(ColumnType $type, $context){
+     /**
+      * Given a framework field type, resolve te actual database type for that
+      * field type
+     * */
+     protected function resolve_db_column_type(ColumnType $type, object $context) : string {
 
      	 if(ColumnType::INTEGER === $type){
      	 	 return match($context->size){
@@ -214,11 +182,14 @@ class MySQLDbManager extends DbManager{
      	 }
      }
 
+     /**
+      * Translate a framework field definiton to sql statement
+      * */
      public function translate_field_definition(?object $def = null) : string {
      	 if(!$def)
      	 	 return "";
 
-     	 $sql = [$def->column, $this->get_db_column_type($def->type, $def)];
+     	 $sql = [$def->column, $this->resolve_db_column_type($def->type, $def)];
 
      	 if($def->primary){
      	 	 $sql[] = $def->type === ColumnType::CHAR ? "PRIMARY KEY" : "AUTO_INCREMENT PRIMARY KEY";
@@ -237,6 +208,62 @@ class MySQLDbManager extends DbManager{
 		
  	 	 return implode(" ", $sql);
      }
+
+     //Create a database table from migration
+     public function create_table_from_migration(string $table, array $column_sqls, array $unique_sqls = [], bool $temporary = false){
+     	 $operation = new TableCreateOperation(
+	 	 	 table:  $table,
+	 	 	 fields: implode(", ", $column_sqls),
+	 	 	 temporary: $temporary,
+	 	 	 constraints: implode(", ", $unique_sqls)
+	 	 );
+
+	 	 $tblcreated = $operation->create($this->connection);
+
+	 	 return $tblcreated;
+     }
+
+     //create table from model class
+     public function create_table_from_model(string $table, string $model_class, bool $temporary = false){
+     	 
+     	 $defs = [];
+     	 $fields = $model_class::get_fields();
+     	 foreach($fields as $f){
+     	 	 $defs[] = $this->translate_field_definition($f->get_definition(FieldDefinition::class));
+     	 }
+
+     	 $operation = new TableCreateOperation(
+	 	 	 table:  $table,
+	 	 	 fields: implode(", ", $defs),
+	 	 	 temporary: $temporary
+	 	 );
+	 	 $tblcreated = $operation->create($this->connection);
+
+	 	 return $tblcreated;
+     }
+
+     public function supports_window_functions(): bool {
+         $version = $this->get_version();
+
+         return $version ? version_compare($version, '8.0', '>=') : false;
+     }
+
+     public function supports_returning(): bool {
+         return false;
+     }
+
+     public function supports_cte(): bool {
+     	 $version = $this->get_version();
+
+         return $version ? version_compare($version, '8.0', '>=') : false;
+     }
+
+     public function supports_json(): bool {
+     	 $version = $this->get_version();
+
+         return $version ? version_compare($version, '8.0', '>=') : false;
+     }
+ 
 }
 
 

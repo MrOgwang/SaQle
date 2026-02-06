@@ -5,7 +5,6 @@ namespace SaQle\Orm\Entities\Model\Manager;
 
 use SaQle\Orm\Operations\Crud\DeleteOperation;
 use SaQle\Orm\Connection\Connection;
-use SaQle\Orm\Database\Trackers\DbContextTracker;
 use SaQle\Core\FeedBack\FeedBack;
 use SaQle\Orm\Entities\Model\Interfaces\IOperationManager;
 use SaQle\Orm\Entities\Model\Manager\Utils\EventUtils;

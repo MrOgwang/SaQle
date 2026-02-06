@@ -13,6 +13,7 @@ class ManyToMany extends RelationField {
 	 public function __construct(...$kwargs){
 		 $kwargs['navigation'] = true;
 		 $kwargs['type'] = ColumnType::CHAR;
+		 $kwargs['many'] = true;
 		 parent::__construct(...$kwargs);
 	 }
 

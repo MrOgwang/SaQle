@@ -1,7 +1,7 @@
 <?php
 namespace SaQle\Orm\Query\Join;
 
-use SaQle\Orm\Database\Trackers\DbContextTracker;
+use SaQle\Orm\Query\References\QueryReferenceMap;
 use SaQle\Orm\Query\Helpers\Q;
 
 class JoinBuilder {
@@ -28,14 +28,15 @@ class JoinBuilder {
      	 ?string $as       = null, 
      	 ?string $ref      = null,
      	 ?Q      $query    = null,
-     	 ?string $database = null
+     	 ?string $database = null,
+     	 ?string $model    = null
      ){
      	 $joins = $this->joins;
-     	 $joins[] = new Join(type: $type, table: $table, from: $from, to: $to, database: $database, aliase: $as, ref: $ref, query: $query);
+     	 $joins[] = new Join(type: $type, table: $table, from: $from, to: $to, database: $database, aliase: $as, ref: $ref, query: $query, model: $model);
 	 	 $this->joins = $joins;
 	 }
 
-	 public function construct_join_clause(DbContextTracker $ctx){
+	 public function construct_join_clause(QueryReferenceMap $query_reference_map){
 
 	 	 $clause = "";
 	 	 $data   = null;
@@ -43,9 +44,9 @@ class JoinBuilder {
 		 if($this->joins){
 			 $join_pieces = [];
 			 for($j = 0; $j < count($this->joins); $j++){
-			 	 $base_table = $ctx->find_table_name(0);
-		         $base_table_aliase = $ctx->aliases[0];
-		         $base_database     = $ctx->databases[0];
+			 	 $base_table = $query_reference_map->find_table_name(0);
+		         $base_table_aliase = $query_reference_map->aliases[0];
+		         $base_database     = $query_reference_map->databases[0];
 
 				 $join     = $this->joins[$j];
 				 $aliase   = $join->aliase;
@@ -69,7 +70,7 @@ class JoinBuilder {
 		         $join_clause = $type." ".$joining_table_qualified_name." ON ".$joining_field_qualified_name." = ".$base_field_qualified_name;
 
 		         if($query){
-				 	 $where_clause = $query->wbuilder->get_where_clause($ctx, [], 'join');
+				 	 $where_clause = $query->wbuilder->get_where_clause($query_reference_map, [], 'join');
 				 	 if($where_clause->data){
 				 	 	 $data = !$data ? [] : $data;
 				 	 	 $data = array_merge($data, $where_clause->data);

@@ -17,9 +17,9 @@
  * */
 namespace SaQle\Orm\Query\Where;
 
-use SaQle\Orm\Database\Trackers\DbContextTracker;
+use SaQle\Orm\Query\References\QueryReferenceMap;
 
-class WhereBuilder{
+class WhereBuilder {
 	 public protected(set) Aggregator $aggregator {
 	 	 set(Aggregator $value){
 	 	 	$this->aggregator = $value;
@@ -82,8 +82,8 @@ class WhereBuilder{
 	 	 $this->aggregator->counter = count($current_raw_filter) > 0 ? 2 : 1;
 	 }
 
-	 public function get_where_clause(DbContextTracker $ctx, array $config = [], string $section = 'where'){
-	 	 $filter_object = $this->translator->translate($this->aggregator->filter, $ctx)->filter;
+	 public function get_where_clause(QueryReferenceMap $query_reference_map, array $config = [], string $section = 'where'){
+	 	 $filter_object = $this->translator->translate($this->aggregator->filter, $query_reference_map)->filter;
 	 	 $parsed_filter = $this->parser->parse_filters($filter_object, $config);
 	 	 return $this->construct_where_clause($parsed_filter, $section);
 	 }

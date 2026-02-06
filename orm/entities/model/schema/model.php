@@ -1,13 +1,11 @@
 <?php
 namespace SaQle\Orm\Entities\Model\Schema;
 
-use SaQle\Orm\Entities\Field\Relations\{Many2Many};
 use SaQle\Orm\Entities\Field\Interfaces\IField;
-use SaQle\Orm\Entities\Field\Types\{Pk, TextField, OneToOne, OneToMany, FloatField, IntegerField, PhpTimestampField, ManyToMany, FileField, DateField, TimeField, DateTimeField, TimestampField, BooleanField, VirtualField};
+use SaQle\Orm\Entities\Field\Types\{Pk, TextField, OneToOne, OneToMany, FloatField, IntegerField, ManyToMany, FileField, DateField, TimeField, DateTimeField, TimestampField, BooleanField, VirtualField};
 use SaQle\Core\Exceptions\Model\FieldValidationException;
 use SaQle\Security\Models\ModelValidator;
 use SaQle\Commons\StringUtils;
-use SaQle\Orm\Entities\Field\Types\Base\{Relation, RealField};
 use SaQle\Orm\Entities\Model\Manager\{CreateManager, UpdateManager, DeleteManager, TruncateManager, ReadManager, RunManager};
 use SaQle\Orm\Entities\Model\Interfaces\{IModel, ITableSchema};
 use SaQle\Orm\Entities\Model\Collection\ModelCollection;
@@ -44,13 +42,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
       * A key => value array of raw model data: keys are field names.
       * Values may be simple, other model objects or arrays of model objects
       * */
-	 protected private(set) array $data = []{
-	 	 set(array $value){
-		 	 $this->data = $value;
-	 	 }
-
-	 	 get => $this->data;
-	 }
+     private array $data = [];
 
      /**
       * A memory record of data between the time it is set and the time
@@ -72,31 +64,34 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 
 	 protected static array $instances = [];
 	 
+	 /**
+	  * Create a new model instance. A model instance can be created under these conditions.
+	  * 1. From static, to provide access to model meta configuration.
+	  * 2. From a database hydration.
+	  * 3. By the client.
+	  * 
+	  * The kwargs argument provided is an associative array of field names and their values.
+	  * */
 	 public function __construct(...$kwargs){
+	 	 /**
+	 	  * if a model isntance is not created from static and from database,
+	 	  * the field values must be provided in the constructor
+	 	  * */
 	 	 if(!self::$from_static_method && !self::$from_database){
 	 	 	 if(empty($kwargs))
-	 	 	 	 throw new \Exception("Please provide data for: ".$this::class." when creating a new model instance!");
+	 	 	 	 throw new Exception("Please provide data for: ".$this::class." when creating a new model instance!");
 
-	 	 	 $this->on_model_input($kwargs);
-
-	 	 	 $this->on_assign_relations($kwargs);
-
-	 	 	 //convert any values coming in with column names to field names
-	 	 	 $kwargs = $this->format_data($kwargs);
-
-	         //ensure all the data keys are column names or fields defined on model
-	 	 	 $this->assert_correct_fields($kwargs);
+	         //ensure all the data keys are field names defined on model
+	 	 	 //$this->assert_correct_fields($kwargs);
 
 	 	 	 //fill in defaults for all the fields that haven't been provided
-	         $kwargs = $this->fill_defaults($kwargs);
+	         $this->fill_defaults($kwargs);
 
 	         //make sure data is provided for all the required fields
-	         $kwargs = $this->assert_required_fields($kwargs);
+	         $this->assert_required_fields($kwargs);
 
 	         //run validation on the data
 	         $this->run_data_validation($kwargs);
-
-	 	 	 $this->on_model_validate($kwargs);
          }
 
 	 	 $this->data = $kwargs;
@@ -104,18 +99,26 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
          self::$from_static_method = false;
      }
 
+     private function create_shared_meta(string $class_name){
+     	 $table_info = new TableInfo();
+         $table_info->set_meta_defaults($class_name);
+         $this->model_setup($table_info);
+         self::$shared_meta[$class_name] = $table_info;
+         $table_info->add_audit_fields();
+         $table_info->clean_model_fields();
+         $table_info->set_unique_constraints();
+     }
+
+     public function set_table_and_connection(?string $connection = null){
+     	 [$connection_name, $table_name] = self::get_table_and_connection($connection);
+     	 $this->meta->set_table_and_connection($table_name, $connection_name);
+     }
+
      //method to ensure shared meta per class
      private function get_shared_meta(string $class_name){
          //Check if meta already exists for this class
          if(!isset(self::$shared_meta[$class_name])){
-             $table_info = new TableInfo();
-             [$connection_name, $table_name] = self::get_table_and_connection();
-             $table_info->initialize_model_meta($table_name, $connection_name, $this::class);
-             $this->model_setup($table_info);
-             self::$shared_meta[$class_name] = $table_info;
-             $table_info->add_audit_fields();
-             $table_info->clean_model_fields();
-             $table_info->set_unique_constraints();
+         	 $this->create_shared_meta($class_name);
          }
 
          //return the shared meta for this class
@@ -125,13 +128,21 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
      //abstract method that must be implemented by concrete classes to define fields
      abstract protected function model_setup(TableInfo $meta): void;
 
+     //get the collection class for this model
+     public static function collection_class() : string {
+         return ModelCollection::class;
+     }
+
+     final public function get_data(){
+     	 return $this->data;
+     }
      
      final public static function make(){
      	 self::$from_static_method = true;
 
          $called_class = get_called_class();
          if(!isset(self::$instances[$called_class])){
-             self::$instances[$called_class] = new $called_class([]);
+             self::$instances[$called_class] = new $called_class(...[]);
          }else{
          	 self::$from_static_method = false;
          }
@@ -148,12 +159,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
          return $model;
      }
 
-     public function set_table_and_connection(string $table_name, string $connection_name){
-     	 $this->meta->set_table_and_connection($table_name, $connection_name);
-     }
-
 	 public static function get_table_and_connection(?string $connection = null){
-	 	 
 	 	 $connection = $connection ?? config('default_connection');
 	 	 if(!$connection || !MigrationUtils::is_schema_defined($connection)){
 	 	 	 throw new Exception("Please provide a valid database connection name!");
@@ -171,21 +177,19 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
          return [$connection, array_keys($models)[$index]];
 	 }
 
-     public function get_validation_configurations(?array $field_names = null){
-     	 $vc = [];
-     	 foreach($this->meta->clean_fields as $fn => $fv){
-     	 	 $column_name = $fv->column_name;
-     	 	 if(!$field_names || (($field_names && in_array($fn, $field_names)) || ($field_names && in_array($column_name, $field_names)))){
-     	 	 	 $fvc = $fv->get_validation_configurations();
-	     	 	 if($fvc){
-	     	 	 	 $vc[$column_name] = $fvc;
-	     	 	 }else{
-	     	 	 	 $vc[$column_name] = false;
-	     	 	 }
-     	 	 }
-     	 }
-     	 return $vc;
-     }
+	 public function clean_model_data(){
+	 	 //ensure all the data keys are field names defined on model
+ 	 	 $this->assert_correct_fields($kwargs);
+
+ 	 	 //fill in defaults for all the fields that haven't been provided
+         $this->fill_defaults($kwargs);
+
+         //make sure data is provided for all the required fields
+         $this->assert_required_fields($kwargs);
+
+         //run validation on the data
+         $this->run_data_validation($kwargs);
+	 }
 
      private function rename_uploaded_files($field, &$clean_data, $file_key, $data_state = null){
 	 	$original_clean_data = $clean_data;
@@ -239,7 +243,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
      private function swap_properties_with_columns($data){
      	 $swapped = [];
      	 foreach($this->meta->clean_fields as $pk => $pv){
-     	 	 $ck = $this->meta->clean_fields[$pk]->column_name;
+     	 	 $ck = $this->meta->clean_fields[$pk]->get_column();
      	 	 if( array_key_exists($ck, $data) || array_key_exists($pk, $data) ){
      	 	 	 $swapped[$ck] = $data[$ck] ?? $data[$pk];
      	 	 }
@@ -247,275 +251,78 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
      	 return $swapped;
      }
 
-	 public function get_field_definitions(){
-	 	 $defs = [];
-     	 foreach($this->meta->clean_fields as $fn => $fv){
-     	 	 $fd = $fv->get_field_definition();
-     	 	 if($fd){
-     	 	 	 $defs[] = $fd;
-     	 	 }
-     	 }
-     	 
-     	 return $defs;
-	 }
-
-     private function assert_field_defined(string $field_name, bool $throw_error = false) : array {
-     	 //ensure field is defined in model meta
-     	 if(array_key_exists($field_name, $this->meta->clean_fields) || array_key_exists($field_name, $this->meta->field_column_refs))
-     	 	 return [$field_name, true];
-
-     	 if($throw_error)
-     	 	 throw new \Exception("The field ".$field_name." is not defined on the model ".$this::class);
-
-
-     	 if(array_key_exists($field_name, $this->data)){
-     	 	 return [$field_name, false];
+     private function assert_field_exists(string $field_name, bool $strict = false) : void {
+     	 if($strict){
+     	 	 if(!array_key_exists($field_name, $this->meta->clean_fields)){
+     	 	     throw new Exception("The field: ".$field_name." does not exist on the model: ".$this::class);
+     	     }
      	 }
 
-     	 throw new \Exception("There is no field or column named: ".$field_name." on the model ".$this::class);
+     	 if(!array_key_exists($field_name, $this->meta->clean_fields) && !array_key_exists($field_name, $this->data)){
+     	 	 throw new Exception("The field: ".$field_name." does not exist on the model: ".$this::class);
+     	 }
      }
 
-     public function get_field(string $field_name) : IField {
-     	 [$field_name, $is_field] = $this->assert_field_defined($field_name, true);
-     	 return $this->assign_field_context_and_value($field_name);
-     }
+     private function render_field(string $name){
 
-     private function assign_field_context_and_value(string $field_name){
-     	 $context           = $this->format_data($this->data, 'columns');
-     	 $field             = $this->meta->clean_fields[$field_name];
-     	 $field->context    = $context;
-     	 $field->value      = $context[$field->column_name] ?? null;
-     	 $field->model_info = [
-     	     'model' => $this->meta->model_class,
-     	     'pk_name' => $this->meta->pk_name,
-     	     'pk_value' => $this->data[$this->meta->pk_name] ?? '',
-     	     'field_name' => $field_name
-     	 ];
-     	 return $field;
+     	 if(!array_key_exists($name, $this->meta->clean_fields)){
+     	 	 return $this->data[$name];
+     	 }
+
+     	 $field = $this->meta->clean_fields[$name];
+     	 $render_callback = $field->get_render_callback();
+
+     	 if($render_callback){
+     	 	 return $render_callback($this->data);
+     	 }
+
+     	 return $this->data[$name];
      }
 
 	 public function __get($name){
-	 	 [$field_name, $is_field] = $this->assert_field_defined($name);
-	 	 if(!$is_field)
-	 	 	 return $this->data[$field_name];
-
-	 	 $field = $this->assign_field_context_and_value($field_name);
-     	 return $field->render();
+	 	 $this->assert_field_exists($name);
+	 	 return $this->render_field($name);
      }
 
      public function __set($name, $value){
      	 if($this->readonly){
-             throw new \Exception("This is a read only model. You cannot modify the values!");
+             throw new Exception("This is a read only model. You cannot modify the values!");
          }
 
-         $this->assert_field_defined($name, true);
-
-         //save the data state so we can track changes from now on
-         if(!$this->data_state){
-         	 $this->data_state = $this->get_data_state();
-         }
-
+         $this->assert_field_exists($name);
          $this->data = array_merge($this->data, [$name => $value]);
      }
 
-     public function __call(string $method, array $args){
-     	 return $this->get_field($method);
+     public function __call(string $name, array $args){
+
+     	 $this->assert_field_exists($name, true);
+     	 $field = $this->meta->clean_fields[$name];
+     	 $field->value($this->data[$name]);
+
+     	 return $field;
      }
 
-     public static function __callStatic(string $method, array $args){
-     	 $modelclass = get_called_class();
-     	 $model      = $modelclass::make();
-     	 return $model->get_field($method);
+     public static function __callStatic(string $name, array $args){
+     	 $model = self::make();
+     	 if(!array_key_exists($name, $model->meta->clean_fields)){
+     	 	 throw new Exception("The field: ".$field_name." does not exist on the model: ".$model::class);
+     	 }
+
+     	 return $model->meta->clean_fields[$name];
      }
 
      /**
       * Check whether a field is a relation field defined on a model
-      * and return the relation or false otherwise
+      * and return the field or false otherwise
       * */
      public function is_relation_field(string $field){
-	 	 $includes = array_merge($this->meta->fk_field_names, $this->meta->nav_field_names);
+	 	 $relation_field_names = array_merge($this->meta->fk_field_names, $this->meta->nav_field_names);
 
-	 	 if(!in_array($field, $includes)){
-	 		$field = array_flip($this->meta->field_column_refs)[$field];
-	 		if(!in_array($field, $includes)){
-	 			 return false;
-	 		}
-	 	 }
-
-	 	 $instance = $this->meta->clean_fields[$field] ?? null;
-	 	 if(!$instance)
+	 	 if(!in_array($field, $relation_field_names)){
 	 		 return false;
-
-	 	 return $instance->get_relation();
-	 }
-
-     /**
-      * Classify defined model fields into different groups
-      * */
-     private function classify_fields(){
-	 	 $defined_field_names = $this->meta->defined_field_names;
-	 	 $nk_field_names      = $this->meta->nav_field_names;
-	 	 $fk_field_names      = $this->meta->fk_field_names;
-	 	 $simple_fields       = array_diff($defined_field_names, array_merge($nk_field_names, $fk_field_names));
-	 	 $nk_fields           = array_diff($defined_field_names, array_merge($simple_fields, $fk_field_names));
-	 	 $fk_fields           = array_diff($defined_field_names, array_merge($simple_fields, $nk_field_names));
-	 	 return [$defined_field_names, $simple_fields, $fk_fields, $nk_fields];
-     }
-
-     /**
-      * Initialize the data state athe time of model instantiation
-      * */
-     private function get_data_state(){
-	 	 $data_state = [];
-	 	 [$defined_field_names, $simple_fields, $fk_fields, $nk_fields] = $this->classify_fields();
-
-	     foreach($defined_field_names as $field){
-	     	 if(in_array($field, $simple_fields)){
-	     	 	 $data_state[$field] = $this->data[$field] ?? null;
-	     	 }elseif(in_array($field, $fk_fields) || in_array($field, $nk_fields)){
-	     	 	 $val = $this->data[$field] ?? null;
-	     	 	 if($val instanceof IModel){
-	     	 	 	 $relation = $this->is_relation_field($property_name);
-	     	 	     $fk_name = $relation->get_foreign_key();
-	     	 	     $pk_values = $val->$fk_name;
-	     	 	     $data_state[$field] = $pk_values;
-	     	 	     if(in_array($field, $nk_fields) && $relation instanceof Many2Many){
-	     	 	     	 [$table_name, $model, $ctx] = $relation->get_through_model();
-	     	 	     	 $data_state[$field] = ['key' => $fk_name, 'values' => $pk_values, 'table' => $table_name, 'model' => $model, 'context' => $ctx];
-	     	 	     }
-	     	 	 }else{
-	     	 	 	 $data_state[$field] = $val;
-	     	 	 }
-	     	 }
-	     }
-	     return $data_state;
-	 }
-
-     /**
-      * Detect whether object data has been updated and return the updated state
-      * */
-	 public function get_state_change($new_data_state = null, $update_optional = null){
-	 	 $simple_changed = [];
-	 	 $fk_changed = [];
-	 	 $nk_changed = [];
-	 	 [$defined_field_names, $simple_fields, $fk_fields, $nk_fields] = $this->classify_fields();
-	 	 $new_data_state = $new_data_state ?? $this->get_data_state();
-
-	 	 foreach($new_data_state as $key => $val){
-	 	 	 if($val != $this->data_state[$key] && ( !is_null($val) && $val != '')){ //This null and empty string condition must be rechecked!
-	 	 	 	 if(in_array($key, $simple_fields)){
-		 	 	 	 $simple_changed[$key] = $val;
-		 	 	 }elseif(in_array($key, $fk_fields)){
-		 	 	 	 $fk_changed[$key] = $val;
-		 	 	 }elseif(in_array($key, $nk_fields)){
-		 	 	 	 /**
-		 	 	 	  * I am assuming this is many to many navigation key, this part must be reworked
-		 	 	 	  * to accomodate many to one and one to one cases as well
-		 	 	 	  * */
-		 	 	 	 $current_values = $val['values'];
-		 	 	 	 $former_values = $this->data_state[$key]['values'];
-
-		 	 	 	 $added_values = array_diff($current_values, $former_values);
-		 	 	 	 $removed_values = array_diff($former_values, $current_values);
-
-		 	 	 	 $val['added'] = $added_values;
-		 	 	 	 $val['removed'] = $removed_values;
-
-		 	 	 	 $nk_changed[$key] = $val;
-		 	 	 }
-	 	 	 }
 	 	 }
-	 	 return [$simple_changed, $fk_changed, $nk_changed];
-	 }
 
-     /**
-      * When attempting to save an updated object, this returns those properties
-      * that are savable.
-      * */
-	 public function get_savable_values(){
-	 	 $regular_fields      = [];
-	 	 $manytomany_fields   = [];
-	 	 $manytomany_throughs = [];
-	 	 //acquire field classification
-	 	 [$defined_field_names, $simple_fields, $fk_fields, $nk_fields] = $this->classify_fields();
-
-	     foreach($defined_field_names as $field){
-	     	 /**
-	     	  * At this point the data has gone through the constructor, so we are confident the model
-	     	  * has all the fields required to be saved.
-              * */
-			 $val = $this->data[$field];
-
-		     if(in_array($field, $simple_fields)){
-		     	 $regular_fields[$field] = $val;
-	     	 }elseif(in_array($field, $nk_fields)){
-	     	 	 $nk_field_vals  = [];
-	     	 	 if($val){
-	     	 	 	 $relation       = $this->is_relation_field($field);
-		     	 	 $fmodel         = $relation->get_related_model();
-		     	 	 $fmodel_pk_name = $fmodel::make()->meta->pk_name;
-		     	 	 foreach($val as $v){
-		     	 	 	 $nk_field_vals[] = is_object($v) ? $v->$fmodel_pk_name : $v;
-		     	 	 }
-		     	 	 $manytomany_fields[$field]   = $nk_field_vals;
-		     	 	 if(is_a($relation, Many2Many::class, true)){
-		     	 	 	 $through = $relation->get_through_model();
-		     	 	 	 $manytomany_throughs[$field] = $through;
-		     	 	 }
-	     	 	 }
-	     	 }elseif(in_array($field, $fk_fields)){
-	     	 	 //will do later
-	     	 	 $relation = $this->is_relation_field($field);
-	     	 	 $fmodel         = $relation->get_related_model();
-	     	 	 $fmodel_pk_name = $fmodel::make()->meta->pk_name;
-	     	 	 $regular_fields[$field] = is_object($val) ? $val->$fmodel_pk_name : $val;
-	     	 }
-	     }
-
-	     return [$regular_fields, $manytomany_fields, $manytomany_throughs];
-	 }
-
-	 /**
-	  * This save assumes the data was set via the model constructor.
-	  * Notes on save:
-	  * 1. By default only simple values are saved or updated when save is called.
-	  * 2. Relation objects must already be existing in the database, as only their ids will be saved
-	  * 3. Values for properties that were not explicitly defined i.e values generated by with_user_audit, with_timestamps, with_soft_delete and with_multitenancy flags will be filled in automatically. If there are values assigned for these properties here, they will be ignored.
-	  * */
-	 public function save(?array $update_optional = null){
-	 	 [$regular_fields, $manytomany_fields, $manytomany_throughs] = $this->get_savable_values();
-	 	 $object_pk_name  = $this->meta->pk_name;
-         $result = new Db($this->meta->db_class)->transaction([
-	 	 	 /**
-		 	  * Save the current object. 
-		 	  * 
-		 	  * This object may as well be already existing, but the models action_on_duplicate setting
-		 	  * should take care of it.
-		 	  * */
-	 	 	 #[TransactionOutput('object1')]
-	 	 	 function() use ($regular_fields){
-	 	 	 	 return self::new($regular_fields)->save();
-	 	     }, 
-
-             //Save many to many objects
-             #[TransactionOutput('object2')]
-	 	     function($object1) use ($manytomany_fields, $manytomany_throughs, $object_pk_name){
-	 	     	 if($manytomany_fields){
-			 	 	 $object_pk_value = $object1->$object_pk_name;
-			 	 	 foreach($manytomany_fields as $field_name => $field_values){
-			 	 	 	 $through = $manytomany_throughs[$field_name];
-			 	 	 	 $toadd = [];
-			 	 	 	 foreach($field_values as $id){
-			 	 	 	 	 $toadd[] = [$through[3] => $object_pk_value, $through[4] => $id];
-			 	 	 	 }
-			 	 	 	 $object1->$field_name = $through[1]::new($toadd)->save();
-			 	 	 }
-			 	 }
-	 	     	 return $object1;
-	 	     }
-	 	 ]);
-
-	 	 return $result['object1'];
+	 	 return $this->meta->clean_fields[$field] ?? false;
 	 }
 
 	 public function jsonSerialize() : mixed {
@@ -568,22 +375,24 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 	 	 return $formatted_values;
      }
 
+     /**
+      * Ensure that values have been provided for all
+      * fields that have required = true
+      * */
      private function assert_required_fields(array $data){
-     	 $required_fields = [];
-     	 foreach($this->meta->fields as $f){
-     	 	 if(!$f instanceof VirtualField && $f->required){
-     	 	 	 /**
-     	 	 	  * generate a value for primary key here if there is none
-     	 	 	  * 
-     	 	 	  * For integer primary keys, just assign 1. The database will assign the right pk value
-     	 	 	  * */
-     	 	 	 if($f instanceof Pk && (!array_key_exists($f->field_name, $data) || (array_key_exists($f->field_name, $data) && !$data[$f->field_name]))){
-     	 	 	 	 $data[$f->field_name] = $this->meta->pk_type === 'GUID' ? $this->guid() : 1;
-     	 	 	 }
 
-     	 	 	 $required_fields[] = $f->field_name;
+     	 $required_fields = [];
+
+     	 foreach($this->meta->clean_fields as $f){
+     	 	 if(!in_array($f->get_name(), $this->meta->defined_field_names)){
+     	 	 	 continue;
+     	 	 }
+
+     	 	 if($f->is_required()){
+     	 	 	 $required_fields[] = $f->get_name();
      	 	 }
      	 }
+
      	 $missing_fields = array_diff($required_fields, array_keys($data));
 
      	 if(!empty($missing_fields)){
@@ -593,16 +402,21 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
      	 return $data;
      }
 
-     private function fill_defaults(array $data){
+     private function fill_defaults(array &$data){
      	 foreach($this->meta->clean_fields as $f){
-     	 	 if(!$f instanceof VirtualField && $f instanceof RealField && !in_array($f->field_name, $this->meta->audit_field_names)){
-     	 	 	 if(!array_key_exists($f->field_name, $data)){
-     	 	 	 	 $data[$f->field_name] = $f->default;
+     	 	 if(!in_array($f->get_name(), $this->meta->defined_field_names)){
+     	 	 	 continue;
+     	 	 }
+
+     	 	 if(!array_key_exists($f->get_name(), $data)){
+     	 	 	 if($f->is_primary()){
+     	 	 	 	 $data[$f->get_name()] = $this->meta->pk_type === 'GUID' ? $this->guid() : 1;
+     	 	 	 	 continue;
      	 	 	 }
+
+     	 	 	 $data[$f->get_name()] = $f->get_default();
      	 	 }
      	 }
-
-     	 return $data;
      }
 
      /**
@@ -625,61 +439,19 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
      	 }
      }
 
+     /**
+      * Run validation on the data to ensure the model is in a valid
+      * and correct state.
+      * */
      private function run_data_validation(array $data, bool $partial = false){
-     	 /**
-     	  * Strip the data of keys the following:
-     	  * 
-     	  * 1. Keys that are not actual column names - These are navigational and virtual field names
-     	  * 2. Primary key name - this does not need validation
-     	  * 3. Foreign key names
-     	  * 3. File keys whose valus are just strings (File names)
-     	  * 4. Non defined field names - these are fields injected by with_user_audit family of settings
-     	  * 5. If partial, especially for updates, fields that are not in data
-     	  * */
-     	 $fields_to_validate = $this->meta->table_column_names;
-     	 unset($fields_to_validate[$this->meta->pk_name]);
-     	 foreach($this->meta->file_field_names as $ffn){
-	 	 	 if(isset($data[$ffn]) && !is_array($data[$ffn])){
-	 	 	 	 unset($fields_to_validate[$ffn]);
-	 	 	 }
-	 	 }
-	 	 foreach($this->meta->audit_field_names as $ndfn){
-	 	 	 unset($fields_to_validate[$ndfn]);
-	 	 }
-	 	 foreach($this->meta->fk_field_names as $fkfn){
-	 	 	 unset($fields_to_validate[$fkfn]);
-	 	 }
-	 	 if($partial){
-	 	 	 $current_fields = array_keys($fields_to_validate);
-	 	 	 foreach($current_fields as $cf){
-	 	 	 	 if(!array_key_exists($cf, $data)){
-	 	 	 	 	 unset($fields_to_validate[$cf]);
-	 	 	 	 }
-	 	 	 }
-	 	 }
-
-	 	 $validation_config = [];
-	 	 $datato_validate   = [];
-	 	 foreach($fields_to_validate as $ftv_key => $ftv){
-	 	 	 $datato_validate[$ftv_key] = $data[$ftv_key];
-	 	 	 $validation_config[$ftv_key] = $this->meta->clean_fields[$ftv_key]->get_validation_configurations();
-	 	 }
-
-	 	 $validation_feedback = ModelValidator::validate($validation_config, $datato_validate);
-
-	 	 if($validation_feedback["status"] !== 0){
-			 throw new FieldValidationException([
-			 	 'model'     => $this::class,
-			 	 'operation' => '',
-			 	 'dirty'     => $validation_feedback['dirty']
-			 ]);
-		 }
+     	 return true;
 	 }
 
 	 public function get_insert_data($request){
 	 	 $fields_to_save = $this->meta->table_column_names;
 	 	 $data_to_save   = array_intersect_key($this->data, $fields_to_save);
-	 	 $data_to_save   = $this->swap_properties_with_columns($data_to_save);
+	 	 //print_r($data_to_save);
+	 	 //$data_to_save = $this->swap_properties_with_columns($fields_to_save); //check swap. Not working correctly
          
 	 	 //Inject creator and modifier fields, created and modified date time fields and deleted fields
 	 	 if($this->meta->with_user_audit){
@@ -742,77 +514,53 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 	 }
 
      //change the connection right before an operation
-	 public static function using(string $connection): ModelProxy {
-	 	 [$connection_name, $table_name] = self::get_table_and_connection($connection);
-	 	 $model_instance = self::make();
-	 	 $model_instance->set_table_and_connection($table_name, $connection_name);
+	 public static function using(string $connection){
+	 	 $model_instance = self::make($connection);
+	 	 $model_instance->set_table_and_connection($connection);
          return new ModelProxy($model_instance);
      }
 
      //add new row(s) to database or batch create new instances
 	 public static function new(array $data) : CreateManager {
 	 	 $model_instance = self::make();
+	 	 $model_instance->set_table_and_connection();
 	 	 return new CreateManager($model_instance, $data);
 	 }
 
 	 //update exisitng rows (s)
 	 public static function set(array $data){
-	 	 return new UpdateManager(get_called_class(), $data);
+	 	 $model_instance = self::make();
+	 	 $model_instance->set_table_and_connection();
+	 	 return new UpdateManager($model_instance, $data);
 	 }
 
 	 //delete one or more rows
 	 public static function del(){
-	 	 return new DeleteManager(get_called_class());
+	 	 $model_instance = self::make();
+	 	 $model_instance->set_table_and_connection();
+	 	 return new DeleteManager($model_instance);
 	 }
 
 	 //empty the entire table
 	 public static function empty(){
-	 	 return new TruncateManager(get_called_class());
+	 	 $model_instance = self::make();
+	 	 $model_instance->set_table_and_connection();
+	 	 return new TruncateManager($model_instance);
 	 }
 
 	 //get one or more rows
 	 public static function get($tablealiase = null, $tableref = null){
-	 	 $calledclass = get_called_class();
-	 	 [$dbclass, $tablename] = $calledclass::get_table_and_connection();
-
-	 	 return self::init_readmanager($tablename, $dbclass, $tablealiase, $tableref);
-	 }
-
-	 private static function init_readmanager($table, $dbclass, $tablealiase, $tableref){
+	 	 $model_instance = self::make();
+	 	 $model_instance->set_table_and_connection();
 	 	 $readmanager = new ReadManager();
-	 	 $readmanager->initialize(table: $table, dbclass: $dbclass, tablealiase: $tablealiase, tableref: $tableref);
+	 	 $readmanager->initialize(model: $model_instance, tablealiase: $tablealiase, tableref: $tableref);
 	 	 return $readmanager;
 	 }
 
 	 //run custom sql and data
-	 public static function run(string $db, string $sql, string $operation, ?array $data = null, bool $multiple = true){
-	 	 return new RunManager($db, $sql, $operation, $data, $multiple);
+	 public static function run(string $connection, string $sql, string $operation, ?array $data = null, bool $multiple = true){
+	 	 return new RunManager($connection, $sql, $operation, $data, $multiple);
 	 }
-
-     /**
-      * In cases where the data is coming from the user, this method will be run before anything else happens.
-      * 
-      * Here is where the data is normalized or transformed into a format
-      * acceptibe for the model
-      * 
-      * This client can override during the model definition, but must not
-      * fail to call the parent's method.
-      * */
-	 protected function on_model_input(array &$kwargs){
-
-	 }
-
-     /**
-      * During the construction of a model, especially one accepting data from
-      * user, override this method to specify how relation fields may obtain their values
-      * */
-     protected function on_assign_relations(array &$kwargs){
-     	 
-     }
-
-     protected function on_model_validate(array &$kwargs){
-     	 
-     }
 
      public static function get_fillable_fields(){
      	 $instance = self::make();
@@ -861,7 +609,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
       * to the outside for easy maintainance
       * */
 
-     public static function get_model_setup(){
+     private static function get_model_setup(){
      	 $model = get_called_class();
      	 $model_instance = $model::make();
 
@@ -944,5 +692,11 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 
 	 public function get_table_name(){
 	 	 return $this->meta->table_name;
+	 }
+
+     //get all the models that belong to the same schema as this one
+	 public function get_sibling_models(){
+	 	 $schema = config('schemas')[$this->meta->connection_name];
+	 	 return new $schema()->get_models();
 	 }
 }

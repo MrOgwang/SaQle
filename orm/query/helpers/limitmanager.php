@@ -31,7 +31,7 @@ trait LimitManager{
          return $this;
      }
 
-     protected function get_limit_records(){
+     public function get_limit_records(){
          $limit = $this->lbuilder->limit;
          return $limit ? $limit->records : 0;     
      }

@@ -12,15 +12,21 @@ final class ModelProxy {
          return new CreateManager($this->model_instance, $data);
      }
 
-     public function get(): ReadManager {
-        return new ReadManager($this->model_class, $this->connection);
+     public function get($tablealiase = null, $tableref = null): ReadManager {
+         $readmanager = new ReadManager();
+         $readmanager->initialize(model: $this->model_instance, tablealiase: $tablealiase, tableref: $tableref);
+         return $readmanager;
      }
 
-     public function update(): UpdateManager {
-        return new UpdateManager($this->model_class, $this->connection);
+     public function set(array $data): UpdateManager {
+         return new UpdateManager($this->model_instance, $data);
      }
 
-     public function delete(): DeleteManager {
-        return new DeleteManager($this->model_class, $this->connection);
+     public function del(): DeleteManager {
+         return new DeleteManager($this->model_instance);
+     }
+
+     public function empty(){
+         return new TruncateManager($this->model_instance);
      }
 }

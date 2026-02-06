@@ -1,6 +1,8 @@
 <?php
 namespace SaQle\Orm\Connection;
-use SaQle\Orm\Database\IDbContextOptions;
+
+use SaQle\Orm\Database\Config\ConnectionConfig;
+use Exception;
 
 ob_start();
 
@@ -11,14 +13,14 @@ class Connection {
 	 protected function __construct(){}
 	 protected function __clone(){}
      public function __wakeup(){
-         throw new \Exception("Cannot unserialize db connection!");
+         throw new Exception("Cannot unserialize db connection!");
      }
 
      //Create a new database connection instance
-     public static function make(IDbContextOptions $context){
-     	 $connection_string = self::get_connection_string($context);
+     public static function make(ConnectionConfig $config){
+     	 $connection_string = self::get_connection_string($config);
      	 if($connection_string !== self::$last_connection_string){
-     	 	 $pdo = self::connect($connection_string, $context->get_username(), $context->get_password());
+     	 	 $pdo = self::connect($connection_string, $config->get_username(), $config->get_password());
      	     self::$connection = $pdo;
      	     self::$last_connection_string = $connection_string;
      	 }
@@ -26,8 +28,8 @@ class Connection {
      }
 
      //Construct a connection string from the database context options
-	 private static function get_connection_string(IDbContextOptions $context){
-		 return $context->get_driver().":host=".$context->get_host().";port=".$context->get_port().";dbname=".$context->get_database().";";
+	 private static function get_connection_string(ConnectionConfig $config){
+		 return $config->get_driver().":host=".$config->get_host().";port=".$config->get_port().";dbname=".$config->get_database().";";
 	 }
 
 	 //Create the pdo connection object
@@ -67,7 +69,7 @@ class Connection {
 
 			 return $last_insert_id ? ['statement' => $statement, 'last_insert_id' => $last_insert_id, 'response' => $response] : ['statement' => $statement, 'response' => $response];
 
-	     }catch(\Exception $ex){
+	     }catch(Exception $ex){
 	     	 if($pdo && $pdo->inTransaction()){
 		 	 	 $pdo->rollback();
 		 	 }

@@ -6,7 +6,7 @@ use SaQle\Commons\FileUtils;
 use SaQle\Core\Migration\Models\Migration;
 use SaQle\Build\Utils\MigrationUtils;
 use SaQle\Orm\Connection\Connection;
-use SaQle\Orm\Database\Manager\DbManagerFactory;
+use SaQle\Orm\Database\Db;
 use SaQle\Orm\Entities\Field\Attributes\FieldDefinition;
 use ReflectionClass;
 use Exception;
@@ -25,22 +25,22 @@ class MakeMigrations {
          return $a === $b;
      }
 
-     private function get_model_operations($snapshot){
+     private function get_model_operations($snapshot, $snapshot_records){
          $up = "";
          $down = "";
-         $touched = "";
          foreach($snapshot as $sk => $sv){
              $added_models = $sv['tables'][0];
              $removed_models = $sv['tables'][1];
              $maintained_models = $sv['tables'][2];
              $added_columns = $sv['columns'][0] ?? [];
              $removed_columns = $sv['columns'][1] ?? [];
-             $unique_field_names = $sv['unique'][0];
-             $last_unique_field_names = $sv['unique'][1];
+             $unique_constraints = $sv['unique'][0];
+             $last_unique_constraints = $sv['unique'][1];
 
              $up .= "\t\t\t'".$sk."' => [\n";
              $down .= "\t\t\t'".$sk."' => [\n";
              foreach($added_models as $an => $am){
+                 $table_unique_constraints = $unique_constraints[$an] ?? [];
                  $up .= "\t\t\t\t['action' => 'create_table', 'params' => ['name' => '".$an."', 'model' => '".$am."']],\n";
                  $down .= "\t\t\t\t['action' => 'drop_table', 'params' => ['name' => '".$an."', 'model' => '".$am."']],\n";
              }
@@ -64,11 +64,12 @@ class MakeMigrations {
                  $up .= "\t\t\t\t['action' => 'drop_columns', 'params' => ['name' => '".$rcv['name']."', 'model' => '".$rcv['model']."', 'columns' => [\n".$columns_def."\t\t\t\t]]],\n";
                  $down .= "\t\t\t\t['action' => 'add_columns', 'params' => ['name' => '".$rcv['name']."', 'model' => '".$rcv['model']."', 'columns' => [\n".$columns_def."\t\t\t\t]]],\n";
              }
+
              foreach($maintained_models as $an => $am){
-                 $ut  = array_key_exists($an, $unique_field_names) ? ($unique_field_names[$an]['unique_together'] ? 'true' : 'false') : 'false';
-                 $uf  = array_key_exists($an, $unique_field_names) ? $unique_field_names[$an]['fields'] : []; 
-                 $last_ut = array_key_exists($an, $last_unique_field_names) ? ($last_unique_field_names[$an]['unique_together'] ? 'true' : 'false') : 'false';
-                 $last_uf  = array_key_exists($an, $last_unique_field_names) ? $last_unique_field_names[$an]['fields'] : [];
+                 $ut  = array_key_exists($an, $unique_constraints) ? ($unique_constraints[$an]['unique_together'] ? 'true' : 'false') : 'false';
+                 $uf  = array_key_exists($an, $unique_constraints) ? $unique_constraints[$an]['fields'] : []; 
+                 $last_ut = array_key_exists($an, $last_unique_constraints) ? ($last_unique_constraints[$an]['unique_together'] ? 'true' : 'false') : 'false';
+                 $last_uf  = array_key_exists($an, $last_unique_constraints) ? $last_unique_constraints[$an]['fields'] : [];
 
                  //something has changed
                  if(!$this->arrays_are_equal($uf, $last_uf)){
@@ -95,12 +96,20 @@ class MakeMigrations {
 
              $up .= "\t\t\t],\n";
              $down .= "\t\t\t],\n";
-             $touched = "\t\t\t'".$sk."',\n";
          }
+
+         $touched = "";
+         foreach($snapshot_records as $sn => $s_attrs){
+             $touched .= "\t\t\t'".$sn."' => [\n";
+             $touched .= "\t\t\t\t'path' => '".$s_attrs[0]."',\n";
+             $touched .= "\t\t\t\t'name' => '".$s_attrs[1]."',\n";
+             $touched .= "\t\t\t]\n";
+         }
+
          return [$up, $down, $touched];
      }
 
-     private function extract_model_fields($models, $project_root, $dbmanager){
+     private function extract_model_fields($models, $project_root, $dbdriver){
          $model_fields = [];
          foreach($models as $n => $m){
              if(!MigrationUtils::is_model_defined($m, $project_root))
@@ -110,7 +119,7 @@ class MakeMigrations {
              $mfields = $m::get_fields();
 
              foreach($mfields as $mfn => $mfv){
-                 $mfvdef = $dbmanager->translate_field_definition($mfv->get_definition(FieldDefinition::class));
+                 $mfvdef = $dbdriver->translate_field_definition($mfv->get_definition(FieldDefinition::class));
 
                  if($mfvdef){
                      $db_col_name = $mfv->get_column();
@@ -135,10 +144,9 @@ class MakeMigrations {
          return $unique_constraints;
      }
 
-     private function write_schema_snapshot($migration_name, $timestamp, $models, $unique_constraints, $dirname, $schema_class, $project_root, $dbmanager){
-         $class_name  = "{$schema_class}_{$timestamp}_{$migration_name}";
+     private function write_schema_snapshot($snapshot_class_name, $models, $unique_constraints, $dirname, $project_root, $dbdriver){
          $snap_folder = dirname($dirname)."/snapshots";
-         $file_name   = $snap_folder."/".$class_name.".php";
+         $file_name   = $snap_folder."/".$snapshot_class_name.".php";
 
          $models_template = "";
          $fields_template = "";
@@ -151,7 +159,7 @@ class MakeMigrations {
                      $db_col_name = $mfv->get_column();
                      $fields_template .= "\t\t\t\t'".$db_col_name."' => [\n";
                      $fields_template .= "\t\t\t\t\t'field' => '".$mfv::class."',\n";
-                     $fields_template .= "\t\t\t\t\t'def' => '".$dbmanager->translate_field_definition($mfv->get_definition(FieldDefinition::class))."',\n";
+                     $fields_template .= "\t\t\t\t\t'def' => '".$dbdriver->translate_field_definition($mfv->get_definition(FieldDefinition::class))."',\n";
                      $fields_template .= "\t\t\t\t\t'params' => [\n"; 
 
                      $params = [];
@@ -181,7 +189,7 @@ class MakeMigrations {
                  foreach($constraint_fields as $uf){
                      $uniques_template .= "\t\t\t\t\t'".$uf."',\n"; 
                  }
-                 $uniques_template .= "\t\t\t\t]\n";
+                 $uniques_template .= "\t\t\t\t],\n";
              }
              $uniques_template .= "\t\t\t],\n";
          }
@@ -203,7 +211,7 @@ class MakeMigrations {
          $template .= "* A database snapshot keeps a record of the database, tables and columns structures as at the time makemigrations is run.\n";
          $template .= "* */\n\n";
          $template .= "use SaQle\\Core\Migration\\Base\\DbSnapshot;\n\n";
-         $template .= "class {$class_name} extends DbSnapshot{\n";
+         $template .= "class {$snapshot_class_name} extends DbSnapshot{\n";
          
          //get the models.
          $template .= "\tpublic function get_models(){\n";
@@ -234,6 +242,8 @@ class MakeMigrations {
          }
 
          file_put_contents($file_name, $template);
+
+         return $file_name;
      }
 
      private function execute_pdo($pdo, $sql, $data = null){
@@ -283,9 +293,10 @@ class MakeMigrations {
          }
 
          $schema_snapshot = [];
+         $snapshot_records = [];
 
          foreach($schemas as $s_name => $s_class){
-             $dbmanager = (new DbManagerFactory(connection: $s_name))->manager();
+             $dbdriver = Db::driver(connection: $s_name);
              
              /**
               * If a specific schema name was provided, it has been vallidated by the time
@@ -302,7 +313,7 @@ class MakeMigrations {
              $models = new $s_class()->get_permanent_models();
 
              //Acquire model fields for models registered with db context.
-             $model_fields = $this->extract_model_fields($models, $project_root, $dbmanager);
+             $model_fields = $this->extract_model_fields($models, $project_root, $dbdriver);
 
              //acquire unique fields
              $unique_constraints = $this->extract_unique_constraints($models, $project_root);
@@ -317,13 +328,15 @@ class MakeMigrations {
 
              $connection = resolve(Connection::class, $connection_params);
 
-             $this->write_schema_snapshot($migration_name, $timestamp, $models, $unique_constraints, $dirname, $schema_class, $project_root, $dbmanager);
+             $snapshot_class_name = "{$schema_class}_{$timestamp}_{$migration_name}";
+             $snapshot_path = $this->write_schema_snapshot($snapshot_class_name, $models, $unique_constraints, $dirname, $project_root, $dbdriver);
+             $snapshot_records[$s_name] = [$snapshot_path, $snapshot_class_name];
 
-             $added_models    = $models;
-             $removed_models  = [];
+             $added_models = $models;
+             $removed_models = [];
              $maintained_models = [];
 
-             $added_columns   = [];
+             $added_columns = [];
              $removed_columns = [];
 
              try{
@@ -393,7 +406,7 @@ class MakeMigrations {
              $schema_snapshot[$s_name]['unique'] = [$unique_constraints, $last_unique_constraints];
          }
 
-         return $schema_snapshot;
+         return [$schema_snapshot, $snapshot_records];
      }
 
      public function execute($migration_name, $project_root, $schema_name = null){
@@ -418,7 +431,7 @@ class MakeMigrations {
          }
 
          echo "Making {$migration_name} migrations now!\n";
-         $snapshot = $this->get_schema_snapshot(...[
+         [$snapshot, $snapshot_records] = $this->get_schema_snapshot(...[
             'project_root'   => $project_root,
             'schema_name'    => $schema_name,
             'timestamp'      => $timestamp,
@@ -426,28 +439,38 @@ class MakeMigrations {
             'tracker'        => $tracker
          ]);
 
-         [$up_models, $down_models, $touched_contexts] = $this->get_model_operations($snapshot);
+         [$up_models, $down_models, $touched_snapshots] = $this->get_model_operations($snapshot, $snapshot_records);
          
          $template = "<?php\n";
-         $template .= "use SaQle\\Migration\\Base\\BaseMigration;\n\n";
+         $template .= "use SaQle\\Core\\Migration\\Base\\BaseMigration;\n\n";
          $template .= "class {$class_name} extends BaseMigration{\n";
+
+         //get migration name
+         $template .= "\tpublic function get_migration_name() : string {\n";
+         $template .= "\t\treturn '".$migration_name."';\n";
+         $template .= "\t}\n\n";
+
+         //get migration timestamp
+         $template .= "\tpublic function get_migration_timestamp() : int {\n";
+         $template .= "\t\treturn '".$timestamp."';\n";
+         $template .= "\t}\n\n";
          
          //Construct the touched_contexts method
-         $template .= "\tpublic function touched_contexts(){\n";
+         $template .= "\tpublic function snapshots() : array {\n";
          $template .= "\t\treturn [\n";
-         $template .= $touched_contexts;
+         $template .= $touched_snapshots;
          $template .= "\t\t];\n";
          $template .= "\t}\n\n";
          
          //Construct the up method.
-         $template .= "\tpublic function up(){\n";
+         $template .= "\tpublic function up() : array {\n";
          $template .= "\t\treturn [\n";
          $template .= $up_models;
          $template .= "\t\t];\n";
          $template .= "\t}\n\n";
          
          //Construct the down method
-         $template .= "\tpublic function down(){\n";
+         $template .= "\tpublic function down() : array {\n";
          $template .= "\t\treturn [\n";
          $template .= $down_models;
          $template .= "\t\t];\n";

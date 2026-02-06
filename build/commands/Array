@@ -1,0 +1,1233 @@
+Array
+(
+    [0] => stdClass Object
+        (
+            [actor_id] => 1
+            [first_name] => PENELOPE
+            [last_name] => GUINESS
+            [last_update] => 2006-02-15 04:34:33
+            [films] => Array
+                (
+                    [0] => stdClass Object
+                        (
+                            [film_id] => 1
+                            [title] => ACADEMY DINOSAUR
+                            [description] => A Epic Drama of a Feminist And a Mad Scientist who must Battle a Teacher in The Canadian Rockies
+                            [release_year] => 2006
+                            [actor_id] => 1
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [1] => stdClass Object
+                        (
+                            [film_id] => 23
+                            [title] => ANACONDA CONFESSIONS
+                            [description] => A Lacklusture Display of a Dentist And a Dentist who must Fight a Girl in Australia
+                            [release_year] => 2006
+                            [actor_id] => 1
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [2] => stdClass Object
+                        (
+                            [film_id] => 25
+                            [title] => ANGELS LIFE
+                            [description] => A Thoughtful Display of a Woman And a Astronaut who must Battle a Robot in Berlin
+                            [release_year] => 2006
+                            [actor_id] => 1
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [3] => stdClass Object
+                        (
+                            [film_id] => 106
+                            [title] => BULWORTH COMMANDMENTS
+                            [description] => A Amazing Display of a Mad Cow And a Pioneer who must Redeem a Sumo Wrestler in The Outback
+                            [release_year] => 2006
+                            [actor_id] => 1
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [4] => stdClass Object
+                        (
+                            [film_id] => 140
+                            [title] => CHEAPER CLYDE
+                            [description] => A Emotional Character Study of a Pioneer And a Girl who must Discover a Dog in Ancient Japan
+                            [release_year] => 2006
+                            [actor_id] => 1
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [5] => stdClass Object
+                        (
+                            [film_id] => 166
+                            [title] => COLOR PHILADELPHIA
+                            [description] => A Thoughtful Panorama of a Car And a Crocodile who must Sink a Monkey in The Sahara Desert
+                            [release_year] => 2006
+                            [actor_id] => 1
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [6] => stdClass Object
+                        (
+                            [film_id] => 277
+                            [title] => ELEPHANT TROJAN
+                            [description] => A Beautiful Panorama of a Lumberjack And a Forensic Psychologist who must Overcome a Frisbee in A Baloon
+                            [release_year] => 2006
+                            [actor_id] => 1
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [7] => stdClass Object
+                        (
+                            [film_id] => 361
+                            [title] => GLEAMING JAWBREAKER
+                            [description] => A Amazing Display of a Composer And a Forensic Psychologist who must Discover a Car in The Canadian Rockies
+                            [release_year] => 2006
+                            [actor_id] => 1
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [8] => stdClass Object
+                        (
+                            [film_id] => 438
+                            [title] => HUMAN GRAFFITI
+                            [description] => A Beautiful Reflection of a Womanizer And a Sumo Wrestler who must Chase a Database Administrator in The Gulf of Mexico
+                            [release_year] => 2006
+                            [actor_id] => 1
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [9] => stdClass Object
+                        (
+                            [film_id] => 499
+                            [title] => KING EVOLUTION
+                            [description] => A Action-Packed Tale of a Boy And a Lumberjack who must Chase a Madman in A Baloon
+                            [release_year] => 2006
+                            [actor_id] => 1
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [10] => stdClass Object
+                        (
+                            [film_id] => 506
+                            [title] => LADY STAGE
+                            [description] => A Beautiful Character Study of a Woman And a Man who must Pursue a Explorer in A U-Boat
+                            [release_year] => 2006
+                            [actor_id] => 1
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [11] => stdClass Object
+                        (
+                            [film_id] => 509
+                            [title] => LANGUAGE COWBOY
+                            [description] => A Epic Yarn of a Cat And a Madman who must Vanquish a Dentist in An Abandoned Amusement Park
+                            [release_year] => 2006
+                            [actor_id] => 1
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [12] => stdClass Object
+                        (
+                            [film_id] => 605
+                            [title] => MULHOLLAND BEAST
+                            [description] => A Awe-Inspiring Display of a Husband And a Squirrel who must Battle a Sumo Wrestler in A Jet Boat
+                            [release_year] => 2006
+                            [actor_id] => 1
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [13] => stdClass Object
+                        (
+                            [film_id] => 635
+                            [title] => OKLAHOMA JUMANJI
+                            [description] => A Thoughtful Drama of a Dentist And a Womanizer who must Meet a Husband in The Sahara Desert
+                            [release_year] => 2006
+                            [actor_id] => 1
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [14] => stdClass Object
+                        (
+                            [film_id] => 749
+                            [title] => RULES HUMAN
+                            [description] => A Beautiful Epistle of a Astronaut And a Student who must Confront a Monkey in An Abandoned Fun House
+                            [release_year] => 2006
+                            [actor_id] => 1
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [15] => stdClass Object
+                        (
+                            [film_id] => 832
+                            [title] => SPLASH GUMP
+                            [description] => A Taut Saga of a Crocodile And a Boat who must Conquer a Hunter in A Shark Tank
+                            [release_year] => 2006
+                            [actor_id] => 1
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [16] => stdClass Object
+                        (
+                            [film_id] => 939
+                            [title] => VERTIGO NORTHWEST
+                            [description] => A Unbelieveable Display of a Mad Scientist And a Mad Scientist who must Outgun a Mad Cow in Ancient Japan
+                            [release_year] => 2006
+                            [actor_id] => 1
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [17] => stdClass Object
+                        (
+                            [film_id] => 970
+                            [title] => WESTWARD SEABISCUIT
+                            [description] => A Lacklusture Tale of a Butler And a Husband who must Face a Boy in Ancient China
+                            [release_year] => 2006
+                            [actor_id] => 1
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [18] => stdClass Object
+                        (
+                            [film_id] => 980
+                            [title] => WIZARD COLDBLOODED
+                            [description] => A Lacklusture Display of a Robot And a Girl who must Defeat a Sumo Wrestler in A MySQL Convention
+                            [release_year] => 2006
+                            [actor_id] => 1
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                )
+
+        )
+
+    [1] => stdClass Object
+        (
+            [actor_id] => 2
+            [first_name] => NICK
+            [last_name] => WAHLBERG
+            [last_update] => 2006-02-15 04:34:33
+            [films] => Array
+                (
+                    [0] => stdClass Object
+                        (
+                            [film_id] => 3
+                            [title] => ADAPTATION HOLES
+                            [description] => A Astounding Reflection of a Lumberjack And a Car who must Sink a Lumberjack in A Baloon Factory
+                            [release_year] => 2006
+                            [actor_id] => 2
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [1] => stdClass Object
+                        (
+                            [film_id] => 31
+                            [title] => APACHE DIVINE
+                            [description] => A Awe-Inspiring Reflection of a Pastry Chef And a Teacher who must Overcome a Sumo Wrestler in A U-Boat
+                            [release_year] => 2006
+                            [actor_id] => 2
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [2] => stdClass Object
+                        (
+                            [film_id] => 47
+                            [title] => BABY HALL
+                            [description] => A Boring Character Study of a A Shark And a Girl who must Outrace a Feminist in An Abandoned Mine Shaft
+                            [release_year] => 2006
+                            [actor_id] => 2
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [3] => stdClass Object
+                        (
+                            [film_id] => 105
+                            [title] => BULL SHAWSHANK
+                            [description] => A Fanciful Drama of a Moose And a Squirrel who must Conquer a Pioneer in The Canadian Rockies
+                            [release_year] => 2006
+                            [actor_id] => 2
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [4] => stdClass Object
+                        (
+                            [film_id] => 132
+                            [title] => CHAINSAW UPTOWN
+                            [description] => A Beautiful Documentary of a Boy And a Robot who must Discover a Squirrel in Australia
+                            [release_year] => 2006
+                            [actor_id] => 2
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [5] => stdClass Object
+                        (
+                            [film_id] => 145
+                            [title] => CHISUM BEHAVIOR
+                            [description] => A Epic Documentary of a Sumo Wrestler And a Butler who must Kill a Car in Ancient India
+                            [release_year] => 2006
+                            [actor_id] => 2
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [6] => stdClass Object
+                        (
+                            [film_id] => 226
+                            [title] => DESTINY SATURDAY
+                            [description] => A Touching Drama of a Crocodile And a Crocodile who must Conquer a Explorer in Soviet Georgia
+                            [release_year] => 2006
+                            [actor_id] => 2
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [7] => stdClass Object
+                        (
+                            [film_id] => 249
+                            [title] => DRACULA CRYSTAL
+                            [description] => A Thrilling Reflection of a Feminist And a Cat who must Find a Frisbee in An Abandoned Fun House
+                            [release_year] => 2006
+                            [actor_id] => 2
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [8] => stdClass Object
+                        (
+                            [film_id] => 314
+                            [title] => FIGHT JAWBREAKER
+                            [description] => A Intrepid Panorama of a Womanizer And a Girl who must Escape a Girl in A Manhattan Penthouse
+                            [release_year] => 2006
+                            [actor_id] => 2
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [9] => stdClass Object
+                        (
+                            [film_id] => 321
+                            [title] => FLASH WARS
+                            [description] => A Astounding Saga of a Moose And a Pastry Chef who must Chase a Student in The Gulf of Mexico
+                            [release_year] => 2006
+                            [actor_id] => 2
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [10] => stdClass Object
+                        (
+                            [film_id] => 357
+                            [title] => GILBERT PELICAN
+                            [description] => A Fateful Tale of a Man And a Feminist who must Conquer a Crocodile in A Manhattan Penthouse
+                            [release_year] => 2006
+                            [actor_id] => 2
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [11] => stdClass Object
+                        (
+                            [film_id] => 369
+                            [title] => GOODFELLAS SALUTE
+                            [description] => A Unbelieveable Tale of a Dog And a Explorer who must Sink a Mad Cow in A Baloon Factory
+                            [release_year] => 2006
+                            [actor_id] => 2
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [12] => stdClass Object
+                        (
+                            [film_id] => 399
+                            [title] => HAPPINESS UNITED
+                            [description] => A Action-Packed Panorama of a Husband And a Feminist who must Meet a Forensic Psychologist in Ancient Japan
+                            [release_year] => 2006
+                            [actor_id] => 2
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [13] => stdClass Object
+                        (
+                            [film_id] => 458
+                            [title] => INDIAN LOVE
+                            [description] => A Insightful Saga of a Mad Scientist And a Mad Scientist who must Kill a Astronaut in An Abandoned Fun House
+                            [release_year] => 2006
+                            [actor_id] => 2
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [14] => stdClass Object
+                        (
+                            [film_id] => 481
+                            [title] => JEKYLL FROGMEN
+                            [description] => A Fanciful Epistle of a Student And a Astronaut who must Kill a Waitress in A Shark Tank
+                            [release_year] => 2006
+                            [actor_id] => 2
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [15] => stdClass Object
+                        (
+                            [film_id] => 485
+                            [title] => JERSEY SASSY
+                            [description] => A Lacklusture Documentary of a Madman And a Mad Cow who must Find a Feminist in Ancient Japan
+                            [release_year] => 2006
+                            [actor_id] => 2
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [16] => stdClass Object
+                        (
+                            [film_id] => 518
+                            [title] => LIAISONS SWEET
+                            [description] => A Boring Drama of a A Shark And a Explorer who must Redeem a Waitress in The Canadian Rockies
+                            [release_year] => 2006
+                            [actor_id] => 2
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [17] => stdClass Object
+                        (
+                            [film_id] => 540
+                            [title] => LUCKY FLYING
+                            [description] => A Lacklusture Character Study of a A Shark And a Man who must Find a Forensic Psychologist in A U-Boat
+                            [release_year] => 2006
+                            [actor_id] => 2
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [18] => stdClass Object
+                        (
+                            [film_id] => 550
+                            [title] => MAGUIRE APACHE
+                            [description] => A Fast-Paced Reflection of a Waitress And a Hunter who must Defeat a Forensic Psychologist in A Baloon
+                            [release_year] => 2006
+                            [actor_id] => 2
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [19] => stdClass Object
+                        (
+                            [film_id] => 555
+                            [title] => MALLRATS UNITED
+                            [description] => A Thrilling Yarn of a Waitress And a Dentist who must Find a Hunter in A Monastery
+                            [release_year] => 2006
+                            [actor_id] => 2
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [20] => stdClass Object
+                        (
+                            [film_id] => 561
+                            [title] => MASK PEACH
+                            [description] => A Boring Character Study of a Student And a Robot who must Meet a Woman in California
+                            [release_year] => 2006
+                            [actor_id] => 2
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [21] => stdClass Object
+                        (
+                            [film_id] => 742
+                            [title] => ROOF CHAMPION
+                            [description] => A Lacklusture Reflection of a Car And a Explorer who must Find a Monkey in A Baloon
+                            [release_year] => 2006
+                            [actor_id] => 2
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [22] => stdClass Object
+                        (
+                            [film_id] => 754
+                            [title] => RUSHMORE MERMAID
+                            [description] => A Boring Story of a Woman And a Moose who must Reach a Husband in A Shark Tank
+                            [release_year] => 2006
+                            [actor_id] => 2
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [23] => stdClass Object
+                        (
+                            [film_id] => 811
+                            [title] => SMILE EARRING
+                            [description] => A Intrepid Drama of a Teacher And a Butler who must Build a Pastry Chef in Berlin
+                            [release_year] => 2006
+                            [actor_id] => 2
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [24] => stdClass Object
+                        (
+                            [film_id] => 958
+                            [title] => WARDROBE PHANTOM
+                            [description] => A Action-Packed Display of a Mad Cow And a Astronaut who must Kill a Car in Ancient India
+                            [release_year] => 2006
+                            [actor_id] => 2
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                )
+
+        )
+
+    [2] => stdClass Object
+        (
+            [actor_id] => 3
+            [first_name] => ED
+            [last_name] => CHASE
+            [last_update] => 2006-02-15 04:34:33
+            [films] => Array
+                (
+                    [0] => stdClass Object
+                        (
+                            [film_id] => 17
+                            [title] => ALONE TRIP
+                            [description] => A Fast-Paced Character Study of a Composer And a Dog who must Outgun a Boat in An Abandoned Fun House
+                            [release_year] => 2006
+                            [actor_id] => 3
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [1] => stdClass Object
+                        (
+                            [film_id] => 40
+                            [title] => ARMY FLINTSTONES
+                            [description] => A Boring Saga of a Database Administrator And a Womanizer who must Battle a Waitress in Nigeria
+                            [release_year] => 2006
+                            [actor_id] => 3
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [2] => stdClass Object
+                        (
+                            [film_id] => 42
+                            [title] => ARTIST COLDBLOODED
+                            [description] => A Stunning Reflection of a Robot And a Moose who must Challenge a Woman in California
+                            [release_year] => 2006
+                            [actor_id] => 3
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [3] => stdClass Object
+                        (
+                            [film_id] => 87
+                            [title] => BOONDOCK BALLROOM
+                            [description] => A Fateful Panorama of a Crocodile And a Boy who must Defeat a Monkey in The Gulf of Mexico
+                            [release_year] => 2006
+                            [actor_id] => 3
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [4] => stdClass Object
+                        (
+                            [film_id] => 111
+                            [title] => CADDYSHACK JEDI
+                            [description] => A Awe-Inspiring Epistle of a Woman And a Madman who must Fight a Robot in Soviet Georgia
+                            [release_year] => 2006
+                            [actor_id] => 3
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [5] => stdClass Object
+                        (
+                            [film_id] => 185
+                            [title] => COWBOY DOOM
+                            [description] => A Astounding Drama of a Boy And a Lumberjack who must Fight a Butler in A Baloon
+                            [release_year] => 2006
+                            [actor_id] => 3
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [6] => stdClass Object
+                        (
+                            [film_id] => 289
+                            [title] => EVE RESURRECTION
+                            [description] => A Awe-Inspiring Yarn of a Pastry Chef And a Database Administrator who must Challenge a Teacher in A Baloon
+                            [release_year] => 2006
+                            [actor_id] => 3
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [7] => stdClass Object
+                        (
+                            [film_id] => 329
+                            [title] => FORREST SONS
+                            [description] => A Thrilling Documentary of a Forensic Psychologist And a Butler who must Defeat a Explorer in A Jet Boat
+                            [release_year] => 2006
+                            [actor_id] => 3
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [8] => stdClass Object
+                        (
+                            [film_id] => 336
+                            [title] => FRENCH HOLIDAY
+                            [description] => A Thrilling Epistle of a Dog And a Feminist who must Kill a Madman in Berlin
+                            [release_year] => 2006
+                            [actor_id] => 3
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [9] => stdClass Object
+                        (
+                            [film_id] => 341
+                            [title] => FROST HEAD
+                            [description] => A Amazing Reflection of a Lumberjack And a Cat who must Discover a Husband in A MySQL Convention
+                            [release_year] => 2006
+                            [actor_id] => 3
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [10] => stdClass Object
+                        (
+                            [film_id] => 393
+                            [title] => HALLOWEEN NUTS
+                            [description] => A Amazing Panorama of a Forensic Psychologist And a Technical Writer who must Fight a Dentist in A U-Boat
+                            [release_year] => 2006
+                            [actor_id] => 3
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [11] => stdClass Object
+                        (
+                            [film_id] => 441
+                            [title] => HUNTER ALTER
+                            [description] => A Emotional Drama of a Mad Cow And a Boat who must Redeem a Secret Agent in A Shark Tank
+                            [release_year] => 2006
+                            [actor_id] => 3
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [12] => stdClass Object
+                        (
+                            [film_id] => 453
+                            [title] => IMAGE PRINCESS
+                            [description] => A Lacklusture Panorama of a Secret Agent And a Crocodile who must Discover a Madman in The Canadian Rockies
+                            [release_year] => 2006
+                            [actor_id] => 3
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [13] => stdClass Object
+                        (
+                            [film_id] => 480
+                            [title] => JEEPERS WEDDING
+                            [description] => A Astounding Display of a Composer And a Dog who must Kill a Pastry Chef in Soviet Georgia
+                            [release_year] => 2006
+                            [actor_id] => 3
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [14] => stdClass Object
+                        (
+                            [film_id] => 539
+                            [title] => LUCK OPUS
+                            [description] => A Boring Display of a Moose And a Squirrel who must Outrace a Teacher in A Shark Tank
+                            [release_year] => 2006
+                            [actor_id] => 3
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [15] => stdClass Object
+                        (
+                            [film_id] => 618
+                            [title] => NECKLACE OUTBREAK
+                            [description] => A Astounding Epistle of a Database Administrator And a Mad Scientist who must Pursue a Cat in California
+                            [release_year] => 2006
+                            [actor_id] => 3
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [16] => stdClass Object
+                        (
+                            [film_id] => 685
+                            [title] => PLATOON INSTINCT
+                            [description] => A Thrilling Panorama of a Man And a Woman who must Reach a Woman in Australia
+                            [release_year] => 2006
+                            [actor_id] => 3
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [17] => stdClass Object
+                        (
+                            [film_id] => 827
+                            [title] => SPICE SORORITY
+                            [description] => A Fateful Display of a Pioneer And a Hunter who must Defeat a Husband in An Abandoned Mine Shaft
+                            [release_year] => 2006
+                            [actor_id] => 3
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [18] => stdClass Object
+                        (
+                            [film_id] => 966
+                            [title] => WEDDING APOLLO
+                            [description] => A Action-Packed Tale of a Student And a Waitress who must Conquer a Lumberjack in An Abandoned Mine Shaft
+                            [release_year] => 2006
+                            [actor_id] => 3
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [19] => stdClass Object
+                        (
+                            [film_id] => 967
+                            [title] => WEEKEND PERSONAL
+                            [description] => A Fast-Paced Documentary of a Car And a Butler who must Find a Frisbee in A Jet Boat
+                            [release_year] => 2006
+                            [actor_id] => 3
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [20] => stdClass Object
+                        (
+                            [film_id] => 971
+                            [title] => WHALE BIKINI
+                            [description] => A Intrepid Story of a Pastry Chef And a Database Administrator who must Kill a Feminist in A MySQL Convention
+                            [release_year] => 2006
+                            [actor_id] => 3
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [21] => stdClass Object
+                        (
+                            [film_id] => 996
+                            [title] => YOUNG LANGUAGE
+                            [description] => A Unbelieveable Yarn of a Boat And a Database Administrator who must Meet a Boy in The First Manned Space Station
+                            [release_year] => 2006
+                            [actor_id] => 3
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                )
+
+        )
+
+    [3] => stdClass Object
+        (
+            [actor_id] => 4
+            [first_name] => JENNIFER
+            [last_name] => DAVIS
+            [last_update] => 2006-02-15 04:34:33
+            [films] => Array
+                (
+                    [0] => stdClass Object
+                        (
+                            [film_id] => 23
+                            [title] => ANACONDA CONFESSIONS
+                            [description] => A Lacklusture Display of a Dentist And a Dentist who must Fight a Girl in Australia
+                            [release_year] => 2006
+                            [actor_id] => 4
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [1] => stdClass Object
+                        (
+                            [film_id] => 25
+                            [title] => ANGELS LIFE
+                            [description] => A Thoughtful Display of a Woman And a Astronaut who must Battle a Robot in Berlin
+                            [release_year] => 2006
+                            [actor_id] => 4
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [2] => stdClass Object
+                        (
+                            [film_id] => 56
+                            [title] => BAREFOOT MANCHURIAN
+                            [description] => A Intrepid Story of a Cat And a Student who must Vanquish a Girl in An Abandoned Amusement Park
+                            [release_year] => 2006
+                            [actor_id] => 4
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [3] => stdClass Object
+                        (
+                            [film_id] => 62
+                            [title] => BED HIGHBALL
+                            [description] => A Astounding Panorama of a Lumberjack And a Dog who must Redeem a Woman in An Abandoned Fun House
+                            [release_year] => 2006
+                            [actor_id] => 4
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [4] => stdClass Object
+                        (
+                            [film_id] => 79
+                            [title] => BLADE POLISH
+                            [description] => A Thoughtful Character Study of a Frisbee And a Pastry Chef who must Fight a Dentist in The First Manned Space Station
+                            [release_year] => 2006
+                            [actor_id] => 4
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [5] => stdClass Object
+                        (
+                            [film_id] => 87
+                            [title] => BOONDOCK BALLROOM
+                            [description] => A Fateful Panorama of a Crocodile And a Boy who must Defeat a Monkey in The Gulf of Mexico
+                            [release_year] => 2006
+                            [actor_id] => 4
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [6] => stdClass Object
+                        (
+                            [film_id] => 355
+                            [title] => GHOSTBUSTERS ELF
+                            [description] => A Thoughtful Epistle of a Dog And a Feminist who must Chase a Composer in Berlin
+                            [release_year] => 2006
+                            [actor_id] => 4
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [7] => stdClass Object
+                        (
+                            [film_id] => 379
+                            [title] => GREEDY ROOTS
+                            [description] => A Amazing Reflection of a A Shark And a Butler who must Chase a Hunter in The Canadian Rockies
+                            [release_year] => 2006
+                            [actor_id] => 4
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [8] => stdClass Object
+                        (
+                            [film_id] => 398
+                            [title] => HANOVER GALAXY
+                            [description] => A Stunning Reflection of a Girl And a Secret Agent who must Succumb a Boy in A MySQL Convention
+                            [release_year] => 2006
+                            [actor_id] => 4
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [9] => stdClass Object
+                        (
+                            [film_id] => 463
+                            [title] => INSTINCT AIRPORT
+                            [description] => A Touching Documentary of a Mad Cow And a Explorer who must Confront a Butler in A Manhattan Penthouse
+                            [release_year] => 2006
+                            [actor_id] => 4
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [10] => stdClass Object
+                        (
+                            [film_id] => 490
+                            [title] => JUMANJI BLADE
+                            [description] => A Intrepid Yarn of a Husband And a Womanizer who must Pursue a Mad Scientist in New Orleans
+                            [release_year] => 2006
+                            [actor_id] => 4
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [11] => stdClass Object
+                        (
+                            [film_id] => 616
+                            [title] => NATIONAL STORY
+                            [description] => A Taut Epistle of a Mad Scientist And a Girl who must Escape a Monkey in California
+                            [release_year] => 2006
+                            [actor_id] => 4
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [12] => stdClass Object
+                        (
+                            [film_id] => 635
+                            [title] => OKLAHOMA JUMANJI
+                            [description] => A Thoughtful Drama of a Dentist And a Womanizer who must Meet a Husband in The Sahara Desert
+                            [release_year] => 2006
+                            [actor_id] => 4
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [13] => stdClass Object
+                        (
+                            [film_id] => 691
+                            [title] => POSEIDON FOREVER
+                            [description] => A Thoughtful Epistle of a Womanizer And a Monkey who must Vanquish a Dentist in A Monastery
+                            [release_year] => 2006
+                            [actor_id] => 4
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [14] => stdClass Object
+                        (
+                            [film_id] => 712
+                            [title] => RAIDERS ANTITRUST
+                            [description] => A Amazing Drama of a Teacher And a Feminist who must Meet a Woman in The First Manned Space Station
+                            [release_year] => 2006
+                            [actor_id] => 4
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [15] => stdClass Object
+                        (
+                            [film_id] => 714
+                            [title] => RANDOM GO
+                            [description] => A Fateful Drama of a Frisbee And a Student who must Confront a Cat in A Shark Tank
+                            [release_year] => 2006
+                            [actor_id] => 4
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [16] => stdClass Object
+                        (
+                            [film_id] => 721
+                            [title] => REDS POCUS
+                            [description] => A Lacklusture Yarn of a Sumo Wrestler And a Squirrel who must Redeem a Monkey in Soviet Georgia
+                            [release_year] => 2006
+                            [actor_id] => 4
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [17] => stdClass Object
+                        (
+                            [film_id] => 798
+                            [title] => SILVERADO GOLDFINGER
+                            [description] => A Stunning Epistle of a Sumo Wrestler And a Man who must Challenge a Waitress in Ancient India
+                            [release_year] => 2006
+                            [actor_id] => 4
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [18] => stdClass Object
+                        (
+                            [film_id] => 832
+                            [title] => SPLASH GUMP
+                            [description] => A Taut Saga of a Crocodile And a Boat who must Conquer a Hunter in A Shark Tank
+                            [release_year] => 2006
+                            [actor_id] => 4
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [19] => stdClass Object
+                        (
+                            [film_id] => 858
+                            [title] => SUBMARINE BED
+                            [description] => A Amazing Display of a Car And a Monkey who must Fight a Teacher in Soviet Georgia
+                            [release_year] => 2006
+                            [actor_id] => 4
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [20] => stdClass Object
+                        (
+                            [film_id] => 909
+                            [title] => TREASURE COMMAND
+                            [description] => A Emotional Saga of a Car And a Madman who must Discover a Pioneer in California
+                            [release_year] => 2006
+                            [actor_id] => 4
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [21] => stdClass Object
+                        (
+                            [film_id] => 924
+                            [title] => UNFORGIVEN ZOOLANDER
+                            [description] => A Taut Epistle of a Monkey And a Sumo Wrestler who must Vanquish a A Shark in A Baloon Factory
+                            [release_year] => 2006
+                            [actor_id] => 4
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                )
+
+        )
+
+    [4] => stdClass Object
+        (
+            [actor_id] => 5
+            [first_name] => JOHNNY
+            [last_name] => LOLLOBRIGIDA
+            [last_update] => 2006-02-15 04:34:33
+            [films] => Array
+                (
+                    [0] => stdClass Object
+                        (
+                            [film_id] => 19
+                            [title] => AMADEUS HOLY
+                            [description] => A Emotional Display of a Pioneer And a Technical Writer who must Battle a Man in A Baloon
+                            [release_year] => 2006
+                            [actor_id] => 5
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [1] => stdClass Object
+                        (
+                            [film_id] => 54
+                            [title] => BANGER PINOCCHIO
+                            [description] => A Awe-Inspiring Drama of a Car And a Pastry Chef who must Chase a Crocodile in The First Manned Space Station
+                            [release_year] => 2006
+                            [actor_id] => 5
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [2] => stdClass Object
+                        (
+                            [film_id] => 85
+                            [title] => BONNIE HOLOCAUST
+                            [description] => A Fast-Paced Story of a Crocodile And a Robot who must Find a Moose in Ancient Japan
+                            [release_year] => 2006
+                            [actor_id] => 5
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [3] => stdClass Object
+                        (
+                            [film_id] => 146
+                            [title] => CHITTY LOCK
+                            [description] => A Boring Epistle of a Boat And a Database Administrator who must Kill a Sumo Wrestler in The First Manned Space Station
+                            [release_year] => 2006
+                            [actor_id] => 5
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [4] => stdClass Object
+                        (
+                            [film_id] => 171
+                            [title] => COMMANDMENTS EXPRESS
+                            [description] => A Fanciful Saga of a Student And a Mad Scientist who must Battle a Hunter in An Abandoned Mine Shaft
+                            [release_year] => 2006
+                            [actor_id] => 5
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [5] => stdClass Object
+                        (
+                            [film_id] => 172
+                            [title] => CONEHEADS SMOOCHY
+                            [description] => A Touching Story of a Womanizer And a Composer who must Pursue a Husband in Nigeria
+                            [release_year] => 2006
+                            [actor_id] => 5
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [6] => stdClass Object
+                        (
+                            [film_id] => 202
+                            [title] => DADDY PITTSBURGH
+                            [description] => A Epic Story of a A Shark And a Student who must Confront a Explorer in The Gulf of Mexico
+                            [release_year] => 2006
+                            [actor_id] => 5
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [7] => stdClass Object
+                        (
+                            [film_id] => 203
+                            [title] => DAISY MENAGERIE
+                            [description] => A Fast-Paced Saga of a Pastry Chef And a Monkey who must Sink a Composer in Ancient India
+                            [release_year] => 2006
+                            [actor_id] => 5
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [8] => stdClass Object
+                        (
+                            [film_id] => 286
+                            [title] => ENOUGH RAGING
+                            [description] => A Astounding Character Study of a Boat And a Secret Agent who must Find a Mad Cow in The Sahara Desert
+                            [release_year] => 2006
+                            [actor_id] => 5
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [9] => stdClass Object
+                        (
+                            [film_id] => 288
+                            [title] => ESCAPE METROPOLIS
+                            [description] => A Taut Yarn of a Astronaut And a Technical Writer who must Outgun a Boat in New Orleans
+                            [release_year] => 2006
+                            [actor_id] => 5
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [10] => stdClass Object
+                        (
+                            [film_id] => 316
+                            [title] => FIRE WOLVES
+                            [description] => A Intrepid Documentary of a Frisbee And a Dog who must Outrace a Lumberjack in Nigeria
+                            [release_year] => 2006
+                            [actor_id] => 5
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [11] => stdClass Object
+                        (
+                            [film_id] => 340
+                            [title] => FRONTIER CABIN
+                            [description] => A Emotional Story of a Madman And a Waitress who must Battle a Teacher in An Abandoned Fun House
+                            [release_year] => 2006
+                            [actor_id] => 5
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [12] => stdClass Object
+                        (
+                            [film_id] => 369
+                            [title] => GOODFELLAS SALUTE
+                            [description] => A Unbelieveable Tale of a Dog And a Explorer who must Sink a Mad Cow in A Baloon Factory
+                            [release_year] => 2006
+                            [actor_id] => 5
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [13] => stdClass Object
+                        (
+                            [film_id] => 375
+                            [title] => GRAIL FRANKENSTEIN
+                            [description] => A Unbelieveable Saga of a Teacher And a Monkey who must Fight a Girl in An Abandoned Mine Shaft
+                            [release_year] => 2006
+                            [actor_id] => 5
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [14] => stdClass Object
+                        (
+                            [film_id] => 383
+                            [title] => GROOVE FICTION
+                            [description] => A Unbelieveable Reflection of a Moose And a A Shark who must Defeat a Lumberjack in An Abandoned Mine Shaft
+                            [release_year] => 2006
+                            [actor_id] => 5
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [15] => stdClass Object
+                        (
+                            [film_id] => 392
+                            [title] => HALL CASSIDY
+                            [description] => A Beautiful Panorama of a Pastry Chef And a A Shark who must Battle a Pioneer in Soviet Georgia
+                            [release_year] => 2006
+                            [actor_id] => 5
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [16] => stdClass Object
+                        (
+                            [film_id] => 411
+                            [title] => HEAVENLY GUN
+                            [description] => A Beautiful Yarn of a Forensic Psychologist And a Frisbee who must Battle a Moose in A Jet Boat
+                            [release_year] => 2006
+                            [actor_id] => 5
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [17] => stdClass Object
+                        (
+                            [film_id] => 503
+                            [title] => KRAMER CHOCOLATE
+                            [description] => A Amazing Yarn of a Robot And a Pastry Chef who must Redeem a Mad Scientist in The Outback
+                            [release_year] => 2006
+                            [actor_id] => 5
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [18] => stdClass Object
+                        (
+                            [film_id] => 535
+                            [title] => LOVE SUICIDES
+                            [description] => A Brilliant Panorama of a Hunter And a Explorer who must Pursue a Dentist in An Abandoned Fun House
+                            [release_year] => 2006
+                            [actor_id] => 5
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [19] => stdClass Object
+                        (
+                            [film_id] => 571
+                            [title] => METAL ARMAGEDDON
+                            [description] => A Thrilling Display of a Lumberjack And a Crocodile who must Meet a Monkey in A Baloon Factory
+                            [release_year] => 2006
+                            [actor_id] => 5
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [20] => stdClass Object
+                        (
+                            [film_id] => 650
+                            [title] => PACIFIC AMISTAD
+                            [description] => A Thrilling Yarn of a Dog And a Moose who must Kill a Pastry Chef in A Manhattan Penthouse
+                            [release_year] => 2006
+                            [actor_id] => 5
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [21] => stdClass Object
+                        (
+                            [film_id] => 665
+                            [title] => PATTON INTERVIEW
+                            [description] => A Thrilling Documentary of a Composer And a Secret Agent who must Succumb a Cat in Berlin
+                            [release_year] => 2006
+                            [actor_id] => 5
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [22] => stdClass Object
+                        (
+                            [film_id] => 687
+                            [title] => POCUS PULP
+                            [description] => A Intrepid Yarn of a Frisbee And a Dog who must Build a Astronaut in A Baloon Factory
+                            [release_year] => 2006
+                            [actor_id] => 5
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [23] => stdClass Object
+                        (
+                            [film_id] => 730
+                            [title] => RIDGEMONT SUBMARINE
+                            [description] => A Unbelieveable Drama of a Waitress And a Composer who must Sink a Mad Cow in Ancient Japan
+                            [release_year] => 2006
+                            [actor_id] => 5
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [24] => stdClass Object
+                        (
+                            [film_id] => 732
+                            [title] => RINGS HEARTBREAKERS
+                            [description] => A Amazing Yarn of a Sumo Wrestler And a Boat who must Conquer a Waitress in New Orleans
+                            [release_year] => 2006
+                            [actor_id] => 5
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [25] => stdClass Object
+                        (
+                            [film_id] => 811
+                            [title] => SMILE EARRING
+                            [description] => A Intrepid Drama of a Teacher And a Butler who must Build a Pastry Chef in Berlin
+                            [release_year] => 2006
+                            [actor_id] => 5
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [26] => stdClass Object
+                        (
+                            [film_id] => 817
+                            [title] => SOLDIERS EVOLUTION
+                            [description] => A Lacklusture Panorama of a A Shark And a Pioneer who must Confront a Student in The First Manned Space Station
+                            [release_year] => 2006
+                            [actor_id] => 5
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [27] => stdClass Object
+                        (
+                            [film_id] => 841
+                            [title] => STAR OPERATION
+                            [description] => A Insightful Character Study of a Girl And a Car who must Pursue a Mad Cow in A Shark Tank
+                            [release_year] => 2006
+                            [actor_id] => 5
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                    [28] => stdClass Object
+                        (
+                            [film_id] => 865
+                            [title] => SUNRISE LEAGUE
+                            [description] => A Beautiful Epistle of a Madman And a Butler who must Face a Crocodile in A Manhattan Penthouse
+                            [release_year] => 2006
+                            [actor_id] => 5
+                            [last_update] => 2006-02-15 05:05:03
+                        )
+
+                )
+
+        )
+
+)

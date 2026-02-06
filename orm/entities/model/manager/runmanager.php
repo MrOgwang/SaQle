@@ -7,57 +7,23 @@ use SaQle\Orm\Operations\Crud\RunOperation;
 use SaQle\Orm\Connection\Connection;
 
 class RunManager{
-	 private string $dbclass = '' {
-	 	 set(string $value){
-	 	 	 $this->dbclass = $value;
-	 	 }
+	 private string $connection;
+	 private string $sql;
+	 private string $operation;
+	 private ?array $data = null;
+	 private bool $multiple = true;
 
-	 	 get => $this->dbclass;
-	 }
-
-	 private string $sql = '' {
-	 	 set(string $value){
-	 	 	 $this->sql = $value;
-	 	 }
-
-	 	 get => $this->sql;
-	 }
-
-	 private string $operation = '' {
-	 	 set(string $value){
-	 	 	 $this->operation = $value;
-	 	 }
-
-	 	 get => $this->operation;
-	 }
-
-	 private ?array $data = null {
-	 	 set(?array $value){
-	 	 	 $this->data = $value;
-	 	 }
-
-	 	 get => $this->data;
-	 }
-
-	 private bool $multiple = true {
-	 	 set(bool $value){
-	 	 	 $this->multiple = $value;
-	 	 }
-
-	 	 get => $this->multiple;
-	 }
-
-	 public function __construct(string $dbclass, string $sql, string $operation, ?array $data = null, bool $multiple = true){
+	 public function __construct(string $connection, string $sql, string $operation, ?array $data = null, bool $multiple = true){
 	 	 $this->sql = $sql;
 	 	 $this->operation = $operation;
 	 	 $this->data = $data;
 	 	 $this->multiple = $multiple;
-	 	 $this->dbclass = $dbclass;
+	 	 $this->connection = $connection;
 	 }
 
 	 public function now(){
 	 	 try{
-	 	 	 $pdo = resolve(Connection::class, config('db_context_classes')[$this->dbclass]);
+	 	 	 $pdo = resolve(Connection::class, config('connections')[$this->connection]);
 	 	 	 $operation = new RunOperation(
 		 	 	 sql:       $this->sql,
 		 	 	 operation: $this->operation,

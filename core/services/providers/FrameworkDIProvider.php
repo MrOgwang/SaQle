@@ -1,8 +1,8 @@
 <?php
 namespace SaQle\Core\Services\Providers;
 
-use SaQle\Orm\Database\DbContextOptions;
-use SaQle\Orm\Database\Trackers\DbContextTracker;
+use SaQle\Orm\Database\Config\ConnectionConfig;
+use SaQle\Orm\Query\References\QueryReferenceMap;
 use SaQle\Orm\Query\Where\Aggregator;
 use SaQle\Orm\Query\Where\Translator;
 use SaQle\Orm\Query\Where\Parser;
@@ -34,7 +34,7 @@ class FrameworkDIProvider extends ServiceProvider {
          $this->app->container->singleton('request', function($c){
              return Request::init();
          });
-         $this->app->container->bind(DbContextTracker::class);
+         $this->app->container->bind(QueryReferenceMap::class);
          $this->app->container->bind(Parser::class);
          $this->app->container->bind(Translator::class);
          $this->app->container->bind(Aggregator::class);
@@ -56,11 +56,11 @@ class FrameworkDIProvider extends ServiceProvider {
          $this->app->container->bind(StartApps::class);
          $this->app->container->bind(MakeResources::class);
          $this->app->container->bind(StartProject::class);
-         $this->app->container->bind(DbContextOptions::class, function($c, ...$connection_params){
-             return new DbContextOptions(...$connection_params);
+         $this->app->container->bind(ConnectionConfig::class, function($c, ...$connection_params){
+             return new ConnectionConfig(...$connection_params);
          });
          $this->app->container->bind(Connection::class, function($c, ...$connection_params){
-             return Connection::make($c->resolve(DbContextOptions::class, $connection_params));
+             return Connection::make($c->resolve(ConnectionConfig::class, $connection_params));
          });
          $this->app->container->bind(FileLogger::class, function($c, $path, $mode){
              return new FileLogger(file_path: $path, file_mode: $mode);

@@ -17,7 +17,7 @@
  * */
 namespace SaQle\Orm\Query\Where;
 
-use SaQle\Orm\Database\Trackers\DbContextTracker;
+use SaQle\Orm\Query\References\QueryReferenceMap;
 
 class Translator{
 	 public protected(set) ?FilterGroup $filter = null {
@@ -38,8 +38,8 @@ class Translator{
          return $random_string;
 	 }
 
-	 public function translate(array $filters, DbContextTracker $ctx){
-		 return $this->filter($filters, $ctx);
+	 public function translate(array $filters, QueryReferenceMap $query_reference_map){
+		 return $this->filter($filters, $query_reference_map);
 	 }
 
      //check whether filters is a simple filter or complex filter
@@ -52,7 +52,7 @@ class Translator{
 		 return true;
 	 }
 
-	 private function do_filter($filter, $ctx, $fill_blanks = true){
+	 private function do_filter($filter, $query_reference_map, $fill_blanks = true){
 	 	 
 	 	 if(!isset($filter[0])){ //if the coloumn name is not provided
 	 	 	 return null;
@@ -60,7 +60,7 @@ class Translator{
          
          $filter_object = null;
 		 if($fill_blanks){
-			 $filter = $this->fill_in_blanks(filter: $filter, ctx: $ctx, strict_null: true);
+			 $filter = $this->fill_in_blanks(filter: $filter, query_reference_map: $query_reference_map, strict_null: true);
 		 }
 			 
 		 for($x = 0; $x < count($filter[0]); $x++){
@@ -97,7 +97,7 @@ class Translator{
 		 return true;
 	 }
 
-	 private function filter(array $filters, DbContextTracker $ctx, ?string $operand = null, ?string $pgid = null, bool $fill_blanks = true){
+	 private function filter(array $filters, QueryReferenceMap $query_reference_map, ?string $operand = null, ?string $pgid = null, bool $fill_blanks = true){
 		 if(count($filters) === 0)
 			 return $this;
 		 
@@ -120,18 +120,18 @@ class Translator{
 			 if(count($filters) >= 3){
 				 foreach($filters as $index => $f){
 					 if($index % 2 === 0){
-						 $this->filter(filters: $f, ctx: $ctx, operand: $filters[$index + 1] ?? null, pgid: $group_id, fill_blanks: $fill_blanks);
+						 $this->filter(filters: $f, query_reference_map: $query_reference_map, operand: $filters[$index + 1] ?? null, pgid: $group_id, fill_blanks: $fill_blanks);
 					 }
 				 }
 
 				 return $this;
 			 }
 
-			 $this->filter(filters: $filters[0], ctx: $ctx, pgid: $group_id, fill_blanks: $fill_blanks);
+			 $this->filter(filters: $filters[0], query_reference_map: $query_reference_map, pgid: $group_id, fill_blanks: $fill_blanks);
 			 return $this;
 		 }
 
-		 $filter_group = $this->do_filter(filter: $filters, ctx: $ctx, fill_blanks: $fill_blanks);
+		 $filter_group = $this->do_filter(filter: $filters, query_reference_map: $query_reference_map, fill_blanks: $fill_blanks);
 		 if($filter_group)
 			 $this->insert_into_parent(pgid: $pgid, filter_entity: $filter_group, operand: $operand);
 
@@ -218,7 +218,7 @@ class Translator{
 		 return $filter;
 	 }
 
-	 private function fill_in_blanks(array $filter, DbContextTracker $ctx, $strict_null = false){
+	 private function fill_in_blanks(array $filter, QueryReferenceMap $query_reference_map, $strict_null = false){
 	 	 /**
 	 	  * a c omplete filter array has the following elements
 	 	  * 0 - the name of the column
@@ -249,11 +249,11 @@ class Translator{
 		 foreach($filter[0] as $index => $field){
 			 $field_properties = explode("__", $field);
 			 if(count($field_properties) === 1) array_push($field_properties, "exact");
-			 $base_table        = $ctx->find_table_name(0);
-			 $tbl_index_search  = $ctx->find_table_index($base_table, $field);
+			 $base_table        = $query_reference_map->find_table_name(0);
+			 $tbl_index_search  = $query_reference_map->find_table_index($base_table, $field);
 			 $tbl_index         = $tbl_index_search['table_index'];
 			 if($tbl_index_search['name_changed']){
-			 	$base_table          = $ctx->find_table_name($tbl_index);
+			 	$base_table          = $query_reference_map->find_table_name($tbl_index);
 			 	$field_properties[0] = explode(":", $field)[1];
 			 }
 			 $new_filter[0][$index] = explode("__", $field_properties[0])[0];
@@ -266,8 +266,8 @@ class Translator{
 
 			 $new_filter[2][$index] = $lap["field_value"];
 			 $operators[]           = $lap["operator"];
-			 $tables[]              = $ctx->find_table_name($tbl_index);
-			 $databases[]           = $ctx->find_database_name($tbl_index);
+			 $tables[]              = $query_reference_map->find_table_name($tbl_index);
+			 $databases[]           = $query_reference_map->find_database_name($tbl_index);
 		 }
 		 $new_filter[1] = $operators;
 		 $new_filter[4] = $tables;
