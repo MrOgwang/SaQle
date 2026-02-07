@@ -3,7 +3,7 @@ namespace SaQle\Orm\Database\Drivers;
 
 use SaQle\Orm\Database\Config\ConnectionConfig;
 use SaQle\Orm\Database\ColumnType;
-use SaQle\Orm\Connection\Connection;
+use SaQle\Orm\Connection\ConnectionManager;
 
 abstract class DbDriver {
 
@@ -23,6 +23,15 @@ abstract class DbDriver {
 	 //return the driver version
      public function get_version() : string {
      	return $this->config->get_options()['version'] ?? "";
+     }
+
+     //return the config
+     public function get_config(){
+         return $this->config;
+     }
+
+     public function get_connection(){
+         return $this->connection;
      }
 
      //whether driver supports window functions
@@ -94,18 +103,16 @@ abstract class DbDriver {
 
      //connect to database server without a database
      protected function connect_without_database(){
-     	 $params = $this->config->to_array();
-     	 $params['database'] = "";
-     	 $this->connection = resolve(Connection::class, $params);
+         $this->connection = ConnectionManager::get($this->config, false);
      }
 
      //connect to the database server with a database
      public function connect_with_database(){
-     	 $this->connection = resolve(Connection::class, $this->config->to_array());
+     	 $this->connection = ConnectionManager::get($this->config, true);
      }
 
      //excecute sql statements
-     protected function execute($sql, $data = null){
+     public function execute($sql, $data = null){
 	 	 $statement = $this->connection->prepare($sql);
 	     $response  = $statement->execute($data);
 	     return ['statement' => $statement, 'response' => $response];

@@ -2,10 +2,12 @@
 namespace SaQle\Orm\Database\Drivers;
 
 use SaQle\Orm\Database\Config\ConnectionConfig;
-use SaQle\Orm\Operations\Crud\TableCreateOperation;
-use SaQle\Orm\Connection\Connection;
+use SaQle\Orm\Connection\ConnectionManager;
 use SaQle\Orm\Database\ColumnType;
 use SaQle\Orm\Entities\Field\Attributes\FieldDefinition;
+use SaQle\Orm\Entities\Model\Manager\QueryManager;
+use SaQle\Core\Exceptions\Model\TableDropOperationFailedException;
+use SaQle\Core\Exceptions\Model\TableCreateOperationFailedException;
 
 class MySqlDriver extends DbDriver {
 	 
@@ -31,10 +33,152 @@ class MySqlDriver extends DbDriver {
 		 return $this->execute($sql)['response'];
 	 }
 
-	 public function drop_table(string $table){
-     	 $sql = "DROP TABLE IF EXISTS $table";
-		 
-		 return $this->execute($sql)['response'];
+	 public function drop_table(string $table, bool $temporary = false){
+         
+         $sql = $temporary ? "DROP TEMPORARY TABLE IF EXISTS {$table}" : "DROP TABLE IF EXISTS {$table}";
+         [$statement, $response] = array_values($this->execute($sql));
+         $error_code = $statement->errorCode();
+
+         if($response === false || $error_code !== "00000"){
+             throw new TableDropOperationFailedException([
+                 'table' => $table,
+                 'statement_error_code' => $error_code
+             ]);
+         }
+
+         return true;
+     }
+
+     public function set_truncate_query(QueryManager $manager) : void {
+         $database = $this->config->get_database();
+         $sql = "TRUNCATE TABLE {$database}.{$table}";
+
+         $manager->set_sql($sql);
+     }
+
+     public function set_temporary_delete_query(QueryManager $manager) : void {
+         $where_clause = $manager->wbuilder->get_where_clause(
+             $manager->get_query_reference_map(), 
+             $manager->get_configurations()
+         );
+         $data = $where_clause->data ? array_merge([1], $where_clause->data) : [1];
+         $database = $this->config->get_database();
+         $table = $manager->table_name();
+         $fields = ['deleted'];
+         $clause   = $where_clause->clause;
+         $fieldstring = implode(" = ?, ", $fields)." = ?";
+         $sql = "UPDATE {$database}.{$table} SET {$fieldstring}{$clause}";
+
+         $manager->set_sql($sql);
+         $manager->set_data($data);
+     }
+
+     public function set_permanent_delete_query(QueryManager $manager) : void {
+         $where_clause = $manager->wbuilder->get_where_clause(
+             $manager->get_query_reference_map(), 
+             $manager->get_configurations()
+         );
+         $data = $where_clause->data ?? null;
+         $database = $this->config->get_database();
+         $table = $manager->table_name();
+         $clause = $where_clause->clause;
+         $sql = "DELETE FROM {$database}.{$table}{$clause}";
+
+         $manager->set_sql($sql);
+         $manager->set_data($data);
+     }
+
+     public function set_update_query(QueryManager $manager) : void {
+         $where_clause = $manager->wbuilder->get_where_clause(
+             $manager->get_query_reference_map(), 
+             $manager->get_configurations()
+         );
+         $clean_data = $manager->get_clean_data();
+         $data = $where_clause->data ? array_merge(array_values($clean_data), $where_clause->data) : array_values($clean_data);
+         $database = $this->config->get_database();
+         $table = $manager->table_name();
+         $fields = array_keys($clean_data);
+         $clause   = $where_clause->clause;
+         $fieldstring = implode(" = ?, ", $fields)." = ?";
+         $sql = "UPDATE {$database}.{$table} SET {$fieldstring}{$clause}";
+
+         $manager->set_sql($sql);
+         $manager->set_data($data);
+     }
+
+     public function set_insert_query(QueryManager $manager) : void {
+         $fields        = array_keys(array_values($manager->get_container()->data)[0]);
+         $data          = array_values($manager->get_container()->data);
+         $values        = [];
+         $row_count     = count($data);
+         foreach($data as $row){
+             $values[]  = array_values($row);
+         }
+         $database      = $this->config->get_database();
+         $table         = $manager->table_name();
+         $fieldstring   = implode(", ", $fields);
+         $valstring     = str_repeat('?, ', count($fields) - 1). '?';
+         $prepared_data = array_merge(...$values);
+         if($manager->get_model()->meta->action_on_duplicate === 'ABORT_WITH_ERROR'){
+             $sql = "INSERT INTO {$database}.{$table} ({$fieldstring}) VALUES ".str_repeat("($valstring), ", $row_count - 1). "($valstring)";
+         }elseif($manager->get_model()->meta->action_on_duplicate === 'INSERT_MINUS_DUPLICATE'){
+             $sql = "INSERT IGNORE INTO {$database}.{$table} ({$fieldstring}) VALUES ".str_repeat("($valstring), ", $row_count - 1)."($valstring)";
+         }elseif($manager->get_model()->meta->action_on_duplicate === 'UPDATE_ON_DUPLICATE'){
+             $exclude = array_merge($manager->get_model()::get_unique_field_names(), [$manager->get_model()::get_pk_name()]);
+             $toupdate = array_map(function($f){
+                 return "$f = VALUES($f)";
+             }, array_diff($fields, $exclude));
+             $sql = "INSERT INTO {$database}.{$table} ({$fieldstring}) VALUES ".str_repeat("($valstring), ", $row_count - 1)."($valstring) ON DUPLICATE KEY UPDATE ".implode(', ', $toupdate);
+         }elseif($manager->get_model()->meta->action_on_duplicate === 'RETURN_EXISTING'){
+             $sql = "INSERT INTO {$database}.{$table} ({$fieldstring}) VALUES ".str_repeat("($valstring), ", $row_count - 1)."($valstring) ON DUPLICATE KEY UPDATE {$manager->get_model()->meta->pk_name} = {$manager->get_model()->meta->pk_name}";
+         }
+
+         $manager->set_sql($sql);
+         $manager->set_data($prepared_data);
+     }
+
+     public function set_read_query(QueryManager $manager) : void {
+         $where_clause = $manager->wbuilder->get_where_clause(
+             $manager->get_query_reference_map(), 
+             $manager->get_configurations()
+         );
+         $join_clause = $manager->jbuilder->construct_join_clause($manager->get_query_reference_map());
+         $data = null;
+         if($where_clause->data || $join_clause->data){
+             $join_clause_data = $join_clause->data ?? [];
+             $where_clause_data = $where_clause->data ?? [];
+             $data = array_merge($join_clause_data, $where_clause_data);
+         }
+
+         $select       = $manager->get_selected();
+         $database     = $manager->get_query_reference_map()->find_database_name(0);
+         $table        = $manager->get_query_reference_map()->find_table_name(0);
+         $table_aka    = $manager->get_query_reference_map()->find_table_aliase(0);
+         $table_ref    = $manager->get_query_reference_map()->find_table_refernce(0);
+         
+         $sql          = "SELECT {$select} FROM ";
+         $from_ref     = "";
+         if($manager->get_configurations()['ftnm'] === 'N-WITH-A'){ //use name and aliase
+             $from_ref = $table_ref ?? ($manager->get_configurations()['ftqm'] === 'F-QUALIFY' ? $database.".".$table : $table);
+             if($table_aka){
+                 $from_ref .= " AS ".$table_aka;
+             }
+         }elseif($manager->get_configurations()['ftnm'] === 'N-ONLY'){ //use only the table name
+             $from_ref = $table_ref ?? ($manager->get_configurations()['ftqm'] === 'F-QUALIFY' ? $database.".".$table : $table);
+         }elseif($manager->get_configurations()['ftnm'] === 'A-ONLY'){ //use only the aliase name
+             $from_ref = $table_ref ?? ($manager->get_configurations()['ftqm'] === 'F-QUALIFY' ? $database.".".$table : $table);
+             $from_ref = $table_aka ? $table_aka : $from_ref;
+         }
+
+         $sql         .= $from_ref;
+         $sql         .= $join_clause->clause;
+         $sql         .= $where_clause->clause;
+         $sql         .= $manager->get_groupby_clause();
+         $sql         .= $manager->obuilder->construct_order_clause();
+         $sql         .= $manager->lbuilder->construct_limit_clause();
+         
+         $manager->set_sql($sql);
+         $manager->set_data($data);
      }
 
      protected function check_column_exists(string $table, string $column) : bool {
@@ -209,18 +353,37 @@ class MySqlDriver extends DbDriver {
  	 	 return implode(" ", $sql);
      }
 
+     private function create_table(string $table, string $fields, bool $temporary = false, string $constraints = ""){
+         $sql = $temporary ? "CREATE TEMPORARY TABLE IF NOT EXISTS {$table} ({$fields})" : "CREATE TABLE IF NOT EXISTS {$table} ({$fields})";
+         if($constraints){
+             $constraints = ", ".$constraints;
+             $sql = $temporary ? 
+             "CREATE TEMPORARY TABLE IF NOT EXISTS {$table} ({$fields}{$constraints})" : 
+             "CREATE TABLE IF NOT EXISTS {$table} ({$fields}{$constraints})";
+         }
+
+         [$statement, $response] = array_values($this->execute($sql));
+         $error_code = $statement->errorCode();
+
+         if($response === false || $error_code !== "00000"){
+             echo "SQL: $sql\n";
+             throw new TableCreateOperationFailedException([
+                 'table' => $table,
+                 'statement_error_code' => $error_code
+             ]);
+         }
+
+         return true;
+     }
+
      //Create a database table from migration
      public function create_table_from_migration(string $table, array $column_sqls, array $unique_sqls = [], bool $temporary = false){
-     	 $operation = new TableCreateOperation(
-	 	 	 table:  $table,
-	 	 	 fields: implode(", ", $column_sqls),
-	 	 	 temporary: $temporary,
-	 	 	 constraints: implode(", ", $unique_sqls)
-	 	 );
-
-	 	 $tblcreated = $operation->create($this->connection);
-
-	 	 return $tblcreated;
+         return $this->create_table(
+             $table,
+             implode(", ", $column_sqls),
+             $temporary, 
+             implode(", ", $unique_sqls)
+         );
      }
 
      //create table from model class
@@ -232,14 +395,11 @@ class MySqlDriver extends DbDriver {
      	 	 $defs[] = $this->translate_field_definition($f->get_definition(FieldDefinition::class));
      	 }
 
-     	 $operation = new TableCreateOperation(
-	 	 	 table:  $table,
-	 	 	 fields: implode(", ", $defs),
-	 	 	 temporary: $temporary
-	 	 );
-	 	 $tblcreated = $operation->create($this->connection);
-
-	 	 return $tblcreated;
+         return $this->create_table(
+             $table,
+             implode(", ", $defs),
+             $temporary
+         );
      }
 
      public function supports_window_functions(): bool {

@@ -13,7 +13,7 @@ abstract class SessionHandler implements SessionHandlerInterface{
 		 return true;
 	 }
      public function destroy($session_id) : bool{
-		 return Session::del()->permanently()->where('session_id__eq', $session_id)->now();
+		 return Session::delete(true)->where('session_id__eq', $session_id)->now();
      }
      public function gc($maxlifetime) : int{
 		 return true;
@@ -25,9 +25,9 @@ abstract class SessionHandler implements SessionHandlerInterface{
      public function write($session_id, $session_data) : bool{
 		 $data = Session::get()->where('session_id__eq', $session_id)->first_or_default();
 		 if(!$data){
-		 	 Session::new(['session_id' => $session_id, 'session_data' => $session_data])->save();
+		 	 Session::create(['session_id' => $session_id, 'session_data' => $session_data])->now();
 		 }else{
-		 	 Session::set(['session_data' => $session_data])->where('session_id__eq', $session_id)->update();
+		 	 Session::update(['session_data' => $session_data])->where('session_id__eq', $session_id)->now();
 		 }
 		 return true;
      }

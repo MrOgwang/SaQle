@@ -39,7 +39,12 @@ trait FilterManager{
  	 }
 
  	 public function where(string $field_name, $value){
+ 	 	 $this->before_where($field_name, $value);
+
 	 	 $this->wbuilder->simple_aggregate([$field_name, $value, 0, "&"]);
+
+	 	 $this->after_where($field_name, $value);
+
 	 	 return $this;
 	 }
 
@@ -49,17 +54,32 @@ trait FilterManager{
       * embedded in the sql statement as is
       * */
 	 public function l_where(string $field_name, $value){
+	 	 $this->before_where($field_name, $value);
+
 	 	 $this->wbuilder->simple_aggregate([$field_name, $value, 1, "&"]);
+
+	 	 $this->after_where($field_name, $value);
+
 	 	 return $this;
 	 }
 
 	 public function or_where(string $field_name, $value){
+	 	 $this->before_where($field_name, $value);
+
 	 	 $this->wbuilder->simple_aggregate([$field_name, $value, 0, "|"]);
+
+	 	 $this->after_where($field_name, $value);
+
 	 	 return $this;
 	 }
 
 	 public function l_or_where(string $field_name, $value){
+	 	 $this->before_where($field_name, $value);
+
 	 	 $this->wbuilder->simple_aggregate([$field_name, $value, 1, "|"]);
+
+	 	 $this->after_where($field_name, $value);
+
 	 	 return $this;
 	 }
 
@@ -71,5 +91,13 @@ trait FilterManager{
 	 public function or_gwhere($callback){
 	 	 $this->wbuilder->group_aggregate($this, $callback, '|');
 	 	 return $this;
+	 }
+
+	 protected function before_where(string $field_name, $value){
+
+	 }
+
+	 protected function after_where(string $field_name, $value){
+	 	
 	 }
 }

@@ -11,19 +11,15 @@ class TestModel {
              ['films.language'],
 
              //tuning seems to cause a problem!
-             /*[
+             [
                  'films' => function($q){
                       return $q->limit(1, 5)->order(['length'], 'ASC');
                   }
-             ]*
+             ]
          )->limit(page: 1, records: 5)->all();
          print_r($actors);*/
 
-         $films = Film::using('sakila')->get()->with(['actors', 'language', 'categories'], /*[
-            'actors' => function($q){
-                      return $q->limit(1, 5)->order(['last_update'], 'ASC');
-                  }
-         ]*/)->limit(page: 1, records: 5)->all();
+         $films = Film::using('sakila')->get()->with(['actors'])->limit(page: 1, records: 5)->all();
          print_r($films);
          /*foreach($films as $index => $flm) {
              $n = $index + 1;

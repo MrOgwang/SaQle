@@ -188,7 +188,7 @@ class Migrate{
          $fn_parts = explode("_", $file_name);
          $recorded = Migration::get()->where('migration_name__eq', $migration_name)->where('migration_timestamp__eq', $fn_parts[1])->first_or_default();
          if(!$recorded){
-             $recorded = Migration::new(['migration_name' => $migration_name, 'migration_timestamp' => $fn_parts[1], 'is_migrated' => 0])->save();
+             $recorded = Migration::create(['migration_name' => $migration_name, 'migration_timestamp' => $fn_parts[1], 'is_migrated' => 0])->now();
          }
 
          if($recorded->is_migrated === 1)
@@ -200,7 +200,7 @@ class Migrate{
          //$op_results = array_map(fn($op) => self::process_up_operation($op, $project_root, $dbdriver), $ctx_up_operations);
 
          #mark current migration file as having been migrated
-         Migration::set(['is_migrated' => 1])->where('migration_id', $recorded->migration_id)->update();
+         Migration::update(['is_migrated' => 1])->where('migration_id', $recorded->migration_id)->now();
 
          return;
      }

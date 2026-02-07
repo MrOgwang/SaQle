@@ -18,7 +18,7 @@ class SeedDatabase{
 
                  echo "Now seeding for model: {$model}\n";
                  $data = require_once $file;
-                 $seeded_data = $model::new($data)->save();
+                 $seeded_data = $model::create($data)->now();
                  echo "Model: {$model} seeded!\n\n";
              }
          }

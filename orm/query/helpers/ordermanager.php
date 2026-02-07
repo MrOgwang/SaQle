@@ -27,11 +27,24 @@ trait OrderManager{
      * @param string $direction - order ASC or DESC
      */
      public function order(array $fields, string $direction = "ASC"){
+         $this->before_order();
+
          $this->obuilder->order = new Order(fields: $fields, direction: $direction);
+
+         $this->after_order();
+
          return $this;
      }
      
      public function get_order_clause(){
          return $this->obuilder->construct_order_clause();
+     }
+
+     protected function before_order(){
+
+     }
+
+     protected function after_order(){
+        
      }
 }

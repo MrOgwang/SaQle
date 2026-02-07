@@ -26,12 +26,25 @@ trait GroupManager{
      * @param array
      */
      public function group_by(array $fields){
+         $this->before_group();
+
          $this->gbuilder->fields = $fields;
+
+         $this->after_group();
+
          return $this;
      }
 
-     protected function get_groupby_clause(){
+     public function get_groupby_clause(){
          $fields = $this->gbuilder->get_groupby($this->query_reference_map, ...$this->configurations);
          return $fields ? ' GROUP BY '.implode(", ", $fields) : "";
+     }
+
+     protected function before_group(){
+
+     }
+
+     protected function after_group(){
+        
      }
 }

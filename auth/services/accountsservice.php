@@ -43,12 +43,12 @@ abstract class AccountsService implements IService{
 	 public function save_verification_code(string $contact){
 		 $generated_code = $this->create_code(len: 5, characters: "0123456789");
 		 //code expires 24 hours from the time of creation.
-		 $code = Vercode::new([
+		 $code = Vercode::create([
 		 	"date_expires" => time() + (24 * 60 * 60), 
 		 	"contact"      => $contact, 
 		 	"code_type"    => "verification", 
 		 	"code"         => $generated_code
-		 ])->save();
+		 ])->now();
 
 		 if(!$code)
 		 	 internal_server_error_exception('Verification code creation failed! Please try again.');

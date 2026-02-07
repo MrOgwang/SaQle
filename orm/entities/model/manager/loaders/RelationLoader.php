@@ -87,7 +87,7 @@ final class RelationLoader {
          * These ID values could be in hundreds, therefore using an IN clause in the resulting SQL is not sound,
          * this is why they are kept in a temporary table to be referenced later
          * */
-         TempId::create($connection);
+         TempId::create_table($connection);
            
          if($pkey_values){
              $values_to_add = [];
@@ -95,7 +95,7 @@ final class RelationLoader {
                  $values_to_add[] = ['id_value' => $id];
              }
 
-             TempId::using($connection)->new($values_to_add)->save();
+             TempId::using($connection)->create($values_to_add)->now();
          }
 
          /**
@@ -105,7 +105,7 @@ final class RelationLoader {
          * */
          $temporary_ids_select_query = TempId::using($connection)->get()
          ->config(fnqm: 'N-QUALIFY', ftnm: 'N-ONLY', ftqm: 'N-QUALIFY')
-         ->select(['id_value'])->get_sql_info();
+         ->select(['id_value'])->get_query_info();
 
          /**
           * Fine tune how the results from the foreign model table should be by injecting:
@@ -159,7 +159,7 @@ final class RelationLoader {
               ->l_where("{$foreign_key}__in", $temporary_ids_select_query['sql']);
          }
         
-         $cte_manager_query = $cte_manager->get_sql_info();
+         $cte_manager_query = $cte_manager->get_query_info();
 
          $query_table_name = 'ranked_rows';
          $outer_manager = $foreign_model::using($connection)->get(tablealiase: $query_table_name)
@@ -183,9 +183,11 @@ final class RelationLoader {
 
          $testfilters = $outer_manager->get_wbuilder()->get_where_clause($outer_manager->get_query_reference_map(), $outer_manager->get_configurations());
 
-         $outer_manager_query = $outer_manager->get_sql_info();
+         $outer_manager_query = $outer_manager->get_query_info();
 
          $finalsql = "WITH {$query_table_name} AS ({$cte_manager_query['sql']}) {$outer_manager_query['sql']}";
+
+         echo "$finalsql\n";
 
          $finalmanager = $foreign_model::using($connection)->get()->sqlndata($finalsql, $testfilters->data ? $testfilters->data : null);
          $this->attach_nested($with, $finalmanager);
@@ -193,7 +195,7 @@ final class RelationLoader {
          $related_data = $finalmanager->eager_load();
 
          //drop the temporary table
-         TempId::drop();
+         TempId::drop_table();
 
          return $related_data;
      }

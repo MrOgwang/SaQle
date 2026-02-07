@@ -17,12 +17,12 @@ abstract class TempModel extends Model implements ITempModel{
  	 	 return [$dbdriver, $table];
 	 }
 
-	 public static function drop(?string $connection = null) : bool {
+	 public static function drop_table(?string $connection = null) : bool {
 	 	 [$dbdriver, $table] = self::get_db_driver($connection);
  	 	 return $dbdriver->drop_table($table);
 	 }
 
-	 public static function create(?string $connection = null) : bool {
+	 public static function create_table(?string $connection = null) : bool {
 	 	 [$dbdriver, $table] = self::get_db_driver($connection);
  	 	 return $dbdriver->create_table_from_model($table, get_called_class(), true);
 	 }

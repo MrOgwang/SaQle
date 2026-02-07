@@ -1,15 +1,12 @@
 <?php
  namespace SaQle\Orm\Entities\Model\Manager;
 
- use SaQle\Orm\Operations\Crud\{SelectOperation, TotalOperation};
+ use SaQle\Core\Exceptions\Model\SelectOperationFailedException;
  use SaQle\Core\Exceptions\Model\NullObjectException;
  use SaQle\Orm\Entities\Model\Schema\Model;
  use SaQle\Commons\{DateUtils, UrlUtils, StringUtils};
  use SaQle\Core\Assert\Assert;
  use SaQle\Orm\Entities\Model\TempId;
- use SaQle\Orm\Connection\Connection;
- use SaQle\Core\FeedBack\FeedBack;
- use SaQle\Orm\Entities\Model\Interfaces\IOperationManager;
  use SaQle\Orm\Entities\Model\Manager\Utils\EventUtils;
  use SaQle\Core\Events\ModelEventPhase;
  use SaQle\Orm\Entities\Model\Manager\Loaders\{RelationStack, EagerLoader};
@@ -17,12 +14,13 @@
  use SaQle\Orm\Entities\Field\Types\Base\RelationField;
  use Exception;
  use Closure;
+ use PDO;
 
-class ReadManager extends IReadManager implements IOperationManager {
+final class ReadManager extends IReadManager {
 	 use DateUtils, UrlUtils, StringUtils, EventUtils;
 
-	 public function __construct(){
-	 	 parent::__construct();
+	 public function __construct(Model $model, ?string $tablealiase = null, ?string $tableref = null){
+	 	 parent::__construct($model, $tablealiase, $tableref);
 	 }
 
 	 public function eager_load(){
@@ -101,19 +99,28 @@ class ReadManager extends IReadManager implements IOperationManager {
 	 private function get(bool $stack_active = false){
 	 	 $relation_stack = RelationStack::enter_root();
 
-	 	 $sql_info = $this->get_sql_info();
-	 	 if($this->is_custom_sql()){
-	 	 	 $sql_info = $this->get_sqlndata();
-	 	 }
-	 	 $pdo = resolve(Connection::class, config('connections')[$this->model->meta->connection_name]);
-	 	 $operation = new SelectOperation(sql: $sql_info['sql'], data: $sql_info['data']);
+	 	 //connect to the database
+	 	 $this->dbdriver->connect_with_database();
+
+	 	 //get query info
+	 	 $query_info = $this->get_query_info();
 
 	 	 //send pre select signal to observers
-	 	 $named_args = $this->get_named_args('select', $sql_info, $this->model->meta->table_name, $this->model::class);
+	 	 $named_args = $this->get_named_args('select', $query_info, $this->model->meta->table_name, $this->model::class);
 	 	 $this->dispatch_event($this->model::class, ModelEventPhase::READING, $named_args, resolve('request')->user);
 
- 	     //get rows
-	 	 $rows = $operation->select($pdo);
+         //execute
+         [$statement, $response] = array_values($this->dbdriver->execute($query_info['sql'], $query_info['data']));
+         $error_code = $statement->errorCode();
+
+         if($response === false || $error_code !== "00000"){
+		 	 throw new SelectOperationFailedException([
+		 	 	 'table' => $this->model->meta->table_name, 
+		 	 	 'statement_error_code' => $error_code
+		 	 ]);
+		 }
+
+	 	 $rows = $statement->fetchAll(PDO::FETCH_OBJ);
 
 	 	 //convert rows to model collection first!
 	 	 if(!$stack_active && $this->model::class !== "SaQle\Orm\Entities\Model\TempId"){

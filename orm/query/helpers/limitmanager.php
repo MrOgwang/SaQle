@@ -27,12 +27,25 @@ trait LimitManager{
      * @param int records - the number of records to fetch.
      */
      public function limit(int $page = 1, int $records = 10){
+         $this->before_limit();
+
          $this->lbuilder->limit = new Limit(page: $page, records: $records);
+
+         $this->after_limit();
+
          return $this;
      }
 
      public function get_limit_records(){
          $limit = $this->lbuilder->limit;
          return $limit ? $limit->records : 0;     
+     }
+
+     protected function before_limit(){
+
+     }
+
+     protected function after_limit(){
+        
      }
 }

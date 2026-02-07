@@ -3,96 +3,104 @@ declare(strict_types = 1);
 
 namespace SaQle\Orm\Entities\Model\Manager;
 
+use SaQle\Core\Exceptions\Model\DeleteOperationFailedException;
 use SaQle\Orm\Query\Helpers\FilterManager;
-use SaQle\Orm\Operations\Crud\{UpdateOperation, DeleteOperation};
-use SaQle\Orm\Connection\Connection;
 use SaQle\Orm\Query\References\QueryReferenceMap;
-use SaQle\Core\FeedBack\FeedBack;
-use SaQle\Orm\Entities\Model\Interfaces\IOperationManager;
 use SaQle\Orm\Entities\Model\Manager\Utils\EventUtils;
 use SaQle\Core\Events\ModelEventPhase;
 use SaQle\Orm\Entities\Model\Schema\Model;
 use Exception;
 
-class DeleteManager implements IOperationManager {
+class DeleteManager extends QueryManager {
 	 use FilterManager {
 		 FilterManager::__construct as private __filterConstruct;
 	 }
 
 	 use EventUtils;
 
-	 private Model $model;
 	 private bool $permanently = false;
 	 private ?QueryReferenceMap $query_reference_map = null;
 
-	 public function __construct(Model $model){
-	 	 $this->model = $model;
+	 public function __construct(Model $model, bool $permanently = false){
+	 	 parent::__construct($model);
+
+	 	 $this->permanently = $permanently;
+
 	 	 $this->setup_query_reference_map(
-		 	 table_name:    $model->meta->table_name,
+		 	 table_name:    $this->model->meta->table_name,
 		 	 table_aliase:  "",
-		 	 database_name: config('connections')[$model->meta->connection_name]['database'],
-		 	 field_list:    $model->meta->table_column_names,
-		 	 ff_settings:   $model->meta->file_required_fields,
+		 	 database_name: $this->dbdriver->get_config()->get_database(),
+		 	 field_list:    $this->model->meta->table_column_names,
+		 	 ff_settings:   $this->model->meta->file_required_fields,
 		 	 table_ref:     ''
 		 );
 
          $this->__filterConstruct();
+
+         $this->update_query();
+	 }
+
+	 private function update_query(){
+	 	 if($this->permanently){
+         	 $this->dbdriver->set_permanent_delete_query($this);
+         }else{
+         	 $this->dbdriver->set_temporary_delete_query($this);
+         }
+	 }
+
+	 protected function after_where(string $field_name, $value){
+	 	 $this->update_query();
+	 }
+
+	 public function get_query_reference_map(){
+	 	 return $this->query_reference_map;
 	 }
 
 	 public function now(){
 	 	 try{
-	 	 	 $pdo = resolve(Connection::class, config('connections')[$this->model->meta->connection_name]);
-	 	     return $this->permanently ? $this->hard_delete($pdo) : $this->soft_delete($pdo);
+	 	 	 //connect to the database
+	 	 	 $this->dbdriver->connect_with_database();
+
+	 	 	 //get query info
+	 	 	 $query_info = $this->get_query_info();
+
+	 	 	 //send a pre delete signal to observers
+	 	     $named_args = $this->get_named_args('delete', $query_info);
+	 	     $this->dispatch_event(
+	 	     	 $this->model::class, 
+	 	     	 $this->permanently ? ModelEventPhase::DELETING : ModelEventPhase::SOFT_DELETING, 
+	 	     	 $named_args, 
+	 	     	 resolve('request')->user
+	 	     );
+
+             //execute query
+	 	     [$statement, $response] = array_values($this->dbdriver->execute($query_info['sql'], $query_info['data']));
+             $error_code = $statement->errorCode();
+
+             if($response === false || $error_code !== "00000"){
+			 	 throw new DeleteOperationFailedException([
+			 	 	 'table' => $this->model->meta->table_name, 
+			 	 	 'statement_error_code' => $error_code
+			 	 ]);
+			 }
+
+			 $result = $statement->rowCount() > 0 ? true : false;
+
+			 //send a post delete signal to observers
+	 	     $this->dispatch_event(
+	 	     	 $this->model::class, 
+	 	     	 $this->permanently ? ModelEventPhase::DELETING : ModelEventPhase::SOFT_DELETED, 
+	 	     	 $named_args, 
+	 	     	 resolve('request')->user, 
+	 	     	 $result
+	 	     );
+
+	 	     return $result;
+
 	 	 }catch(Exception $ex){
 	 	 	 throw $ex;
 	 	 }
 	 }
-
-	 public function permanently(){
-	 	 $this->permanently = true;
-	 	 return $this;
-	 }
-
-	 private function soft_delete($pdo){
-	 	 $sql_info = $this->get_update_sql_info();
-	 	 $operation = new UpdateOperation(
-	 	 	 sql:   $sql_info['sql'],
-	 	 	 data:  $sql_info['data'],
-	 	 	 table: $this->model->meta->table_name
-	 	 );
-
-	 	 //send a pre delete signal to observers
-	 	 $named_args = $this->get_named_args('delete', $sql_info);
-	 	 $this->dispatch_event($this->model::class, ModelEventPhase::SOFT_DELETING, $named_args, resolve('request')->user);
-
-	 	 $response = $operation->update($pdo);
-	 	 $result = $response->row_count > 0 ? true : false;
-
-	 	 //send a post delete signal to observers
-	 	 $this->dispatch_event($this->model::class, ModelEventPhase::SOFT_DELETED, $named_args, resolve('request')->user, $result);
-
-	 	 return $result;
-     }
-
-     private function hard_delete($pdo){
-     	 $sql_info = $this->get_delete_sql_info();
-	 	 $operation = new DeleteOperation(
-	 	 	 sql:   $sql_info['sql'],
-	 	 	 data:  $sql_info['data'],
-	 	 	 table: $this->model->meta->table_name
-	 	 );
-
-	 	 //send a pre delete signal to observers
-	 	 $named_args = $this->get_named_args('delete', $sql_info);
-	 	 $this->dispatch_event($this->model::class, ModelEventPhase::DELETING, $named_args, resolve('request')->user);
-
-	 	 $result = $operation->delete($pdo);
-
-	 	 //send a post delete signal to observers
-	 	 $this->dispatch_event($this->model::class, ModelEventPhase::DELETED, $named_args, resolve('request')->user, $result);
-
-	 	 return $result;
-     }
 
      private function setup_query_reference_map(string $table_name, string $table_aliase, string $database_name, array $field_list, array $ff_settings, ?string $table_ref = null){
      	 $this->query_reference_map             = new QueryReferenceMap();
@@ -104,7 +112,7 @@ class DeleteManager implements IOperationManager {
 	 	 $this->query_reference_map->ffsettings = array_merge($this->query_reference_map->ffsettings, [$ff_settings]);
 	 }
 
-	 private function get_configurations(){
+	 public function get_configurations(){
 	 	  return [
 	 	  	 /**
 	 		 * field name qualification mode: how to qualify field names in the resulting sql statement: options, 
@@ -130,34 +138,5 @@ class DeleteManager implements IOperationManager {
 	 		 'ftqm' => 'F-QUALIFY'
 	 	  ];
 	 }
-
-	 private function get_update_sql_info(){
-	 	 $where_clause = $this->wbuilder->get_where_clause($this->query_reference_map, $this->get_configurations());
-	 	 $data = $where_clause->data ? array_merge([1], $where_clause->data) : [1];
-	 	 $database = config('connections')[$this->model->meta->connection_name]['database'];
-	 	 $table = $this->model->meta->table_name;
-	 	 $fields = ['deleted'];
-	 	 $clause   = $where_clause->clause;
-		 $fieldstring = implode(" = ?, ", $fields)." = ?";
-			 
-		 $sql = "UPDATE {$database}.{$table} SET {$fieldstring}{$clause}";
-
-         return ['sql' => $sql, 'data' => $data];
-     }
-
-     private function get_delete_sql_info(){
-	 	 $where_clause = $this->wbuilder->get_where_clause($this->query_reference_map, $this->get_configurations());
-	 	 $data         = $where_clause->data ?? null;
-	 	 $database     = config('connections')[$this->model->meta->connection_name]['database'];
-	 	 $table        = $this->model->meta->table_name;
-	 	 $clause       = $where_clause->clause;
-		 $sql          = "DELETE FROM {$database}.{$table}{$clause}";
-
-         return ['sql' => $sql, 'data' => $data];
-     }
-
-     public function get_sql_info(){
-     	 return $this->permanently ? $this->get_delete_sql_info() : $this->get_update_sql_info();
-     }
 }
 

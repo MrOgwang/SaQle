@@ -521,24 +521,24 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
      }
 
      //add new row(s) to database or batch create new instances
-	 public static function new(array $data) : CreateManager {
+	 public static function create(array $data) : CreateManager {
 	 	 $model_instance = self::make();
 	 	 $model_instance->set_table_and_connection();
 	 	 return new CreateManager($model_instance, $data);
 	 }
 
 	 //update exisitng rows (s)
-	 public static function set(array $data){
+	 public static function update(array $data){
 	 	 $model_instance = self::make();
 	 	 $model_instance->set_table_and_connection();
 	 	 return new UpdateManager($model_instance, $data);
 	 }
 
 	 //delete one or more rows
-	 public static function del(){
+	 public static function delete(bool $permanently = false){
 	 	 $model_instance = self::make();
 	 	 $model_instance->set_table_and_connection();
-	 	 return new DeleteManager($model_instance);
+	 	 return new DeleteManager($model_instance, $permanently);
 	 }
 
 	 //empty the entire table
@@ -552,14 +552,13 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 	 public static function get($tablealiase = null, $tableref = null){
 	 	 $model_instance = self::make();
 	 	 $model_instance->set_table_and_connection();
-	 	 $readmanager = new ReadManager();
-	 	 $readmanager->initialize(model: $model_instance, tablealiase: $tablealiase, tableref: $tableref);
-	 	 return $readmanager;
+	 	 return new ReadManager($model_instance, $tablealiase, $tableref);
 	 }
 
 	 //run custom sql and data
-	 public static function run(string $connection, string $sql, string $operation, ?array $data = null, bool $multiple = true){
-	 	 return new RunManager($connection, $sql, $operation, $data, $multiple);
+	 public static function run(string $sql, string $operation, ?array $data = null, bool $multiple = true){
+	 	 $model_instance = self::make();
+	 	 return new RunManager($model_instance, $sql, $operation, $data, $multiple);
 	 }
 
      public static function get_fillable_fields(){

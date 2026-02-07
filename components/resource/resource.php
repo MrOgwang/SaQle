@@ -55,7 +55,7 @@ final class Resource {
              keep_keys: true
          );
 
-         $object = $model_class::new($insert_data)->save();
+         $object = $model_class::create($insert_data)->now();
 
          return $object;
      }

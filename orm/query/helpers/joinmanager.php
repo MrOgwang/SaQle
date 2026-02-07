@@ -43,15 +43,19 @@ trait JoinManager{
      	 ?Q      $q        = null,
      	 ?string $database = null
      ){
+     	 $this->before_join();
+
      	 $joining_model = $this->register_joining_model(table: $table, tblref: $ref, as: $as);
 
      	 $database = $database ?: $this->query_reference_map->find_database_name(0);
          $ptable   = $this->query_reference_map->find_table_name(0);
-     	 $model    = $this->get_model($ptable);
+     	 $model    = $this->model_from_table($ptable);
 		 $pkname   = $model->get_pk_name();
      	 $from     = $from ?: $pkname;
      	 $to       = $to   ?: $pkname;
      	 $this->jbuilder->add_join(type: $type, table: $table, from: $from, to: $to, as: $as, ref: $ref, database: $database, query: $q, model: $joining_model::class);
+
+     	 $this->after_join();
      }
 
      /**
@@ -158,6 +162,14 @@ trait JoinManager{
 	 ){
 	 	 [$table_name, $database_name] = $this->get_table_n_database($model);
 	 	 return $this->inner_join(table: $table_name, from: $from, to: $to, as: $as, ref: $ref, select: $select, database: $database_name);
+	 }
+
+	 protected function before_join(){
+
+	 }
+
+	 protected function after_join(){
+	 	
 	 }
 
 }

@@ -67,6 +67,7 @@ final class App{
      private function initialize() : void {
          require_once __DIR__.'/shortcuts/helpers.php';
          require_once __DIR__.'/shortcuts/strings.php';
+         require_once __DIR__.'/shortcuts/arrays.php';
          $this->load_environment();
      }
 

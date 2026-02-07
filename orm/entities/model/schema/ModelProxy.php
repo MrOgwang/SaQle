@@ -8,25 +8,27 @@ final class ModelProxy {
          protected Model $model_instance
      ){}
 
-     public function new(array $data) : CreateManager {
+     public function create(array $data) : CreateManager {
          return new CreateManager($this->model_instance, $data);
      }
 
      public function get($tablealiase = null, $tableref = null): ReadManager {
-         $readmanager = new ReadManager();
-         $readmanager->initialize(model: $this->model_instance, tablealiase: $tablealiase, tableref: $tableref);
-         return $readmanager;
+         return new ReadManager($this->model_instance, $tablealiase, $tableref);
      }
 
-     public function set(array $data): UpdateManager {
+     public function update(array $data): UpdateManager {
          return new UpdateManager($this->model_instance, $data);
      }
 
-     public function del(): DeleteManager {
-         return new DeleteManager($this->model_instance);
+     public function delete(bool $permanently = false): DeleteManager {
+         return new DeleteManager($this->model_instance, $permanently);
      }
 
      public function empty(){
          return new TruncateManager($this->model_instance);
+     }
+
+     public function run(string $sql, string $operation, ?array $data = null, bool $multiple = true){
+         return new RunManager($this->model_instance, $sql, $operation, $data, $multiple);
      }
 }

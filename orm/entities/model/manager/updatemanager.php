@@ -3,73 +3,95 @@ declare(strict_types = 1);
 
 namespace SaQle\Orm\Entities\Model\Manager;
 
+use SaQle\Core\Exceptions\Model\UpdateOperationFailedException;
 use SaQle\Orm\Entities\Model\Manager\Containers\DataContainer;
-use SaQle\Orm\Operations\Crud\UpdateOperation;
 use SaQle\Core\Assert\Assert;
-use SaQle\Orm\Connection\Connection;
-use SaQle\Image\Image;
 use SaQle\Orm\Query\References\QueryReferenceMap;
 use SaQle\Orm\Query\Helpers\FilterManager;
-use SaQle\Core\FeedBack\FeedBack;
-use SaQle\Orm\Entities\Model\Interfaces\IOperationManager;
 use SaQle\Orm\Entities\Model\Manager\Utils\{EventUtils, ImageUtils};
 use SaQle\Core\Events\ModelEventPhase;
 use SaQle\Orm\Entities\Model\Schema\Model;
 use Exception;
 
-class UpdateManager implements IOperationManager{
+class UpdateManager extends QueryManager {
 	 use ImageUtils, EventUtils;
 	 
-	 use FilterManager{
+	 use FilterManager {
 		 FilterManager::__construct as private __filterConstruct;
 	 }
 
-	 private Model $model;
+     private array $clean_data;
 	 private DataContainer $container;
-     //when an update is done from an object instead of update manager, the object state is tracked here
-	 private array $datastate = [];
 	 private ?QueryReferenceMap $query_reference_map = null;
 
 	 public function __construct(Model $model, array $data){
 	 	 Assert::isNonEmptyMap($data, "The data to update is not properly defined!");
+	 	 
+	 	 parent::__construct($model);
 
-	 	 $this->model = $model;
          $this->container  = new DataContainer();
+
 	 	 $this->container->data = $data;
 
 	 	 $this->setup_query_reference_map(
-		 	 table_name:    $this->table,
+		 	 table_name:    $this->model->meta->table_name,
 		 	 table_aliase:  "",
-		 	 database_name: config('connections')[$this->model->meta->connection_name]['database'],
+		 	 database_name: $this->dbdriver->get_config()->get_database(),
 		 	 field_list:    $this->model->meta->table_column_names,
 		 	 ff_settings:   $this->model->meta->file_required_fields,
 		 	 table_ref:     ''
 		 );
 
 		 $this->__filterConstruct();
+
+		 [$clean_data, $file_data] = $this->model->get_update_data($this->container->data, resolve('request'), []);
+		 $this->container->files = $file_data;
+		 $this->clean_data = $clean_data;
+
+		 $this->dbdriver->set_update_query($this);
 	 }
 
-	 public function update(bool $multiple = false){
-	 	 try{
-	 	 	 $pdo = resolve(Connection::class, config('connections')[$this->model->meta->connection_name]);
-     	     [$clean_data, $file_data] = $this->model->get_update_data($this->container->data, resolve('request'), $this->datastate);
-     	     $this->container->files = [$file_data];
-     	     $sql_info  = $this->get_sql_info($clean_data);
-     	     $operation = new UpdateOperation(
-		 	 	 sql:   $sql_info['sql'],
-		 	 	 table: $this->model->meta->table_name,
-		 	 	 data:  $sql_info['data']
-		 	 );
+	 protected function after_where(string $field_name, $value){
+	 	 $this->dbdriver->set_update_query($this);
+	 }
 
-		 	 //send a pre update signal to observers
-		 	 $named_args = $this->get_named_args('update', $sql_info, null, null, $clean_data, $file_data);
+	 public function get_query_reference_map(){
+	 	 return $this->query_reference_map;
+	 }
+
+	 public function get_clean_data(){
+	 	return $this->clean_data;
+	 }
+
+	 public function now(){
+	 	 try{
+	 	 	 //connect to the database
+	 	 	 $this->dbdriver->connect_with_database();
+
+	 	 	 //get query info
+	 	 	 $query_info = $this->get_query_info();
+
+	 	 	 //send a pre update signal to observers
+		 	 $named_args = $this->get_named_args('update', $query_info, null, null, $this->clean_data, $this->container->files);
 	 	     $this->dispatch_event($this->model::class, ModelEventPhase::UPDATING, $named_args, resolve('request')->user);
 
-	 	     //update data
-		 	 $response = $operation->update($pdo);
-		 	 $this->auto_save_files(array_values($this->container->files));
+             //execute
+             [$statement, $response] = array_values($this->dbdriver->execute($query_info['sql'], $query_info['data']));
+             $error_code = $statement->errorCode();
+
+             if($response === false || $error_code !== "00000"){
+			 	 throw new UpdateOperationFailedException([
+			 	 	 'table' => $this->model->meta->table_name, 
+			 	 	 'statement_error_code' => $error_code
+			 	 ]);
+			 }
+
+			 //save files
+			 $this->auto_save_files(array_values($this->container->files));
+
+			 //get updates
 		 	 $updateddata = $modelclass::get()->set_raw_filters($this->get_raw_filters())->all();
-		 	 $result = $multiple ? $updateddata : ($updateddata[0] ?? false);
+		 	 $result = $statement->rowCount() > 0 ? $updateddata : ($updateddata[0] ?? false);
 
 		 	 //send a post update signal to observers
 		 	 $this->dispatch_event($this->model::class, ModelEventPhase::UPDATED, $named_args, resolve('request')->user, $result);
@@ -79,11 +101,6 @@ class UpdateManager implements IOperationManager{
      	 	 throw $ex;
      	 }
 	 }
-
-     public function set_data_state(array $datastate){
-     	 $this->datastate = $datastate;
-     	 return $this;
-     }
 
      private function setup_query_reference_map(string $table_name, string $table_aliase, string $database_name, array $field_list, array $ff_settings, ?string $table_ref = null){
      	 $this->query_reference_map             = new QueryReferenceMap();
@@ -95,7 +112,7 @@ class UpdateManager implements IOperationManager{
 	 	 $this->query_reference_map->ffsettings = array_merge($this->query_reference_map->ffsettings, [$ff_settings]);
 	 }
 
-	 private function get_configurations(){
+	 public function get_configurations(){
 	 	  return [
 	 	  	 /**
 	 		 * field name qualification mode: how to qualify field names in the resulting sql statement: options, 
@@ -121,18 +138,4 @@ class UpdateManager implements IOperationManager{
 	 		 'ftqm' => 'F-QUALIFY'
 	 	  ];
 	 }
-
-	 private function get_sql_info(array $clean_data){
-	 	 $where_clause = $this->wbuilder->get_where_clause($this->query_reference_map, $this->get_configurations());
-	 	 $data = $where_clause->data ? array_merge(array_values($clean_data), $where_clause->data) : array_values($clean_data);
-	 	 $database = config('connections')[$this->model->meta->connection_name]['database'];
-	 	 $table = $this->model->meta->table_name;
-	 	 $fields = array_keys($clean_data);
-	 	 $clause   = $where_clause->clause;
-		 $fieldstring = implode(" = ?, ", $fields)." = ?";
-			 
-		 $sql = "UPDATE {$database}.{$table} SET {$fieldstring}{$clause}";
-
-         return ['sql' => $sql, 'data' => $data];
-     }
 }

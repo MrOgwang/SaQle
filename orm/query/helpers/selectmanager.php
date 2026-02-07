@@ -32,12 +32,17 @@ trait SelectManager{
      * @param array
      */
      public function select(?array $fields = null, ?Closure $callback = null){
+         $this->before_select();
+
          $this->callback = $callback;
          $this->sbuilder->selected = $fields;
+
+         $this->after_select();
+
          return $this;
      }
 
-     protected function get_selected(){
+     public function get_selected(){
          $selected = $this->sbuilder->get_selected($this->query_reference_map, ...$this->configurations);
          if($this->callback){
              $fn = $this->callback;
@@ -48,5 +53,13 @@ trait SelectManager{
 
      public function get_selected_fields(){
          return $this->sbuilder->get_selected($this->query_reference_map, ...$this->configurations);
+     }
+
+     protected function before_select(){
+
+     }
+
+     protected function after_select(){
+        
      }
 }
