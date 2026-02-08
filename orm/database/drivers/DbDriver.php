@@ -9,6 +9,11 @@ abstract class DbDriver {
 
 	 protected ConnectionConfig $config;
 	 protected $connection = null;
+      /**
+      * This key is used to fetch events that will be fired after a model
+      * is committed. 
+      * */
+     protected string $connection_key = "";
 
 	 public function __construct(ConnectionConfig $config){
 	 	 $this->config = $config;
@@ -32,6 +37,10 @@ abstract class DbDriver {
 
      public function get_connection(){
          return $this->connection;
+     }
+
+     public function get_connection_key(){
+         return $this->connection_key;
      }
 
      //whether driver supports window functions
@@ -103,12 +112,16 @@ abstract class DbDriver {
 
      //connect to database server without a database
      protected function connect_without_database(){
-         $this->connection = ConnectionManager::get($this->config, false);
+         [$c, $k] = ConnectionManager::get($this->config, false);
+         $this->connection = $c;
+         $this->connection_key = $k;
      }
 
      //connect to the database server with a database
      public function connect_with_database(){
-     	 $this->connection = ConnectionManager::get($this->config, true);
+     	 [$c, $k] = ConnectionManager::get($this->config, true);
+         $this->connection = $c;
+         $this->connection_key = $k;
      }
 
      //excecute sql statements

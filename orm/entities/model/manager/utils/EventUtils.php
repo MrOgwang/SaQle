@@ -9,6 +9,7 @@ use SaQle\Core\Events\{
 use SaQle\Core\Registries\EventRegistry;
 use SaQle\Auth\Models\BaseUser;
 use SaQle\Core\Events\ModelEventPhase;
+use SaQle\Orm\Database\Transaction\TransactionContext;
 
 trait EventUtils {
 	 private function get_model_name(string $model_class_name){
@@ -26,8 +27,11 @@ trait EventUtils {
              attrs: []
          );
 
+         $defer_dispatch = false;
+         
          if(in_array($phase, [ModelEventPhase::CREATED, ModelEventPhase::UPDATED, ModelEventPhase::DELETED, ModelEventPhase::READ])){
          	 $context = $context->with_result($result);
+         	 $defer_dispatch = true; //dispatch once transaction commits!
          }
 
          /**
@@ -45,8 +49,21 @@ trait EventUtils {
           * */
          $event_one = GenericEvent::named($this->get_model_name($model)."::".$phase, $context);
          $event_two = GenericEvent::named("::".$phase, $context);
+
+         $connection_key = $this->dbdriver->get_connection_key();
+
+         /**
+          * If we are inside a transaction, model events must not be sent out
+          * immediatly until a commit happens. Record them, the transaction 
+          * will send them out after the commit is comfirmed!
+          * */
+         if(TransactionContext::active($connection_key) && $defer_dispatch){
+             TransactionContext::envelope($connection_key)->record($event_one);
+             TransactionContext::envelope($connection_key)->record($event_one);
+             return;
+         }
 	 	 
-	 	 //Dispatch events (from registry or static)
+	 	 //For before model events or out of transaction events, dispatch immediatly
 	 	 (new EventBus(resolve(EventRegistry::class)))->dispatch($event_one);
 	 	 (new EventBus(resolve(EventRegistry::class)))->dispatch($event_two);
 	 }

@@ -13,9 +13,8 @@ final class TransactionManager {
      public static function run(string $connection_name, callable $callback): mixed {
          
          $config = ConnectionConfig::from_connection($connection_name);
-         $pdo = ConnectionManager::get($config, true);
+         [$pdo, $connection_key] = ConnectionManager::get($config, true);
          $transaction_key = spl_object_id($pdo);
-         $connection_key = ConnectionManager::make_key($config, true);
 
          self::$transaction_level[$transaction_key] ??= 0;
 
@@ -36,8 +35,20 @@ final class TransactionManager {
 
              if(self::$transaction_level[$transaction_key] === 0){
                  $pdo->commit();
+
+                 //RELEASE EVENTS ONLY AT OUTERMOST COMMIT
+                 $envelope = TransactionContext::pop($connection_key);
+                 $envelope?->commit();
              }else{
                  $pdo->exec('RELEASE SAVEPOINT sp_' . self::$transaction_level[$transaction_key]);
+
+                 //nested commit → merge envelopes upward
+                 $child = TransactionContext::pop($connection_key);
+                 $parent = TransactionContext::envelope($connection_key);
+
+                 foreach($child->events ?? [] as $event){
+                     $parent->record($event);
+                 }
              }
 
              return $result;
@@ -48,13 +59,17 @@ final class TransactionManager {
              if($pdo->inTransaction()){
                  if(self::$transaction_level[$transaction_key] === 0){
                      $pdo->rollBack();
+
+                     TransactionContext::pop($connection_key)?->rollback();
                  }else{
                      $pdo->exec('ROLLBACK TO SAVEPOINT sp_' . self::$transaction_level[$transaction_key]);
+
+                     TransactionContext::pop($connection_key)?->rollback();
                  }
              }
 
              throw $e;
-         }finally {
+         }finally{
              TransactionContext::pop($connection_key);
          }
      }

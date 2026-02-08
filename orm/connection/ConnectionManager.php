@@ -13,9 +13,9 @@ final class ConnectionManager {
          $key = self::make_key($config, $with_database);
 
          //1. is there an active transaction for this connection?
-         $pdo = TransactionContext::current($key);
+         $pdo = TransactionContext::current($key)['pdo'];
          if($pdo){
-             return $pdo;
+             return [$pdo, $key];
          }
 
          //2. Resolve connection normally
@@ -29,10 +29,10 @@ final class ConnectionManager {
              self::$connections[$key] = resolve(Connection::class, $params);
          }
 
-         return self::$connections[$key];
+         return [self::$connections[$key], $key];
      }
 
-     public static function make_key(ConnectionConfig $config, bool $with_database): string {
+     private static function make_key(ConnectionConfig $config, bool $with_database): string {
          return implode(':', [
              $config->get_driver(),
              $config->get_host(),

@@ -25,6 +25,6 @@ class Db {
      }
 
 	 public function transaction(string $connection_name, callable $callback){
-         $result = TransactionManager::run($connection_name, $callback);
+         return TransactionManager::run($connection_name, $callback);
 	 }
 }

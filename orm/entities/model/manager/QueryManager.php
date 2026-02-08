@@ -11,7 +11,7 @@ class QueryManager {
 	 protected string   $sql = "";
 	 protected ?array   $data = null;
 	 protected DbDriver $dbdriver;
-	 protected Model    $model;   
+	 protected Model    $model;
 
 	 public function __construct(Model $model){
 	 	 $this->model = $model;
@@ -48,6 +48,10 @@ class QueryManager {
 
 	 public function get_model(){
 	 	 return $this->model;
+	 }
+
+	 public function get_connection_key(){
+
 	 }
 }
 
