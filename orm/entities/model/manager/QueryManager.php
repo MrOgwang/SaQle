@@ -8,7 +8,7 @@ use SaQle\Orm\Entities\Model\Schema\Model;
 use SaQle\Orm\Database\Db;
 
 class QueryManager {
-	 protected string   $sql;
+	 protected string   $sql = "";
 	 protected ?array   $data = null;
 	 protected DbDriver $dbdriver;
 	 protected Model    $model;   

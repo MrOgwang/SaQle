@@ -23,7 +23,7 @@ class SelectBuilder{
 	  * 
 	  * Regular fields will be added via the select method of the model manager
 	  * */
-	 public ?array $selected = [] {
+	 public ?array $selected = null {
 	 	 set(?array $value){
  	 	 	 $this->selected = $value;
  	 	 }
@@ -64,6 +64,8 @@ class SelectBuilder{
 	 }
 
 	 public function get_selected(QueryReferenceMap $query_reference_map, ...$config){
+	 	 $selected   = [];
+
 	 	 $tables     = $query_reference_map->tables;
  	     $aliases    = $query_reference_map->aliases;
  	     $databases  = $query_reference_map->databases;
@@ -71,7 +73,6 @@ class SelectBuilder{
  	     $ffsettings = $query_reference_map->ffsettings;
 
 	 	 if(!$this->selected){
-	 		 $this->selected = [];
 	 		 $original_columns = [];
 	 		
 	 		 foreach($fieldrefs as $t_index => $fields){
@@ -89,7 +90,7 @@ class SelectBuilder{
 	 		 	 	 }
 	 		 	 }
 	 		 	 $original_columns = array_merge($original_columns, $real_fields);
-	 		 	 $this->selected = array_merge($this->selected, $qualified_fields);
+	 		 	 $selected = array_merge($selected, $qualified_fields);
 	 		 }
 	 	 }else{ 
 	 	     /**
@@ -105,23 +106,22 @@ class SelectBuilder{
 	 	      * 1. The file fields are explicitly listed in the select fields list
 	 	      * 2. The path, rename and dpath source fields have not be explcitly listed in the select fields list.
 	 	      * */
-
              $selected = $this->selected;
 	 	     foreach($ffsettings as $t_index => $settings){
 	 	     	 $table_name = $tables[$t_index];
 	 	     	 $db_name    = $databases[$t_index];
 	 		 	 foreach($settings as $file_field => $file_field_config){
 	 		 	 	 //the file field must be existing in the select fields list in any format: fully qualified or not
-	 		 	 	 if( in_array($file_field, $selected) || 
-	 		 	 	 	 in_array($table_name.".".$file_field, $selected) || in_array($db_name.".".$table_name.".".$file_field, $selected)
+	 		 	 	 if( in_array($file_field, $this->selected) || 
+	 		 	 	 	 in_array($table_name.".".$file_field, $this->selected) || in_array($db_name.".".$table_name.".".$file_field, $this->selected)
 	 		 	 	 ){
 	 		 	 	 	 //$file_meta_fields = array_unique(array_merge($file_field_config['path'], $file_field_config['rename'], $file_field_config['dpath']));
 	 		 	 	 	 $file_meta_fields = $file_field_config;
 	 		 	 	 	 foreach($file_meta_fields as $fmf){
 	 		 	 	 	 	 //the file meta field must not already be existing in the field list in any format: fully qualified or not
-	 		 	 	 	 	 if(!in_array($fmf, $selected) &&
-			 		 	 	 	!in_array($table_name.".".$fmf, $selected) &&
-			 		 	 	 	!in_array($db_name.".".$table_name.".".$fmf, $selected)
+	 		 	 	 	 	 if(!in_array($fmf, $this->selected) &&
+			 		 	 	 	!in_array($table_name.".".$fmf, $this->selected) &&
+			 		 	 	 	!in_array($db_name.".".$table_name.".".$fmf, $this->selected)
 			 		 	 	 ){
 			 		 	 	 	 $selected[] = match($config['fnqm']){
 					 		 	 	 'N-QUALIFY' => $fmf,
@@ -134,9 +134,8 @@ class SelectBuilder{
 	 		 	 	 }
 	 		 	 }
 	 		 }
-	 		 $this->selected = $selected;
 	 	 }
 
-	 	 return $this->selected;
+	 	 return $selected;
 	 }
 }

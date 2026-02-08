@@ -19,6 +19,7 @@ class TestModel {
          )->limit(page: 1, records: 5)->all();
          print_r($actors);*/
 
+         //$films = Film::using('sakila')->get()->limit(page: 1, records: 5)->all();
          $films = Film::using('sakila')->get()->with(['actors'])->limit(page: 1, records: 5)->all();
          print_r($films);
          /*foreach($films as $index => $flm) {

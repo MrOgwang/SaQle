@@ -8,6 +8,7 @@
  use SaQle\Orm\Entities\Model\Manager\Modes\FetchMode;
  use SaQle\Orm\Query\Helpers\{JoinManager, FilterManager, LimitManager, OrderManager, SelectManager, GroupManager};
  use SaQle\Orm\Entities\Model\Schema\Model;
+ use Closure;
      
 class IReadManager extends QueryManager {
  	 use JoinManager{
@@ -160,8 +161,12 @@ class IReadManager extends QueryManager {
 	 	 $this->dbdriver->set_read_query($this);
 	 }
 
-	 protected function after_select(){
+	 protected function after_select(?array $fields = null, ?Closure $callback = null){
 	 	 $this->dbdriver->set_read_query($this);
+	 }
+
+	 protected function before_select(?array $fields = null, ?Closure $callback = null){
+	 	
 	 }
 
 	 protected function after_group(){

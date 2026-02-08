@@ -136,27 +136,25 @@ final class RelationLoader {
 
          $through_columns = [];
          if($through){
-           if(!$selected_fields){
+             if(!$selected_fields){
                  $through_model   = $through[1];
                  $through_columns = array_values($through_model::get_table_column_names());
+             }
 
-                 //print_r($through_columns);
-           }
-
-           $throughtablename = $through[0];
-                $cte_manager = $foreign_model::using($connection)->get()->config(fnqm: 'H-QUALIFY', ftnm: 'N-ONLY', ftqm: 'N-QUALIFY');
-              $cte_manager->select(null, function($fields) use ($foreign_key, $order_clause){
-                     return implode(", ", $fields).", ROW_NUMBER() OVER (PARTITION BY {$foreign_key}{$order_clause}) AS row_num";
-               })
-               ->l_where("{$foreign_key}__in", $temporary_ids_select_query['sql'])
-               ->inner_join(table: $throughtablename, from: $original_foreignkey, to: $through[4]);
+             $throughtablename = $through[0];
+             $cte_manager = $foreign_model::using($connection)->get()->config(fnqm: 'H-QUALIFY', ftnm: 'N-ONLY', ftqm: 'N-QUALIFY');
+             $cte_manager->select(null, function($fields) use ($foreign_key, $order_clause){
+                 return implode(", ", $fields).", ROW_NUMBER() OVER (PARTITION BY {$foreign_key}{$order_clause}) AS row_num";
+             })
+             ->l_where("{$foreign_key}__in", $temporary_ids_select_query['sql'])
+             ->inner_join(table: $throughtablename, from: $original_foreignkey, to: $through[4]);
          }else{
-           $cte_manager = $foreign_model::using($connection)->get()
-               ->config(fnqm: 'N-QUALIFY', ftnm: 'N-ONLY', ftqm: 'N-QUALIFY')
+             $cte_manager = $foreign_model::using($connection)->get()
+             ->config(fnqm: 'N-QUALIFY', ftnm: 'N-ONLY', ftqm: 'N-QUALIFY')
              ->select(null, function($fields) use ($foreign_key, $order_clause){
                     return "*, ROW_NUMBER() OVER (PARTITION BY {$foreign_key}{$order_clause}) AS row_num";
-              })
-              ->l_where("{$foreign_key}__in", $temporary_ids_select_query['sql']);
+             })
+             ->l_where("{$foreign_key}__in", $temporary_ids_select_query['sql']);
          }
         
          $cte_manager_query = $cte_manager->get_query_info();
@@ -187,7 +185,7 @@ final class RelationLoader {
 
          $finalsql = "WITH {$query_table_name} AS ({$cte_manager_query['sql']}) {$outer_manager_query['sql']}";
 
-         echo "$finalsql\n";
+         //echo "$finalsql\n";
 
          $finalmanager = $foreign_model::using($connection)->get()->sqlndata($finalsql, $testfilters->data ? $testfilters->data : null);
          $this->attach_nested($with, $finalmanager);
