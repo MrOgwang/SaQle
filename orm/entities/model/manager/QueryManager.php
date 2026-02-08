@@ -5,7 +5,7 @@ namespace SaQle\Orm\Entities\Model\Manager;
 
 use SaQle\Orm\Database\Drivers\DbDriver;
 use SaQle\Orm\Entities\Model\Schema\Model;
-use SaQle\Orm\Database\Db;
+use SaQle\Core\Support\Db;
 
 class QueryManager {
 	 protected string   $sql = "";

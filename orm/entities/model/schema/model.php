@@ -10,11 +10,12 @@ use SaQle\Orm\Entities\Model\Manager\{CreateManager, UpdateManager, DeleteManage
 use SaQle\Orm\Entities\Model\Interfaces\{IModel, ITableSchema};
 use SaQle\Orm\Entities\Model\Collection\ModelCollection;
 use SaQle\Core\Exceptions\Model\{UndefinedFieldException, MissingRequiredFieldsException};
-use SaQle\Orm\Database\Db;
-use SaQle\Core\Support\TransactionOutput;
 use SaQle\Build\Utils\MigrationUtils;
+use SaQle\Core\Files\{TempFileRef, UploadedFile};
+use SaQle\Core\Files\Storage\TempStorage;
 use Exception;
 use JsonSerializable;
+use InvalidArgumentException;
 
 abstract class Model implements ITableSchema, IModel, JsonSerializable{
 	 use StringUtils;
@@ -43,6 +44,23 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
       * Values may be simple, other model objects or arrays of model objects
       * */
      private array $data = [];
+
+     /**
+      * File references. Models will not have file objects. When one of the model fields
+      * is a file field, and it has a value, this file will be saved to a temporrary location
+      * after all the validation is done.
+      * 
+      * This is a key => value array of all the files, where the key is the field name
+      * and the value is the temporary path, to be used when saving the file to its
+      * final and permamnent destination later.
+      * 
+      * file_upload_session - a unique id generated per model instance. used when committing files later
+      * references - the generated file references after temporary save
+      * */
+     private array $files = [
+     	 'file_upload_session' => '',
+     	 'references' => []
+     ];
 
      /**
       * A memory record of data between the time it is set and the time
@@ -82,7 +100,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 	 	 	 	 throw new Exception("Please provide data for: ".$this::class." when creating a new model instance!");
 
 	         //ensure all the data keys are field names defined on model
-	 	 	 //$this->assert_correct_fields($kwargs);
+	 	 	 $this->assert_correct_fields($kwargs);
 
 	 	 	 //fill in defaults for all the fields that haven't been provided
 	         $this->fill_defaults($kwargs);
@@ -92,6 +110,9 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 
 	         //run validation on the data
 	         $this->run_data_validation($kwargs);
+
+	         //save files to temporary holding
+	         $this->save_model_files($kwargs);
          }
 
 	 	 $this->data = $kwargs;
@@ -189,6 +210,45 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 
          //run validation on the data
          $this->run_data_validation($kwargs);
+	 }
+
+	 protected function save_model_files(array $kwargs): void {
+	     if(empty($this->meta->file_field_names)){
+	         return;
+	     }
+
+	     $model = strtolower((new ReflectionClass($this))->getShortName());
+	     $session = bin2hex(random_bytes(16));
+
+	     foreach($this->meta->file_field_names as $field){
+
+	         if(!array_key_exists($field, $kwargs)){
+	             continue;
+	         }
+
+	         $value = $kwargs[$field];
+
+	         if($value === null){
+	            continue;
+	         }
+
+	         $files = is_array($value) ? $value : [$value];
+	         $refs  = [];
+
+	         foreach($files as $file){
+	             if(!$file instanceof UploadedFile) {
+	                 throw new InvalidArgumentException(
+	                    "Invalid upload supplied for file field '{$field}'"
+	                 );
+	             }
+
+	             $refs[] = TempStorage::store(model: $model, field: $field, session: $session, file: $file);
+	         }
+
+	         $this->files['references'][$field] = count($refs) === 1 ? $refs[0] : $refs;
+	     }
+
+	     $this->files['file_upload_session'] = $session;
 	 }
 
      private function rename_uploaded_files($field, &$clean_data, $file_key, $data_state = null){

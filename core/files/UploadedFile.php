@@ -11,4 +11,8 @@ class UploadedFile {
          public readonly string $type,
          public readonly bool $is_binary = true
      ) {}
+
+     public function extension(): string {
+         return pathinfo($this->name, PATHINFO_EXTENSION);
+     }
 }

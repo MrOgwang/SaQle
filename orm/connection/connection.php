@@ -42,39 +42,4 @@ class Connection {
 			 throw $ex;
 		 }
 	 }
-
-	 /**
-	 * Execute a database operation
-	 */
-	 public static function execute(string $sql, ?array $data = null, ?string $operation = null, string $prmkeytype = ""){
-		 try{
-		 	 $last_insert_id = null;
-	 	     $response = false;
-	 	     $pdo = self::$connection;
-
-			 $pdo->beginTransaction();
-			 $statement = $pdo->prepare($sql);
-			 $response  = $statement->execute($data);
-			 
-			 if($response === false && $pdo->inTransaction()){
-				 $pdo->rollback();
-			 }else{
-			 	 if($operation && $operation === "insert" && $prmkeytype === "AUTO"){
-			 	 	 $last_insert_id = $pdo->lastInsertId();
-			 	 }
-			 	 if($pdo->inTransaction()){
-			 	 	 $pdo->commit();
-			 	 }
-			 }
-
-			 return $last_insert_id ? ['statement' => $statement, 'last_insert_id' => $last_insert_id, 'response' => $response] : ['statement' => $statement, 'response' => $response];
-
-	     }catch(Exception $ex){
-	     	 if($pdo && $pdo->inTransaction()){
-		 	 	 $pdo->rollback();
-		 	 }
-			 throw $ex;
-		 }
-	 }
-
 }

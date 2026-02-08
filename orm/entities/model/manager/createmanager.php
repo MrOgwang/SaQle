@@ -8,7 +8,8 @@ use SaQle\Orm\Entities\Model\Manager\Containers\DataContainer;
 use SaQle\Core\Assert\Assert;
 use SaQle\Orm\Entities\Model\Manager\Utils\{EventUtils, ImageUtils};
 use SaQle\Core\Events\ModelEventPhase;
-use SaQle\Orm\Entities\Model\Schema\Model;
+use SaQle\Orm\Entities\Model\Interfaces\IModel;
+use SaQle\Core\Files\FileCommitter;
 use InvalidArgumentException;
 use Exception;
 
@@ -17,7 +18,7 @@ class CreateManager extends QueryManager {
 
 	 private DataContainer $container; 
 
-	 public function __construct(Model $model, array $data){
+	 public function __construct(IModel $model, array $data){
 
 	 	 $this->assert_valid_data($data);
 
@@ -44,13 +45,12 @@ class CreateManager extends QueryManager {
 	     }
 
 	     //Empty array is ambiguous → reject
-	     if($data === []) {
+	     if($data === []){
 	         throw new InvalidArgumentException(
 	            'Cannot insert empty data!'
 	         );
 	     }
 	 }
-
 
      private function extract_row(array $row, int $index = 0){
      	 Assert::isNonEmptyMap($row, "The data in one or more rows is not properly defined!");
@@ -127,7 +127,8 @@ class CreateManager extends QueryManager {
 		 	 }
 
 		 	 //save files if any
-		 	 $this->auto_save_files(array_values($this->container->files));
+		 	 //$this->auto_save_files(array_values($this->container->files));
+		 	 FileCommitter::commit($this->model, $this->model->files, $created_rows[0]);
 
      	 	 $result = $this->container->multiple === true ? $created_rows : $created_rows[0];
 

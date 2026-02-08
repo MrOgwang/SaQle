@@ -36,7 +36,7 @@ class FileField extends Field {
 	  * If a file is not public, it will be saved outside the public folder, which means
 	  * there is control on how the file is accessed.
 	  * */
-	 protected string $storage; //public, private
+	 protected string $storage = "default"; //public, private
 
 	 //Upload path: This is where the file will be uploaded to
 	 protected null|string|array|Closure $upload_to = null;
@@ -146,5 +146,14 @@ class FileField extends Field {
 	 public function get_extensions(){
 	 	 return $this->extensions;
 	 }
+
+	 public function storage(string $storage){
+	 	 $this->storage = $storage;
+         return $this;
+     }
+
+     public function get_storage(): string {
+         return $this->storage;
+     }
 }
 

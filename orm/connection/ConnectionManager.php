@@ -3,6 +3,7 @@
 namespace SaQle\Orm\Connection;
 
 use SaQle\Orm\Database\Config\ConnectionConfig;
+use SaQle\Orm\Database\Transaction\TransactionContext;
 
 final class ConnectionManager {
      /** @var array<string, Connection> */
@@ -11,6 +12,13 @@ final class ConnectionManager {
      public static function get(ConnectionConfig $config, bool $with_database = true) {
          $key = self::make_key($config, $with_database);
 
+         //1. is there an active transaction for this connection?
+         $pdo = TransactionContext::current($key);
+         if($pdo){
+             return $pdo;
+         }
+
+         //2. Resolve connection normally
          if(!isset(self::$connections[$key])){
              $params = $config->to_array();
 
@@ -24,7 +32,7 @@ final class ConnectionManager {
          return self::$connections[$key];
      }
 
-     protected static function make_key(ConnectionConfig $config, bool $with_database): string {
+     public static function make_key(ConnectionConfig $config, bool $with_database): string {
          return implode(':', [
              $config->get_driver(),
              $config->get_host(),

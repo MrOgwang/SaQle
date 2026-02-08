@@ -7,7 +7,7 @@ use SaQle\Orm\Query\Select\SelectBuilder;
 use SaQle\Orm\Entities\Field\Types\Base\RelationField;
 use SaQle\Orm\Entities\Model\Schema\Model;
 use SaQle\Orm\Entities\Model\TempId;
-use SaQle\Orm\Database\Db;
+use SaQle\Core\Support\Db;
 use SaQle\Orm\Entities\Model\Collection\ModelCollection;
 
 final class RelationLoader {

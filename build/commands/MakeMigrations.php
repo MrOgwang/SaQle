@@ -6,7 +6,7 @@ use SaQle\Commons\FileUtils;
 use SaQle\Core\Migration\Models\Migration;
 use SaQle\Build\Utils\MigrationUtils;
 use SaQle\Orm\Connection\Connection;
-use SaQle\Orm\Database\Db;
+use SaQle\Core\Support\Db;
 use SaQle\Orm\Entities\Field\Attributes\FieldDefinition;
 use ReflectionClass;
 use Exception;

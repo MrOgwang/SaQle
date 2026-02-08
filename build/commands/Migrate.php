@@ -1,7 +1,7 @@
 <?php
 namespace SaQle\Build\Commands;
 
-use SaQle\Orm\Database\Db;
+use SaQle\Core\Support\Db;
 use SaQle\Commons\FileUtils;
 use SaQle\Core\Migration\Models\Migration;
 use SaQle\Core\Migration\Tracker\MigrationTracker;

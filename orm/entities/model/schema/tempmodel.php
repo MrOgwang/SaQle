@@ -3,7 +3,7 @@ namespace SaQle\Orm\Entities\Model\Schema;
 
 use SaQle\Orm\Entities\Model\Interfaces\ITempModel;
 use SaQle\Orm\Entities\Model\Schema\{Model, TableInfo};
-use SaQle\Orm\Database\Db;
+use SaQle\Core\Support\Db;
 
 abstract class TempModel extends Model implements ITempModel{
 
