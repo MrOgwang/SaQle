@@ -4,141 +4,179 @@ namespace SaQle\Orm\Database\Drivers;
 use SaQle\Orm\Database\Config\ConnectionConfig;
 use SaQle\Orm\Database\ColumnType;
 use SaQle\Orm\Connection\ConnectionManager;
+use SaQle\Orm\Database\Features\DatabaseFeatures;
+use SaQle\Orm\Database\Features\FeatureDetector;
 
 abstract class DbDriver {
 
-	 protected ConnectionConfig $config;
-	 protected $connection = null;
-      /**
-      * This key is used to fetch events that will be fired after a model
-      * is committed. 
-      * */
-     protected string $connection_key = "";
+    protected ConnectionConfig $config;
+    protected $connection = null;
 
-	 public function __construct(ConnectionConfig $config){
-	 	 $this->config = $config;
-	 	 $this->connect_without_database();
-	 }
+    /**
+     * Connection key used for event dispatching
+     */
+    protected string $connection_key = "";
 
-     //return the driver name
-	 public function name() : string {
-	 	 return $this->config->get_driver();
-	 }
+    /**
+     * Cached database version string
+     */
+    protected string $version = '';
 
-	 //return the driver version
-     public function get_version() : string {
-     	return $this->config->get_options()['version'] ?? "";
-     }
+    /**
+     * Cached feature detector
+     */
+    protected FeatureDetector $features;
 
-     //return the config
-     public function get_config(){
-         return $this->config;
-     }
+    public function __construct(ConnectionConfig $config){
+        $this->config = $config;
 
-     public function get_connection(){
-         return $this->connection;
-     }
+        // Establish low-level connection (no DB selected)
+        $this->connect_without_database();
 
-     public function get_connection_key(){
-         return $this->connection_key;
-     }
+        // Resolve version ONCE
+        $this->version = $this->resolve_version();
 
-     //whether driver supports window functions
-     abstract public function supports_window_functions() : bool;
+        // Build feature detector ONCE
+        $this->features = new FeatureDetector($this->version);
+    }
 
-     //whether driver supports returning 
-     abstract public function supports_returning() : bool;
-     
-     //whether driver supports cte
-     abstract public function supports_cte() : bool;
-     
-     //whether driver supports json
-     abstract public function supports_json() : bool;
+    // ------------------------------------------------------------------
+    // Metadata
+    // ------------------------------------------------------------------
 
-     //check if database exists
-     abstract public function check_database_exists() : bool;
+    public function name() : string {
+        return $this->config->get_driver();
+    }
 
-     //create a database
-	 abstract public function create_database();
+    public function get_version() : string {
+        return $this->version;
+    }
 
-	 //drop a table
-	 abstract public function drop_table(string $table);
+    public function get_config(){
+        return $this->config;
+    }
 
-	 //check if a column exists
-	 abstract protected function check_column_exists(string $table, string $column) : bool;
+    public function get_connection(){
+        return $this->connection;
+    }
 
-	 /**
-      * Columns here comes in the form of associative array where column name is the key and column definition is the value.
-      * Example: ['user_id' => 'user_id TEXT NOT NULL']
-      * */
-	 abstract public function add_columns(string $table, array $columns);
+    public function get_connection_key(){
+        return $this->connection_key;
+    }
 
-	 /**
-      * Columns here comes in the form of associative array where column name is the key and column definition is the value.
-      * Example: ['user_id' => 'user_id TEXT NOT NULL']
-      * */
-	 abstract public function drop_columns(string $table, array $columns);
+    // ------------------------------------------------------------------
+    // Feature support (delegated to FeatureDetector)
+    // ------------------------------------------------------------------
 
-	 /**
-      * Add unique constrains to the table. Constraints is an associative array where the key is the constraint name
-      * and the value is an array of columns that are unique.
-      * */
-     abstract public function add_unique_constraints(string $table, array $new_constraints, array $previous_constraints = []);
+    public function supports_window_functions() : bool {
+        return $this->features->supports(DatabaseFeatures::WINDOW_FUNCTIONS);
+    }
 
-	 /**
-      * Drop unique constrains from the table. Constraints is an associative array where the key is the constraint name
-      * and the value is an array of columns that are unique.
-      * */
-     abstract public function drop_unique_constraints(string $table, array $constraints = []);
+    public function supports_returning() : bool {
+        return $this->features->supports(DatabaseFeatures::RETURNING);
+    }
 
-     /**
-      * Given a framework field type, resolve te actual database type for that
-      * field type
-      * */
-     abstract protected function resolve_db_column_type(ColumnType $type, object $context) : string;
+    public function supports_cte() : bool {
+        return $this->features->supports(DatabaseFeatures::COMMON_TABLE_EXPRESSIONS);
+    }
 
-     /**
-      * Translate a framework field definiton to sql statement
-      * */
-     abstract public function translate_field_definition(?object $def = null) : string;
+    public function supports_json() : bool {
+        return $this->features->supports(DatabaseFeatures::JSON_TYPE);
+    }
 
-     /**
-      * Create a database table from migration
-      * */
-     abstract public function create_table_from_migration(string $table, array $column_sqls, array $unique_sqls = [], bool $temporary = false);
+    // Optional generic hook (future-proof)
+    public function supports(string $feature) : bool {
+        return $this->features->supports($feature);
+    }
 
-     //create table from model class
-     abstract public function create_table_from_model(string $table, string $model_class, bool $temporary = false);
+    // ------------------------------------------------------------------
+    // Version resolution (runs ONCE)
+    // ------------------------------------------------------------------
 
-     //connect to database server without a database
-     protected function connect_without_database(){
-         [$c, $k] = ConnectionManager::get($this->config, false);
-         $this->connection = $c;
-         $this->connection_key = $k;
-     }
+    protected function resolve_version() : string
+    {
+        //1. Prefer explicitly configured version (zero SQL cost)
+        $options = $this->config->get_options();
+        if (!empty($options['version'])) {
+            return (string)$options['version'];
+        }
 
-     //connect to the database server with a database
-     public function connect_with_database(){
-     	 [$c, $k] = ConnectionManager::get($this->config, true);
-         $this->connection = $c;
-         $this->connection_key = $k;
-     }
+        //2. Fallback: query database ONCE
+        try {
+            $stmt = $this->connection->query('SELECT VERSION()');
+            return (string)$stmt->fetchColumn();
+        } catch (\Throwable $e) {
+            // Absolute fallback: unknown version
+            return 'unknown';
+        }
+    }
 
-     //excecute sql statements
-     public function execute($sql, $data = null){
-	 	 $statement = $this->connection->prepare($sql);
-	     $response  = $statement->execute($data);
-	     return ['statement' => $statement, 'response' => $response];
-	 }
+    // ------------------------------------------------------------------
+    // Connection handling
+    // ------------------------------------------------------------------
 
-	 public function get_unique_constraint_sqls(array $unique_snapshot){
-     	 $unique_sqls = [];
-     	 foreach($unique_snapshot as $constraint_name => $constraint_columns){
-     	 	 $unique_sqls[] = "CONSTRAINT ".$constraint_name." UNIQUE (".implode(', ', $constraint_columns).")";
-     	 }
+    protected function connect_without_database(){
+        [$c, $k] = ConnectionManager::get($this->config, false);
+        $this->connection = $c;
+        $this->connection_key = $k;
+    }
 
-     	 return $unique_sqls;
-     }
+    public function connect_with_database(){
+        [$c, $k] = ConnectionManager::get($this->config, true);
+        $this->connection = $c;
+        $this->connection_key = $k;
+    }
 
+    // ------------------------------------------------------------------
+    // SQL execution
+    // ------------------------------------------------------------------
+
+    public function execute($sql, $data = null){
+        $statement = $this->connection->prepare($sql);
+        $response  = $statement->execute($data);
+        return ['statement' => $statement, 'response' => $response];
+    }
+
+    // ------------------------------------------------------------------
+    // Schema helpers
+    // ------------------------------------------------------------------
+
+    public function get_unique_constraint_sqls(array $unique_snapshot){
+        $unique_sqls = [];
+        foreach($unique_snapshot as $constraint_name => $constraint_columns){
+            $unique_sqls[] =
+                "CONSTRAINT ".$constraint_name." UNIQUE (".implode(', ', $constraint_columns).")";
+        }
+        return $unique_sqls;
+    }
+
+    // ------------------------------------------------------------------
+    // Abstract schema + DDL operations
+    // ------------------------------------------------------------------
+
+    abstract public function check_database_exists() : bool;
+    abstract public function create_database();
+    abstract public function drop_table(string $table);
+    abstract protected function check_column_exists(string $table, string $column) : bool;
+    abstract public function add_columns(string $table, array $columns);
+    abstract public function drop_columns(string $table, array $columns);
+    abstract public function add_unique_constraints(
+        string $table,
+        array $new_constraints,
+        array $previous_constraints = []
+    );
+    abstract public function drop_unique_constraints(string $table, array $constraints = []);
+    abstract protected function resolve_db_column_type(ColumnType $type, object $context) : string;
+    abstract public function translate_field_definition(?object $def = null) : string;
+    abstract public function create_table_from_migration(
+        string $table,
+        array $column_sqls,
+        array $unique_sqls = [],
+        bool $temporary = false
+    );
+    abstract public function create_table_from_model(
+        string $table,
+        string $model_class,
+        bool $temporary = false
+    );
 }
-

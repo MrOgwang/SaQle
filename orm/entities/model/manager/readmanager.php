@@ -10,7 +10,7 @@
  use SaQle\Orm\Entities\Model\Manager\Utils\EventUtils;
  use SaQle\Core\Events\ModelEventPhase;
  use SaQle\Orm\Entities\Model\Manager\Loaders\{RelationStack, EagerLoader};
- use SaQle\Orm\Entities\Model\Collection\ModelCollection;
+ use SaQle\Orm\Entities\Model\Collection\{GenericModelCollection, ModelCollection};
  use SaQle\Orm\Entities\Field\Types\Base\RelationField;
  use Exception;
  use Closure;
@@ -125,7 +125,11 @@ final class ReadManager extends IReadManager {
 	 	 //convert rows to model collection first!
 	 	 if(!$stack_active && $this->model::class !== "SaQle\Orm\Entities\Model\TempId"){
 	 	 	 $collection_class = $this->model::class::collection_class();
-	 	     $rows = $collection_class::from_objects($this->model::class, $rows);
+	 	 	 if($collection_class == GenericModelCollection::class){
+	 	 	 	 $rows = $collection_class::from_objects($this->model::class, $rows);
+	 	 	 }else{
+	 	 	 	 $rows = new $collection_class($rows);
+	 	 	 }
 	 	 }
 
 	 	 //process includes and return

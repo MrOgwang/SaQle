@@ -21,7 +21,7 @@ class TestModel {
 
          //$films = Film::using('sakila')->get()->limit(page: 1, records: 5)->all();
          $films = Film::using('sakila')->get()->with(['actors'])->limit(page: 1, records: 5)->all();
-         print_r($films);
+         //print_r($films);
          /*foreach($films as $index => $flm) {
              $n = $index + 1;
              cli_log("{$n} - {$flm->title}\n");

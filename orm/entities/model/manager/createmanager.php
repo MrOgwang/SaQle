@@ -8,86 +8,97 @@ use SaQle\Orm\Entities\Model\Manager\Containers\DataContainer;
 use SaQle\Core\Assert\Assert;
 use SaQle\Orm\Entities\Model\Manager\Utils\{EventUtils, ImageUtils};
 use SaQle\Core\Events\ModelEventPhase;
-use SaQle\Orm\Entities\Model\Interfaces\IModel;
+use SaQle\Orm\Entities\Model\Schema\Model;
 use SaQle\Core\Files\FileCommitter;
+use SaQle\Orm\Entities\Model\Collection\ModelCollection;
+use SaQle\Orm\Entities\Model\Interfaces\IModel;
 use InvalidArgumentException;
 use Exception;
+use PDO;
 
-class CreateManager extends QueryManager {
+class CreateManager extends QueryManager{
 	 use ImageUtils, EventUtils;
 
-	 private DataContainer $container; 
-
-	 public function __construct(IModel $model, array $data){
-
-	 	 $this->assert_valid_data($data);
-
+	 public function __construct(IModel $model){
 	 	 parent::__construct($model);
-	 	 $this->container = new DataContainer();
-	 	 $this->prepare_insert_data($data);
 
-	 	 $this->dbdriver->set_insert_query($this);
+	 	 if($this->model instanceof ModelCollection){
+	 	 	 $this->dbdriver->set_multiple_insert_query($this);
+	 	 }else{
+	 	 	 $this->dbdriver->set_insert_query($this);
+	 	 }
 	 }
 
-	 private function assert_valid_data(array $data): void {
-	     //Case 1: single object (associative array)
-	     if(is_assoc($data)) {
-	         return;
-	     }
+	 private function swap_properties_with_columns(array $data){
+	 	 $clean_fields = $this->model instanceof ModelCollection ? 
+	 	 $this->model[0]->meta->clean_fields :
+	 	 $this->model->meta->clean_fields;
 
-	     //Case 2: many objects (array of associative arrays)
-	     foreach ($data as $item) {
-	         if(!is_array($item) || !is_assoc($item)) {
-	            throw new InvalidArgumentException(
-	                "The data to insert is not properly defined!"
-	            );
-	         }
-	     }
+     	 $swapped = [];
+     	 foreach($clean_fields as $pk => $pv){
+     	 	 $ck = $clean_fields[$pk]->get_column();
+     	 	 if(array_key_exists($ck, $data) || array_key_exists($pk, $data)){
+     	 	 	 $swapped[$ck] = $data[$ck] ?? ($data[$pk] ?? null);
+     	 	 }
+     	 }
 
-	     //Empty array is ambiguous → reject
-	     if($data === []){
-	         throw new InvalidArgumentException(
-	            'Cannot insert empty data!'
-	         );
-	     }
-	 }
-
-     private function extract_row(array $row, int $index = 0){
-     	 Assert::isNonEmptyMap($row, "The data in one or more rows is not properly defined!");
-
-         $modelclass = $this->model::class;
-	 	 $model = new $modelclass(...$row);
- 	 	 [$clean_data, $file_data] = $model->get_insert_data(resolve('request'));
-
-         $entry_key = spl_object_hash((object)$clean_data).$index;
-
-         return [$entry_key, $clean_data, $file_data, $clean_data[$this->model->meta->pk_name]];
+     	 return $swapped;
      }
 
-	 private function prepare_insert_data(array $data){
-	 	 $pkvalues   = [];
-	 	 $files      = [];
-	 	 $insertdata = [];
-	 	 if(array_is_list($data)){
-	 	 	 $this->container->multiple = true;
-	 	 	 foreach($data as $index => $row){
-	 	 	 	 [$entry_key, $clean_data, $file_data, $pkvalue] = $this->extract_row($row, $index);
+     private function is_multiple_inserts(){
+     	 return $this->model instanceof ModelCollection;
+     }
 
-                 $pkvalues[$entry_key]   = $pkvalue;
-     	         $files[$entry_key]      = $file_data;
-     	         $insertdata[$entry_key] = $clean_data;
-	 	 	 }
-	 	 }else{
-	 	 	 [$entry_key, $clean_data, $file_data, $pkvalue] = $this->extract_row($data, 0);
+     private function extract_data(string $type = 'data'){
+     	 $origianl_data = $type === 'data' ? $this->model->get_data() : $this->model->get_file_references();
+	 	 if(is_assoc($origianl_data)){
+             return $this->swap_properties_with_columns($origianl_data);
+         }
 
-	 	 	 $pkvalues[$entry_key]   = $pkvalue;
-     	     $files[$entry_key]      = $file_data;
-     	     $insertdata[$entry_key] = $clean_data;
-	 	 }
+         $data = [];
+         foreach($origianl_data as $d){
+         	 $data[] = $this->swap_properties_with_columns($d);
+         }
 
-	 	 $this->container->pkvalues = $pkvalues;
-	 	 $this->container->files    = $files;
-	 	 $this->container->data     = $insertdata;
+	 	 return $data;
+     }
+
+	 public function get_data(){
+	 	 return $this->extract_data('data');
+	 }
+
+	 public function get_files(){
+	 	 return $this->extract_data('files');
+	 }
+
+	 public function get_duplicate_action(){
+	 	 return $this->model instanceof ModelCollection ? 
+	 	 $this->model[0]->meta->action_on_duplicate :
+	 	 $this->model->meta->action_on_duplicate;
+	 }
+
+	 public function get_primary_key_column(){
+	 	 return $this->model instanceof ModelCollection ? 
+	 	 $this->model[0]->meta->field_column_refs[$this->model[0]->meta->pk_name] :
+	 	 $this->model->meta->field_column_refs[$this->model->meta->pk_name];
+	 }
+
+	 public function get_primary_key_type(){
+	 	 return $this->model instanceof ModelCollection ? $this->model[0]->meta->pk_type : $this->model->meta->pk_type;
+	 }
+
+	 public function get_update_columns(){
+	 	 return $this->model->get_update_columns();
+	 }
+
+	 public function get_primary_key_values(){
+	 	 return $this->model instanceof ModelCollection ? 
+	 	 $this->model->pluck_unique($this->model[0]->meta->pk_name) :
+	 	 [$this->model->get_data()[$this->model->meta->pk_name]];
+	 }
+
+	 public function get_collection_class(){
+	 	 return $this->model instanceof ModelCollection ? $this->model::class : $this->model::class::collection_class();
 	 }
 	 
 	 public function now(){
@@ -99,7 +110,7 @@ class CreateManager extends QueryManager {
 	 	 	 $query_info = $this->get_query_info();
 
 	 	 	 //send a pre insert signal to observers
-		 	 $named_args = $this->get_named_args('insert', $query_info, null, null, $this->container->data, $this->container->files);
+		 	 $named_args = $this->get_named_args('insert', $query_info, null, null, $this->get_data(), $this->get_files());
 		 	 $this->dispatch_event($this->model::class, ModelEventPhase::CREATING, $named_args, resolve('request')->user);
 
 		 	 //execute
@@ -113,24 +124,19 @@ class CreateManager extends QueryManager {
 			 	 ]);
 			 }
 
-		 	 //get inserted data
-		 	 $created_rows = $this->get_created_rows(
-		 	 	 $this->dbdriver->get_connection()->lastInsertId(), 
-		 	 	 $statement->rowCount()
-		 	 );
+			 $rows = $this->get_created_rows($statement);
 
-		 	 if(!$created_rows){
+		 	 if(!$rows){
 		 	 	 throw new InsertOperationFailedException([
 			 	 	 'table' => $this->model->meta->table_name, 
 			 	 	 'statement_error_code' => $error_code
 			 	 ]);
 		 	 }
 
-		 	 //save files if any
-		 	 //$this->auto_save_files(array_values($this->container->files));
-		 	 FileCommitter::commit($this->model, $this->model->files, $created_rows[0]);
+		 	 $result = $this->is_multiple_inserts() ? $rows : $rows[0];
 
-     	 	 $result = $this->container->multiple === true ? $created_rows : $created_rows[0];
+		 	 //save files if any
+		 	 //FileCommitter::commit($this->model, $this->get_files(), $result);
 
              //send a post insert signal to observers
              $this->dispatch_event($this->model::class, ModelEventPhase::CREATED, $named_args, resolve('request')->user, $result);
@@ -142,21 +148,30 @@ class CreateManager extends QueryManager {
      	 }
 	 }
 
-     private function get_created_rows($last_insert_id, $row_count){
-     	 $modelclass = $this->model::class;
- 	 	 if($modelclass::get_pk_type() === 'GUID'){
-	 	 	 $pkvalues = array_values($this->container->pkvalues);
-	 	 }else{
-			 for($i = 0; $i < $row_count; $i++){
-			     $pkvalues[] = $last_insert_id + $i;
-			 }
-	 	 }
+	 private function get_created_rows($statement){
+	 	 //after successful execute
+		 if($this->dbdriver->supports_returning()){
+		     $rows = $statement->fetchAll(PDO::FETCH_OBJ);
 
-	 	 return $modelclass::using($this->model->meta->connection_name)->get()->where($modelclass::get_pk_name()."__in", $pkvalues)->all();
-     }
+		     $collection_class = $this->get_collection_class();
+	 	 	 if($collection_class == GenericModelCollection::class){
+	 	 	 	 $rows = $collection_class::from_objects($this->get_model_class(), $rows);
+	 	 	 }else{
+	 	 	 	 $rows = new $collection_class($rows);
+	 	 	 }
 
-     public function get_container(){
-     	 return $this->container;
-     }
+	 	 	 return $rows;
+		 }
+
+		 if($this->get_primary_key_type() === 'GUID'){
+		 	 $pk_values = $this->get_primary_key_values();
+		 }else{
+		 	 $first_id = (int)$this->dbdriver->get_connection()->lastInsertId();
+		     $pk_values = range($first_id, $first_id + $row_count - 1);
+		 }
+
+		 $model_class = $this->get_model_class();
+		 return $model_class::get()->where($this->get_primary_key_column()."__in", $pk_values)->all();
+	 }
 }
 

@@ -3,7 +3,7 @@
 namespace SaQle\Orm\Entities\Model\Manager\Loaders;
 
 use SaQle\Orm\Query\Select\SelectBuilder;
-use SaQle\Orm\Entities\Model\Collection\ModelCollection;
+use SaQle\Orm\Entities\Model\Collection\{GenericModelCollection, ModelCollection};
 
 class EagerLoader {
 
@@ -54,8 +54,6 @@ class EagerLoader {
              //load includes
              $include_data = $loader->load($connection, $parents, $relation, $nested, $tuning, $relation_stack);
 
-             //print_r($include_data);
-
              //atach to parents
              foreach($parents as $p){
                  $assign_to = $include_data['assign_to'];
@@ -63,7 +61,11 @@ class EagerLoader {
                  $local_key_value = $p->$local_key;
                  if($include_data['multiple']){
                      //$p->$assign_to = $include_data['mapped'][$local_key_value] ?? [];
-                     $p->$assign_to = $model_collection_class::from_objects($model_class, $include_data['mapped'][$local_key_value] ?? []);
+                     if($model_collection_class == GenericModelCollection::class){
+                         $p->$assign_to = $model_collection_class::from_objects($model_class, $include_data['mapped'][$local_key_value] ?? []);
+                     }else{
+                         $p->$assign_to = new $model_collection_class($include_data['mapped'][$local_key_value] ?? []);
+                     }
                  }else{
                      $p->$assign_to = new $model_class(
                          ...get_object_vars($include_data['mapped'][$local_key_value][0])

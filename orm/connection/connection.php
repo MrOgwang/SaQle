@@ -3,6 +3,7 @@ namespace SaQle\Orm\Connection;
 
 use SaQle\Orm\Database\Config\ConnectionConfig;
 use Exception;
+use PDO;
 
 ob_start();
 
@@ -35,7 +36,7 @@ class Connection {
 	 //Create the pdo connection object
 	 private static function connect(string $connection_string, string $username, string $password){
 	 	try{
-			 $pdo = new \PDO($connection_string, $username, $password);
+			 $pdo = new PDO($connection_string, $username, $password);
 			 $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 			 return $pdo;
 		 }catch(\Exception $ex){

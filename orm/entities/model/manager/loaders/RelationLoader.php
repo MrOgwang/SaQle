@@ -6,7 +6,7 @@ use SaQle\Orm\Entities\Field\Types\{OneToOne, OneToMany, ManyToMany};
 use SaQle\Orm\Query\Select\SelectBuilder;
 use SaQle\Orm\Entities\Field\Types\Base\RelationField;
 use SaQle\Orm\Entities\Model\Schema\Model;
-use SaQle\Orm\Entities\Model\TempId;
+use SaQle\Orm\Entities\Model\{TempId, TempIdCollection};
 use SaQle\Core\Support\Db;
 use SaQle\Orm\Entities\Model\Collection\ModelCollection;
 
@@ -76,6 +76,7 @@ final class RelationLoader {
      }
      
      private function window_function_fetch($connection, $foreign_model, $foreign_key, $pkey_values, $field_name, $with, $tuning, $through, $relation_stack){
+         echo "Using window function!\n";
          if($through){
              $original_foreignkey = $foreign_key;
              $foreign_key = $through[3];
@@ -95,7 +96,7 @@ final class RelationLoader {
                  $values_to_add[] = ['id_value' => $id];
              }
 
-             TempId::using($connection)->create($values_to_add)->now();
+             TempIdCollection::using($connection)->create($values_to_add)->now();
          }
 
          /**
@@ -260,6 +261,8 @@ final class RelationLoader {
 
      protected function load_without_limit(string $connection, array | ModelCollection $parents, RelationField $relation,
       mixed $nested, RelationStack $relation_stack){
+         echo "Using without limit!\n";
+         
          $local_key = $relation->get_local_key();
          $foreign_key = $relation->get_foreign_key();
          $related_model = $relation->get_related_model();

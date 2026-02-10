@@ -5,34 +5,112 @@ namespace SaQle\Orm\Entities\Model\Collection;
 
 use SaQle\Core\Collection\Base\TypedCollection;
 use SaQle\Orm\Entities\Model\Interfaces\IModel;
+use SaQle\Orm\Entities\Model\Manager\CreateManager;
 
-class ModelCollection extends TypedCollection implements IModel {
-     private string $type;
-     public function __construct(string $type, array $elements = []){
-         $this->type = $type;
+abstract class ModelCollection extends TypedCollection implements IModel {
+
+     private ?string $connection = null;
+
+     public function __construct(array $elements = []){
          parent::__construct($elements);
      }
 
-     protected function type(): string{
-        return $this->type;
+     abstract protected function type(): string;
+
+     public function set_connection(string $connection){
+         $this->connection = $connection;
      }
 
-     public static function from_objects(string $type, array $objects = []){
-         //print_r($objects);
+     public function get_connection(){
+         return $this->connection;
+     }
 
-         $models = [];
-         foreach($objects as $object){
-             $models[] = new $type(...get_object_vars($object));
+     public function initialize_data(array $elements = []){
+         $type = $this->type();
+        
+         foreach($elements as $object){
+             $model = new $type(...$object);
+             $model->set_table_and_connection($this->connection);
+             $this->add($model);
+         }
+     }
+
+     //change the connection right before an operation
+     public static function using(string $connection){
+         $collection = new static();
+         $collection->set_connection($connection);
+         return new ModelCollectionProxy($collection);
+     }
+
+     //add new row(s) to database or batch create new instances
+     public static function create(array $data) : CreateManager {
+         self::assert_valid_data($data);
+         return new CreateManager(new static($data));
+     }
+
+     static public function assert_valid_data(array $data): void {
+         //Case 1: single object (associative array)
+         if(is_assoc($data)){
+             throw new InvalidArgumentException(
+                 "Data is not well defined!"
+             );
          }
 
-         return new static($type, $models);
+         //Case 2: many objects (array of associative arrays)
+         foreach ($data as $item) {
+             if(!is_array($item) || !is_assoc($item)){
+                throw new InvalidArgumentException(
+                    "The data to insert is not properly defined!"
+                );
+             }
+         }
+
+         //Empty array is ambiguous → reject
+         if($data === []){
+             throw new InvalidArgumentException(
+                'Cannot insert empty data!'
+             );
+         }
      }
 
-     public static function from_arrays(string $type, array $elements = []){
+     public function get_data(){
+         $data = [];
+         foreach($this->elements as $el){
+             $data[] = $el->get_data();
+         }
 
+         return $data;
      }
 
-     public static function from_models(string $type, array $elements = []){
+     public function get_file_references(){
+         $files = [];
+         foreach($this->elements as $el){
+             $files[] = $el->get_file_references();
+         }
 
+         return $files;
+     }
+
+     public function get_files(){
+         $files = [];
+         foreach($this->elements as $el){
+             $files[] = $el->get_files();
+         }
+
+         return $files;
+     }
+
+     public function get_update_columns(){
+         return $this->elements[0]->get_update_columns();
+     }
+
+     public function pluck(string $field, bool $filter_nulls = true) : array {
+         $values = array_map(fn($model) => $model->$field ?? null, $this->elements);
+
+         return $filter_nulls ? array_values(array_filter($values, fn ($v) => $v !== null)) : $values;
+     }
+
+     public function pluck_unique(string $field) : array {
+         return array_values(array_unique($this->pluck($field)));
      }
 }

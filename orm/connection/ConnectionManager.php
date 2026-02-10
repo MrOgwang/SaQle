@@ -13,7 +13,8 @@ final class ConnectionManager {
          $key = self::make_key($config, $with_database);
 
          //1. is there an active transaction for this connection?
-         $pdo = TransactionContext::current($key)['pdo'];
+         $pdo = TransactionContext::current($key)['pdo'] ?? null;
+
          if($pdo){
              return [$pdo, $key];
          }

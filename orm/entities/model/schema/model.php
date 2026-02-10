@@ -8,11 +8,12 @@ use SaQle\Security\Models\ModelValidator;
 use SaQle\Commons\StringUtils;
 use SaQle\Orm\Entities\Model\Manager\{CreateManager, UpdateManager, DeleteManager, TruncateManager, ReadManager, RunManager};
 use SaQle\Orm\Entities\Model\Interfaces\{IModel, ITableSchema};
-use SaQle\Orm\Entities\Model\Collection\ModelCollection;
+use SaQle\Orm\Entities\Model\Collection\GenericModelCollection;
 use SaQle\Core\Exceptions\Model\{UndefinedFieldException, MissingRequiredFieldsException};
 use SaQle\Build\Utils\MigrationUtils;
 use SaQle\Core\Files\{TempFileRef, UploadedFile};
 use SaQle\Core\Files\Storage\TempStorage;
+use SaQle\Core\Assert\Assert;
 use Exception;
 use JsonSerializable;
 use InvalidArgumentException;
@@ -96,28 +97,31 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 	 	  * the field values must be provided in the constructor
 	 	  * */
 	 	 if(!self::$from_static_method && !self::$from_database){
-	 	 	 if(empty($kwargs))
-	 	 	 	 throw new Exception("Please provide data for: ".$this::class." when creating a new model instance!");
-
-	         //ensure all the data keys are field names defined on model
-	 	 	 $this->assert_correct_fields($kwargs);
-
-	 	 	 //fill in defaults for all the fields that haven't been provided
-	         $this->fill_defaults($kwargs);
-
-	         //make sure data is provided for all the required fields
-	         $this->assert_required_fields($kwargs);
-
-	         //run validation on the data
-	         $this->run_data_validation($kwargs);
-
-	         //save files to temporary holding
-	         $this->save_model_files($kwargs);
+	 	 	 $this->initialize_model_data($kwargs);
          }
 
 	 	 $this->data = $kwargs;
 	 	 $this->readonly = self::$from_static_method;
          self::$from_static_method = false;
+     }
+
+     public function initialize_model_data(array $data){
+     	 Assert::isNonEmptyMap($data, "The data provided is not properly defined!");
+
+         //ensure all the data keys are field names defined on model
+ 	 	 //$this->assert_correct_fields($kwargs);
+
+ 	 	 //fill in defaults for all the fields that haven't been provided
+         $this->fill_defaults($data);
+
+         //make sure data is provided for all the required fields
+         $this->assert_required_fields($data);
+
+         //run validation on the data
+         $this->run_data_validation($data);
+
+         //save files to temporary holding
+         $this->save_model_files($data);
      }
 
      private function create_shared_meta(string $class_name){
@@ -151,11 +155,19 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 
      //get the collection class for this model
      public static function collection_class() : string {
-         return ModelCollection::class;
+         return GenericModelCollection::class;
      }
 
      final public function get_data(){
      	 return $this->data;
+     }
+
+     final public function get_files(){
+     	 return $this->files;
+     }
+
+     final public function get_file_references(){
+     	 return $this->files['references'];
      }
      
      final public static function make(){
@@ -212,7 +224,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
          $this->run_data_validation($kwargs);
 	 }
 
-	 protected function save_model_files(array $kwargs): void {
+	 protected function save_model_files(array &$kwargs): void {
 	     if(empty($this->meta->file_field_names)){
 	         return;
 	     }
@@ -220,32 +232,35 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 	     $model = strtolower((new ReflectionClass($this))->getShortName());
 	     $session = bin2hex(random_bytes(16));
 
-	     foreach($this->meta->file_field_names as $field){
+	     foreach($this->meta->file_field_names as $ffn){
 
-	         if(!array_key_exists($field, $kwargs)){
+	         if(!array_key_exists($ffn, $kwargs)){
 	             continue;
 	         }
 
-	         $value = $kwargs[$field];
+	         $value = $kwargs[$ffn];
 
 	         if($value === null){
 	            continue;
 	         }
 
+             $field = $this->meta->clean_fields[$ffn];
 	         $files = is_array($value) ? $value : [$value];
 	         $refs  = [];
 
 	         foreach($files as $file){
 	             if(!$file instanceof UploadedFile) {
 	                 throw new InvalidArgumentException(
-	                    "Invalid upload supplied for file field '{$field}'"
+	                    "Invalid upload supplied for file field '{$ffn}'"
 	                 );
 	             }
 
-	             $refs[] = TempStorage::store(model: $model, field: $field, session: $session, file: $file);
+	             $refs[] = TempStorage::store(model: $model, field: $ffn, session: $session, file: $file);
 	         }
 
-	         $this->files['references'][$field] = count($refs) === 1 ? $refs[0] : $refs;
+             $kwargs[$ffn] = implode("~", array_map(fn($ref) => $ref->file_id, $refs));
+
+	         $this->files['references'][$ffn] = count($refs) === 1 ? $refs[0] : $refs;
 	     }
 
 	     $this->files['file_upload_session'] = $session;
@@ -299,17 +314,6 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 	 	 }
 	 	 return $file_data;
 	 }
-
-     private function swap_properties_with_columns($data){
-     	 $swapped = [];
-     	 foreach($this->meta->clean_fields as $pk => $pv){
-     	 	 $ck = $this->meta->clean_fields[$pk]->get_column();
-     	 	 if( array_key_exists($ck, $data) || array_key_exists($pk, $data) ){
-     	 	 	 $swapped[$ck] = $data[$ck] ?? $data[$pk];
-     	 	 }
-     	 }
-     	 return $swapped;
-     }
 
      private function assert_field_exists(string $field_name, bool $strict = false) : void {
      	 if($strict){
@@ -477,6 +481,21 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
      	 	 	 $data[$f->get_name()] = $f->get_default();
      	 	 }
      	 }
+
+     	 /*/Inject creator and modifier fields, created and modified date time fields and deleted fields
+	 	 if($this->meta->with_user_audit){
+	 	 	 $data_to_save[$this->meta->created_by_field] = $request->user->user_id ?? 0; #Id of current user
+	 	 	 $data_to_save[$this->meta->modified_by_field] = $request->user->user_id ?? 0; #Id of current user
+	 	 }
+	 	 if($this->meta->with_timestamps){
+	 	 	 $data_to_save[$this->meta->created_at_field] = time(); #current date time.
+	 	 	 $data_to_save[$this->meta->modified_at_field] = time(); #Current date time
+	 	 }
+	 	 if($this->meta->with_soft_delete){
+	 	 	 $data_to_save[$this->meta->deleted_field] = 0; #0 or 1, will be updated according to the operation
+	 	 	 $data_to_save[$this->meta->deleted_by_field] = $request->user->user_id ?? 0; #Id of current user
+	 	 	 $data_to_save[$this->meta->deleted_at_field] = time(); #current date and time stamp
+	 	 }*/
      }
 
      /**
@@ -505,32 +524,6 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
       * */
      private function run_data_validation(array $data, bool $partial = false){
      	 return true;
-	 }
-
-	 public function get_insert_data($request){
-	 	 $fields_to_save = $this->meta->table_column_names;
-	 	 $data_to_save   = array_intersect_key($this->data, $fields_to_save);
-	 	 //print_r($data_to_save);
-	 	 //$data_to_save = $this->swap_properties_with_columns($fields_to_save); //check swap. Not working correctly
-         
-	 	 //Inject creator and modifier fields, created and modified date time fields and deleted fields
-	 	 if($this->meta->with_user_audit){
-	 	 	 $data_to_save[$this->meta->created_by_field] = $request->user->user_id ?? 0; #Id of current user
-	 	 	 $data_to_save[$this->meta->modified_by_field] = $request->user->user_id ?? 0; #Id of current user
-	 	 }
-	 	 if($this->meta->with_timestamps){
-	 	 	 $data_to_save[$this->meta->created_at_field] = time(); #current date time.
-	 	 	 $data_to_save[$this->meta->modified_at_field] = time(); #Current date time
-	 	 }
-	 	 if($this->meta->with_soft_delete){
-	 	 	 $data_to_save[$this->meta->deleted_field] = 0; #0 or 1, will be updated according to the operation
-	 	 	 $data_to_save[$this->meta->deleted_by_field] = $request->user->user_id ?? 0; #Id of current user
-	 	 	 $data_to_save[$this->meta->deleted_at_field] = time(); #current date and time stamp
-	 	 }
-
-	 	 $file_data = $this->prepare_file_data($data_to_save);
-
-	 	 return [$data_to_save, $file_data];
 	 }
 
 	 public function get_update_data($data, $request, $data_state = null, $skip_validation = false){
@@ -575,16 +568,16 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 
      //change the connection right before an operation
 	 public static function using(string $connection){
-	 	 $model_instance = self::make($connection);
+	 	 $model_instance = self::make();
 	 	 $model_instance->set_table_and_connection($connection);
          return new ModelProxy($model_instance);
      }
 
      //add new row(s) to database or batch create new instances
 	 public static function create(array $data) : CreateManager {
-	 	 $model_instance = self::make();
+	 	 $model_instance = new static($data);
 	 	 $model_instance->set_table_and_connection();
-	 	 return new CreateManager($model_instance, $data);
+	 	 return new CreateManager($model_instance);
 	 }
 
 	 //update exisitng rows (s)
@@ -671,7 +664,6 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
      private static function get_model_setup(){
      	 $model = get_called_class();
      	 $model_instance = $model::make();
-
      	 return $model_instance->meta;
      }
 
@@ -758,4 +750,22 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 	 	 $schema = config('schemas')[$this->meta->connection_name];
 	 	 return new $schema()->get_models();
 	 }
+
+	 public function get_update_columns(){
+	 	 $exclude_fields = array_merge(
+	 	 	 $this->meta->unique_field_names,
+	 	 	 [$this->meta->pk_name],
+	 	 	 $this->audit_field_names
+	 	 );
+
+	 	 $update_fields = array_diff(array_keys($this->meta->clean_fields), $exclude_fields);
+	 	 $update_columns = [];
+
+	 	 foreach($update_fields as $f){
+	 	 	 $update_columns[] = $this->meta->field_column_refs[$f];
+	 	 }
+
+	 	 return $update_columns;
+	 }
+
 }

@@ -10,11 +10,6 @@ use ReflectionFunction;
 use Exception;
 
 class Db {
-
-	 public function __construct(private string $connection_name){
-
-	 }
-
      public static function driver(string $connection){
          $db_config = config('connections')[$connection];
 

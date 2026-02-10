@@ -19,7 +19,7 @@ trait EventUtils {
 
 	 protected function dispatch_event(string $model, string $phase, array $named_args, ?BaseUser $user = null, mixed $result = null){
 	 	 $context = new EventContext(
-             service : $model::make(),
+             service : null,
              method  : $phase,
              args    : $named_args,
              result  : null,
@@ -70,13 +70,13 @@ trait EventUtils {
 
 	 protected function get_named_args(string $operation, array $sql_info, ?string $table = null, ?string $model = null, ?array $data = null, ?array $files = null){
 	 	 $named_args = [
-	 	 	 'table'         => $table ?? $this->model->meta->table_name, 
+	 	 	 'table'         => $table ?? $this->table_name(), 
      	 	 'sql'           => $sql_info['sql'], 
      	 	 'prepared_data' => $sql_info['data'],
-     	 	 'connection'    => $this->model->meta->connection_name,
-     	 	 'db'            => config('connections')[$this->model->meta->connection_name]['database'],
+     	 	 'connection'    => $this->connection_name(),
+     	 	 'db'            => config('connections')[$this->connection_name()]['database'],
      	 	 'timestamp'     => time(),
-     	 	 'model'         => $model ?? $this->model::class
+     	 	 'model'         => $model ?? $this->get_model_class()
 	 	 ];
 
 	 	 if($operation === 'insert' || $operation === 'update'){

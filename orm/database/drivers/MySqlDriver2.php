@@ -9,7 +9,7 @@ use SaQle\Orm\Entities\Model\Manager\QueryManager;
 use SaQle\Core\Exceptions\Model\TableDropOperationFailedException;
 use SaQle\Core\Exceptions\Model\TableCreateOperationFailedException;
 
-class MySqlDriver extends DbDriver {
+class MySqlDriver2 extends DbDriver {
 	 
 	 public function __construct(ConnectionConfig $config){
 	 	 parent::__construct($config);
@@ -107,7 +107,6 @@ class MySqlDriver extends DbDriver {
      }
 
      public function set_insert_query(QueryManager $manager) : void {
-         $supports_returning = $this->supports_returning();
          $data = $manager->get_data();
          $fields = array_keys($data); 
          $values = array_values($data);
@@ -120,86 +119,63 @@ class MySqlDriver extends DbDriver {
 
          switch($duplicate_action){
              case "ABORT_WITH_ERROR":
-                 $sql = "INSERT INTO {$database}.{$table} ({$fieldstring}) 
-                         VALUES ({$valstring})";
-             break;
-             case "UPDATE_ON_DUPLICATE":
-                 $columns_to_update = $manager->get_update_columns();
-                 $updates = array_map(fn($f) => "$f = VALUES($f)", $columns_to_update);
-                 $updates = implode(', ', $updates);
-             
-                 $sql = "INSERT INTO {$database}.{$table} ({$fieldstring}) 
-                         VALUES ({$valstring})
-                         ON DUPLICATE KEY UPDATE {$updates}";
-
+                 $sql = "INSERT INTO {$database}.{$table} ({$fieldstring}) VALUES ({$valstring})";
              break;
              case "INSERT_MINUS_DUPLICATE":
-             case "RETURN_EXISTING":
-                 //perform a no-op update
-                 $pk_name = $manager->get_primary_key_column();
-                 $sql = "INSERT INTO {$database}.{$table} ({$fieldstring}) 
-                         VALUES ({$valstring}) 
-                         ON DUPLICATE KEY UPDATE {$pk_name} = {$pk_name}";
+                 $sql = "INSERT IGNORE INTO {$database}.{$table} ({$fieldstring}) VALUES ".str_repeat("($valstring), ", $row_count - 1)."($valstring)";
              break;
          }
 
-         if($supports_returning){
-             $sql .= " RETURNING {$fieldstring}";
-         }
+         if($manager->get_model()->meta->action_on_duplicate === 'ABORT_WITH_ERROR'){
+             $sql = "INSERT INTO {$database}.{$table} ({$fieldstring}) VALUES ".str_repeat("($valstring), ", $row_count - 1). "($valstring)";
 
-         $manager->set_sql($sql);
-         $manager->set_data($values);
-     }
-
-     public function set_multiple_insert_query(QueryManager $manager) : void {
-         $supports_returning = $this->supports_returning();
-         $data = $manager->get_data();
-         $row_count = count($data);
-         $fields = array_keys($data[0]); 
-         $values = [];
-         foreach($data as $row){
-             $values[] = array_values($row);
-         }
-         $database = $this->config->get_database();
-         $table = $manager->table_name();
-         $fieldstring = implode(", ", $fields);
-         $valstring = str_repeat('?, ', count($fields) - 1).'?';
-         $duplicate_action = $manager->get_duplicate_action();
-         $prepared_data = array_merge(...$values);
-         $sql = "";
-
-         switch($duplicate_action){
-             case "ABORT_WITH_ERROR":
-                 $sql = "INSERT INTO {$database}.{$table} ({$fieldstring}) 
-                         VALUES ".str_repeat("($valstring), ", $row_count - 1)."($valstring)";
-             break;
-             case "UPDATE_ON_DUPLICATE":
-                 $columns_to_update = $manager->get_update_columns();
-                 $updates = array_map(fn($f) => "$f = VALUES($f)", $columns_to_update);
-                 $updates = implode(', ', $updates);
+         }elseif($manager->get_model()->meta->action_on_duplicate === 'INSERT_MINUS_DUPLICATE'){
+             $sql = "INSERT IGNORE INTO {$database}.{$table} ({$fieldstring}) VALUES ".str_repeat("($valstring), ", $row_count - 1)."($valstring)";
+         }elseif($manager->get_model()->meta->action_on_duplicate === 'UPDATE_ON_DUPLICATE'){
+             $exclude = array_merge($manager->get_model()::get_unique_field_names(), [$manager->get_model()::get_pk_name()]);
+             $toupdate = array_map(function($f){
+                 return "$f = VALUES($f)";
+             }, array_diff($fields, $exclude));
              
-                 $sql = "INSERT INTO {$database}.{$table} ({$fieldstring}) 
-                         VALUES ".str_repeat("($valstring), ", $row_count - 1)."($valstring)
-                         ON DUPLICATE KEY UPDATE {$updates}";
-
-             break;
-             case "INSERT_MINUS_DUPLICATE":
-             case "RETURN_EXISTING":
-                 //perform a no-op update
-                 $pk_name = $manager->get_primary_key_column();
-                 $sql = "INSERT INTO {$database}.{$table} ({$fieldstring}) 
-                         VALUES ".str_repeat("($valstring), ", $row_count - 1)."($valstring)
-                         ON DUPLICATE KEY UPDATE {$pk_name} = {$pk_name}";
-             break;
-         }
-
-         if($supports_returning){
-             $sql .= " RETURNING {$fieldstring}";
+             $sql = "INSERT INTO {$database}.{$table} ({$fieldstring}) VALUES ".str_repeat("($valstring), ", $row_count - 1)."($valstring) ON DUPLICATE KEY UPDATE ".implode(', ', $toupdate);
+         }elseif($manager->get_model()->meta->action_on_duplicate === 'RETURN_EXISTING'){
+             $sql = "INSERT INTO {$database}.{$table} ({$fieldstring}) VALUES ".str_repeat("($valstring), ", $row_count - 1)."($valstring) ON DUPLICATE KEY UPDATE {$manager->get_model()->meta->pk_name} = {$manager->get_model()->meta->pk_name}";
          }
 
          $manager->set_sql($sql);
          $manager->set_data($prepared_data);
      }
+
+     /*public function set_insert_query(QueryManager $manager) : void {
+         $fields        = array_keys(array_values($manager->get_container()->data)[0]);
+         $data          = array_values($manager->get_container()->data);
+         $values        = [];
+         $row_count     = count($data);
+         foreach($data as $row){
+             $values[]  = array_values($row);
+         }
+         $database      = $this->config->get_database();
+         $table         = $manager->table_name();
+         $fieldstring   = implode(", ", $fields);
+         $valstring     = str_repeat('?, ', count($fields) - 1). '?';
+         $prepared_data = array_merge(...$values);
+         if($manager->get_model()->meta->action_on_duplicate === 'ABORT_WITH_ERROR'){
+             $sql = "INSERT INTO {$database}.{$table} ({$fieldstring}) VALUES ".str_repeat("($valstring), ", $row_count - 1). "($valstring)";
+         }elseif($manager->get_model()->meta->action_on_duplicate === 'INSERT_MINUS_DUPLICATE'){
+             $sql = "INSERT IGNORE INTO {$database}.{$table} ({$fieldstring}) VALUES ".str_repeat("($valstring), ", $row_count - 1)."($valstring)";
+         }elseif($manager->get_model()->meta->action_on_duplicate === 'UPDATE_ON_DUPLICATE'){
+             $exclude = array_merge($manager->get_model()::get_unique_field_names(), [$manager->get_model()::get_pk_name()]);
+             $toupdate = array_map(function($f){
+                 return "$f = VALUES($f)";
+             }, array_diff($fields, $exclude));
+             $sql = "INSERT INTO {$database}.{$table} ({$fieldstring}) VALUES ".str_repeat("($valstring), ", $row_count - 1)."($valstring) ON DUPLICATE KEY UPDATE ".implode(', ', $toupdate);
+         }elseif($manager->get_model()->meta->action_on_duplicate === 'RETURN_EXISTING'){
+             $sql = "INSERT INTO {$database}.{$table} ({$fieldstring}) VALUES ".str_repeat("($valstring), ", $row_count - 1)."($valstring) ON DUPLICATE KEY UPDATE {$manager->get_model()->meta->pk_name} = {$manager->get_model()->meta->pk_name}";
+         }
+
+         $manager->set_sql($sql);
+         $manager->set_data($prepared_data);
+     }*/
 
      public function set_read_query(QueryManager $manager) : void {
          $where_clause = $manager->wbuilder->get_where_clause(
@@ -464,6 +440,28 @@ class MySqlDriver extends DbDriver {
              implode(", ", $defs),
              $temporary
          );
+     }
+
+     public function supports_window_functions(): bool {
+         $version = $this->get_version();
+
+         return $version ? version_compare($version, '8.0', '>=') : false;
+     }
+
+     public function supports_returning(): bool {
+         return false;
+     }
+
+     public function supports_cte(): bool {
+     	 $version = $this->get_version();
+
+         return $version ? version_compare($version, '8.0', '>=') : false;
+     }
+
+     public function supports_json(): bool {
+     	 $version = $this->get_version();
+
+         return $version ? version_compare($version, '8.0', '>=') : false;
      }
  
 }

@@ -4,18 +4,19 @@ declare(strict_types = 1);
 namespace SaQle\Orm\Entities\Model\Manager;
 
 use SaQle\Orm\Database\Drivers\DbDriver;
-use SaQle\Orm\Entities\Model\Schema\Model;
+use SaQle\Orm\Entities\Model\Interfaces\IModel;
 use SaQle\Core\Support\Db;
+use SaQle\Orm\Entities\Model\Collection\ModelCollection;
 
 class QueryManager {
 	 protected string   $sql = "";
 	 protected ?array   $data = null;
 	 protected DbDriver $dbdriver;
-	 protected Model    $model;
+	 protected IModel   $model;
 
-	 public function __construct(Model $model){
+	 public function __construct(IModel $model){
 	 	 $this->model = $model;
-	 	 $this->dbdriver = Db::driver($this->model->meta->connection_name);
+	 	 $this->dbdriver = Db::driver($this->connection_name());
 	 }
 
 	 public function sql(){
@@ -39,19 +40,19 @@ class QueryManager {
 	 }
 
 	 public function connection_name(){
-	 	 return $this->model->meta->connection_name;
+	 	 return $this->model instanceof ModelCollection ? $this->model[0]->meta->connection_name : $this->model->meta->connection_name;
 	 }
 
 	 public function table_name(){
-	 	 return $this->model->meta->table_name;
+	 	 return $this->model instanceof ModelCollection ? $this->model[0]->meta->table_name : $this->model->meta->table_name;
 	 }
 
 	 public function get_model(){
 	 	 return $this->model;
 	 }
 
-	 public function get_connection_key(){
-
+	 public function get_model_class(){
+	 	 return $this->model instanceof ModelCollection ? $this->model[0]::class : $this->model::class;
 	 }
 }
 

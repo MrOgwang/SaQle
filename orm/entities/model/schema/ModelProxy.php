@@ -9,7 +9,8 @@ final class ModelProxy {
      ){}
 
      public function create(array $data) : CreateManager {
-         return new CreateManager($this->model_instance, $data);
+         $this->model_instance->initialize_model_data($data);
+         return new CreateManager($this->model_instance);
      }
 
      public function get($tablealiase = null, $tableref = null): ReadManager {
