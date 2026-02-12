@@ -5,21 +5,30 @@ use SaQle\Core\Support\Db;
 use SaQle\Commons\FileUtils;
 use SaQle\Core\Migration\Models\Migration;
 use SaQle\Core\Migration\Tracker\MigrationTracker;
-use SaQle\App;
+use SaQle\Build\Utils\MigrationUtils;
 
 class Migrate{
      use FileUtils;
 
-     private static function process_migration_file($file, $migrations_folder, $project_root){
+     private string $migrations_folder;
+    
+     public function __construct(){
+         $base_path = config('base_path');
+
+         $this->migrations_folder = $base_path."/databases/migrations";
+     }
+
+     private function process_migration_file($file){
          $file_name = pathinfo($file, PATHINFO_FILENAME);
-         $file_name_parts = explode("_", $file_name);
-         $file_path = $migrations_folder."/".$file;
+         $file_path = $this->migrations_folder."/".$file;
+         
          if(!file_exists($file_path)){
              return;
          }
 
          cli_log("Scanning file {$file_name} for changes!\n");
          require_once $file_path;
+
          $class_instance = new $file_name();
          cli_log("Getting affected database contexts!\n");
          $touched_snapshots = $class_instance->snapshots();
@@ -29,23 +38,31 @@ class Migrate{
          }
 
          cli_log("Affected contexts found!\n");
-         print_r($touched_snapshots);
-         
          $up_operations = $class_instance->up();
 
+         $migration_name = $class_instance->get_migration_name();
+         $migration_timestamp = $class_instance->get_migration_timestamp();
          foreach($touched_snapshots as $snapshot_name => $snapshot_location){
-             self::process_context($snapshot_name, $snapshot_location, $file_name, $file_name_parts[2], $up_operations, $project_root);
+             $this->process_snapshot(
+                 $snapshot_name, 
+                 $snapshot_location, 
+                 $migration_name,
+                 $migration_timestamp,
+                 $up_operations
+             );
          }
         
          return;
      }
 
-     private static function create_table($op, $project_root, $dbdriver){
+     private function create_table($op, $dbdriver, $snapshot){
          $table_name = $op['params']['name'];
          $model_class = $op['params']['model'];
 
          cli_log("Attempting to create table: {$table_name}!\n");
-         $tblcreated = $dbdriver->create_table_from_migration($table_name, $model_class);
+         $migration_field_defs = $this->extract_snapshot_field_definitions($snapshot->get_model_fields(), $table_name);
+         $unique_constraint_defs = $dbdriver->get_unique_constraint_sqls($snapshot->get_unique_constraints()[$table_name] ?? []);
+         $tblcreated = $dbdriver->create_table_from_migration($table_name, $migration_field_defs, $unique_constraint_defs);
 
          if(!$tblcreated){
              cli_log("Table {$table_name} creation failed!\n");
@@ -56,7 +73,7 @@ class Migrate{
          return;
      }
 
-     private static function drop_table($op, $dbdriver){
+     private function drop_table($op, $dbdriver){
          $table_name = $op['params']['name'];
          echo "Attempting to drop table: {$table_name}!\n";
          $tbldropped = $dbdriver->drop_table($table_name);
@@ -70,84 +87,64 @@ class Migrate{
          return;
      }
 
-     private static function add_columns($op, $dbdriver){
+     private function add_columns($op, $dbdriver){
          $table_name = $op['params']['name'];
-         echo "Attempting to add new columns table: {$table_name}!\n";
+         
+         cli_log("Attempting to add new columns table: {$table_name}!\n");
          $colsadded = $dbdriver->add_columns($table_name, $op['params']['columns']);
 
          if(!$colsadded){
-             echo "Columns addition to table {$table_name} failed!\n";
+             cli_log("Columns addition to table {$table_name} failed!\n");
              return;
          }
 
-         echo "New columns added to table {$table_name}!\n";
+         cli_log("New columns added to table {$table_name}!\n");
          return;
      }
 
-     private static function drop_columns($op, $dbdriver){
+     private function drop_columns($op, $dbdriver){
          $table_name = $op['params']['name'];
-         echo "Attempting to delete columns from table: {$table_name}!\n";
+         
+         cli_log("Attempting to delete columns from table: {$table_name}!\n");
          $colsdropped = $dbdriver->drop_columns($table_name, $op['params']['columns']);
 
          if(!$colsdropped){
-             echo "Column deletion from table {$table_name} failed!\n";
+             cli_log("Column deletion from table {$table_name} failed!\n");
              return;
          }
 
-         echo "Columns dropped from table {$table_name}!\n";
+         cli_log("Columns dropped from table {$table_name}!\n");
          return;
      }
 
-     private static function add_unique($op, $dbdriver){
+     private function update_unique($op, $dbdriver){
          $table_name = $op['params']['name'];
-         $columns    = explode(",", $op['unique']);
-         echo "Attempting to add unique fields to table: {$table_name}!\n";
-         $uniqueadded = $dbdriver->add_unique_constraints($table_name, $columns, $op['unique_together']);
 
-         if(!$uniqueadded){
-             echo "Failed to set unique columns (".$op['unique'].") on table {$table_name}!\n";
-             return;
-         }
+         cli_log("Attempting to update unique constraints on table: {$table_name}!\n");
+         $dbdriver->add_unique_constraints($table_name, $op['unique'], $op['prev_unique']);
 
-         echo "Unique columns (".$op['unique'].") set on table {$table_name}!\n";
          return;
      }
 
-     private static function drop_unique($op, $dbdriver){
-         $table_name = $op['params']['name'];
-         $columns    = explode(",", $op['unique']);
-         echo "Attempting to drop unique fields from table table: {$table_name}!\n";
-         $uniqueadded = $dbdriver->drop_unique_constraints($table_name, $columns, $op['unique_together']);
-
-         if(!$uniqueadded){
-             echo "Failed to drop unique columns (".$op['unique'].") from table {$table_name}!\n";
-             return;
-         }
-
-         echo "Unique columns (".$op['unique'].") dropped from table {$table_name}!\n";
-         return;
-     }
-
-     private static function process_up_operation($op, $project_root, $dbdriver){
+     private function process_up_operation($op, $dbdriver, $snapshot){
          return match($op['action']){
-             'create_table' => self::create_table($op, $project_root, $dbdriver),
-             'drop_table'   => self::drop_table($op, $dbdriver),
-             'add_columns'  => self::add_columns($op, $dbdriver),
-             'drop_columns' => self::drop_columns($op, $dbdriver),
-             'add_unique'   => self::add_unique($op, $dbdriver),
-             'drop_unique'  => self::drop_unique($op, $dbdriver),
+             'create_table'  => $this->create_table($op, $dbdriver, $snapshot),
+             'drop_table'    => $this->drop_table($op, $dbdriver),
+             'add_columns'   => $this->add_columns($op, $dbdriver),
+             'drop_columns'  => $this->drop_columns($op, $dbdriver),
+             'update_unique' => $this->update_unique($op, $dbdriver)
          };
      }
 
-     private static function extract_snapshot_field_definitions(array $schema, string $table): array {
+     private function extract_snapshot_field_definitions(array $schema, string $table): array {
          if (!isset($schema[$table])) {
              return [];
          }
 
-         return array_map(fn($field) => $field['def'], $schema[$table]);
+         return array_filter(array_map(fn($field) => $field['def'], $schema[$table]));
      }
 
-     private static function process_context($snapshot_name, $snapshot_location, $file_name, $migration_name, $up_operations, $project_root){
+     private function process_snapshot($snapshot_name, $snapshot_location, $migration_name, $migration_timestamp, $up_operations){
          $snapshot_path = $snapshot_location['path'];
          $snapshot_class = $snapshot_location['name'];
 
@@ -180,24 +177,40 @@ class Migrate{
          cli_log("We have connected!\n");
 
          cli_log("Creating migrations table!\n");
-         $migration_field_defs = self::extract_snapshot_field_definitions($snapshot->get_model_fields(), 'migrations');
+         $migration_field_defs = $this->extract_snapshot_field_definitions($snapshot->get_model_fields(), 'migrations');
          $unique_constraint_defs = $dbdriver->get_unique_constraint_sqls($snapshot->get_unique_constraints()['migrations'] ?? []);
          $dbdriver->create_table_from_migration('migrations', $migration_field_defs, $unique_constraint_defs);
 
          //record this migration in db
-         $fn_parts = explode("_", $file_name);
-         $recorded = Migration::get()->where('migration_name__eq', $migration_name)->where('migration_timestamp__eq', $fn_parts[1])->first_or_default();
+         $recorded = Migration::get()
+         ->where('migration_name__eq', $migration_name)
+         ->where('migration_timestamp__eq', $migration_timestamp)
+         ->first_or_default();
+
          if(!$recorded){
-             $recorded = Migration::create(['migration_name' => $migration_name, 'migration_timestamp' => $fn_parts[1], 'is_migrated' => 0])->now();
+             $recorded = Migration::create([
+                 'migration_name' => $migration_name, 
+                 'migration_timestamp' => $migration_timestamp, 
+                 'is_migrated' => 0
+             ])->now();
          }
 
          if($recorded->is_migrated === 1)
             return;
 
+         /*$prev_snapshot = MigrationUtils::get_previous_snapshot(
+             $snapshot_name, 
+             $recorded->prev_migration_name,
+             $recorded->prev_migration_timestamp,
+             $this->migrations_folder
+         );*/
+
          #Get and execute the up operations.
          $ctx_up_operations = $up_operations[$snapshot_name];
 
-         //$op_results = array_map(fn($op) => self::process_up_operation($op, $project_root, $dbdriver), $ctx_up_operations);
+         foreach($ctx_up_operations as $op){
+             $this->process_up_operation($op, $dbdriver, $snapshot);
+         }
 
          #mark current migration file as having been migrated
          Migration::update(['is_migrated' => 1])->where('migration_id', $recorded->migration_id)->now();
@@ -218,17 +231,16 @@ class Migrate{
          return $files;
      }
      
-     public function execute(string $project_root){
-         $migrations_folder      = $project_root."/databases/migrations";
-         $migration_tracker_file = $project_root."/databases/migrationstracker.bin";
-         $tracker                = $this->unserialize_from_file($migration_tracker_file);
+     public function execute(){
+         $migration_tracker_file = config('base_path')."/databases/migrationstracker.bin";
+         $tracker = $this->unserialize_from_file($migration_tracker_file);
          if(!$tracker){
              $tracker = new MigrationTracker();
          }
 
-         $files                  = [];
+         $files = [];
          if(config('environment') === 'development'){
-             $files              = $tracker ? $tracker->get_migration_files() : [];
+             $files = $tracker ? $tracker->get_migration_files() : [];
          }
 
          if($files){
@@ -237,16 +249,18 @@ class Migrate{
              });
              $migration_file_names = array_column($migration_files, 'file');
          }else{
-             $files = $this->scandir(path: $migrations_folder, exts: ['php']);
+             $files = $this->scandir(path: $this->migrations_folder, exts: ['php']);
              $files = $this->order_migration_filenames($files);
              $migration_file_names = array_values($files);
          }
 
          cli_log("Starting migrations!\n");
-         array_map(fn($file) => self::process_migration_file($file, $migrations_folder, $project_root), $migration_file_names);
+         foreach($migration_file_names as $migration_file){
+             $this->process_migration_file($migration_file);
+         }
 
-         /*$tracker->set_migrated($migration_file_names);
-         $this->serialize_to_file($migration_tracker_file, $tracker);*/
+         $tracker->set_migrated($migration_file_names);
+         $this->serialize_to_file($migration_tracker_file, $tracker);
          return;
      }
 }

@@ -8,9 +8,10 @@ use SaQle\Orm\Entities\Field\Attributes\FieldDefinition;
 
 class Pk implements IField {
 
-     protected string $strategy = 'AUTO';
+     protected string $strategy;
 
-     public function __construct(string $strategy = 'AUTO') {
+     public function __construct(?string $strategy = null){
+         $strategy = $strategy ?? config('primary_key_type');
          $this->strategy = strtoupper($strategy);
      }
 

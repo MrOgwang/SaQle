@@ -92,6 +92,7 @@ class CreateManager extends QueryManager{
 	 }
 
 	 public function get_primary_key_values(){
+	 	 //print_r($this->model->get_data());
 	 	 return $this->model instanceof ModelCollection ? 
 	 	 $this->model->pluck_unique($this->model[0]->meta->pk_name) :
 	 	 [$this->model->get_data()[$this->model->meta->pk_name]];

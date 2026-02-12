@@ -4,7 +4,7 @@ namespace SaQle\Build\Commands;
 use Booibo\Models\{Actor, Film, Category, City, Country};
 
 class TestModel {
-     private static function test_models(string $project_root){
+     private static function test_models(){
          cli_log("Testing models!\n");
 
          /*$actors = Actor::using('sakila')->get()->with(
@@ -46,7 +46,7 @@ class TestModel {
          }*/
      }
 
-     static public function execute($project_root){
-         self::test_models($project_root);
+     static public function execute(){
+         self::test_models();
      }
 }

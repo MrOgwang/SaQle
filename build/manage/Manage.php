@@ -100,10 +100,10 @@ class Manage{
 	             	 throw new Exception("The database schema [{$schema_name}] provided does not exist or is not defined correctly!");
 	             }
 
-	             resolve(MakeMigrations::class)->execute($migration_name, $this->project_root, $schema_name);
+	             resolve(MakeMigrations::class)->execute($migration_name, $schema_name);
 			 break;
 			 case 'migrate':
-			     resolve(Migrate::class)->execute($this->project_root);
+			     resolve(Migrate::class)->execute();
 			 break;
 			 case 'make:backoffice':
 			     //resolve(MakeBackoffice::class)->execute($this->project_root);
@@ -119,9 +119,7 @@ class Manage{
 			     resolve(MakeModels::class)->execute($this->project_root, $app_name, $db_context);
 			 break;
 			 case 'make:throughs':
-			     $app_name       = $this->arguments['app']     ?? null;
-	             $db_context     = $this->arguments['context'] ?? null;
-			     resolve(MakeThroughs::class)->execute($this->project_root, $app_name, $db_context);
+			     resolve(MakeThroughs::class)->execute();
 			 break;
 			 case 'make:superuser':
 			     $email      = $this->arguments['email']    ?? null;
@@ -129,10 +127,10 @@ class Manage{
 			     resolve(MakeSuperuser::class)->execute($this->project_root, $email, $password);
 			 break;
 			 case 'db:seed':
-			     resolve(SeedDatabase::class)->execute($this->project_root);
+			     resolve(SeedDatabase::class)->execute();
 			 break;
 			 case 'db:reset':
-			     resolve(ResetDatabase::class)->execute($this->project_root);
+			     resolve(ResetDatabase::class)->execute();
 			 break;
 			 case 'start:project':
 			     $name = $this->arguments['name'] ?? null;
@@ -150,7 +148,7 @@ class Manage{
 			     MakeResources::execute($this->project_root);
 			 break;
 			 case 'model:test':
-			     TestModel::execute($this->project_root);
+			     TestModel::execute();
 			 break;
 			 default:
 			     throw new Exception("Unknown command!");

@@ -22,7 +22,12 @@ trait FilterManager{
      }
 
  	 public function set_raw_filters(array $filters){
+ 	 	 $this->before_where("", "");
+
  	 	 $this->wbuilder->aggregator->filter = $filters;
+
+ 	 	 $this->after_where("", "");
+
 	 	 return $this;
  	 }
 

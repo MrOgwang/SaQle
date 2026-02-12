@@ -87,10 +87,10 @@ class UpdateManager extends QueryManager {
 			 }
 
 			 //save files
-			 $this->auto_save_files(array_values($this->container->files));
+			 //$this->auto_save_files(array_values($this->container->files));
 
 			 //get updates
-		 	 $updateddata = $modelclass::get()->set_raw_filters($this->get_raw_filters())->all();
+		 	 $updateddata = $this->model::class::get()->set_raw_filters($this->get_raw_filters())->all();
 		 	 $result = $statement->rowCount() > 0 ? $updateddata : ($updateddata[0] ?? false);
 
 		 	 //send a post update signal to observers

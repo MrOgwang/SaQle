@@ -1,9 +1,9 @@
 <?php
 namespace SaQle\Build\Commands;
 
-class ResetDatabase{
+class ResetDatabase {
      
-     public function reset_database($project_root){
+     public function reset_database(){
          foreach(config('connections') as $connection_name => $params){
              $schema = config('schemas')[$connection_name];
              $schema_instance = new $schema();
@@ -14,10 +14,10 @@ class ResetDatabase{
                  }
              }
          }
-         (new SeedDatabase())->seed_database($project_root);
+         (new SeedDatabase())->seed_database();
      }
 
-     public function execute($project_root){
-           $this->reset_database($project_root);
+     public function execute(){
+           $this->reset_database();
      }
 }

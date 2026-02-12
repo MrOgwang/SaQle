@@ -12,17 +12,44 @@ use ReflectionClass;
 use Exception;
 
 class MakeMigrations {
+
      use FileUtils;
 
-     private function arrays_are_equal(array $a, array $b): bool {
-         if(empty($a) && empty($b)){
-             return true;
+     private string $migrations_folder;
+     private string $snapshots_folder;
+     private string $schemas_folder;
+
+     public function __construct(){
+         $base_path = config('base_path');
+
+         $this->migrations_folder = $base_path."/databases/migrations";
+         $this->snapshots_folder  = $base_path."/databases/snapshots";
+         $this->schemas_folder    = $base_path."/databases/schemas";
+     }
+
+     private function constraints_are_equal(array $a, array $b) : bool {
+         if(count($a) !== count($b)){
+             return false;
          }
 
-         sort($a);
-         sort($b);
+         ksort($a);
+         ksort($b);
 
-         return $a === $b;
+         foreach($a as $key => $values){
+             if(!array_key_exists($key, $b)){
+                 return false;
+             }
+
+             sort($values);
+             $otherValues = $b[$key];
+             sort($otherValues);
+
+             if($values !== $otherValues){
+                 return false;
+             }
+         }
+
+         return true;
      }
 
      private function get_model_operations($snapshot, $snapshot_records){
@@ -40,7 +67,6 @@ class MakeMigrations {
              $up .= "\t\t\t'".$sk."' => [\n";
              $down .= "\t\t\t'".$sk."' => [\n";
              foreach($added_models as $an => $am){
-                 $table_unique_constraints = $unique_constraints[$an] ?? [];
                  $up .= "\t\t\t\t['action' => 'create_table', 'params' => ['name' => '".$an."', 'model' => '".$am."']],\n";
                  $down .= "\t\t\t\t['action' => 'drop_table', 'params' => ['name' => '".$an."', 'model' => '".$am."']],\n";
              }
@@ -66,32 +92,54 @@ class MakeMigrations {
              }
 
              foreach($maintained_models as $an => $am){
-                 $ut  = array_key_exists($an, $unique_constraints) ? ($unique_constraints[$an]['unique_together'] ? 'true' : 'false') : 'false';
-                 $uf  = array_key_exists($an, $unique_constraints) ? $unique_constraints[$an]['fields'] : []; 
-                 $last_ut = array_key_exists($an, $last_unique_constraints) ? ($last_unique_constraints[$an]['unique_together'] ? 'true' : 'false') : 'false';
-                 $last_uf  = array_key_exists($an, $last_unique_constraints) ? $last_unique_constraints[$an]['fields'] : [];
 
-                 //something has changed
-                 if(!$this->arrays_are_equal($uf, $last_uf)){
-                     if(!empty($last_uf)){
-                         //first drop the previous unique fields
-                         $up .= "\t\t\t\t['action' => 'drop_unique', 'params' => ['name' => '".$an."', 'model' => '".$am."'], 'unique' => '".implode(',', $last_uf)."', 'unique_together' => ".$last_ut."],\n";
-                         $down .= "\t\t\t\t['action' => 'add_unique', 'params' => ['name' => '".$an."', 'model' => '".$am."'], 'unique' => '".implode(',', $last_uf)."', 'unique_together' => ".$last_ut."],\n";
-                     }
+                 $table_unique_constraints = $unique_constraints[$an] ?? [];
+                 $table_last_unique_constraints = $last_unique_constraints[$an] ?? [];
 
-                     if(!empty($uf)){
-                         //add the new unique fields
-                         $up .= "\t\t\t\t['action' => 'add_unique', 'params' => ['name' => '".$an."', 'model' => '".$am."'], 'unique' => '".implode(',', $uf)."', 'unique_together' => ".$ut."],\n";
-                         $down .= "\t\t\t\t['action' => 'drop_unique', 'params' => ['name' => '".$an."', 'model' => '".$am."'], 'unique' => '".implode(',', $uf)."', 'unique_together' => ".$ut."],\n";
+                 //something changed
+                 if(!$this->constraints_are_equal($table_unique_constraints, $table_last_unique_constraints)){
+
+                     $up .= "\t\t\t\t['action' => 'update_unique', 'params' => ['name' => '".$an."', 'model' => '".$am."'], ";
+                     $up .= "'unique' => [\n";
+                     foreach($table_unique_constraints as $ccn => $ccfs){
+                         $up .= "\t\t\t\t\t'".$ccn."' => [\n";
+                         foreach($ccfs as $cuf){
+                             $up .= "\t\t\t\t\t\t'".$cuf."',\n"; 
+                         }
+                         $up .= "\t\t\t\t\t],\n";
                      }
-                 }elseif( (!empty($uf) && !empty($last_uf)) && $ut !== $last_ut){
-                     //first drop the previous unique fields
-                     $up .= "\t\t\t\t['action' => 'drop_unique', 'params' => ['name' => '".$an."', 'model' => '".$am."'], 'unique' => '".implode(',', $last_uf)."', 'unique_together' => ".$last_ut."],\n";
-                     $down .= "\t\t\t\t['action' => 'add_unique', 'params' => ['name' => '".$an."', 'model' => '".$am."'], 'unique' => '".implode(',', $last_uf)."', 'unique_together' => ".$last_ut."],\n";
-                     //add the new unique fields
-                     $up .= "\t\t\t\t['action' => 'add_unique', 'params' => ['name' => '".$an."', 'model' => '".$am."'], 'unique' => '".implode(',', $uf)."', 'unique_together' => ".$ut."],\n";
-                     $down .= "\t\t\t\t['action' => 'drop_unique', 'params' => ['name' => '".$an."', 'model' => '".$am."'], 'unique' => '".implode(',', $uf)."', 'unique_together' => ".$ut."],\n";
-                 }
+                     $up .= "\t\t\t\t],\n";
+                     $up .= "\t\t\t\t'prev_unique' => [\n";
+                     foreach($table_last_unique_constraints as $pcn => $pcfs){
+                         $up .= "\t\t\t\t\t'".$pcn."' => [\n";
+                         foreach($pcfs as $puf){
+                             $up .= "\t\t\t\t\t\t'".$puf."',\n"; 
+                         }
+                         $up .= "\t\t\t\t\t],\n";
+                     }
+                     $up .= "\t\t\t\t]],\n";
+
+
+                     $down .= "\t\t\t\t['action' => 'update_unique', 'params' => ['name' => '".$an."', 'model' => '".$am."'], ";
+                     $down .= "'prev_unique' => [\n";
+                     foreach($table_unique_constraints as $ccn => $ccfs){
+                         $down .= "\t\t\t\t\t'".$ccn."' => [\n";
+                         foreach($ccfs as $cuf){
+                             $down .= "\t\t\t\t\t\t'".$cuf."',\n"; 
+                         }
+                         $down .= "\t\t\t\t\t],\n";
+                     }
+                     $down .= "\t\t\t\t],\n";
+                     $down .= "\t\t\t\t'unique' => [\n";
+                     foreach($table_last_unique_constraints as $pcn => $pcfs){
+                         $down .= "\t\t\t\t\t'".$pcn."' => [\n";
+                         foreach($pcfs as $puf){
+                             $down .= "\t\t\t\t\t\t'".$puf."',\n"; 
+                         }
+                         $down .= "\t\t\t\t\t],\n";
+                     }
+                     $down .= "\t\t\t\t]],\n";
+                 }  
              }
 
              $up .= "\t\t\t],\n";
@@ -109,12 +157,9 @@ class MakeMigrations {
          return [$up, $down, $touched];
      }
 
-     private function extract_model_fields($models, $project_root, $dbdriver){
+     private function extract_model_fields($models, $dbdriver){
          $model_fields = [];
          foreach($models as $n => $m){
-             if(!MigrationUtils::is_model_defined($m, $project_root))
-                 continue;
-
              $model_fields[$n] = []; //all the fields defined on the model.
              $mfields = $m::get_fields();
 
@@ -131,12 +176,9 @@ class MakeMigrations {
          return $model_fields;
      }
 
-     private function extract_unique_constraints($models, $project_root){
+     private function extract_unique_constraints($models){
          $unique_constraints = [];
          foreach($models as $n => $m){
-             if(!MigrationUtils::is_model_defined($m, $project_root))
-                 continue;
-
              $mi = $m::make();
              $unique_constraints[$n] = $mi::get_unique_constraints();
          }
@@ -144,41 +186,37 @@ class MakeMigrations {
          return $unique_constraints;
      }
 
-     private function write_schema_snapshot($snapshot_class_name, $models, $unique_constraints, $dirname, $project_root, $dbdriver){
-         $snap_folder = dirname($dirname)."/snapshots";
-         $file_name   = $snap_folder."/".$snapshot_class_name.".php";
-
+     private function write_schema_snapshot($snapshot_class_name, $models, $unique_constraints, $dbdriver){
+         $file_name = $this->snapshots_folder."/".$snapshot_class_name.".php";
          $models_template = "";
          $fields_template = "";
          foreach($models as $n => $m){
-             if(MigrationUtils::is_model_defined($m, $project_root)){
-                 $models_template .= "\t\t\t'".$n."' => '".$m."',\n";
-                 $mfields = $m::get_fields();
-                 $fields_template.= "\t\t\t'".$n."' => [\n";
-                 foreach($mfields as $mfn => $mfv){
-                     $db_col_name = $mfv->get_column();
-                     $fields_template .= "\t\t\t\t'".$db_col_name."' => [\n";
-                     $fields_template .= "\t\t\t\t\t'field' => '".$mfv::class."',\n";
-                     $fields_template .= "\t\t\t\t\t'def' => '".$dbdriver->translate_field_definition($mfv->get_definition(FieldDefinition::class))."',\n";
-                     $fields_template .= "\t\t\t\t\t'params' => [\n"; 
+             $models_template .= "\t\t\t'".$n."' => '".$m."',\n";
+             $mfields = $m::get_fields();
+             $fields_template.= "\t\t\t'".$n."' => [\n";
+             foreach($mfields as $mfn => $mfv){
+                 $db_col_name = $mfv->get_column();
+                 $fields_template .= "\t\t\t\t'".$db_col_name."' => [\n";
+                 $fields_template .= "\t\t\t\t\t'field' => '".$mfv::class."',\n";
+                 $fields_template .= "\t\t\t\t\t'def' => '".$dbdriver->translate_field_definition($mfv->get_definition(FieldDefinition::class))."',\n";
+                 $fields_template .= "\t\t\t\t\t'params' => [\n"; 
 
-                     $params = [];
-                     foreach($params as $pk => $pv){
-                         if(is_array($pv)){
-                            $pvv = array_map(function($_pv){
-                                return "'".$_pv."'";
-                            }, $pv);
-                            $pvv = "[".implode(", ", $pvv)."]";
-                         }else{
-                            $pvv = "'".(string)$pv."'";
-                         }
-                         $fields_template .= "\t\t\t\t\t\t'".(string)$pk."' => ".(string)$pvv.",\n";
+                 $params = [];
+                 foreach($params as $pk => $pv){
+                     if(is_array($pv)){
+                        $pvv = array_map(function($_pv){
+                            return "'".$_pv."'";
+                        }, $pv);
+                        $pvv = "[".implode(", ", $pvv)."]";
+                     }else{
+                        $pvv = "'".(string)$pv."'";
                      }
-                     $fields_template .= "\t\t\t\t\t],\n";
-                     $fields_template .= "\t\t\t\t],\n";
+                     $fields_template .= "\t\t\t\t\t\t'".(string)$pk."' => ".(string)$pvv.",\n";
                  }
-                 $fields_template.= "\t\t\t],\n";
+                 $fields_template .= "\t\t\t\t\t],\n";
+                 $fields_template .= "\t\t\t\t],\n";
              }
+             $fields_template.= "\t\t\t],\n";
          }
 
          $uniques_template = "";
@@ -237,8 +275,8 @@ class MakeMigrations {
          $template .= "}\n";
 
          //create snapshot folder
-         if(!file_exists($snap_folder)){
-             mkdir($snap_folder);
+         if(!file_exists($this->snapshots_folder)){
+             mkdir($this->snapshots_folder);
          }
 
          file_put_contents($file_name, $template);
@@ -252,40 +290,34 @@ class MakeMigrations {
          return ['statement' => $statement, 'response' => $response];
      }
 
-     private function get_snapshot($migration_name, $timestamp, $dirname, $ctxname, $project_root){
-         $class_name  = "{$ctxname}_{$timestamp}_{$migration_name}";
-         $snap_folder = dirname($dirname)."/snapshots";
-         $file_name   = $snap_folder."/".$class_name.".php";
-         if(!file_exists($file_name)){
-            throw new Exception("The snapshot file({$class_name}) cannot be located!");
-         }
-
+     private function get_snapshot($migration_name, $timestamp, $schema_class){
+         $class_name = "{$schema_class}_{$timestamp}_{$migration_name}";
+         $file_name = $this->snapshots_folder."/".$class_name.".php";
+         
          require_once $file_name;
 
-         $instance      = new $class_name();
-         $raw_models    = $instance->get_models();
-         $raw_fields    = $instance->get_model_fields();
-         $unique_field_names = $instance->get_unique_field_names();
+         $instance = new $class_name();
+         $raw_models = $instance->get_models();
+         $raw_fields = $instance->get_model_fields();
+         $unique_constraints = $instance->get_unique_constraints();
 
-         $clean_models   = [];
-         $clean_fields   = [];
+         $clean_models = [];
+         $clean_fields = [];
 
          foreach($raw_models as $n => $m){
-             if(MigrationUtils::is_model_defined($m, $project_root)){
-                 $clean_models[$n] = $m;
+             $clean_models[$n] = $m;
 
-                 if(isset($raw_fields[$n]) && is_array($raw_fields[$n])){
-                     $clean_fields[$n] = array_filter($raw_fields[$n], function($value, $key){
-                         return $value['def'] !== '';
-                     }, ARRAY_FILTER_USE_BOTH);
-                 }
+             if(isset($raw_fields[$n]) && is_array($raw_fields[$n])){
+                 $clean_fields[$n] = array_filter($raw_fields[$n], function($value, $key){
+                     return $value['def'] !== '';
+                 }, ARRAY_FILTER_USE_BOTH);
              }
          }
 
-         return [$clean_models, $clean_fields, $unique_field_names];
+         return [$clean_models, $clean_fields, $unique_constraints];
      }
 
-     private function get_schema_snapshot($project_root, $schema_name, $timestamp, $migration_name, $tracker){
+     private function get_schema_snapshot($schema_name, $timestamp, $migration_name, $tracker){
 
          $schemas = config('schemas', []);
          if($schema_name){
@@ -313,15 +345,11 @@ class MakeMigrations {
              $models = new $s_class()->get_permanent_models();
 
              //Acquire model fields for models registered with db context.
-             $model_fields = $this->extract_model_fields($models, $project_root, $dbdriver);
+             $model_fields = $this->extract_model_fields($models, $dbdriver);
 
              //acquire unique fields
-             $unique_constraints = $this->extract_unique_constraints($models, $project_root);
+             $unique_constraints = $this->extract_unique_constraints($models);
              $last_unique_constraints = [];
-             
-             $a        = new ReflectionClass($s_class);
-             $filename = $a->getFileName();
-             $dirname  = pathinfo($filename)['dirname'];
 
              $connection_params = config('connections')[$s_name];
              $connection_params['database'] = ''; //we are connecting without a database, therefore set the database name to empty string
@@ -329,7 +357,7 @@ class MakeMigrations {
              $connection = resolve(Connection::class, $connection_params);
 
              $snapshot_class_name = "{$schema_class}_{$timestamp}_{$migration_name}";
-             $snapshot_path = $this->write_schema_snapshot($snapshot_class_name, $models, $unique_constraints, $dirname, $project_root, $dbdriver);
+             $snapshot_path = $this->write_schema_snapshot($snapshot_class_name, $models, $unique_constraints, $dbdriver);
              $snapshot_records[$s_name] = [$snapshot_path, $snapshot_class_name];
 
              $added_models = $models;
@@ -351,14 +379,13 @@ class MakeMigrations {
                      ->order(fields: ['migration_timestamp'], direction: 'DESC')
                      ->limit(page: 1, records: 1)
                      ->first_or_default();
-                     /*if($last_migration){
+
+                     if($last_migration){
 
                          [$last_models, $last_model_fields, $last_unique_constraints] = $this->get_snapshot(
                             $last_migration->migration_name, 
                             $last_migration->migration_timestamp, 
-                            $dirname, 
-                            $ctxname,
-                            $project_root
+                            $schema_class
                          );
 
                          //Which new models have been added.
@@ -395,7 +422,8 @@ class MakeMigrations {
                                  $removed_columns[] = $removed_settings;
                              }
                          }
-                     }*/
+
+                     }
                  }
              }catch(Exception $ignore){
                  
@@ -409,12 +437,11 @@ class MakeMigrations {
          return [$schema_snapshot, $snapshot_records];
      }
 
-     public function execute($migration_name, $project_root, $schema_name = null){
+     public function execute($migration_name, $schema_name = null){
          $timestamp  = date('YmdHis');
          $class_name = 'Migration_' . $timestamp . '_' . $migration_name;
-         $migrations_folder = $project_root."/databases/migrations";
-         $migration_filename = $migrations_folder."/".$class_name.".php";
-         $migration_tracker_filename = $project_root."/databases/migrationstracker.bin";
+         $migration_filename = $this->migrations_folder."/".$class_name.".php";
+         $migration_tracker_filename = config('base_path')."/databases/migrationstracker.bin";
 
          $tracker = $this->unserialize_from_file($migration_tracker_filename);
          if(!$tracker){
@@ -431,13 +458,7 @@ class MakeMigrations {
          }
 
          echo "Making {$migration_name} migrations now!\n";
-         [$snapshot, $snapshot_records] = $this->get_schema_snapshot(...[
-            'project_root'   => $project_root,
-            'schema_name'    => $schema_name,
-            'timestamp'      => $timestamp,
-            'migration_name' => $migration_name,
-            'tracker'        => $tracker
-         ]);
+         [$snapshot, $snapshot_records] = $this->get_schema_snapshot($schema_name, $timestamp, $migration_name, $tracker);
 
          [$up_models, $down_models, $touched_snapshots] = $this->get_model_operations($snapshot, $snapshot_records);
          
@@ -478,8 +499,8 @@ class MakeMigrations {
          $template .= "}\n";
 
          //create migrations folder
-         if(!file_exists($migrations_folder)){
-             mkdir($migrations_folder);
+         if(!file_exists($this->migrations_folder)){
+             mkdir($this->migrations_folder);
          }
 
          if(file_put_contents($migration_filename, $template) !== false){

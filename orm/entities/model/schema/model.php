@@ -97,19 +97,19 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 	 	  * the field values must be provided in the constructor
 	 	  * */
 	 	 if(!self::$from_static_method && !self::$from_database){
-	 	 	 $this->initialize_model_data($kwargs);
+	 	 	 $kwargs = $this->initialize_model_data($kwargs);
          }
 
-	 	 $this->data = $kwargs;
+         $this->data = $kwargs;
 	 	 $this->readonly = self::$from_static_method;
          self::$from_static_method = false;
      }
 
-     public function initialize_model_data(array $data){
+     public function initialize_model_data(array $data, bool $return = true){
      	 Assert::isNonEmptyMap($data, "The data provided is not properly defined!");
 
          //ensure all the data keys are field names defined on model
- 	 	 //$this->assert_correct_fields($kwargs);
+ 	 	 //$this->assert_correct_fields($data);
 
  	 	 //fill in defaults for all the fields that haven't been provided
          $this->fill_defaults($data);
@@ -122,6 +122,11 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 
          //save files to temporary holding
          $this->save_model_files($data);
+
+         if($return)
+         	 return $data;
+
+         $this->data = $data;
      }
 
      private function create_shared_meta(string $class_name){
@@ -210,21 +215,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
          return [$connection, array_keys($models)[$index]];
 	 }
 
-	 public function clean_model_data(){
-	 	 //ensure all the data keys are field names defined on model
- 	 	 $this->assert_correct_fields($kwargs);
-
- 	 	 //fill in defaults for all the fields that haven't been provided
-         $this->fill_defaults($kwargs);
-
-         //make sure data is provided for all the required fields
-         $this->assert_required_fields($kwargs);
-
-         //run validation on the data
-         $this->run_data_validation($kwargs);
-	 }
-
-	 protected function save_model_files(array &$kwargs): void {
+	 protected function save_model_files(array &$kwargs) {
 	     if(empty($this->meta->file_field_names)){
 	         return;
 	     }
@@ -462,11 +453,10 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
      	 if(!empty($missing_fields)){
      	 	 throw new MissingRequiredFieldsException('The values for the following required fields were not provided: '.implode(", ", $missing_fields));
      	 }
-
-     	 return $data;
      }
 
      private function fill_defaults(array &$data){
+     	
      	 foreach($this->meta->clean_fields as $f){
      	 	 if(!in_array($f->get_name(), $this->meta->defined_field_names)){
      	 	 	 continue;
@@ -575,7 +565,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 
      //add new row(s) to database or batch create new instances
 	 public static function create(array $data) : CreateManager {
-	 	 $model_instance = new static($data);
+	 	 $model_instance = new static(...$data);
 	 	 $model_instance->set_table_and_connection();
 	 	 return new CreateManager($model_instance);
 	 }

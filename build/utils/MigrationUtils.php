@@ -2,6 +2,7 @@
 namespace SaQle\Build\Utils;
 
 use SaQle\Orm\Database\Schema;
+use RuntimeException;
 
 class MigrationUtils {
 
@@ -20,24 +21,6 @@ class MigrationUtils {
          return true;
      }
 
-     public static function is_model_defined($model_class, $project_root){
-         $mnparts = explode("\\", $model_class);
-         $root = array_shift($mnparts);
-         $root = strtolower($root);
-
-         $model_file_path = strtolower(implode(DIRECTORY_SEPARATOR, $mnparts)).".php";
-         if($root == "saqle"){
-             $project_root_parts = explode(DIRECTORY_SEPARATOR, $project_root);
-             array_pop($project_root_parts);
-             $saqle_root = strtolower(implode(DIRECTORY_SEPARATOR, $project_root_parts))."/saqle";
-             $model_file_path = $saqle_root."/".$model_file_path;
-         }else{
-             $model_file_path = $project_root."/".$model_file_path;
-         }
-
-         return file_exists($model_file_path);
-     }
-
      public static function get_class_namespace(string $long_class_name){
          $nameparts = explode("\\", $long_class_name);
          array_pop($nameparts);
@@ -52,20 +35,46 @@ class MigrationUtils {
          return end($nameparts);
      }
 
-     public static function get_path_from_namespace(string $namespace, $project_root){
-         $mnparts = explode("\\", $namespace);
-         $root = array_shift($mnparts);
-         $root = strtolower($root);
-         $path = strtolower(implode(DIRECTORY_SEPARATOR, $mnparts))."/";
-         if($root == "saqle"){
-             $project_root_parts = explode(DIRECTORY_SEPARATOR, $project_root);
-             array_pop($project_root_parts);
-             $saqle_root = strtolower(implode(DIRECTORY_SEPARATOR, $project_root_parts))."/saqle";
-             $path = $saqle_root."/".$path;
-         }else{
-             $path = $project_root."/".$path;
-         }
-         return $path;
+     public static function get_path_from_namespace(string $namespace){
+         $namespace_parts = explode("\\", $namespace);
+         $first = strtolower(array_shift($namespace_parts));
+
+         if($first === 'saqle')
+             throw new RuntimeException("Cannot write to framework root!");
+
+         $base_path = config('base_path');
+
+         return $base_path."/".implode("/", $namespace_parts);
+     }
+
+     public static function get_previous_snapshot($snapshot_name, $migration_name, $migration_timestamp, $migrations_folder){
+
+         if(!$migration_name || !$migration_timestamp)
+             return null;
+
+         $migration_class = "Migration_{$migration_timestamp}_{$migration_name}";
+         $migration_path = $migrations_folder."/".$migration_class.".php";
+
+         if(!file_exists($migration_path))
+             return null;
+
+         require_once $migration_path;
+
+         $migration_instance = new $migration_class();
+         $snapshot_details = $migration_instance->snapshots()[$snapshot_name] ?? null;
+
+         if(!$snapshot_details)
+             return null;
+
+         $snapshot_path = $snapshot_details['path'];
+         if(!file_exists($snapshot_path))
+             return null;
+
+         require_once $snapshot_path;
+
+         $snapshot_class = $snapshot_details['name'];
+
+         return new $snapshot_class();
      }
 
 }

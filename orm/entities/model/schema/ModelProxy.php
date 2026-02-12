@@ -9,7 +9,7 @@ final class ModelProxy {
      ){}
 
      public function create(array $data) : CreateManager {
-         $this->model_instance->initialize_model_data($data);
+         $this->model_instance->initialize_model_data($data, false);
          return new CreateManager($this->model_instance);
      }
 

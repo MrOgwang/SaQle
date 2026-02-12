@@ -8,6 +8,7 @@ use SaQle\Orm\Entities\Field\Attributes\FieldDefinition;
 use SaQle\Orm\Entities\Model\Manager\QueryManager;
 use SaQle\Core\Exceptions\Model\TableDropOperationFailedException;
 use SaQle\Core\Exceptions\Model\TableCreateOperationFailedException;
+use PDO;
 
 class MySqlDriver extends DbDriver {
 	 
@@ -254,29 +255,51 @@ class MySqlDriver extends DbDriver {
          return $object->result == "Exist" ? true : false;
      }
 
+     public function index_exists(string $table, string $index_name): bool {
+         $sql = "SELECT 1
+                 FROM INFORMATION_SCHEMA.STATISTICS
+                 WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = ?
+                     AND INDEX_NAME = ?
+                 LIMIT 1
+         ";
+
+         $statement = $this->execute($sql, [$table, $index_name])['statement'];
+
+         $row = $statement->fetch(PDO::FETCH_ASSOC);
+
+         return $row !== false ? true : false;
+     }
+
+
      /**
       * Columns here comes in the form of associative array where column name is the key and column definition is the value.
       * Example: ['user_id' => 'user_id TEXT NOT NULL']
       * */
      public function add_columns(string $table, array $columns){
-     	 /**
-     	  * Only add columns that are not presently existing on this table.
-     	  * */
-     	 $columns_to_add = [];
-     	 foreach($columns as $col_name => $col_def){
-     	 	if(!$this->check_column_exists($table, $col_name)){
-     	 		$columns_to_add[] = $col_def;
-     	 	}
-     	 }
-     	
-     	 $definitions = array_map(function($c){
-     	 	return 'ADD COLUMN '.$c;
-     	 }, $columns_to_add );
+         try{
+             /**
+              * Only add columns that are not presently existing on this table.
+              * */
+             $columns_to_add = [];
+             foreach($columns as $col_name => $col_def){
+                if(!$this->check_column_exists($table, $col_name)){
+                    $columns_to_add[] = $col_def;
+                }
+             }
+            
+             $definitions = array_map(function($c){
+                return 'ADD COLUMN '.$c;
+             }, $columns_to_add );
 
-     	 $definitions = implode(", ", $definitions);
-     	 $sql = "ALTER TABLE $table $definitions";
-		 $data = null;
-		 return $this->execute($sql, $data)['response'];
+             $definitions = implode(", ", $definitions);
+             $sql = "ALTER TABLE $table $definitions";
+             $data = null;
+             return $this->execute($sql, $data)['response'];
+         }catch(\Exception $e){
+            echo "Sql: $sql\n";
+            throw $e;
+         }
      }
 
      /**
@@ -325,8 +348,10 @@ class MySqlDriver extends DbDriver {
       * */
      public function drop_unique_constraints(string $table, array $constraints = []){
      	 foreach($constraints as $name => $columns){
-     	 	 $sql = "ALTER TABLE $table DROP INDEX ".$name;
-     	 	 $this->execute($sql);
+             if($this->index_exists($table, $name)){
+                 $sql = "ALTER TABLE $table DROP INDEX ".$name;
+                 $this->execute($sql);
+             }
      	 }
      }
 
@@ -411,30 +436,36 @@ class MySqlDriver extends DbDriver {
      	 }
 
      	 if($def->default){
-     	 	 $sql[] = "DEFAULT ".$def->default;
+     	 	 $sql[] = $def->type === ColumnType::CHAR || $def->type === ColumnType::TEXT ? 
+             'DEFAULT "'.$def->default.'"' :
+             "DEFAULT ".$def->default;
      	 }
 		
  	 	 return implode(" ", $sql);
      }
 
      private function create_table(string $table, string $fields, bool $temporary = false, string $constraints = ""){
-         $sql = $temporary ? "CREATE TEMPORARY TABLE IF NOT EXISTS {$table} ({$fields})" : "CREATE TABLE IF NOT EXISTS {$table} ({$fields})";
-         if($constraints){
-             $constraints = ", ".$constraints;
-             $sql = $temporary ? 
-             "CREATE TEMPORARY TABLE IF NOT EXISTS {$table} ({$fields}{$constraints})" : 
-             "CREATE TABLE IF NOT EXISTS {$table} ({$fields}{$constraints})";
-         }
+         try{
+             $sql = $temporary ? "CREATE TEMPORARY TABLE IF NOT EXISTS {$table} ({$fields})" : "CREATE TABLE IF NOT EXISTS {$table} ({$fields})";
+             if($constraints){
+                 $constraints = ", ".$constraints;
+                 $sql = $temporary ? 
+                 "CREATE TEMPORARY TABLE IF NOT EXISTS {$table} ({$fields}{$constraints})" : 
+                 "CREATE TABLE IF NOT EXISTS {$table} ({$fields}{$constraints})";
+             }
 
-         [$statement, $response] = array_values($this->execute($sql));
-         $error_code = $statement->errorCode();
+             [$statement, $response] = array_values($this->execute($sql));
+             $error_code = $statement->errorCode();
 
-         if($response === false || $error_code !== "00000"){
-             echo "SQL: $sql\n";
-             throw new TableCreateOperationFailedException([
-                 'table' => $table,
-                 'statement_error_code' => $error_code
-             ]);
+             if($response === false || $error_code !== "00000"){
+                 throw new TableCreateOperationFailedException([
+                     'table' => $table,
+                     'statement_error_code' => $error_code
+                 ]);
+             }
+         }catch(\Exception $e){
+             echo "Sql: $sql\n";
+             throw $e;
          }
 
          return true;
