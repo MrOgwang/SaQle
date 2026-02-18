@@ -7,10 +7,15 @@ use SaQle\Orm\Database\ColumnType;
 use SaQle\Orm\Entities\Field\Attributes\FieldDefinition;
 
 class CharField extends TextualField {
-	 public function __construct(...$kwargs){
-	 	 $kwargs['max_length'] = $kwargs['max_length'] ?? 100;
-	 	 $kwargs['type'] = $kwargs['type'] ?? ColumnType::CHAR;
-	 	 parent::__construct(...$kwargs);
-	 }
+
+	 protected function initialize_defaults(){
+	 	 if(!$this->max_length){
+	 	 	 $this->max_length = 100;
+	 	 }
+
+		 $this->type = ColumnType::CHAR;
+
+		 parent::initialize_defaults();
+     }
 }
 

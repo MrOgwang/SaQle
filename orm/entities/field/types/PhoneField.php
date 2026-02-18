@@ -2,7 +2,7 @@
 
 namespace SaQle\Orm\Entities\Field\Types;
 
-use SaQle\Orm\Entities\Field\Attributes\FieldDefinition;
+use SaQle\Orm\Entities\Field\Attributes\{FieldDefinition, ShouldValidate};
 
 class PhoneField extends CharField {
 	 
@@ -10,14 +10,12 @@ class PhoneField extends CharField {
 	 protected ?string $country = null;
 
 	 //the expected phone format
+	 #[ShouldValidate('phone_format')]
 	 protected ?string $format = null;
 
 	 //provide phone in internationally recognizable format
+	 #[ShouldValidate()]
 	 protected bool $international = false;
-
-	 public function __construct(...$kwargs){
-	 	 parent::__construct(...$kwargs);
-	 }
 
 	 public function country(string $country){
 	 	 $this->country = $country;

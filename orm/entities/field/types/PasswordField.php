@@ -3,18 +3,15 @@
 namespace SaQle\Orm\Entities\Field\Types;
 
 use SaQle\Orm\Entities\Field\Types\CharField;
-use SaQle\Orm\Entities\Field\Attributes\FieldDefinition;
+use SaQle\Orm\Entities\Field\Attributes\{FieldDefinition, ShouldValidate};
 
 class PasswordField extends CharField {
 	 //the miminum strength
+	 #[ShouldValidate()]
 	 protected ?int $min_strength = null;
 
 	 //the hash algorithm
 	 protected ?string $hash = null;
-	 
-	 public function __construct(...$kwargs){
-	 	 parent::__construct(...$kwargs);
-	 }
 
 	 public function min_strength(int $min_strength){
 	 	 $this->min_strength = $min_strength;

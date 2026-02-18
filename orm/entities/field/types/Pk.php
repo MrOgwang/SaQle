@@ -11,31 +11,24 @@ class Pk implements IField {
      protected string $strategy;
 
      public function __construct(?string $strategy = null){
+        
          $strategy = $strategy ?? config('primary_key_type');
          $this->strategy = strtoupper($strategy);
      }
 
-     public function resolve(): Field {
+     public function resolve(...$kwargs): Field {
          return match ($this->strategy){
-             'GUID' => $this->build_uuid(),
-             'AUTO' => $this->build_integer(),
+             'GUID' => $this->build_uuid(...$kwargs),
+             'AUTO' => $this->build_integer(...$kwargs),
          };
      }
 
-     protected function build_integer(): IntegerField {
-         return new IntegerField(
-             primary: true,
-             auto: true,
-             unsigned: true,
-             required: true
-         );
+     protected function build_integer(...$kwargs): IntegerField {
+         return new IntegerField(...array_merge($kwargs, ['primary' => true, 'auto' => true, 'unsigned' => true, 'required' => true]));
      }
 
-     protected function build_uuid(): UuidField {
-         return new UuidField(
-             primary: true,
-             required: true
-         );
+     protected function build_uuid(...$kwargs): UuidField {
+         return new UuidField(...array_merge($kwargs, ['primary' => true, 'required' => true]));
      }
 }
 

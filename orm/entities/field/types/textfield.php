@@ -12,9 +12,12 @@ class TextField extends TextualField {
 	 #[FieldDefinition()]
 	 protected string $size = 'regular'; //big, small, medium, tiny, regular
 
-	 public function __construct(...$kwargs){
-	 	 $kwargs['type'] = ColumnType::TEXT;
-	 	 parent::__construct(...$kwargs);
-	 }
+	 protected function initialize_defaults(){
+
+         $this->type = ColumnType::TEXT;
+
+         parent::initialize_defaults();
+
+     }
 }
 

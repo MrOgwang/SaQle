@@ -4,26 +4,34 @@ namespace SaQle\Orm\Entities\Field\Types;
 
 use SaQle\Core\Support\CropMode;
 use Closure;
-use SaQle\Orm\Entities\Field\Attributes\FieldDefinition;
+use SaQle\Orm\Entities\Field\Attributes\{FieldDefinition, ShouldValidate};
 
 class MediaField extends FileField {
 	 
+	 protected string $media_type;
+
 	 //the maximum width
+	 #[ShouldValidate()]
 	 protected mixed $max_width = null;
 
 	 //the minimum width
+	 #[ShouldValidate()]
 	 protected mixed $min_width = null;
 
 	 //the width of the image
+	 #[ShouldValidate()]
 	 protected mixed $width = null;
 
 	 //the maximum height of image
+	 #[ShouldValidate()]
 	 protected mixed $max_height = null;
 
 	 //the miniumum height of image
+	 #[ShouldValidate()]
 	 protected mixed $min_height = null;
 
 	 //the height of image
+	 #[ShouldValidate()]
 	 protected mixed $height = null;
 
 	 /**
@@ -31,6 +39,7 @@ class MediaField extends FileField {
 	  * 
 	  * Example: [16, 9], [1, 1]
 	  * */
+	 #[ShouldValidate()]
 	 protected ?array $aspect_ratio = null;
 
 	 /**
@@ -111,6 +120,42 @@ class MediaField extends FileField {
 
 	 public function get_aspect_ratio(){
 	 	 return $this->aspect_ratio;
+	 }
+
+	 public function get_media_type(){
+	 	 return $this->media_type;
+	 }
+
+	 protected function validate_field_state(){
+	 	 if($this->height && $this->max_height){
+	 	 	 $this->errors[] = "Having height and maximum height at the same time is ambigous!";
+	 	 }
+
+	 	 if($this->height && $this->min_height){
+	 	 	 $this->errors[] = "Having height and minimum height at the same time is ambigous!";
+	 	 }
+
+	 	 if($this->width && $this->max_width){
+	 	 	 $this->errors[] = "Having width and maximum width at the same time is ambigous!";
+	 	 }
+
+	 	 if($this->width && $this->min_width){
+	 	 	 $this->errors[] = "Having width and minimum width at the same time is ambigous!";
+	 	 }
+
+	 	 if($this->max_height && $this->min_height){
+	 	 	 if($this->min_height > $this->max_height){
+	 	 	 	 $this->errors[] = "Minimum height cannot be more than the maximum height!";
+	 	 	 }
+     	 }
+
+     	 if($this->max_width && $this->min_width){
+	 	 	 if($this->min_width > $this->max_width){
+	 	 	 	 $this->errors[] = "Minimum width cannot be more than the maximum width!";
+	 	 	 }
+     	 }
+
+     	 parent::validate_field_state();
 	 }
 }
 

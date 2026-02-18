@@ -2,10 +2,11 @@
 
 namespace SaQle\Orm\Entities\Field\Types\Base;
 
-use SaQle\Orm\Entities\Field\Attributes\FieldDefinition;
+use SaQle\Orm\Entities\Field\Attributes\{FieldDefinition, ShouldValidate};
 
 class TemporalField extends Field {
 	 //the format 
+	 #[ShouldValidate('temporal_format')]
 	 protected ?string $format = null;
 
 	 //set to current date on save
@@ -17,11 +18,8 @@ class TemporalField extends Field {
 	 protected bool $auto_now_add = false;
 
 	 //Whether to store with timezone
+	 #[ShouldValidate()]
 	 protected bool $timezone = false;
-
-	 public function __construct(...$kwargs){
-	 	 parent::__construct(...$kwargs);
-	 }
 
 	 public function format(string $format){
 	 	 $this->format = $format;
@@ -59,5 +57,14 @@ class TemporalField extends Field {
 	 public function get_timezone(){
 	 	 return $this->timezone;
 	 }
+
+	 protected function initialize_defaults(){
+  
+     	 if(!$this->native_type){
+     	 	 $this->native_type = "string";
+     	 }
+
+     	 parent::initialize_defaults();
+     }
 }
 

@@ -15,7 +15,7 @@ use SaQle\Core\Services\Providers\{
      FrameworkDIProvider, 
      EventServiceProvider, 
      AuthenticationProvider,
-     RuleHandlerServiceProvider,
+     ValidationServiceProvider,
      StorageServiceProvider
 };
 use SaQle\Http\Cors\CorsConfig;
@@ -26,7 +26,7 @@ use SaQle\Session\Providers\SessionProvider;
 use SaQle\Routes\Providers\RoutingProvider;
 use SaQle\Auth\Guards\GuardManager;
 
-final class App{
+final class App {
      public MiddlewareRegistry $middleware;
      public Container $container;
      public CorsConfig $cors;
@@ -95,7 +95,7 @@ final class App{
              EventServiceProvider::class,
              AuthenticationProvider::class,
              SessionProvider::class,
-             RuleHandlerServiceProvider::class,
+             ValidationServiceProvider::class,
              StorageServiceProvider::class
              //RoutingProvider::class
          ];

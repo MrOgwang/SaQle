@@ -7,9 +7,15 @@ use SaQle\Orm\Database\ColumnType;
 use SaQle\Orm\Entities\Field\Attributes\FieldDefinition;
 
 class OneToMany extends RelationField {
-	 public function __construct(...$kwargs){
-	 	 $kwargs['type'] = ColumnType::CHAR;
-	 	 $kwargs['many'] = true;
-	 	 parent::__construct(...$kwargs);
+
+	 protected function infer_foreign_key(){
+	 	 $related_model_fields = $this->related_model::get_fields();
+	 	 foreach($related_model_fields as $f){
+	 	 	 if($f instanceof OneToOne && $this->model_class === $f->get_related_model()){
+	 	 	 	 return $f->get_name()."_id";
+	 	 	 }
+	 	 }
+
+	 	 return null;
 	 }
 }

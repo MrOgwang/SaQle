@@ -7,9 +7,13 @@ use SaQle\Orm\Database\ColumnType;
 use SaQle\Orm\Entities\Field\Attributes\FieldDefinition;
 
 class JsonField extends TextualField {
-	 public function __construct(...$kwargs){
-	 	 $kwargs['type'] = ColumnType::JSON;
-	 	 parent::__construct(...$kwargs);
-	 }
+
+	 protected function initialize_defaults(){
+
+         $this->type = ColumnType::JSON;
+
+         parent::initialize_defaults();
+
+     }
 }
 

@@ -1,0 +1,88 @@
+<?php
+
+namespace SaQle\Security\Validation;
+
+use SaQle\Security\Validation\Abstracts\IValidator;
+use SaQle\Security\Validation\Types\ValidationResult;
+
+class RegexPatternValidator extends IValidator {
+     public function validate(mixed $value, array $context = []): ValidationResult {
+
+        $nullable = $context['nullable'] ?? false;
+        $message  = $context['message'] ?? "{$field} format is invalid.";
+
+        //1. Handle null/empty safely
+        if ($value === null || $value === '') {
+            return $nullable
+                ? new ValidationResult(true, null)
+                : new ValidationResult(false, "{$field} cannot be empty.");
+        }
+
+        // 2️⃣ Must be string or stringable
+        if (!is_string($value)) {
+            return new ValidationResult(false, "{$field} must be a string.");
+        }
+
+        // 3️⃣ Pattern must be provided
+        if (!is_string($threshold) || trim($threshold) === '') {
+            return new ValidationResult(false, "Invalid regex pattern supplied.");
+        }
+
+        $pattern = $this->normalizePattern($threshold);
+
+        if ($pattern === null) {
+            return new ValidationResult(false, "Invalid regex pattern format.");
+        }
+
+        // 4️⃣ Suppress warnings and check errors manually
+        $result = @preg_match($pattern, $value);
+
+        if ($result === false) {
+            return new ValidationResult(false, $this->pregErrorMessage());
+        }
+
+        if (preg_last_error() !== PREG_NO_ERROR) {
+            return new ValidationResult(false, $this->pregErrorMessage());
+        }
+
+        return $result === 1
+            ? new ValidationResult(true, null)
+            : new ValidationResult(false, $message);
+    }
+
+    /**
+     * Ensure proper delimiters and UTF-8 safety
+     */
+    private function normalizePattern(string $pattern): ?string
+    {
+        $pattern = trim($pattern);
+
+        // If user already provided delimiters, trust but verify
+        if (preg_match('/^(.).+\\1[imsxuADSUXJu]*$/', $pattern)) {
+            return $pattern;
+        }
+
+        // Otherwise auto-wrap with safe delimiter
+        $delimiter = '/';
+
+        $escaped = str_replace($delimiter, '\\' . $delimiter, $pattern);
+
+        return $delimiter . $escaped . '/' . 'u';
+    }
+
+    /**
+     * Translate preg error codes to readable messages
+     */
+    private function pregErrorMessage(): string
+    {
+        return match (preg_last_error()) {
+            PREG_INTERNAL_ERROR        => 'Internal regex error.',
+            PREG_BACKTRACK_LIMIT_ERROR => 'Regex backtrack limit exceeded.',
+            PREG_RECURSION_LIMIT_ERROR => 'Regex recursion limit exceeded.',
+            PREG_BAD_UTF8_ERROR        => 'Invalid UTF-8 sequence detected.',
+            PREG_BAD_UTF8_OFFSET_ERROR => 'Invalid UTF-8 offset.',
+            PREG_JIT_STACKLIMIT_ERROR  => 'Regex JIT stack limit exceeded.',
+            default                    => 'Unknown regex error.'
+        };
+    }
+}

@@ -7,6 +7,14 @@ use Attribute;
 #[Attribute(Attribute::TARGET_PROPERTY)]
 class ShouldValidate {
     public function __construct(
-        public string $rule //the validation rule to apply
+        private ?string $key = null // optional override for array key
     ) {}
+
+    public function set_key(string $key){
+        $this->key = $key;
+    }
+
+    public function get_key(){
+         return $this->key;
+    }
 }

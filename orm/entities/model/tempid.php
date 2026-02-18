@@ -7,16 +7,15 @@ use SaQle\Orm\Entities\Model\Schema\TableInfo;
 
 class TempId extends TempModel {
 	 protected function model_setup(TableInfo $meta) : void {
-	 	 $meta->fields = [
+	 	 $meta->fields([
 	 	 	 'id' => new Pk(config('primary_key_type')),
 		     'id_value' => strtolower(config('primary_key_type')) === 'auto' ? 
 		                   new IntegerField(required: true, unsigned: true, min: 1) : 
 		                   new CharField(required: true)
-	 	 ];
-
-	 	 $meta->with_user_audit = false;
-	 	 $meta->with_timestamps = false;
-	 	 $meta->with_soft_delete = false;
-		 $meta->temporary = true;
+	 	 ]);
+	 	 $meta->with_user_audit(false);
+		 $meta->with_timestamps(false);
+		 $meta->with_soft_delete(false);
+		 $meta->temporary(true);
 	 }
 }

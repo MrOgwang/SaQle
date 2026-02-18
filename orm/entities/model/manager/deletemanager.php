@@ -27,11 +27,11 @@ class DeleteManager extends QueryManager {
 	 	 $this->permanently = $permanently;
 
 	 	 $this->setup_query_reference_map(
-		 	 table_name:    $this->model->meta->table_name,
+		 	 table_name:    $this->model->meta->get_table_name(),
 		 	 table_aliase:  "",
 		 	 database_name: $this->dbdriver->get_config()->get_database(),
-		 	 field_list:    $this->model->meta->table_column_names,
-		 	 ff_settings:   $this->model->meta->file_required_fields,
+		 	 field_list:    $this->model->meta->get_table_column_names(),
+		 	 ff_settings:   $this->model->meta->get_file_required_fields(),
 		 	 table_ref:     ''
 		 );
 
@@ -79,7 +79,7 @@ class DeleteManager extends QueryManager {
 
              if($response === false || $error_code !== "00000"){
 			 	 throw new DeleteOperationFailedException([
-			 	 	 'table' => $this->model->meta->table_name, 
+			 	 	 'table' => $this->model->meta->get_table_name(), 
 			 	 	 'statement_error_code' => $error_code
 			 	 ]);
 			 }

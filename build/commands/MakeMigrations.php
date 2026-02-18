@@ -7,7 +7,6 @@ use SaQle\Core\Migration\Models\Migration;
 use SaQle\Build\Utils\MigrationUtils;
 use SaQle\Orm\Connection\Connection;
 use SaQle\Core\Support\Db;
-use SaQle\Orm\Entities\Field\Attributes\FieldDefinition;
 use ReflectionClass;
 use Exception;
 
@@ -164,7 +163,7 @@ class MakeMigrations {
              $mfields = $m::get_fields();
 
              foreach($mfields as $mfn => $mfv){
-                 $mfvdef = $dbdriver->translate_field_definition($mfv->get_definition(FieldDefinition::class));
+                 $mfvdef = $dbdriver->translate_field_definition($mfv->get_definition());
 
                  if($mfvdef){
                      $db_col_name = $mfv->get_column();
@@ -198,7 +197,7 @@ class MakeMigrations {
                  $db_col_name = $mfv->get_column();
                  $fields_template .= "\t\t\t\t'".$db_col_name."' => [\n";
                  $fields_template .= "\t\t\t\t\t'field' => '".$mfv::class."',\n";
-                 $fields_template .= "\t\t\t\t\t'def' => '".$dbdriver->translate_field_definition($mfv->get_definition(FieldDefinition::class))."',\n";
+                 $fields_template .= "\t\t\t\t\t'def' => '".$dbdriver->translate_field_definition($mfv->get_definition())."',\n";
                  $fields_template .= "\t\t\t\t\t'params' => [\n"; 
 
                  $params = [];

@@ -5,7 +5,7 @@ namespace SaQle\Orm\Entities\Field\Types;
 use SaQle\Orm\Entities\Field\Types\Base\Field;
 use SaQle\Orm\Database\ColumnType;
 use Closure;
-use SaQle\Orm\Entities\Field\Attributes\FieldDefinition;
+use SaQle\Orm\Entities\Field\Attributes\{FieldDefinition, ShouldValidate};
 
 class FileField extends Field {
 	 /**
@@ -48,9 +48,11 @@ class FileField extends Field {
 	 protected ?array $depends_on = null;
 
 	 //the maximum file size in bytes
+	 #[ShouldValidate()]
 	 protected mixed $max_size = null;
 
 	 //the minimum file size in bytes
+	 #[ShouldValidate()]
 	 protected mixed $min_size = null;
 
 	 //whether to upload multiple files or not
@@ -61,6 +63,7 @@ class FileField extends Field {
 	  * 
 	  * example: ['jpg', 'png', 'pdf']
 	  * */
+	 #[ShouldValidate()]
 	 protected ?array $extensions = null;
 
 	 /**
@@ -68,12 +71,8 @@ class FileField extends Field {
 	  * 
 	  * example: ['image/jpeg', 'image/png', 'application/pdf', 'image/*']
 	  * */
+	 #[ShouldValidate()]
 	 protected ?array $mime_types = null;
-
-	 public function __construct(...$kwargs){
-	 	 $kwargs['type'] = $kwargs['type'] ?? ColumnType::CHAR;
-	 	 parent::__construct(...$kwargs);
-	 }
 
 	 public function depends_on(array $fields){
 	 	 $this->depends_on = $fields;
@@ -154,6 +153,25 @@ class FileField extends Field {
 
      public function get_storage(): string {
          return $this->storage;
+     }
+
+     protected function validate_field_state(){
+         if($this->max_size && $this->min_size){
+             if($this->min_size > $this->max_size){
+                 $this->errors[] = "Minimum size cannot be more than the maximum size!";
+             }
+         }
+
+         parent::validate_field_state();
+     }
+
+     protected function initialize_defaults(){
+
+         $this->native_type = "file";
+         $this->type = ColumnType::CHAR;
+
+         parent::initialize_defaults();
+
      }
 }
 

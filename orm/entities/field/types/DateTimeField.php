@@ -4,12 +4,14 @@ namespace SaQle\Orm\Entities\Field\Types;
 
 use SaQle\Orm\Entities\Field\Types\Base\TemporalField;
 use SaQle\Orm\Database\ColumnType;
-use SaQle\Orm\Entities\Field\Attributes\FieldDefinition;
+use SaQle\Orm\Entities\Field\Attributes\{FieldDefinition, ShouldValidate};
 
 class DateTimeField extends TemporalField {
 
+     #[ShouldValidate()]
 	 protected mixed $min_datetime = null;
 
+     #[ShouldValidate()]
 	 protected mixed $max_datetime = null;
 
      /**
@@ -23,11 +25,6 @@ class DateTimeField extends TemporalField {
       * */
      #[FieldDefinition()]
 	 protected string $storage = "unix";
-
-	 public function __construct(...$kwargs){
-         $kwargs['type'] = ColumnType::DATETIME;
-	 	 parent::__construct(...$kwargs);
-	 }
 
      public function min_datetime(mixed $min_datetime){
          $this->min_datetime = $min_datetime;
@@ -54,6 +51,31 @@ class DateTimeField extends TemporalField {
 
      public function get_storage(){
          return $this->storage;
+     }
+
+     protected function validate_field_state(){
+         if($this->max_datetime && $this->min_datetime){
+             if($this->min_datetime > $this->max_datetime){
+                 $this->errors[] = "Minimum date and time cannot be more than the maximum date and time!";
+             }
+         }
+
+         parent::validate_field_state();
+     }
+
+     protected function initialize_defaults(){
+
+         if(!$this->storage){
+             $this->storage = 'unix';
+         }
+
+         if($this->storage === 'unix'){
+             $this->native_type = "integer";
+         }
+
+         $this->type = ColumnType::DATETIME;
+
+         parent::initialize_defaults();
      }
 }
 

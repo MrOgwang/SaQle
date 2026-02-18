@@ -2,23 +2,27 @@
 
 namespace SaQle\Orm\Entities\Field\Types\Base;
 
-use SaQle\Orm\Entities\Field\Attributes\FieldDefinition;
+use SaQle\Orm\Entities\Field\Attributes\{FieldDefinition, ShouldValidate};
 
 class NumericField extends Field {
 
 	 //the minimum value allowed
+	 #[ShouldValidate()]
 	 protected mixed $min = null;
 
+     #[ShouldValidate()]
 	 //the maximum value allowed
 	 protected mixed $max = null;
 
 	 //disallow negative numbers
+	 #[ShouldValidate()]
 	 protected bool $unsigned = false;
 
 	 //increment step
 	 protected mixed $step = null;
 
 	 //display format
+	 #[ShouldValidate('number_format')]
 	 protected ?string $format = null;
 
 	 //whether to auto incerement
@@ -77,6 +81,22 @@ class NumericField extends Field {
 
 	 public function get_format(){
 	 	 return $this->format;
+	 }
+
+	 protected function validate_field_state(){
+	 	 if($this->max && $this->min){
+	 	 	 if($this->min > $this->max){
+	 	 	 	 $this->errors[] = "Minimum cannot be more than maximum!";
+	 	 	 }
+     	 }
+
+     	 if($this->max && $this->step){
+	 	 	 if($this->step > $this->max){
+	 	 	 	 $this->errors[] = "The step count cannot be more than maximum!";
+	 	 	 }
+     	 }
+
+     	 parent::validate_field_state();
 	 }
 }
 

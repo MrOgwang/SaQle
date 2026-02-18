@@ -10,100 +10,40 @@ use RuntimeException;
 final class TableInfo{
      
      //Whether this is a temporary table or not
-     public bool $temporary = false {
-         set(bool $value){
-             $this->temporary = $value;
-         }
-
-         get => $this->temporary;
-     }
+     private bool $_temporary = false;
 
      //the table primary key name
-     public private(set) string $pk_name = '' {
-         set(string $value){
-             $this->pk_name = $value;
-         }
-
-         get => $this->pk_name;
-     }
+     private string $pk_name = '';
 
      //the table primary key type
-     public string $pk_type = '' {
-         set(string $value){
-             $this->pk_type = $value;
-         }
-
-         get => $this->pk_type;
-     }
+     private string $pk_type = '';
 
      //the value of this property will represent the entire model
-     public string $name_property = "" {
-         set(string $value){
-             $this->name_property = $value;
-         }
-
-         get => $this->name_property;
-     }
+     private string $_name_property = "";
 
      //the class name of the model
-     public string $model_class = "" {
-         set(string $value){
-             $this->model_class = $value;
-         }
-
-         get => $this->model_class;
-     }
+     private string $model_class = ""; 
 
      //the name of the database table associated with this model
-     public ?string $table_name = null {
-         set(?string $value){
-             $this->table_name = $value;
-         }
-
-         get => $this->table_name;
-     }
+     private ?string $table_name = null;
 
      //the connection name to use for this model
-     public ?string $connection_name = null {
-         set(?string $value){
-             $this->connection_name = $value;
-         }
-
-         get => $this->connection_name;
-     }
+     private ?string $connection_name = null;
 
      //whether to automatically include created by and modified by fields in the model
-     public bool $with_user_audit = false {
-         set(bool $value){
-             $this->with_user_audit = $value;
-         }
-
-         get => $this->with_user_audit;
-     }
+     private bool $_with_user_audit = false;
 
      //whether to automatically incude created at and modified at fields in the model
-     public bool $with_timestamps = false {
-         set(bool $value){
-             $this->with_timestamps = $value;
-         }
-
-         get => $this->with_timestamps;
-     }
+     private bool $_with_timestamps = false;
 
      //whether to automatically include a deleted field in the model
-     public bool $with_soft_delete = false {
-         set(bool $value){
-             $this->with_soft_delete = $value;
-         }
-
-         get => $this->with_soft_delete;
-     }
+     private bool $_with_soft_delete = false;
 
      //an array of all the names of the navigation fields
-     public array $nav_field_names = [];
+     private array $nav_field_names = [];
 
      //an array of the names of the foreign key fields
-     public array $fk_field_names = [];
+     private array $fk_field_names = [];
 
      /**
       * When declaring fields on the model, the field names may be different from
@@ -112,7 +52,7 @@ final class TableInfo{
       * This array keeps a reference of all the field names and their respective column names
       * as key => value pairs, where the key is the field name and the value is the column name.
       * */
-     public array $field_column_refs = [];
+     private array $field_column_refs = [];
 
      /**
       * These are all the table column names as they will appear
@@ -120,70 +60,28 @@ final class TableInfo{
       * 
       * Navigation and Virtual Field column names are not here!
       * */
-     public array $table_column_names = [];
+     private array $table_column_names = [];
 
      //the name of the created at field
-     public string $created_at_field = '' {
-         set(string $value){
-             $this->created_at_field = $value;
-         }
-
-         get => $this->created_at_field;
-     }
+     private string $created_at_field = '';
 
      //the name of the created by field
-     public string $created_by_field = '' {
-         set(string $value){
-             $this->created_by_field = $value;
-         }
-
-         get => $this->created_by_field;
-     }
+     private string $created_by_field = '';
 
      //the name of the modified at field
-     public string $modified_at_field = '' {
-         set(string $value){
-             $this->modified_at_field = $value;
-         }
-
-         get => $this->modified_at_field;
-     }
+     private string $modified_at_field = '';
 
      //the name of the modified by field
-     public string $modified_by_field = '' {
-         set(string $value){
-             $this->modified_by_field = $value;
-         }
-
-         get => $this->modified_by_field;
-     }
+     private string $modified_by_field = '';
 
      //the name of the deleted field
-     public string $deleted_field = '' {
-         set(string $value){
-             $this->deleted_field = $value;
-         }
-
-         get => $this->deleted_field;
-     }
+     private string $deleted_field = '';
 
      //the name of the deleted at field
-     public string $deleted_at_field = '' {
-         set(string $value){
-             $this->deleted_at_field = $value;
-         }
-
-         get => $this->deleted_at_field;
-     }
+     private string $deleted_at_field = '';
 
      //the name of the deleted by field
-     public string $deleted_by_field = '' {
-         set(string $value){
-             $this->deleted_by_field = $value;
-         }
-
-         get => $this->deleted_by_field;
-     }
+     private string $deleted_by_field = '';
 
      /**
       * Tell the model the action to take when an attempt to insert
@@ -201,26 +99,16 @@ final class TableInfo{
       * Defaults to the value set using config('action_on_duplicate') constant in app config, which defaults to ABORT_WITH_ERROR
       * 
       * */
-     public string $action_on_duplicate = '' {
-         set(string $value){
-             //ensure action is among the valid options
-             $actions = ['ABORT_WITH_ERROR', 'INSERT_MINUS_DUPLICATE', 'UPDATE_ON_DUPLICATE', 'RETURN_EXISTING'];
-             if(!in_array($value, $actions)){
-                 throw new RuntimeException('The duplicate action provided is not valid. Valid duplicate actions are: '.implode(',', $actions));
-             }
-             $this->action_on_duplicate = $value;
-         }
-
-         get => $this->action_on_duplicate;
-     }
+     private string $_action_on_duplicate = '';
 
      /**
       * Avoid duplicate data in your table by setting the unique fields,
       * it defaults to an empty array to indicate that rows in this table can contain duplicate
       * data.
       * */
-     public array $unique_field_names = [];
-     public array $unique_fields = [];
+     private array $unique_field_names = [];
+
+     private array $_unique_fields = [];
 
      /**
       * The final model fields after state validation happens.
@@ -228,7 +116,7 @@ final class TableInfo{
       * Note: Model state validation is not the same as model data validation. State validation
       * ensures that all fields defined for a model are correctly defined!
       * */
-     public protected(set) array $clean_fields = [] {
+     private array $clean_fields = [] {
          set(array $value){
              foreach($value as $n => $v){
                  $has_table_column = true;
@@ -255,10 +143,6 @@ final class TableInfo{
                          $this->unique_field_names[] = $n;
                      }
                  }
-
-                 if($v->is_primary()){
-                    $this->pk_name = $v->get_name();
-                 }
              }
 
              $this->defined_field_names = array_diff(array_keys($value), $this->audit_field_names, $this->virtual_field_names);
@@ -271,45 +155,32 @@ final class TableInfo{
 
      /**
       * Fields defined on a model pending state validation. These are used only internally
-      *
       * */
-     public array $fields = []{
+     private array $fields = []{
          set(array $value){
-             $this->fields = $value;
+             $this->fields = array_merge($this->fields, $value);
          }
 
          get => $this->fields;
      }
 
      //an array of the names of the fields defined in the model
-     public array $defined_field_names = [] {
-         set(array $value){
-             $this->defined_field_names = $value;
-         }
-
-         get => $this->defined_field_names;
-     }
+     private array $defined_field_names = [];
 
      //an array of the names of the fields not defined in the model
-     public array $audit_field_names = [] {
-         set(array $value){
-             $this->audit_field_names = $value;
-         }
-
-         get => $this->audit_field_names;
-     }
+     private array $audit_field_names = [];
 
      //an array of the names of all the virtual fields
-     public array $virtual_field_names = [];
+     private array $virtual_field_names = [];
 
      //an array of the names of the file fields defined in the model
-     public array $file_field_names = [];
+     private array $file_field_names = [];
 
      /**
       * an array of all the field names that must be included in select clause 
       * to support file fields callback path, rename, url and default_path functions
       * */
-     public array $file_required_fields = [];
+     private array $file_required_fields = [];
 
      /**
       * this is a property used to override the auto added fields from with_user_audit, with_timestamps and with_soft_delete settings.
@@ -317,15 +188,9 @@ final class TableInfo{
       * to override the default ones.
       *
       * */
-     public array $audit_fields_override = []{
-         set(array $value){
-             $this->audit_fields_override = $value;
-         }
+     private array $audit_fields_override = [];
 
-         get => $this->audit_fields_override;
-     }
-
-     public array $unique_constraints = [];
+     private array $unique_constraints = [];
 
      private function assert_model_exists(string $model_class){
          if($model_class && class_exists($model_class) && is_subclass_of($model_class, Model::class)){
@@ -355,7 +220,7 @@ final class TableInfo{
 
      //add or remove created at and modified at date time stamps depending on with_timestamps setting
      private function get_timestamp_fields(bool $switch = true) : array {
-         if($this->with_timestamps){
+         if($this->_with_timestamps){
              return [
                  $this->created_at_field => $this->audit_fields_override[$this->created_at_field] ?? new DateTimeField(),
                  $this->modified_at_field => $this->audit_fields_override[$this->modified_at_field] ?? new DateTimeField()
@@ -367,7 +232,7 @@ final class TableInfo{
 
      //add or remove soft delete fields depending on with_soft_delete setting
      private function get_delete_fields(bool $switch = true) : array {
-         if($this->with_soft_delete){
+         if($this->_with_soft_delete){
              $fields = [
                  $this->deleted_field => $this->audit_fields_override[$this->deleted_field] ?? new BooleanField(),
                  $this->deleted_at_field => $this->audit_fields_override[$this->deleted_at_field] ?? new DateTimeField()
@@ -399,10 +264,9 @@ final class TableInfo{
 
      public function set_meta_defaults($model_class){
          $this->model_class = $model_class;
-         $this->pk_type = config('primary_key_type');
-         $this->with_user_audit = config('with_user_audit');
-         $this->with_timestamps = config('with_timestamps');
-         $this->with_soft_delete = config('with_soft_delete');
+         $this->_with_user_audit = config('with_user_audit');
+         $this->_with_timestamps = config('with_timestamps');
+         $this->_with_soft_delete = config('with_soft_delete');
          $this->created_at_field = config('created_at_field');
          $this->created_by_field = config('created_by_field');
          $this->modified_at_field = config('modified_at_field');
@@ -410,33 +274,27 @@ final class TableInfo{
          $this->deleted_field = config('deleted_field');
          $this->deleted_at_field = config('deleted_at_field');
          $this->deleted_by_field = config('deleted_by_field');
-         $this->action_on_duplicate = config('action_on_duplicate');
+         $this->action_on_duplicate(config('action_on_duplicate'));
      }
 
      public function clean_model_fields(){
-         $clean_fields = [];
+
+         //create primary key field
+         $pk = new Pk($this->pk_type);
+
+         $clean_fields = [$this->pk_name => $pk->resolve([
+             'model_class' => $this->model_class,
+             'model_pk'    => $this->pk_name,
+             'name'        => $this->pk_name
+         ])];
 
          foreach($this->fields as $n => $v){
 
              //assert field instance
              Assert::isInstanceOf($v, IField::class, $n.' is not a field instance!');
 
-             //resolve field if pk
-             $field = $v instanceof Pk ? $v->resolve() : $v;
-
-             //set the field name
-             $field->name($n);
-
-             //set column name
-             if(!$field->get_column()){
-                 $field->column($n);
-             }
-
-             //set local model for relation fields
-             if($v instanceof RelationField){
-                 $field->local_model($this->model_class);
-             } 
-
+             $field->build(name: $n, model_class: $this->model_class, model_pk: $this->pk_name);
+             
              //each field knows to validate its own state
              if(!$field->is_state_valid()){
                  throw new RuntimeException("The field: {$n} defined on the model: {$this->model_class} is not correctly defined!");
@@ -462,7 +320,7 @@ final class TableInfo{
              $constraints[$unique_constraint_name] = [$column_name];
          }
          
-         foreach($this->unique_fields as $ucn => $unq_fields){
+         foreach($this->_unique_fields as $ucn => $unq_fields){
              $constraints[$ucn] = [];
              foreach($unq_fields as $uf){
                  $column_name = $this->clean_fields[$uf]->get_column();
@@ -476,5 +334,164 @@ final class TableInfo{
      public function set_table_and_connection(string $table_name, string $connection_name){
          $this->table_name = $table_name;
          $this->connection_name = $connection_name;
+     }
+
+
+     public function primary_key(string $name, ?string $type = null){
+         $this->pk_name = $name;
+         $this->pk_type = $type ?? config('primary_key_type');
+     }
+
+     public function temporary(bool $temporary = true){
+         $this->_temporary = $temporary;
+     }
+
+     public function is_temporary(){
+         return $this->_temporary;
+     }
+
+     public function get_pk_name(){
+        return $this->pk_name;
+     }
+
+     public function get_pk_type(){
+        return $this->pk_type;
+     }
+
+     public function get_name_property(){
+         return $this->_name_property;
+     }
+
+     public function name_property(string $name_property){
+         $this->_name_property = $name_property;
+     }
+
+     public function get_table_name(){
+         return $this->table_name;
+     }
+
+     public function get_connection_name(){
+         return $this->connection_name;
+     }
+
+     public function with_user_audit(bool $user_audit = true){
+         $this->_with_user_audit = $user_audit;
+     }
+
+     public function with_timestamps(bool $timestamps = true){
+         $this->_with_timestamps = $timestamps;
+     }
+
+     public function with_soft_delete(bool $soft_delete = true){
+         $this->_with_soft_delete = $soft_delete;
+     }
+
+     public function has_user_audit(){
+         return $this->_with_user_audit;
+     }
+
+     public function has_timestamps(){
+         return $this->_with_timestamps;
+     }
+
+     public function has_soft_delete(){
+         return $this->_with_soft_delete;
+     }
+
+     public function get_nav_field_names(){
+         return $this->nav_field_names;
+     }
+
+     public function get_fk_field_names(){
+         return $this->fk_field_names;
+     }
+
+     public function get_field_column_refs(){
+         return $this->field_column_refs;
+     }
+
+     public function get_table_column_names(){
+         return $this->table_column_names;
+     }
+
+     public function get_created_at_field(){
+         return $this->created_at_field;
+     }
+
+     public function get_created_by_field(){
+         return $this->created_by_field;
+     }
+
+     public function get_modified_at_field(){
+         return $this->modified_at_field;
+     }
+
+     public function get_modified_by_field(){
+         return $this->modified_by_field;
+     }
+
+     public function get_deleted_at_field(){
+         return $this->deleted_at_field;
+     }
+
+     public function get_deleted_by_field(){
+         return $this->deleted_by_field;
+     }
+
+     public function get_deleted_field(){
+         return $this->deleted_field;
+     }
+
+     public function get_action_on_duplicate(){
+         return $this->_action_on_duplicate;
+     }
+
+     public function action_on_duplicate(string $action){
+         //ensure action is among the valid options
+         $actions = ['ABORT_WITH_ERROR', 'INSERT_MINUS_DUPLICATE', 'UPDATE_ON_DUPLICATE', 'RETURN_EXISTING'];
+         if(!in_array($action, $actions)){
+             throw new RuntimeException('The duplicate action provided is not valid. Valid duplicate actions are: '.implode(',', $actions));
+         }
+         $this->_action_on_duplicate = $action;
+     }
+
+     public function get_unique_field_names(){
+        return $this->unique_field_names;
+     }
+
+     public function unique_fields(array $fields){
+         $this->_unique_fields = $fields;
+     }
+
+     public function get_clean_fields(){
+         return $this->clean_fields;
+     }
+
+     public function fields(array $fields){
+         $this->fields = $fields;
+     }
+
+     public function get_defined_field_names(){
+         return $this->defined_field_names;
+     }
+
+     public function get_audit_field_names(){
+         return $this->audit_field_names;
+     }
+
+     public function get_virtual_field_names(){
+         return $this->virtual_field_names;
+     }
+
+     public function get_file_field_names(){
+         return $this->file_field_names;
+     }
+
+     public function get_file_required_fields(){
+        return $this->file_required_fields;
+     }
+
+     public function audit_fields_override(array $overrides){
+         $this->audit_fields_override = $overrides;
      }
 }

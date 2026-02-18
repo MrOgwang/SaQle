@@ -3,26 +3,32 @@
 namespace SaQle\Orm\Entities\Field\Types\Base;
 
 use SaQle\Core\Support\CharSet;
-use SaQle\Orm\Entities\Field\Attributes\FieldDefinition;
+use SaQle\Orm\Entities\Field\Attributes\{FieldDefinition, ShouldValidate};
 
 class TextualField extends Field {
-	//the minimum length allowed
+	 //the minimum length allowed
+	 #[ShouldValidate()]
 	 protected ?int $min_length = null;
 
 	 //the maximum length allowed
+	 #[ShouldValidate()]
+	 #[FieldDefinition()]
 	 protected ?int $max_length = null;
 
 	 //the exact length allowed
-	 #[FieldDefinition()]
+	 #[ShouldValidate()]
 	 protected ?int $length = null;
 
 	 //the regex pattern to match
+	 #[ShouldValidate()]
 	 protected ?string $pattern = null;
 
 	 //the field character set
+	 #[ShouldValidate()]
 	 protected ?CharSet $charset = null;
 
 	 //whether to allow blank or not
+	 #[ShouldValidate()]
 	 protected bool $blank = true;
 
 	 public function length(int $length){
@@ -78,5 +84,46 @@ class TextualField extends Field {
 	 public function is_blank(){
 	 	 return $this->blank;
 	 }
+
+	 protected function validate_field_state(){
+	 	 if($this->length && $this->max_length){
+	 	 	 $this->errors[] = "Having length and maximum length at the same time is ambigous!";
+	 	 }
+
+	 	 if($this->length && $this->min_length){
+	 	 	 $this->errors[] = "Having length and minimum length at the same time is ambigous!";
+	 	 }
+
+	 	 if($this->max_length && $this->min_length){
+	 	 	 if($this->min_length > $this->max_length){
+	 	 	 	 $this->errors[] = "Minimum length cannot be more than the maximum length!";
+	 	 	 }
+     	 }
+
+     	 if($this->required && $this->blank){
+	 	 	 $this->errors[] = "A required field cannot be blank!";
+     	 }
+
+     	 parent::validate_field_state();
+	 }
+
+	 protected function initialize_defaults(){
+	 	 if($this->length){
+	 	 	 $this->max_length = $this->length;
+	 	 	 $this->min_length = $this->length;
+	 	 }
+
+	 	 parent::initialize_defaults();
+     }
+
+     protected function initialize_defaults(){
+     	 
+     	 if(!$this->native_type){
+     	 	 $this->native_type = "string";
+     	 }
+
+     	 parent::initialize_defaults();
+     	 
+     }
 }
 

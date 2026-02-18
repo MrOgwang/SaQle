@@ -3,22 +3,19 @@
 namespace SaQle\Orm\Entities\Field\Types;
 
 use SaQle\Orm\Database\ColumnType;
-use SaQle\Orm\Entities\Field\Attributes\FieldDefinition;
+use SaQle\Orm\Entities\Field\Attributes\{FieldDefinition, ShouldValidate};
 
 class DecimalField extends FloatField {
      
      //the total number of digits
      #[FieldDefinition()]
+     #[ShouldValidate()]
      protected ?int $precision = null;
 
      //digits after decimal point
      #[FieldDefinition()]
+     #[ShouldValidate()]
      protected ?int $scale = null;
-
-	 public function __construct(...$kwargs){
-         $kwargs['type'] = ColumnType::DECIMAL;
-	 	 parent::__construct(...$kwargs);
-	 }
 
      public function precision(int $precision){
          $this->precision = $precision;
@@ -36,6 +33,15 @@ class DecimalField extends FloatField {
 
      public function get_scale(){
          return $this->scale;
+     }
+
+     protected function initialize_defaults(){
+
+         $this->native_type = "float";
+         $this->type = ColumnType::DECIMAL;
+
+         parent::initialize_defaults();
+
      }
 }
 

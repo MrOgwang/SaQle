@@ -7,9 +7,14 @@ use SaQle\Orm\Database\ColumnType;
 use SaQle\Orm\Entities\Field\Attributes\FieldDefinition;
 
 class FloatField extends NumericField {
-	 public function __construct(...$kwargs){
-	 	 $kwargs['type'] = $kwargs['type'] ?? ColumnType::FLOAT;
-	 	 parent::__construct(...$kwargs);
-	 }
+
+	 protected function initialize_defaults(){
+
+         $this->native_type = "float";
+         $this->type = ColumnType::FLOAT;
+
+         parent::initialize_defaults();
+
+     }
 }
 

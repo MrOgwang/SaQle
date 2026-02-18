@@ -35,7 +35,7 @@ class TruncateManager extends QueryManager {
 
              if($response === false || $error_code !== "00000"){
 			 	 throw new DeleteOperationFailedException([
-			 	 	 'table' => $this->model->meta->table_name, 
+			 	 	 'table' => $this->model->meta->get_table_name(), 
 			 	 	 'statement_error_code' => $error_code
 			 	 ]);
 			 }

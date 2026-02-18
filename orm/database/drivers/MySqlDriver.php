@@ -4,7 +4,6 @@ namespace SaQle\Orm\Database\Drivers;
 use SaQle\Orm\Database\Config\ConnectionConfig;
 use SaQle\Orm\Connection\ConnectionManager;
 use SaQle\Orm\Database\ColumnType;
-use SaQle\Orm\Entities\Field\Attributes\FieldDefinition;
 use SaQle\Orm\Entities\Model\Manager\QueryManager;
 use SaQle\Core\Exceptions\Model\TableDropOperationFailedException;
 use SaQle\Core\Exceptions\Model\TableCreateOperationFailedException;
@@ -487,7 +486,7 @@ class MySqlDriver extends DbDriver {
      	 $defs = [];
      	 $fields = $model_class::get_fields();
      	 foreach($fields as $f){
-     	 	 $defs[] = $this->translate_field_definition($f->get_definition(FieldDefinition::class));
+     	 	 $defs[] = $this->translate_field_definition($f->get_definition());
      	 }
 
          return $this->create_table(

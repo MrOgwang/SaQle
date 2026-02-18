@@ -7,13 +7,18 @@ use SaQle\Orm\Database\ColumnType;
 use SaQle\Orm\Entities\Field\Attributes\FieldDefinition;
 
 class IntegerField extends NumericField {
+	
 	 //the minimum length allowed
 	 #[FieldDefinition()]
 	 protected string $size = 'regular'; //big, small, medium, tiny, regular
 
-	 public function __construct(...$kwargs){
-	 	 $kwargs['type'] = ColumnType::INTEGER;
-	 	 parent::__construct(...$kwargs);
-	 }
+	 protected function initialize_defaults(){
+
+         $this->type = ColumnType::INTEGER;
+         $this->native_type = "integer";
+
+         parent::initialize_defaults();
+
+     }
 }
 

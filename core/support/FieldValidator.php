@@ -1,14 +1,14 @@
 <?php
 namespace SaQle\Core\Support;
 
-use SaQle\Security\Validation\Managers\ValidatorManager;
 use SaQle\Security\Validation\Types\{FieldValidationResult, ValidationMode, RuleKey};
-use SaQle\Security\Utils\ArrayItemValidator;
+use SaQle\Security\Validation\Utils\ArrayItemValidator;
 use RuntimeException;
 
 class FieldValidator {
 
      public function __construct(
+         protected array $rules,
          protected ValidationMode $mode = ValidationMode::COLLECT_ALL
      ){}
 
@@ -20,7 +20,7 @@ class FieldValidator {
          return new RuleKey($key, false);
      }
 
-	 public function validate(string $field, mixed $value, array $rules) : FieldValidationResult {
+	 public function validate(string $field, mixed $value) : FieldValidationResult {
 
          $errors = [];
 
@@ -34,8 +34,9 @@ class FieldValidator {
              return (new ArrayItemValidator())->validate($field, $value, $rules);
          }
 
-         foreach($rules as $r => $v){
-             $validator = new ValidatorManager($r)->get_validator();
+         foreach($this->rules as $r => $v){
+             $validator_class = app()->rules->get($r);
+             $validator = new $validator_class();
              $result = $validator->validate($field, $v, $value, $rules);
 
              if(!$result->isvalid){
@@ -49,4 +50,8 @@ class FieldValidator {
 
          return new FieldValidationResult($field, empty($errors), $errors);
 	 }
+
+     public function get_rules(){
+         return $this->rules;
+     }
 }

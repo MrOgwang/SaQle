@@ -3,17 +3,31 @@
 namespace SaQle\Orm\Entities\Field\Types\Base;
 
 use Closure;
+use SaQle\Core\Support\FieldValidator;
 use SaQle\Orm\Entities\Field\Interfaces\IField;
 use SaQle\Orm\Entities\Field\Types\Base\RelationField;
 use SaQle\Orm\Entities\Field\Types\VirtualField;
 use SaQle\Orm\Database\ColumnType;
-use SaQle\Orm\Entities\Field\Attributes\FieldDefinition;
+use SaQle\Orm\Entities\Field\Attributes\{FieldDefinition, ShouldValidate};
 use ReflectionClass;
 
 class Field implements IField {
 
+	 /**
+	  * Will keep track of field state errors. We are not making any assumptions
+	  * concerning the developer's intentions, so we will just complain loudly
+	  * and let the developer handle it
+	  * */
+	 protected array $errors = [];
+
+	 //the parent model class
+	 protected ?string $model_class = null;
+
+	 //the pk name on parent model class
+	 protected ?string $model_pk = null;
+
 	 //the logical field name on the model
-	 protected string $name;
+	 protected ?string $name = null;
 
 	 //the database column name - defaults to name
 	 #[FieldDefinition()]
@@ -22,9 +36,13 @@ class Field implements IField {
 	 //the actual, unmodified value of field
 	 protected mixed $value = null;
 
-	 //the primitive type of the field
+	 //the database column type of the field
 	 #[FieldDefinition()]
 	 protected ColumnType $type;
+
+	 //the primitive type of the field
+	 #[ShouldValidate()]
+	 protected ?string $native_type = null;
 
 	 //the default value or callable
 	 #[FieldDefinition()]
@@ -32,6 +50,7 @@ class Field implements IField {
 
 	 //whether field is required
 	 #[FieldDefinition()]
+	 #[ShouldValidate()]
 	 protected bool $required = false;
 
 	 //whether to allow null values
@@ -166,13 +185,8 @@ class Field implements IField {
 	 	 return $this->render_callback;
 	 }
 
-	 function get_definition(string $attribute_class): ?object {
-	 	 $is_field = $this instanceof VirtualField || ($this instanceof RelationField && $this->navigation) ? false : true;
-	     if (!$is_field) {
-	         return null;
-	     }
-
-	     $reflection = new ReflectionClass($this);
+	 protected function get_properties_with_attribute(string $attribute_class){
+	 	 $reflection = new ReflectionClass($this);
 	     $result = [];
 
 	     foreach($reflection->getProperties() as $property){
@@ -192,12 +206,60 @@ class Field implements IField {
 	         $result[$key] = $value;
 	     }
 
-	     return (object)$result;
+	     return $result;
+	 }
+
+	 public function get_definition(): ?object {
+	 	 $is_field = $this instanceof VirtualField || ($this instanceof RelationField && $this->navigation) ? false : true;
+	     if (!$is_field) {
+	         return null;
+	     }
+
+	     return (object)$this->get_properties_with_attribute(FieldDefinition::class);
+	 }
+
+	 protected function validate_field_state(){
+	 	 if(!$this->name){
+	 	 	 $this->errors[] = "A field name is required!";
+	 	 }
+
+	 	 if($this->required === true && $this->nullable === true){
+     	 	 $this->errors[] = "A required field cannot be nullable!";
+     	 }
 	 }
 
      public function is_state_valid(){
-     	 return true;
+     	 return empty($this->errors) ? true : false;
      }
 
+     protected function initialize_defaults(){
+     	 //if column name isnt provided, set it to the field name.
+     	 if(!$this->column){
+     	 	 $this->column = $this->name;
+     	 }
+     }
+
+     protected function get_validation_rules() : array {
+     	 $is_field = $this instanceof VirtualField || ($this instanceof RelationField && $this->navigation) ? false : true;
+	     if (!$is_field){
+	         return [];
+	     }
+
+	     return $this->get_properties_with_attribute(ShouldValidate::class);
+     }
+
+     public function validator(){
+     	 return new FieldValidator($this->get_validation_rules());
+     }
+
+     public function build(string $name, string $model_class, string $model_pk){
+
+     	 $this->name = $name;
+     	 $this->model_class = $model_class;
+     	 $this->model_pk = $model_pk;
+     	 $this->validate_field_state();
+	 	 $this->initialize_defaults();
+	 	 
+     }
 }
 

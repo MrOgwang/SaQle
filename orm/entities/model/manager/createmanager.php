@@ -31,8 +31,8 @@ class CreateManager extends QueryManager{
 
 	 private function swap_properties_with_columns(array $data){
 	 	 $clean_fields = $this->model instanceof ModelCollection ? 
-	 	 $this->model[0]->meta->clean_fields :
-	 	 $this->model->meta->clean_fields;
+	 	 $this->model[0]->meta->get_clean_fields() :
+	 	 $this->model->meta->get_clean_fields();
 
      	 $swapped = [];
      	 foreach($clean_fields as $pk => $pv){
@@ -73,18 +73,18 @@ class CreateManager extends QueryManager{
 
 	 public function get_duplicate_action(){
 	 	 return $this->model instanceof ModelCollection ? 
-	 	 $this->model[0]->meta->action_on_duplicate :
-	 	 $this->model->meta->action_on_duplicate;
+	 	 $this->model[0]->meta->get_action_on_duplicate() :
+	 	 $this->model->meta->get_action_on_duplicate();
 	 }
 
 	 public function get_primary_key_column(){
 	 	 return $this->model instanceof ModelCollection ? 
-	 	 $this->model[0]->meta->field_column_refs[$this->model[0]->meta->pk_name] :
-	 	 $this->model->meta->field_column_refs[$this->model->meta->pk_name];
+	 	 $this->model[0]->meta->get_field_column_refs()[$this->model[0]->meta->get_pk_name()] :
+	 	 $this->model->meta->get_field_column_refs()[$this->model->meta->get_pk_name()];
 	 }
 
 	 public function get_primary_key_type(){
-	 	 return $this->model instanceof ModelCollection ? $this->model[0]->meta->pk_type : $this->model->meta->pk_type;
+	 	 return $this->model instanceof ModelCollection ? $this->model[0]->meta->get_pk_type() : $this->model->meta->get_pk_type();
 	 }
 
 	 public function get_update_columns(){
@@ -94,8 +94,8 @@ class CreateManager extends QueryManager{
 	 public function get_primary_key_values(){
 	 	 //print_r($this->model->get_data());
 	 	 return $this->model instanceof ModelCollection ? 
-	 	 $this->model->pluck_unique($this->model[0]->meta->pk_name) :
-	 	 [$this->model->get_data()[$this->model->meta->pk_name]];
+	 	 $this->model->pluck_unique($this->model[0]->meta->get_pk_name()) :
+	 	 [$this->model->get_data()[$this->model->meta->get_pk_name()]];
 	 }
 
 	 public function get_collection_class(){
@@ -120,7 +120,7 @@ class CreateManager extends QueryManager{
 
              if($response === false || $error_code !== "00000"){
 			 	 throw new InsertOperationFailedException([
-			 	 	 'table' => $this->model->meta->table_name, 
+			 	 	 'table' => $this->model->meta->get_table_name(), 
 			 	 	 'statement_error_code' => $error_code
 			 	 ]);
 			 }
@@ -129,7 +129,7 @@ class CreateManager extends QueryManager{
 
 		 	 if(!$rows){
 		 	 	 throw new InsertOperationFailedException([
-			 	 	 'table' => $this->model->meta->table_name, 
+			 	 	 'table' => $this->model->meta->get_table_name(), 
 			 	 	 'statement_error_code' => $error_code
 			 	 ]);
 		 	 }
