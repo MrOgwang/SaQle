@@ -6,24 +6,28 @@ use SaQle\Orm\Entities\Field\Attributes\{FieldDefinition, ShouldValidate};
 
 class PhoneField extends CharField {
 	 
+	 #[ShouldValidate()]
+	 protected bool $phone = true;
+
 	 //the country code
-	 protected ?string $country = null;
+	 #[ShouldValidate()]
+	 protected ?array $countries = null;
 
 	 //the expected phone format
-	 #[ShouldValidate('phone_format')]
+	 #[ShouldValidate()]
 	 protected ?string $format = null;
 
 	 //provide phone in internationally recognizable format
 	 #[ShouldValidate()]
 	 protected bool $international = false;
 
-	 public function country(string $country){
-	 	 $this->country = $country;
+	 public function countries(array $countries){
+	 	 $this->countries = $countries;
 	 	 return $this;
 	 }
 
-	 public function get_country(){
-	 	 return $this->country;
+	 public function get_countries(){
+	 	 return $this->countries;
 	 }
 
 	 public function format(string $format){

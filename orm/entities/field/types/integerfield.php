@@ -20,5 +20,10 @@ class IntegerField extends NumericField {
          parent::initialize_defaults();
 
      }
+
+     public function size(string $size){
+     	 $this->size = $size;
+     	 return $this;
+     }
 }
 

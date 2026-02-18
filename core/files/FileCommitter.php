@@ -17,7 +17,7 @@ final class FileCommitter {
          }
 
          foreach($files['references'] as $field_name => $refs){
-             $field = $model->meta->fields[$field_name];
+             $field = $model->table->fields[$field_name];
 
              if(!$field instanceof FileField){
                  continue;

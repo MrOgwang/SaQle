@@ -20,9 +20,9 @@ class NumericField extends Field {
 
 	 //increment step
 	 protected mixed $step = null;
-
+	 
 	 //display format
-	 #[ShouldValidate('number_format')]
+	 #[ShouldValidate()]
 	 protected ?string $format = null;
 
 	 //whether to auto incerement

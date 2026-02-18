@@ -6,7 +6,7 @@ use SaQle\Orm\Entities\Field\Attributes\{FieldDefinition, ShouldValidate};
 
 class TemporalField extends Field {
 	 //the format 
-	 #[ShouldValidate('temporal_format')]
+	 #[ShouldValidate()]
 	 protected ?string $format = null;
 
 	 //set to current date on save

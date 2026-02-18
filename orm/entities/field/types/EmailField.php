@@ -5,6 +5,9 @@ namespace SaQle\Orm\Entities\Field\Types;
 use SaQle\Orm\Entities\Field\Attributes\{FieldDefinition, ShouldValidate};
 
 class EmailField extends CharField {
+
+     #[ShouldValidate()]
+	 protected bool $email = true;
 	 
 	 //the domain white list
 	 #[ShouldValidate()]
@@ -15,7 +18,6 @@ class EmailField extends CharField {
 	 protected ?array $blacklist = null;
 
 	 //very email exists
-	 #[ShouldValidate()]
 	 protected bool $dnscheck = false;
 	 
 	 public function whitelist(array $whitelist){

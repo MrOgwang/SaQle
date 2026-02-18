@@ -4,13 +4,11 @@ use SaQle\Log\FileLogger;
 use SaQle\Http\Response\HttpMessage;
 use SaQle\Http\Response\Types\RedirectResponse;
 use SaQle\Http\Request\Data\Session;
-use SaQle\FeedBack\ExceptionFeedBack;
-use SaQle\Core\Exceptions\Http\{ProcessingException, OkException, CreatedException, NoContentException, BadRequestException, PartialContentException, MovedPermanentlyException, FoundException, UnauthorizedException, PaymentRequiredException, ForbiddenException, NotFoundException, MethodNotAllowedException, NotAcceptableException, RequestTimeoutException, ConflictException, TooManyRequestsException, InternalServerErrorException, ServiceUnavailableException};
 use SaQle\Core\Config\ConfigRepository;
-use SaQle\Core\FeedBack\FeedBack;
 use SaQle\Http\Request\Request;
 use SaQle\Core\Support\AppContext;
 use SaQle\App;
+use Exception;
 
 if(!function_exists('app')){
      function app() : App {
@@ -87,250 +85,6 @@ if(!function_exists('path_join')){
      }
 }
 
-/**
- * The following are shortcuts to http message responses/feedback
- * */
-function create_feedback(int $code, mixed $data = null, string $message = '', string $action = ''){
-     $fb = new FeedBack();
-     $fb->set($code, $data, $message, $action);
-     return HttpMessage::from_feedback($fb);
-}
-
-if(!function_exists('ok')){
-     function ok(mixed $data = null, string $message = '', string $action = ''){
-         return create_feedback(FeedBack::OK, $data, $message, $action);
-     }
-}
-
-if(!function_exists('processing')){
-     function processing(mixed $data = null, string $message = '', string $action = ''){
-         return create_feedback(FeedBack::PROCESSING, $data, $message, $action);
-     }
-}
-
-if(!function_exists('payment_required')){
-     function payment_required(mixed $data = null, string $message = '', string $action = ''){
-         return create_feedback(FeedBack::PAYMENT_REQUIRED, $data, $message, $action);
-     }
-}
-
-if(!function_exists('created')){
-     function created(mixed $data = null, string $message = '', string $action = ''){
-         return create_feedback(FeedBack::CREATED, $data, $message, $action);
-     }
-}
-
-if(!function_exists('no_content')){
-     function no_content(mixed $data = null, string $message = '', string $action = ''){
-         return create_feedback(FeedBack::NO_CONTENT, $data, $message, $action);
-     }
-}
-
-if(!function_exists('partial_content')){
-     function partial_content(mixed $data = null, string $message = '', string $action = ''){
-         return create_feedback(FeedBack::PARTIAL_CONTENT, $data, $message, $action);
-     }
-}
-
-if(!function_exists('moved_permanently')){
-     function moved_permanently(mixed $data = null, string $message = '', string $action = ''){
-         return create_feedback(FeedBack::MOVED_PERMANENTLY, $data, $message, $action);
-     }
-}
-
-if(!function_exists('found')){
-     function found(mixed $data = null, string $message = '', string $action = ''){
-         return create_feedback(FeedBack::FOUND, $data, $message, $action);
-     }
-}
-
-if(!function_exists('bad_request')){
-     function bad_request(mixed $data = null, string $message = '', string $action = ''){
-         return create_feedback(FeedBack::BAD_REQUEST, $data, $message, $action);
-     }
-}
-
-if(!function_exists('unauthorized')){
-     function unauthorized(mixed $data = null, string $message = '', string $action = ''){
-         return create_feedback(FeedBack::UNAUTHORIZED, $data, $message, $action);
-     }
-}
-
-if(!function_exists('forbidden')){
-     function forbidden(mixed $data = null, string $message = '', string $action = ''){
-         return create_feedback(FeedBack::FORBIDDEN, $data, $message, $action);
-     }
-}
-
-if(!function_exists('not_found')){
-     function not_found(mixed $data = null, string $message = '', string $action = ''){
-         return create_feedback(FeedBack::NOT_FOUND, $data, $message, $action);
-     }
-}
-
-if(!function_exists('method_not_allowed')){
-     function method_not_allowed(mixed $data = null, string $message = '', string $action = ''){
-         return create_feedback(FeedBack::METHOD_NOT_ALLOWED, $data, $message, $action);
-     }
-}
-
-if(!function_exists('not_acceptable')){
-     function not_acceptable(mixed $data = null, string $message = '', string $action = ''){
-         return create_feedback(FeedBack::NOT_ACCEPTABLE, $data, $message, $action);
-     }
-}
-
-if(!function_exists('request_timeout')){
-     function request_timeout(mixed $data = null, string $message = '', string $action = ''){
-         return create_feedback(FeedBack::REQUEST_TIMEOUT, $data, $message, $action);
-     }
-}
-
-if(!function_exists('conflict')){
-     function conflict(mixed $data = null, string $message = '', string $action = ''){
-         return create_feedback(FeedBack::CONFLICT, $data, $message, $action);
-     }
-}
-
-if(!function_exists('too_many_requests')){
-     function too_many_requests(mixed $data = null, string $message = '', string $action = ''){
-         return create_feedback(FeedBack::TOO_MANY_REQUESTS, $data, $message, $action);
-     }
-}
-
-if(!function_exists('internal_server_error')){
-     function internal_server_error(mixed $data = null, string $message = '', string $action = ''){
-         return create_feedback(FeedBack::INTERNAL_SERVER_ERROR, $data, $message, $action);
-     }
-}
-
-if(!function_exists('service_unavailable')){
-     function service_unavailable(mixed $data = null, string $message = '', string $action = ''){
-         return create_feedback(FeedBack::SERVICE_UNAVAILABLE, $data, $message, $action);
-     }
-}
-
-/**
- * The following are shortcuts to http exceptions
- * */
-function create_exception(string $eclass, string $message = '', mixed $data = null){
-     return new $eclass($message, is_null($data) ? [] : (!is_array($data) ? [$data] : $data));
-}
-
-if(!function_exists('ok_exception')){
-     function ok_exception(string $message = '', mixed $data = null){
-         throw create_exception(OkException::class, $message, $data);
-     }
-}
-
-if(!function_exists('processing_exception')){
-     function processing_exception(string $message = '', mixed $data = null){
-         throw create_exception(ProcessingException::class, $message, $data);
-     }
-}
-
-if(!function_exists('payment_required_exception')){
-     function payment_required_exception(string $message = '', mixed $data = null){
-         throw create_exception(PaymentRequiredException::class, $message, $data);
-     }
-}
-
-if(!function_exists('created_exception')){
-     function created_exception(string $message = '', mixed $data = null){
-         throw create_exception(CreatedException::class, $message, $data);
-     }
-}
-
-if(!function_exists('no_content_exception')){
-     function no_content_exception(string $message = '', mixed $data = null){
-         throw create_exception(NoContentException::class, $message, $data);
-     }
-}
-
-if(!function_exists('partial_content_exception')){
-     function partial_content_exception(string $message = '', mixed $data = null){
-         throw create_exception(PartialContentException::class, $message, $data);
-     }
-}
-
-if(!function_exists('moved_permanently_exception')){
-     function moved_permanently_exception(string $message = '', mixed $data = null){
-         throw create_exception(MovedPermanentlyException::class, $message, $data);
-     }
-}
-
-if(!function_exists('found_exception')){
-     function found_exception(string $message = '', mixed $data = null){
-         throw create_exception(FoundException::class, $message, $data);
-     }
-}
-
-if(!function_exists('bad_request_exception')){
-     function bad_request_exception(string $message = '', mixed $data = null){
-         throw create_exception(BadRequestException::class, $message, $data);
-     }
-}
-
-if(!function_exists('unauthorized_exception')){
-     function unauthorized_exception(string $message = '', mixed $data = null){
-         throw create_exception(UnauthorizedException::class, $message, $data);
-     }
-}
-
-if(!function_exists('forbidden_exception')){
-     function forbidden_exception(string $message = '', mixed $data = null){
-         throw create_exception(ForbiddenException::class, $message, $data);
-     }
-}
-
-if(!function_exists('not_found_exception')){
-     function not_found_exception(string $message = '', mixed $data = null){
-         throw create_exception(NotFoundException::class, $message, $data);
-     }
-}
-
-if(!function_exists('method_not_allowed_exception')){
-     function method_not_allowed_exception(string $message = '', mixed $data = null){
-         throw create_exception(MethodNotAllowedException::class, $message, $data);
-     }
-}
-
-if(!function_exists('not_acceptable_exception')){
-     function not_acceptable_exception(string $message = '', mixed $data = null){
-        throw create_exception(NotAcceptableException::class, $message, $data);
-     }
-}
-
-if(!function_exists('request_timeout_exception')){
-     function request_timeout_exception(string $message = '', mixed $data = null){
-         throw create_exception(RequestTimeoutException::class, $message, $data);
-     }
-}
-
-if(!function_exists('conflict_exception')){
-     function conflict_exception(string $message = '', mixed $data = null){
-         throw create_exception(ConflictException::class, $message, $data);
-     }
-}
-
-if(!function_exists('too_many_requests_exception')){
-     function too_many_requests_exception(string $message = '', mixed $data = null){
-         throw create_exception(TooManyRequestsException::class, $message, $data);
-     }
-}
-
-if(!function_exists('internal_server_error_exception')){
-     function internal_server_error_exception(string $message = '', mixed $data = null){
-         throw create_exception(InternalServerErrorException::class, $message, $data);
-     }
-}
-
-if(!function_exists('service_unavailable_exception')){
-     function service_unavailable_exception(string $message = '', mixed $data = null){
-         throw create_exception(ServiceUnavailableException::class, $message, $data);
-     }
-}
-
 if(!function_exists('redirect')){
      function redirect(?string $url = null, int $status = HttpMessage::FOUND, mixed $data = null, ?string $message = null){
          return new RedirectResponse(url: $url, status: $status)->send();
@@ -399,3 +153,43 @@ if(!function_exists('cli_log')){
          fwrite(STDERR, $message . PHP_EOL);
      }
 }
+
+if (!function_exists('saqle_validate')){
+
+    /**
+     * Global helper to validate a value using a registered validator.
+     * Returns boolean only.
+     *
+     * @param string $rule Rule name registered in the app, e.g., 'email', 'min_length'
+     * @param mixed $threshold The threshold/value of the rule, e.g., true, 5, ['red','green']
+     * @param mixed $value The value to validate
+     * @param array $context Optional context
+     * @return bool True if value passes validation, false otherwise
+     * @throws Exception
+     */
+    function saqle_validate(string $rule, mixed $threshold, mixed $value, array $context = []): bool {
+        // Fetch app instance (assumes you have a global app helper)
+        if (!function_exists('app')) {
+            throw new Exception("Global helper 'app()' is required to access validator registry.");
+        }
+
+        $app = app(); // returns your SaQle app instance
+
+        // Check if rule exists in registry
+        if (!$app->rules->has($rule)) {
+            throw new Exception("Validator for rule '{$rule}' is not registered in the app.");
+        }
+
+        // Get validator class and instantiate
+        $validator_class = $app->rules->get($rule);
+        
+        $validator = new $validator_class();
+
+        // Run validation
+        $result = $validator->validate($rule, $value, $threshold, $context);
+
+        // Return boolean only
+        return $result->isvalid;
+    }
+}
+

@@ -3,11 +3,11 @@ namespace SaQle\Orm\Entities\Model\Schema;
 
 use SaQle\Core\Assert\Assert;
 use SaQle\Orm\Entities\Field\Interfaces\IField;
-use SaQle\Orm\Entities\Field\Types\{Pk, BooleanField, FileField, OneToOne, PhpTimestampField, DateField, DateTimeField, TimeField, TimestampField, VirtualField};
+use SaQle\Orm\Entities\Field\Types\{Pk, BooleanField, FileField, OneToOne, DateTimeField, VirtualField, ManyRelation};
 use SaQle\Orm\Entities\Field\Types\Base\RelationField;
 use RuntimeException;
 
-final class TableInfo{
+final class Table {
      
      //Whether this is a temporary table or not
      private bool $_temporary = false;
@@ -262,7 +262,7 @@ final class TableInfo{
          $this->fields = array_merge($this->fields, $audit_fields);
      }
 
-     public function set_meta_defaults($model_class){
+     public function set_table_defaults($model_class){
          $this->model_class = $model_class;
          $this->_with_user_audit = config('with_user_audit');
          $this->_with_timestamps = config('with_timestamps');
@@ -293,6 +293,8 @@ final class TableInfo{
              //assert field instance
              Assert::isInstanceOf($v, IField::class, $n.' is not a field instance!');
 
+             $field = $v instanceof ManyRelation ? $v->resolve() : $v;
+            
              $field->build(name: $n, model_class: $this->model_class, model_pk: $this->pk_name);
              
              //each field knows to validate its own state

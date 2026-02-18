@@ -40,6 +40,8 @@ class ChoiceField extends CharField {
 	 	 }
 	 }
 
+	 protected bool $_use_keys = false;
+
 	 public function choices(array $choices){
 	 	 $this->choices = $choices;
 	 	 return $this;
@@ -56,6 +58,11 @@ class ChoiceField extends CharField {
 
 	 public function is_multiple(){
 	 	 return $this->multiple;
+	 }
+
+	 public function use_keys(bool $use_keys = true){
+	 	 $this->_use_keys = $use_keys;
+	 	 return $this;
 	 }
 }
 

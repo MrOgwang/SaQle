@@ -54,7 +54,7 @@ class MakeThroughs{
          $template .= "namespace ".$througnamespace.";\n\n";
          $template .= "use SaQle\\Orm\Entities\\Model\\Interfaces\\IThroughModel;\n";
          $template .= "use SaQle\\Orm\Entities\Field\\Types\\{Pk, OneToOne};\n";
-         $template .= "use SaQle\\Orm\Entities\\Model\\Schema\\{Model, TableInfo};\n";
+         $template .= "use SaQle\\Orm\Entities\\Model\\Schema\\{Model, Table};\n";
          $template .= "use ".$pnamespace."\\".$o_pmodel_name.";\n";
          $template .= "use ".$fnamespace."\\".$o_fmodel_name.";\n";
          /*$template .= "use SaQle\\Core\\Assert\\Assert;\n\n";*/
@@ -66,8 +66,8 @@ class MakeThroughs{
          /**
           * Define the constructor
           * */
-         $template .= "\tprotected function model_setup(TableInfo $"."meta) : void{\n";
-         $template .= "\t\t$"."meta->fields = [\n";
+         $template .= "\tprotected function table_schema(Table $"."table) : void{\n";
+         $template .= "\t\t$"."table->fields = [\n";
          $template .= "\t\t\t'id' => new Pk(),\n";
          $template .= "\t\t\t'".$pmodel_name."' => new OneToOne(related_model: ".$o_pmodel_name."::class, local_key: '".$pmodel_name."_id', foreign_key: '".$pmodel_pk."', column: '".$pmodel_name."_id'),\n";
          $template .= "\t\t\t'".$fmodel_name."' => new OneToOne(related_model: ".$o_fmodel_name."::class, local_key: '".$fmodel_name."_id', foreign_key: '".$fmodel_pk."', column: '".$fmodel_name."_id')\n";

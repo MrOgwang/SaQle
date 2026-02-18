@@ -86,7 +86,7 @@ final class ReadManager extends IReadManager {
 	 	 $includes_tuning = array_merge(array_column($explicit_includes, 'tuning'), array_column($auto_includes, 'tuning'));
 
 	 	 return (new EagerLoader())->load(
-	 	 	 $model_instance->meta->get_connection_name(), 
+	 	 	 $model_instance->table->get_connection_name(), 
 	 	 	 $parents, 
 	 	 	 $include_instances, 
 	 	 	 $nested_includes, 
@@ -106,7 +106,7 @@ final class ReadManager extends IReadManager {
 	 	 $query_info = $this->get_query_info();
 
 	 	 //send pre select signal to observers
-	 	 $named_args = $this->get_named_args('select', $query_info, $this->model->meta->get_table_name(), $this->model::class);
+	 	 $named_args = $this->get_named_args('select', $query_info, $this->model->table->get_table_name(), $this->model::class);
 	 	 $this->dispatch_event($this->model::class, ModelEventPhase::READING, $named_args, resolve('request')->user);
 
          //execute
@@ -115,7 +115,7 @@ final class ReadManager extends IReadManager {
 
          if($response === false || $error_code !== "00000"){
 		 	 throw new SelectOperationFailedException([
-		 	 	 'table' => $this->model->meta->get_table_name(), 
+		 	 	 'table' => $this->model->table->get_table_name(), 
 		 	 	 'statement_error_code' => $error_code
 		 	 ]);
 		 }

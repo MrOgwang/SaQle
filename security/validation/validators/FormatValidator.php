@@ -9,7 +9,7 @@
  * */
 
 /**
- * Temporoal format validator
+ * Format validator for dates/datetime/times, numbers and phones
  * 
  * @pacakge SaQle
  * @author  Wycliffe Omondi Otieno <wycliffomondiotieno@gmail.com>
@@ -20,7 +20,7 @@ use SaQle\Security\Validation\Types\ValidationResult;
 use SaQle\Security\Validation\Abstracts\{IValidator, AbstractDateTimeValidator};
 use SaQle\Security\Validation\Utils\DateValidationHelper;
 
-class TemporalFormatValidator extends AbstractDateTimeValidator {
+class FormatValidator extends AbstractDateTimeValidator {
      use DateValidationHelper;
 
      public function validate(mixed $value, array $context = []): ValidationResult {

@@ -40,11 +40,11 @@ class QueryManager {
 	 }
 
 	 public function connection_name(){
-	 	 return $this->model instanceof ModelCollection ? $this->model[0]->meta->get_connection_name() : $this->model->meta->get_connection_name();
+	 	 return $this->model instanceof ModelCollection ? $this->model[0]->table->get_connection_name() : $this->model->table->get_connection_name();
 	 }
 
 	 public function table_name(){
-	 	 return $this->model instanceof ModelCollection ? $this->model[0]->meta->get_table_name() : $this->model->meta->get_table_name();
+	 	 return $this->model instanceof ModelCollection ? $this->model[0]->table->get_table_name() : $this->model->table->get_table_name();
 	 }
 
 	 public function get_model(){

@@ -19,5 +19,10 @@ class TextField extends TextualField {
          parent::initialize_defaults();
 
      }
+
+     public function size(string $size){
+     	 $this->size = $size;
+     	 return $this;
+     }
 }
 

@@ -34,11 +34,11 @@ class UpdateManager extends QueryManager {
 	 	 $this->container->data = $data;
 
 	 	 $this->setup_query_reference_map(
-		 	 table_name:    $this->model->meta->get_table_name(),
+		 	 table_name:    $this->model->table->get_table_name(),
 		 	 table_aliase:  "",
 		 	 database_name: $this->dbdriver->get_config()->get_database(),
-		 	 field_list:    $this->model->meta->get_table_column_names(),
-		 	 ff_settings:   $this->model->meta->get_file_required_fields(),
+		 	 field_list:    $this->model->table->get_table_column_names(),
+		 	 ff_settings:   $this->model->table->get_file_required_fields(),
 		 	 table_ref:     ''
 		 );
 
@@ -81,7 +81,7 @@ class UpdateManager extends QueryManager {
 
              if($response === false || $error_code !== "00000"){
 			 	 throw new UpdateOperationFailedException([
-			 	 	 'table' => $this->model->meta->get_table_name(), 
+			 	 	 'table' => $this->model->table->get_table_name(), 
 			 	 	 'statement_error_code' => $error_code
 			 	 ]);
 			 }

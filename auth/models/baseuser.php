@@ -1,24 +1,22 @@
 <?php
 namespace SaQle\Auth\Models;
 
-use SaQle\Orm\Entities\Field\Types\{PasswordField, CharField, OneToMany, ManyToMany};
-use SaQle\Orm\Entities\Model\Schema\{Model, TableInfo};
+use SaQle\Orm\Entities\Model\Schema\{Model, Table};
 use SaQle\Auth\Models\Interfaces\IUser;
 use SaQle\Auth\Guards\Guard;
 
 class BaseUser extends Model implements IUser {
-	 protected function model_setup(TableInfo $meta) : void {
 
-	 	 $meta->primary_key('user_id');
+	 protected function table_schema(Table $table) : void {
 
-		 $fields = [
-		     'first_name' => new CharField(required: true),
-		     'last_name'  => new CharField(required: true),
-		     'username'   => new CharField(required: true),
-		     'password'   => new PasswordField(required: true),
-		 ];
-		 
-		 $meta->fields($fields);
+	 	 $table->primary_key('user_id');
+
+		 $table->fields([
+		     'first_name' => char_field()->required(),
+		     'last_name'  => char_field()->required(),
+		     'username'   => char_field()->required(),
+		     'password'   => password_field()->required(),
+		 ]);
 	 }
 
      //check if a user passes a guard

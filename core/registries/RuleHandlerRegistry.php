@@ -12,6 +12,10 @@ class RuleHandlerRegistry {
          return $this->handlers[$rule] ?? null;
      }
 
+     public function has(string $rule): bool {
+         return array_key_exists($rule, $this->handlers);
+     }
+
      public function all(): array {
          return $this->handlers;
      }

@@ -5,6 +5,9 @@ namespace SaQle\Orm\Entities\Field\Types;
 use SaQle\Orm\Entities\Field\Attributes\{FieldDefinition, ShouldValidate};
 
 class UrlField extends CharField {
+
+	 #[ShouldValidate()]
+     protected bool $url = true;
 	 
 	 //Allowed schemes (http, https)
 	 #[ShouldValidate()]

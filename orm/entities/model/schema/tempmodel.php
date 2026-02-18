@@ -2,12 +2,12 @@
 namespace SaQle\Orm\Entities\Model\Schema;
 
 use SaQle\Orm\Entities\Model\Interfaces\ITempModel;
-use SaQle\Orm\Entities\Model\Schema\{Model, TableInfo};
+use SaQle\Orm\Entities\Model\Schema\{Model, Table};
 use SaQle\Core\Support\Db;
 
 abstract class TempModel extends Model implements ITempModel{
 
-	 abstract protected function model_setup(TableInfo $meta): void;
+	 abstract protected function table_schema(Table $table): void;
 
 	 private static function get_db_driver(?string $connection = null){
 	 	 [$connection, $table] = get_called_class()::get_table_and_connection($connection);

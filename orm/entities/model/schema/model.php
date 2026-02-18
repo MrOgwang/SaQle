@@ -76,7 +76,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 	 /**
 	  * Virtual property that gets all the information about a table scehema
 	  * */
-	 public mixed $meta {
+	 public mixed $table {
  	 	 get => $this->get_shared_meta(static::class);
 	 }
 
@@ -129,19 +129,19 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
      }
 
      private function create_shared_meta(string $class_name){
-     	 $table_info = new TableInfo();
-     	 $table_info->primary_key('id', config('primary_key_type')); //default primary key
-         $table_info->set_meta_defaults($class_name);
-         $this->model_setup($table_info);
-         self::$shared_meta[$class_name] = $table_info;
-         $table_info->add_audit_fields();
-         $table_info->clean_model_fields();
-         $table_info->set_unique_constraints();
+     	 $table = new Table();
+     	 $table->primary_key('id', config('primary_key_type')); //default primary key
+         $table->set_table_defaults($class_name);
+         $this->table_schema($table);
+         self::$shared_meta[$class_name] = $table;
+         $table->add_audit_fields();
+         $table->clean_model_fields();
+         $table->set_unique_constraints();
      }
 
      public function set_table_and_connection(?string $connection = null){
      	 [$connection_name, $table_name] = self::get_table_and_connection($connection);
-     	 $this->meta->set_table_and_connection($table_name, $connection_name);
+     	 $this->table->set_table_and_connection($table_name, $connection_name);
      }
 
      //method to ensure shared meta per class
@@ -156,7 +156,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
      }
 
      //abstract method that must be implemented by concrete classes to define fields
-     abstract protected function model_setup(TableInfo $meta): void;
+     abstract protected function table_schema(Table $table): void;
 
      //get the collection class for this model
      public static function collection_class() : string {
@@ -216,14 +216,14 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 	 }
 
 	 protected function save_model_files(array &$kwargs) {
-	     if(empty($this->meta->get_file_field_names())){
+	     if(empty($this->table->get_file_field_names())){
 	         return;
 	     }
 
 	     $model = strtolower((new ReflectionClass($this))->getShortName());
 	     $session = bin2hex(random_bytes(16));
 
-	     foreach($this->meta->get_file_field_names() as $ffn){
+	     foreach($this->table->get_file_field_names() as $ffn){
 
 	         if(!array_key_exists($ffn, $kwargs)){
 	             continue;
@@ -235,7 +235,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 	            continue;
 	         }
 
-             $field = $this->meta->get_clean_fields()[$ffn];
+             $field = $this->table->get_clean_fields()[$ffn];
 	         $files = is_array($value) ? $value : [$value];
 	         $refs  = [];
 
@@ -283,20 +283,20 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 	 	  * 3. Reset the file values in clean data to file names only
 	 	  * */
 	 	 $file_data = [];
-	 	 foreach($this->meta->get_file_field_names() as $ffn){
-	 	 	$db_col = $this->meta->get_field_column_refs()[$ffn];
+	 	 foreach($this->table->get_file_field_names() as $ffn){
+	 	 	$db_col = $this->table->get_field_column_refs()[$ffn];
 	 	 	#if the file exists.
 	 	 	if(isset($clean_data[$db_col]) && is_array($clean_data[$db_col])){
 	 	 		 $file_config = [
-	 	 		 	 'crop_dimensions'   => $this->meta->get_clean_fields()[$ffn]->crop_dimensions, 
-	 	 		     'resize_dimensions' => $this->meta->get_clean_fields()[$ffn]->resize_dimensions
+	 	 		 	 'crop_dimensions'   => $this->table->get_clean_fields()[$ffn]->crop_dimensions, 
+	 	 		     'resize_dimensions' => $this->table->get_clean_fields()[$ffn]->resize_dimensions
 	 	 		 ];
 
 	 	 		 //rename files
-	 	 		 $this->rename_uploaded_files($this->meta->get_clean_fields()[$ffn], $clean_data, $db_col, $data_state);
+	 	 		 $this->rename_uploaded_files($this->table->get_clean_fields()[$ffn], $clean_data, $db_col, $data_state);
 
 	 	 		 //get the file path
-	 	 		 $file_config['path'] = $this->meta->get_clean_fields()[$ffn]->path($data_state ? $data_state : $clean_data);
+	 	 		 $file_config['path'] = $this->table->get_clean_fields()[$ffn]->path($data_state ? $data_state : $clean_data);
 	 			 $file_data[$db_col] = (Object)['file' => $clean_data[$db_col], 'config' => $file_config];
 
 	 			 //reset the file value in clean data to file names only.
@@ -308,23 +308,23 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 
      private function assert_field_exists(string $field_name, bool $strict = false) : void {
      	 if($strict){
-     	 	 if(!array_key_exists($field_name, $this->meta->get_clean_fields())){
+     	 	 if(!array_key_exists($field_name, $this->table->get_clean_fields())){
      	 	     throw new Exception("The field: ".$field_name." does not exist on the model: ".$this::class);
      	     }
      	 }
 
-     	 if(!array_key_exists($field_name, $this->meta->get_clean_fields()) && !array_key_exists($field_name, $this->data)){
+     	 if(!array_key_exists($field_name, $this->table->get_clean_fields()) && !array_key_exists($field_name, $this->data)){
      	 	 throw new Exception("The field: ".$field_name." does not exist on the model: ".$this::class);
      	 }
      }
 
      private function render_field(string $name){
 
-     	 if(!array_key_exists($name, $this->meta->get_clean_fields())){
+     	 if(!array_key_exists($name, $this->table->get_clean_fields())){
      	 	 return $this->data[$name];
      	 }
 
-     	 $field = $this->meta->get_clean_fields()[$name];
+     	 $field = $this->table->get_clean_fields()[$name];
      	 $render_callback = $field->get_render_callback();
 
      	 if($render_callback){
@@ -351,7 +351,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
      public function __call(string $name, array $args){
 
      	 $this->assert_field_exists($name, true);
-     	 $field = $this->meta->get_clean_fields()[$name];
+     	 $field = $this->table->get_clean_fields()[$name];
      	 $field->value($this->data[$name]);
 
      	 return $field;
@@ -359,11 +359,11 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 
      public static function __callStatic(string $name, array $args){
      	 $model = self::make();
-     	 if(!array_key_exists($name, $model->meta->get_clean_fields())){
+     	 if(!array_key_exists($name, $model->table->get_clean_fields())){
      	 	 throw new Exception("The field: ".$field_name." does not exist on the model: ".$model::class);
      	 }
 
-     	 return $model->meta->get_clean_fields()[$name];
+     	 return $model->table->get_clean_fields()[$name];
      }
 
      /**
@@ -371,13 +371,13 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
       * and return the field or false otherwise
       * */
      public function is_relation_field(string $field){
-	 	 $relation_field_names = array_merge($this->meta->get_fk_field_names(), $this->meta->get_nav_field_names());
+	 	 $relation_field_names = array_merge($this->table->get_fk_field_names(), $this->table->get_nav_field_names());
 
 	 	 if(!in_array($field, $relation_field_names)){
 	 		 return false;
 	 	 }
 
-	 	 return $this->meta->get_clean_fields()[$field] ?? false;
+	 	 return $this->table->get_clean_fields()[$field] ?? false;
 	 }
 
 	 public function jsonSerialize() : mixed {
@@ -398,7 +398,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
       * */
      private function format_data(array $data, string $keytype = 'fields'){
      	 $formatted_values = [];
- 	     $db_columns = $this->meta->get_field_column_refs();
+ 	     $db_columns = $this->table->get_field_column_refs();
  	     $db_columns_flip = array_flip($db_columns);
 	 	 foreach($data as $k => $v){
 	 	 	 $field_name = null;
@@ -438,8 +438,8 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 
      	 $required_fields = [];
 
-     	 foreach($this->meta->get_clean_fields() as $f){
-     	 	 if(!in_array($f->get_name(), $this->meta->get_defined_field_names())){
+     	 foreach($this->table->get_clean_fields() as $f){
+     	 	 if(!in_array($f->get_name(), $this->table->get_defined_field_names())){
      	 	 	 continue;
      	 	 }
 
@@ -457,14 +457,14 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 
      private function fill_defaults(array &$data){
      	
-     	 foreach($this->meta->get_clean_fields() as $f){
-     	 	 if(!in_array($f->get_name(), $this->meta->get_defined_field_names())){
+     	 foreach($this->table->get_clean_fields() as $f){
+     	 	 if(!in_array($f->get_name(), $this->table->get_defined_field_names())){
      	 	 	 continue;
      	 	 }
 
      	 	 if(!array_key_exists($f->get_name(), $data)){
      	 	 	 if($f->is_primary()){
-     	 	 	 	 $data[$f->get_name()] = $this->meta->get_pk_type() === 'GUID' ? $this->guid() : 1;
+     	 	 	 	 $data[$f->get_name()] = $this->table->get_pk_type() === 'GUID' ? $this->guid() : 1;
      	 	 	 	 continue;
      	 	 	 }
 
@@ -473,18 +473,18 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
      	 }
 
      	 /*/Inject creator and modifier fields, created and modified date time fields and deleted fields
-	 	 if($this->meta->has_user_audit()){
-	 	 	 $data_to_save[$this->meta->get_created_by_field()] = $request->user->user_id ?? 0; #Id of current user
-	 	 	 $data_to_save[$this->meta->get_modified_by_field()] = $request->user->user_id ?? 0; #Id of current user
+	 	 if($this->table->has_user_audit()){
+	 	 	 $data_to_save[$this->table->get_created_by_field()] = $request->user->user_id ?? 0; #Id of current user
+	 	 	 $data_to_save[$this->table->get_modified_by_field()] = $request->user->user_id ?? 0; #Id of current user
 	 	 }
-	 	 if($this->meta->has_timestamps()){
-	 	 	 $data_to_save[$this->meta->get_created_at_field()] = time(); #current date time.
-	 	 	 $data_to_save[$this->meta->get_modified_at_field()] = time(); #Current date time
+	 	 if($this->table->has_timestamps()){
+	 	 	 $data_to_save[$this->table->get_created_at_field()] = time(); #current date time.
+	 	 	 $data_to_save[$this->table->get_modified_at_field()] = time(); #Current date time
 	 	 }
-	 	 if($this->meta->has_soft_delete()){
-	 	 	 $data_to_save[$this->meta->get_deleted_field()] = 0; #0 or 1, will be updated according to the operation
-	 	 	 $data_to_save[$this->meta->get_deleted_by_field()] = $request->user->user_id ?? 0; #Id of current user
-	 	 	 $data_to_save[$this->meta->get_deleted_at_field()] = time(); #current date and time stamp
+	 	 if($this->table->has_soft_delete()){
+	 	 	 $data_to_save[$this->table->get_deleted_field()] = 0; #0 or 1, will be updated according to the operation
+	 	 	 $data_to_save[$this->table->get_deleted_by_field()] = $request->user->user_id ?? 0; #Id of current user
+	 	 	 $data_to_save[$this->table->get_deleted_at_field()] = time(); #current date and time stamp
 	 	 }*/
      }
 
@@ -500,7 +500,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
       *                       the model
       * */
      private function assert_correct_fields(array $data){
-     	 $model_field_names = array_keys($this->meta->get_field_column_refs());
+     	 $model_field_names = array_keys($this->table->get_field_column_refs());
      	 foreach(array_keys($data) as $dk){
      	 	 if(!in_array($dk, $model_field_names)){
      	 		 throw new UndefinedFieldException('The key: '.$dk.' is not a field on this model!');
@@ -515,7 +515,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
      private function run_data_validation(array $data, bool $partial = false){
      	 
      	 foreach($data as $field_name => $field_value){
-     	 	 $field = $this->meta->get_clean_fields()[$field_name];
+     	 	 $field = $this->table->get_clean_fields()[$field_name];
      	 	 $validator = $field->validator();
 
      	 	 $result = $validator->validate($field_name, $field_value);
@@ -535,9 +535,9 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
          $this->run_data_validation($data, true);
 
          //strip the primary key field, navigtaional and virtual fields, and the deleted field
-	 	 unset($data[$this->meta->get_deleted_field()]);
-	 	 //unset($data[$this->meta->get_pk_name()]);
-	 	 $actual_fields = array_keys($this->meta->get_table_column_names());
+	 	 unset($data[$this->table->get_deleted_field()]);
+	 	 //unset($data[$this->table->get_pk_name()]);
+	 	 $actual_fields = array_keys($this->table->get_table_column_names());
 
          $clean_data = [];
      	 foreach(array_keys($data) as $_dk){
@@ -551,11 +551,11 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 	 	 $data = $this->format_data($data, 'columns');
 
 	 	 //Inject modifier and modified date time fields
-	 	 if($this->meta->has_user_audit()){
-	 	 	$data[$this->meta->get_modified_by_field()] = $request->user->user_id ?? 0; #Id of current user
+	 	 if($this->table->has_user_audit()){
+	 	 	$data[$this->table->get_modified_by_field()] = $request->user->user_id ?? 0; #Id of current user
 	 	 }
-	 	 if($this->meta->has_timestamps()){
-	 	 	 $data[$this->meta->get_modified_at_field()] = time(); #Current date time
+	 	 if($this->table->has_timestamps()){
+	 	 	 $data[$this->table->get_modified_at_field()] = time(); #Current date time
 	 	 }
 
 	 	 //Prepare file data.
@@ -622,20 +622,20 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
      	  * 2. Non defined field names - values will be added automatically
      	  *
      	  * */
-     	 $field_names = $instance->meta->get_defined_field_names();
+     	 $field_names = $instance->table->get_defined_field_names();
 
      	 //remove the primary key
-     	 $pk_index = array_search($instance->meta->get_pk_name(), $field_names);
+     	 $pk_index = array_search($instance->table->get_pk_name(), $field_names);
      	 unset($field_names[$pk_index]);
 
      	 //remove automaticly added fields
-	 	 foreach($instance->meta->get_audit_field_names() as $ndfn){
+	 	 foreach($instance->table->get_audit_field_names() as $ndfn){
 	 	 	 $ndf_index = array_search($ndfn, $field_names);
 	 	 	 unset($field_names[$ndf_index]);
 	 	 }
 
 	 	 //remove virtual fields
-	 	 foreach($instance->meta->get_virtual_field_names() as $vfn){
+	 	 foreach($instance->table->get_virtual_field_names() as $vfn){
 	 	 	 $vfn_index = array_search($vfn, $field_names);
 	 	 	 unset($field_names[$vfn_index]);
 	 	 }
@@ -736,31 +736,31 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 	 }
 
 	 public function get_connection_name(){
-	 	 return $this->meta->get_connection_name();
+	 	 return $this->table->get_connection_name();
 	 }
 
 	 public function get_table_name(){
-	 	 return $this->meta->get_table_name();
+	 	 return $this->table->get_table_name();
 	 }
 
      //get all the models that belong to the same schema as this one
 	 public function get_sibling_models(){
-	 	 $schema = config('schemas')[$this->meta->get_connection_name()];
+	 	 $schema = config('schemas')[$this->table->get_connection_name()];
 	 	 return new $schema()->get_models();
 	 }
 
 	 public function get_update_columns(){
 	 	 $exclude_fields = array_merge(
-	 	 	 $this->meta->get_unique_field_names(),
-	 	 	 [$this->meta->get_pk_name()],
-	 	 	 $this->meta->get_audit_field_names()
+	 	 	 $this->table->get_unique_field_names(),
+	 	 	 [$this->table->get_pk_name()],
+	 	 	 $this->table->get_audit_field_names()
 	 	 );
 
-	 	 $update_fields = array_diff(array_keys($this->meta->get_clean_fields()), $exclude_fields);
+	 	 $update_fields = array_diff(array_keys($this->table->get_clean_fields()), $exclude_fields);
 	 	 $update_columns = [];
 
 	 	 foreach($update_fields as $f){
-	 	 	 $update_columns[] = $this->meta->get_field_column_refs()[$f];
+	 	 	 $update_columns[] = $this->table->get_field_column_refs()[$f];
 	 	 }
 
 	 	 return $update_columns;

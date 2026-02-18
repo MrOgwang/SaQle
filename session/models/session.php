@@ -1,18 +1,20 @@
 <?php
 namespace SaQle\Session\Models;
 
-use SaQle\Orm\Entities\Field\Types\{Pk, CharField, TextField};
-use SaQle\Orm\Entities\Model\Schema\{Model, TableInfo};
+use SaQle\Orm\Entities\Model\Schema\{Model, Table};
 
-class Session extends Model{
-	 protected function model_setup(TableInfo $meta) : void{
-	 	 $meta->fields([
-	 	 	 'id'            => new Pk(),
-		     'session_id'    => new CharField(required: true, length: 100),
-		     'session_data'  => new TextField()
+class Session extends Model {
+
+	 protected function table_schema(Table $table) : void {
+	 	 
+	 	 $table->fields([
+		     'session_id' => char_field()->length(100)->required(),
+		     'session_data' => text_field()
 	 	 ]);
-	 	 $meta->with_user_audit(false);
-		 $meta->with_timestamps(false);
-		 $meta->with_soft_delete(false);
+
+	 	 $table->with_user_audit(false);
+		 $table->with_timestamps(false);
+		 $table->with_soft_delete(false);
 	 }
+
 }
