@@ -1,6 +1,7 @@
 <?php
 
 use SaQle\Core\FeedBack\FeedBack;
+use SaQle\Http\Response\HttpMessage;
 
 /**
  * The following are shortcuts to http message responses/feedback

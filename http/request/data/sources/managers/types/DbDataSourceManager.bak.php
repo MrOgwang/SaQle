@@ -51,8 +51,8 @@ class DbDataSourceManager extends DataSourceManager{
  	 	     	 return $modelclass::get()->where($column_name.'__in', is_array($refkey_value) ? $refkey_value : [$refkey_value])->all();
  	 	     }else{
  	 	     	 return $this->optional ? 
-	 	 	     $modelclass::get()->where($column_name, $refkey_value)->first_or_default() : 
-	 	 	     $modelclass::get()->where($column_name, $refkey_value)->first();
+	 	 	     $modelclass::get()->where($column_name, $refkey_value)->first_or_null() : 
+	 	 	     $modelclass::get()->where($column_name, $refkey_value)->first_or_fail();
  	 	     }
 	 	 }
 

@@ -8,7 +8,7 @@ class MigrationUtils {
 
      public static function is_schema_defined(string $schema_name){
 
-         $schema = config('schemas', [])[$schema_name] ?? null;
+         $schema = config('db.schemas', [])[$schema_name] ?? null;
 
          if(!$schema){
              return false;

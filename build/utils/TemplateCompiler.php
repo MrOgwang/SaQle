@@ -107,7 +107,7 @@ final class TemplateCompiler {
                      'meta'    => $all_meta
                  ], true);
 
-                 $filename = $templatename.'.'.config('component_template_ext');
+                 $filename = $templatename.'.'.config('app.component_template_ext');
                  $r['route']['templates'][$templatename] = path_join([config('base_path'), config('templates_cache_dir'), $filename]);
                  $templates_cache[$filename] = $compiled_template;
              }

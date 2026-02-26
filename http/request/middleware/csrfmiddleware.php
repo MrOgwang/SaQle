@@ -14,7 +14,7 @@ class CsrfMiddleware extends IMiddleware implements ScopedMiddleware{
          return [RequestIntent::WEB, RequestIntent::AJAX];
      }
 
-     public function handle(MiddlewareRequestInterface &$request){
+     public function handle(MiddlewareRequestInterface $request){
 
          //Generate CSRF token if not set
          $token_key      = CsrfMiddleware::get_token_key();

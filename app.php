@@ -2,7 +2,6 @@
 
 namespace SaQle;
 
-use SaQle\Core\Config\AppSetup;
 use SaQle\Core\Services\Container\Container;
 use SaQle\Core\Registries\{
     MiddlewareRegistry,
@@ -20,7 +19,7 @@ use SaQle\Core\Services\Providers\{
 };
 use SaQle\Http\Cors\CorsConfig;
 use SaQle\Core\Support\AppContext;
-use SaQle\Core\Config\{ConfigRepository, Config, ConfigBridge};
+use SaQle\Core\Config\{ConfigRepository, AppSetup};
 use SaQle\Http\Request\{Request, Runtime};
 use SaQle\Session\Providers\SessionProvider;
 use SaQle\Routes\Providers\RoutingProvider;
@@ -51,7 +50,6 @@ final class App {
 
          // 4. Load config
          $config = $setup->get_configurations();
-         ConfigBridge::expose($config);
 
          // 5. Remaining services
          $this->cors   = new CorsConfig($setup->cors);

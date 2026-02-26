@@ -150,7 +150,7 @@ class Migrate{
 
          echo "Confirming connection: {$snapshot_name} is defined!\n";
 
-         $defined_context = config('connections')[$snapshot_name] ?? null;
+         $defined_context = config('db.connections')[$snapshot_name] ?? null;
          if(!$defined_context){
              echo "Connection: {$snapshot_name} not defined! Exiting!.\n";
              return;
@@ -159,10 +159,10 @@ class Migrate{
          require_once $snapshot_path;
          $snapshot = new $snapshot_class();
         
-         $databasename = config('connections')[$snapshot_name]['database'];
+         $databasename = config('db.connections')[$snapshot_name]['database'];
          echo "Connection: {$snapshot_name} found! Pinging database: {$databasename} for existance!\n";
 
-         $dbdriver = Db::driver(connection: $snapshot_name);
+         $dbdriver = Db::using($snapshot_name)->driver();
          $isdbnew = false;
          if(!$dbdriver->check_database_exists()){
              echo "Database {$databasename} not found. Attempting to create database {$databasename}\n";
@@ -185,7 +185,7 @@ class Migrate{
          $recorded = Migration::get()
          ->where('migration_name__eq', $migration_name)
          ->where('migration_timestamp__eq', $migration_timestamp)
-         ->first_or_default();
+         ->first_or_null();
 
          if(!$recorded){
              $recorded = Migration::create([

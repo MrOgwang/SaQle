@@ -16,7 +16,7 @@ class QueryManager {
 
 	 public function __construct(IModel $model){
 	 	 $this->model = $model;
-	 	 $this->dbdriver = Db::driver($this->connection_name());
+	 	 $this->dbdriver = Db::using($this->connection_name())->driver();
 	 }
 
 	 public function sql(){

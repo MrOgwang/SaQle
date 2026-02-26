@@ -7,7 +7,7 @@ use SaQle\Http\Request\RequestIntentResolver;
 
 class RequestIntentMiddleware extends IMiddleware{
      
-     public function handle(MiddlewareRequestInterface &$request){
+     public function handle(MiddlewareRequestInterface $request){
 
          $request->intent = new RequestIntentResolver()->resolve($request);
 

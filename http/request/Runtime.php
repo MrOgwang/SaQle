@@ -10,7 +10,7 @@ use SaQle\Core\Exceptions\ExceptionMapper;
 
 class Runtime {
      private function bootstrap_request(Request $request) : Request {
-         date_default_timezone_set(config('default_timezone'));
+         date_default_timezone_set(config('app.timezone'));
          return (new MiddlewareGroup())->handle($request);
      }
 

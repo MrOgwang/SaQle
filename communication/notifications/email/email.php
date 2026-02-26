@@ -99,12 +99,12 @@ class Email implements INotification{
      * @param array $configurations
      */
 	 public function __construct(...$configurations){
-	 	 $this->host = config('email_host');
-	 	 $this->username = config('username');
-	 	 $this->password = config('email_password');
-	 	 $this->from_address = [config('email_sender_address'), config('email_sender_name')];
-	 	 $this->reply_to_address = [config('email_sender_address'), config('email_sender_name')];
-	 	 $this->port = (int)config('email_port');
+	 	 $this->host = config('email.host');
+	 	 $this->username = config('email.username');
+	 	 $this->password = config('email.password');
+	 	 $this->from_address = [config('email.sender_address'), config('email.sender_name')];
+	 	 $this->reply_to_address = [config('email.sender_address'), config('email.sender_name')];
+	 	 $this->port = (int)config('email.port');
 		 $this->to_address  = [$configurations['rec_email'], $configurations['rec_name']];
 		 $this->subject     = $configurations['subject'];
 		 $this->body        = [

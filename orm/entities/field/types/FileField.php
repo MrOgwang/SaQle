@@ -156,10 +156,8 @@ class FileField extends Field {
      }
 
      protected function validate_field_state(){
-         if($this->max_size && $this->min_size){
-             if($this->min_size > $this->max_size){
-                 $this->errors[] = "Minimum size cannot be more than the maximum size!";
-             }
+         if($this->max_size && $this->min_size && ($this->min_size > $this->max_size)){
+             $this->errors[] = "Minimum size cannot be more than the maximum size!";
          }
 
          parent::validate_field_state();

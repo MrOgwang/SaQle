@@ -74,7 +74,7 @@ trait EventUtils {
      	 	 'sql'           => $sql_info['sql'], 
      	 	 'prepared_data' => $sql_info['data'],
      	 	 'connection'    => $this->connection_name(),
-     	 	 'db'            => config('connections')[$this->connection_name()]['database'],
+     	 	 'db'            => config('db.connections')[$this->connection_name()]['database'],
      	 	 'timestamp'     => time(),
      	 	 'model'         => $model ?? $this->get_model_class()
 	 	 ];

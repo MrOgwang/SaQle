@@ -41,7 +41,7 @@ class Field implements IField {
 	 protected ColumnType $type;
 
 	 //the primitive type of the field
-	 #[ShouldValidate()]
+	 #[ShouldValidate('type')]
 	 protected ?string $native_type = null;
 
 	 //the default value or callable
@@ -228,6 +228,10 @@ class Field implements IField {
      	 }
 	 }
 
+	 public function get_errors(){
+	 	 return $this->errors;
+	 }
+
      public function is_state_valid(){
      	 return empty($this->errors) ? true : false;
      }
@@ -237,6 +241,10 @@ class Field implements IField {
      	 if(!$this->column){
      	 	 $this->column = $this->name;
      	 }
+
+     	 if($this->required === true){
+	 	 	 $this->nullable = false;
+	 	 }
      }
 
      protected function get_validation_rules() : array {
@@ -249,7 +257,11 @@ class Field implements IField {
      }
 
      public function validator(){
-     	 return new FieldValidator($this->get_validation_rules());
+     	 $rules = $this->get_validation_rules();
+     	 return new FieldValidator(
+     	 	 rules: array_filter($rules, fn($r) => $r !== null),
+     	 	 array: $this->multiple ?? false
+     	 );
      }
 
      public function build(string $name, string $model_class, string $model_pk){
@@ -257,9 +269,8 @@ class Field implements IField {
      	 $this->name = $name;
      	 $this->model_class = $model_class;
      	 $this->model_pk = $model_pk;
-     	 $this->validate_field_state();
 	 	 $this->initialize_defaults();
-	 	 
+	 	 $this->validate_field_state();
      }
 }
 

@@ -14,7 +14,7 @@
  * @pacakge SaQle
  * @author  Wycliffe Omondi Otieno <wycliffomondiotieno@gmail.com>
  * */
-namespace SaQle\Security\Validation;
+namespace SaQle\Security\Validation\Validators;
 
 use SaQle\Security\Validation\Types\ValidationResult;
 use SaQle\Security\Validation\Abstracts\{IValidator, AbstractDateValidator};

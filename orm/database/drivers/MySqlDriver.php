@@ -359,7 +359,6 @@ class MySqlDriver extends DbDriver {
       * field type
      * */
      protected function resolve_db_column_type(ColumnType $type, object $context) : string {
-
      	 if(ColumnType::INTEGER === $type){
      	 	 return match($context->size){
      	 	 	 'regular' => 'INT',
@@ -379,8 +378,9 @@ class MySqlDriver extends DbDriver {
      	 }
 
      	 if(ColumnType::TEXT === $type){
-     	 	 if($context->length)
-     	 	     return "VARCHAR(".$context->length.")";
+             $islength = $context->length ?? null;
+             if($islength)
+                 return "VARCHAR(".$islength.")";
 
      	 	 return match($context->size){
      	 	 	 'regular' => 'TEXT',

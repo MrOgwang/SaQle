@@ -27,13 +27,11 @@ final class ReadManager extends IReadManager {
 	 	 return $this->get(stack_active: true);
 	 }
 
-	 //return all the rows found
 	 public function all(){
 	 	 return $this->get();
 	 }
 
-	 //return the first row if its available otherwise throw an exception
-	 public function first(){
+	 public function first_or_fail(){
 	 	 $response = $this->get();
 	 	 if(!$response){
 	 	 	$table = $this->query_reference_map->find_table_name(0);
@@ -42,23 +40,20 @@ final class ReadManager extends IReadManager {
 	 	 return $response[0];
 	 }
 
-     //return the first row if its available otherwise return null
-	 public function first_or_default(){
+	 public function first_or_null(){
 	 	 $response = $this->get();
 	 	 return $response ? $response[0] : null;
 	 }
 
-     //reteurn the last row if its available otherwise throw an exception
-	 public function last(){
+	 public function last_or_fail(){
 	 	 $response = $this->get();
 	 	 if(!$response){
 	 	 	throw NullObjectException(['table' => $this->query_reference_map->find_table_name(0)]);
 	 	 }
 	 	 return $response[count($response) - 1];
 	 }
-
-	 //return the last row if its available otherwise return null
-	 public function last_or_default(){
+	 
+	 public function last_or_null(){
 	 	 $response = $this->get();
 	 	 return $response ? $response[count($response) - 1] : null;
 	 }

@@ -7,7 +7,7 @@ use SaQle\Core\Files\Storage\Storage;
 class StorageServiceProvider extends ServiceProvider {
      public function register(): void {
 
-         $config = config('media_storage_drivers');
+         $config = config('app.media_storage_drivers');
 
          foreach($config as $name => $storage){
              $driver_class = $storage['driver'];

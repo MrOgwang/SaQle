@@ -22,7 +22,7 @@ class FileResponse{
      }
 
      public function get(string $token){
-         $decoded = $this->decrypt($token, config('media_key'), 'media-url-salt');
+         $decoded = $this->decrypt($token, config('app.media_key'), 'media-url-salt');
          $file_data = json_decode($decoded);
          $file_name = $file_data->file_name;
          $file_path = $file_data->path;

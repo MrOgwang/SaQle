@@ -29,8 +29,8 @@ class BuildProject{
 
          //check app folders
          foreach ($this->watch_dirs as $dir){
-             foreach(config('installed_apps') as $app){
-                 $this->scan_dir( path_join([config('base_path'), 'apps', $app, $dir]), $files, $dir, $changed, $app);
+             foreach(config('app.modules') as $app){
+                 $this->scan_dir( path_join([config('base_path'), 'modules', $app, $dir]), $files, $dir, $changed, $app);
              }
          }
 
@@ -41,11 +41,14 @@ class BuildProject{
                  $this->manifest->remove($file);
              }
          }
-
+         
          return $files;
      }
 
-     protected function scan_dir(string $path, array &$files, string $dir, $changed, ?string $app = null): void{
+     protected function scan_dir(string $path, array &$files, string $dir, $changed, ?string $app = null): void {
+            if(!is_dir($path))
+                return;
+            
            $iterator = new RecursiveIteratorIterator(
                 new RecursiveDirectoryIterator($path)
            );

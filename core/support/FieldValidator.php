@@ -1,7 +1,7 @@
 <?php
 namespace SaQle\Core\Support;
 
-use SaQle\Security\Validation\Types\{FieldValidationResult, ValidationMode, RuleKey};
+use SaQle\Security\Validation\Types\{FieldValidationResult, ValidationMode};
 use SaQle\Security\Validation\Utils\ArrayItemValidator;
 use RuntimeException;
 
@@ -9,35 +9,34 @@ class FieldValidator {
 
      public function __construct(
          protected array $rules,
+         protected bool  $array = false,
          protected ValidationMode $mode = ValidationMode::COLLECT_ALL
      ){}
-
-     private function parse_rule_key(string $key): RuleKey {
-         if(str_ends_with($key, '.*')){
-             return new RuleKey(base: substr($key, 0, -2), is_wildcard: true);
-         }
-
-         return new RuleKey($key, false);
-     }
 
 	 public function validate(string $field, mixed $value) : FieldValidationResult {
 
          $errors = [];
 
-         $parsed = parse_rule_key($field);
-
-         if($parsed->is_wildcard){
+         if($this->array){
              if(!is_array($value)){
                  throw new RuntimeException("The value provided is not an array!");
              }
 
-             return (new ArrayItemValidator())->validate($field, $value, $rules);
+             return (new ArrayItemValidator())->validate($field, $value, $this->rules);
          }
 
-         foreach($this->rules as $r => $v){
-             $validator_class = app()->rules->get($r);
-             $validator = new $validator_class();
-             $result = $validator->validate($field, $v, $value, $rules);
+         $app = app();
+
+         foreach($this->rules as $rule => $threshold){
+
+             //Check if rule exists in registry
+             if(!$app->rules->has($rule)){
+                 throw new RuntimeException("Validator for rule '{$rule}' is not registered in the app.");
+             }
+
+             $validator_class = app()->rules->get($rule);
+             $validator = new $validator_class($field, $threshold);
+             $result = $validator->validate($value);
 
              if(!$result->isvalid){
                  $errors[] = $result->message;

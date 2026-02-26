@@ -1,6 +1,6 @@
 <?php
 
-namespace SaQle\Security\Validation;
+namespace SaQle\Security\Validation\Validators;
 
 use SaQle\Security\Validation\Abstracts\IValidator;
 use SaQle\Security\Validation\Types\ValidationResult;

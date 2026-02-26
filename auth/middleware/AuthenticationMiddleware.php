@@ -18,16 +18,25 @@ namespace SaQle\Auth\Middleware;
 
 use SaQle\Middleware\IMiddleware;
 use SaQle\Middleware\MiddlewareRequestInterface;
-use SaQle\Auth\Services\AuthService;
+use SaQle\Auth\Services\AuthenticationService;
+use SaQle\Core\Services\IService;
 
-class AuthenticationMiddleware extends IMiddleware{
-      public function handle(MiddlewareRequestInterface &$request){
-         $auth_service = resolve(AuthService::class);
-         $user = $auth_service->resolve_user();
+class AuthenticationMiddleware extends IMiddleware {
+     
+     private IService $auth_service;
+
+     public function __construct(){
+         $this->auth_service = resolve(AuthenticationService::class);
+     }
+
+     public function handle(MiddlewareRequestInterface $request){
+         
+         $user = $this->auth_service->resolve_user();
+
          if($user){
              $request->session->set('user', $user, true);
          }
          
          parent::handle($request);
-      }
+     }
 }

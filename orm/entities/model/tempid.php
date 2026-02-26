@@ -8,8 +8,8 @@ use SaQle\Orm\Entities\Model\Schema\Table;
 class TempId extends TempModel {
 	 protected function table_schema(Table $table) : void {
 	 	 $table->fields([
-	 	 	 'id' => new Pk(config('primary_key_type')),
-		     'id_value' => strtolower(config('primary_key_type')) === 'auto' ? 
+	 	 	 'id' => new Pk(config('model.pk_type')),
+		     'id_value' => strtolower(config('model.pk_type')) === 'auto' ? 
 		                   new IntegerField(required: true, unsigned: true, min: 1) : 
 		                   new CharField(required: true)
 	 	 ]);

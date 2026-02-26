@@ -5,7 +5,7 @@ namespace SaQle\Session;
 use SessionHandlerInterface;
 use SaQle\Session\Models\Session;
 
-abstract class SessionHandler implements SessionHandlerInterface{
+class SessionHandler implements SessionHandlerInterface{
 	 public function open($save_path, $session_id) : bool{
 		 return true;
 	 }
@@ -19,11 +19,11 @@ abstract class SessionHandler implements SessionHandlerInterface{
 		 return true;
      }
      public function read($session_id) : string{
-		 $data = Session::get()->where('session_id__eq', $session_id)->first_or_default();
+		 $data = Session::get()->where('session_id__eq', $session_id)->first_or_null();
 		 return $data ? $data->session_data : "";
      }
      public function write($session_id, $session_data) : bool{
-		 $data = Session::get()->where('session_id__eq', $session_id)->first_or_default();
+		 $data = Session::get()->where('session_id__eq', $session_id)->first_or_null();
 		 if(!$data){
 		 	 Session::create(['session_id' => $session_id, 'session_data' => $session_data])->now();
 		 }else{

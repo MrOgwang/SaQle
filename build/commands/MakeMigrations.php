@@ -318,7 +318,7 @@ class MakeMigrations {
 
      private function get_schema_snapshot($schema_name, $timestamp, $migration_name, $tracker){
 
-         $schemas = config('schemas', []);
+         $schemas = config('db.schemas', []);
          if($schema_name){
              $schemas = [$schema_name => $schemas[$schema_name]];
          }
@@ -327,7 +327,7 @@ class MakeMigrations {
          $snapshot_records = [];
 
          foreach($schemas as $s_name => $s_class){
-             $dbdriver = Db::driver(connection: $s_name);
+             $dbdriver = Db::using($s_name)->driver();
              
              /**
               * If a specific schema name was provided, it has been vallidated by the time
@@ -350,7 +350,7 @@ class MakeMigrations {
              $unique_constraints = $this->extract_unique_constraints($models);
              $last_unique_constraints = [];
 
-             $connection_params = config('connections')[$s_name];
+             $connection_params = config('db.connections')[$s_name];
              $connection_params['database'] = ''; //we are connecting without a database, therefore set the database name to empty string
 
              $connection = resolve(Connection::class, $connection_params);
@@ -368,7 +368,7 @@ class MakeMigrations {
 
              try{
                  $sql = "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?";
-                 $data = [config('connections')[$s_name]['database']];
+                 $data = [config('db.connections')[$s_name]['database']];
                  $statement = $this->execute_pdo($connection, $sql, $data)['statement'];
                  $object = $statement->fetchObject(); 
 
@@ -377,7 +377,7 @@ class MakeMigrations {
                      $last_migration = Migration::get()
                      ->order(fields: ['migration_timestamp'], direction: 'DESC')
                      ->limit(page: 1, records: 1)
-                     ->first_or_default();
+                     ->first_or_null();
 
                      if($last_migration){
 

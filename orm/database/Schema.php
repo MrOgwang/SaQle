@@ -70,22 +70,22 @@ abstract class Schema {
       * */
      private function get_framework_models(){
      	 //is framework connection set?
-     	 $connection = config('framework_connection');
+     	 $connection = config('db.framework_connection');
 
      	 //if not, use the default connection
      	 if(!$connection){
-     	 	 $connection = config('default_connection');
+     	 	 $connection = config('db.default_connection');
      	 }
 
      	 //if default connection is not set, use the first connection
-     	 $connection = array_keys(config('connections'))[0] ?? '';
+     	 $connection = array_keys(config('db.connections'))[0] ?? '';
 
      	 //if there is still no connection, fail loudly!
      	 if(!$connection){
      	 	 throw new RuntimeException('Please define at least one database connection for this project!');
      	 }
 
-     	 $schema_class = config('schemas')[$connection];
+     	 $schema_class = config('db.schemas')[$connection];
 
      	 if($schema_class === get_class($this)){
      	 	 return [

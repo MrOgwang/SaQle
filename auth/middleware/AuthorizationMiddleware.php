@@ -10,7 +10,7 @@ use SaQle\Core\Exceptions\Http\UnauthorizedException;
 */
 class AuthorizationMiddleware extends IMiddleware{
      
-      public function handle(MiddlewareRequestInterface &$request){
+      public function handle(MiddlewareRequestInterface $request){
            
            if(!AuthorizationEvaluator::authorize($request->route->guards ?? [])){
                 throw new UnauthorizedException('Unauthorized');

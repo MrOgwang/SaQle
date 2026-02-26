@@ -2,8 +2,6 @@
 namespace SaQle\Build\Commands;
 
 use ReflectionClass;
-use RecursiveIteratorIterator;
-use RecursiveDirectoryIterator;
 use SaQle\Orm\Entities\Model\Schema\Model;
 
 final class MakeResources {
@@ -11,8 +9,8 @@ final class MakeResources {
      public static function execute(string $projectroot){
 
          $model_dirs = [$projectroot.'/models'];
-         foreach(config('installed_apps') as $f){
-             $model_dirs[] = $projectroot."/apps/".$f."/models";
+         foreach(config('app.modules') as $f){
+             $model_dirs[] = $projectroot."/modules/".$f."/models";
          }
          
          $generated_models = [];
@@ -96,7 +94,7 @@ final class MakeResources {
                      return false;
                  }
 
-                 $ref = new \ReflectionClass($class);
+                 $ref = new ReflectionClass($class);
 
                  // must be concrete
                  if ($ref->isAbstract()) {

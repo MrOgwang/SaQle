@@ -129,7 +129,7 @@ class MakeThroughs{
       }
 
       private function make_throughs(){
-         $schemas = config('schemas');
+         $schemas = config('db.schemas');
          $manytomany_throughs = [];
 
          foreach($schemas as $schema_name => $schema_class){

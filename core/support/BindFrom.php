@@ -67,10 +67,22 @@ class BindFrom {
 	 	 get => $this->embedded;
 	 }
 
-	 public function __construct(string $from, string $key = '', ?bool $embedded = null){
-	 	 $this->from     = $from;
+	 /**
+	  * The validation rules to be used for valiadtion
+	  * */
+	 public array $rules = [] {
+	 	 set(array $value){
+	 	 	 $this->rules = $value;
+	 	 }
+
+	 	 get => $this->rules;
+	 }
+
+	 public function __construct(string $source, string $key = '', array $rules = [], ?bool $embedded = null){
+	 	 $this->from     = $source;
 	 	 $this->key      = $key;
 	 	 $this->embedded = $embedded;
+	 	 $this->rules = $rules;
 	 }
 
 	 public function set_key(string $key, bool $update = false){

@@ -16,7 +16,7 @@ use SaQle\Middleware\MiddlewareRequestInterface;
 use SaQle\Core\Files\UploadedFile;
 
 class DataMiddleware extends IMiddleware {
-     public function handle(MiddlewareRequestInterface &$request){
+     public function handle(MiddlewareRequestInterface $request){
          $data = [];
 
          //1. Query parameters (GET)

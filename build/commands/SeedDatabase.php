@@ -12,7 +12,7 @@ class SeedDatabase {
      }
 
      public function seed_database(){
-         $db_seeder = config('db_seeder');
+         $db_seeder = config('db.seeder');
          if($db_seeder !== ''){
              $seeds = $db_seeder::get_seeds();
              foreach($seeds as $c => $seed){

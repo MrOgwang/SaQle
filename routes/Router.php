@@ -291,7 +291,7 @@ final class Router {
 
      public static function find_matching_route(string $method, string $uri): ?array{
         // Merge all prefixes
-        $all_prefixes = array_merge(config('api_url_prefixes'), config('sse_url_prefixes'));
+        $all_prefixes = array_merge(config('app.api_url_prefixes'), config('app.sse_url_prefixes'));
 
         // Get all compiled routes from your registry
         $compiled_routes = RouteRegistry::all();

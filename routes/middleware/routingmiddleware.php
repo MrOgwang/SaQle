@@ -26,7 +26,7 @@ use SaQle\Core\Exceptions\Http\NotAcceptableException;
 
 class RoutingMiddleware extends IMiddleware{
      
-     public function handle(MiddlewareRequestInterface &$request){
+     public function handle(MiddlewareRequestInterface $request){
          //find matching route
          $match = Router::find_matching_route($request->method(), $request->uri());
 

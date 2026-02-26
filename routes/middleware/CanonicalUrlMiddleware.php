@@ -34,7 +34,7 @@ final class CanonicalUrlMiddleware extends IMiddleware implements ScopedMiddlewa
          return [RequestIntent::WEB]; //Only canonicalize web requests
      }
 
-     public function handle(MiddlewareRequestInterface &$request){
+     public function handle(MiddlewareRequestInterface $request){
          //only safe methods
          if(!in_array($request->method(), ['GET', 'HEAD'])) {
              parent::handle($request);

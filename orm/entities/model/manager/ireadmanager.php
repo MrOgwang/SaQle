@@ -136,7 +136,7 @@ class IReadManager extends QueryManager {
 		 $this->register_to_context_tracker(
 		 	 table_name:    $table,
 		 	 table_aliase:  !is_null($as) ? $as : "",
-		 	 database_name: config('connections')[$this->model->table->get_connection_name()]['database'],
+		 	 database_name: config('db.connections')[$this->model->table->get_connection_name()]['database'],
 		 	 field_list:    $model->table->get_table_column_names(),
 		 	 ff_settings:   $model->table->get_file_required_fields(),
 		 	 table_ref:     $tblref

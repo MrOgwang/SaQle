@@ -84,16 +84,12 @@ class NumericField extends Field {
 	 }
 
 	 protected function validate_field_state(){
-	 	 if($this->max && $this->min){
-	 	 	 if($this->min > $this->max){
-	 	 	 	 $this->errors[] = "Minimum cannot be more than maximum!";
-	 	 	 }
+	 	 if($this->max && $this->min && ($this->min > $this->max)){
+	 	 	 $this->errors[] = "Minimum cannot be more than maximum!";
      	 }
 
-     	 if($this->max && $this->step){
-	 	 	 if($this->step > $this->max){
-	 	 	 	 $this->errors[] = "The step count cannot be more than maximum!";
-	 	 	 }
+     	 if($this->max && $this->step && ($this->step > $this->max)){
+     	 	 $this->errors[] = "The step count cannot be more than maximum!";
      	 }
 
      	 parent::validate_field_state();

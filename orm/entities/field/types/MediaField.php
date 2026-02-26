@@ -127,32 +127,28 @@ class MediaField extends FileField {
 	 }
 
 	 protected function validate_field_state(){
-	 	 if($this->height && $this->max_height){
+	 	 if($this->height && $this->max_height && ($this->height !== $this->max_height)){
 	 	 	 $this->errors[] = "Having height and maximum height at the same time is ambigous!";
 	 	 }
 
-	 	 if($this->height && $this->min_height){
+	 	 if($this->height && $this->min_height && ($this->height !== $this->min_height)){
 	 	 	 $this->errors[] = "Having height and minimum height at the same time is ambigous!";
 	 	 }
 
-	 	 if($this->width && $this->max_width){
+	 	 if($this->width && $this->max_width && ($this->width !== $this->max_width)){
 	 	 	 $this->errors[] = "Having width and maximum width at the same time is ambigous!";
 	 	 }
 
-	 	 if($this->width && $this->min_width){
+	 	 if($this->width && $this->min_width && ($this->width !== $this->min_width)){
 	 	 	 $this->errors[] = "Having width and minimum width at the same time is ambigous!";
 	 	 }
 
-	 	 if($this->max_height && $this->min_height){
-	 	 	 if($this->min_height > $this->max_height){
-	 	 	 	 $this->errors[] = "Minimum height cannot be more than the maximum height!";
-	 	 	 }
+	 	 if($this->max_height && $this->min_height && ($this->min_height > $this->max_height)){
+	 	 	 $this->errors[] = "Minimum height cannot be more than the maximum height!";
      	 }
 
-     	 if($this->max_width && $this->min_width){
-	 	 	 if($this->min_width > $this->max_width){
-	 	 	 	 $this->errors[] = "Minimum width cannot be more than the maximum width!";
-	 	 	 }
+     	 if($this->max_width && $this->min_width && ($this->min_width > $this->max_width)){
+     	 	 $this->errors[] = "Minimum width cannot be more than the maximum width!";
      	 }
 
      	 parent::validate_field_state();

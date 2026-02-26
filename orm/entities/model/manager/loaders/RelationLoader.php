@@ -60,7 +60,7 @@ final class RelationLoader {
 
      public function load(string $connection, array | ModelCollection $parents, RelationField $relation, mixed $nested, mixed $tuning, RelationStack $relation_stack){
 
-         $driver = Db::driver($connection);
+         $driver = Db::using($connection)->driver();
 
          if($driver->supports_window_functions()){
              return $this->load_with_window_function($connection, $parents, $relation, $nested, $tuning, $relation_stack);

@@ -8,7 +8,7 @@ use RuntimeException;
 final class StorageFactory {
 
      public static function make(string $name): Storage {
-         $config = config('media_storage_drivers')[$name] ?? null;
+         $config = config('app.media_storage_drivers')[$name] ?? null;
 
          //Framework default
          if(!$config){

@@ -32,7 +32,7 @@ final class Resource {
 
         // If :id is present, fetch single resource
         if (!empty($request->params['id'])) {
-            $record = $query->where('id', $request->params['id'])->first();
+            $record = $query->where('id', $request->params['id'])->first_or_fail();
             if (!$record) {
                 return ['error' => 'Resource not found', 'status' => 404];
             }
@@ -67,7 +67,7 @@ final class Resource {
          $data = $request->data;
 
          if (!empty($request->params['id'])) {
-            $record = $model_class::get()->where('id', $request->params['id'])->first();
+            $record = $model_class::get()->where('id', $request->params['id'])->first_or_fail();
             if (!$record) {
                 return ['error' => 'Resource not found', 'status' => 404];
             }
@@ -95,7 +95,7 @@ final class Resource {
          $model_class = $this->resolve_model($request);
 
          if (!empty($request->params['id'])) {
-             $record = $model_class::get()->where('id', $request->params['id'])->first();
+             $record = $model_class::get()->where('id', $request->params['id'])->first_or_fail();
              if (!$record) {
                 return ['error' => 'Resource not found', 'status' => 404];
              }
@@ -166,7 +166,7 @@ final class Resource {
      }
 
      private function fetch_relationship($query, $id, string $relationship){
-         $record = $query->where('id', $id)->first();
+         $record = $query->where('id', $id)->first_or_fail();
          if (!$record) {
              return ['error' => 'Resource not found', 'status' => 404];
          }

@@ -13,7 +13,7 @@ final class EventCompiler {
          //get listener directories
          $listener_dirs = [path_join([$base_path, 'listeners'])];
 
-         foreach(config('installed_apps') as $app){
+         foreach(config('app.modules') as $app){
              $listener_dirs[] = path_join([$base_path, 'apps', $app, 'listeners']);
          }
 

@@ -54,10 +54,8 @@ class DateTimeField extends TemporalField {
      }
 
      protected function validate_field_state(){
-         if($this->max_datetime && $this->min_datetime){
-             if($this->min_datetime > $this->max_datetime){
-                 $this->errors[] = "Minimum date and time cannot be more than the maximum date and time!";
-             }
+         if($this->max_datetime && $this->min_datetime && ($this->min_datetime > $this->max_datetime)){
+             $this->errors[] = "Minimum date and time cannot be more than the maximum date and time!";
          }
 
          parent::validate_field_state();

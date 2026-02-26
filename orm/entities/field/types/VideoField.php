@@ -57,18 +57,16 @@ class VideoField extends MediaField {
 	 }
 
 	 protected function validate_field_state(){
-	 	 if($this->duration && $this->max_duration){
+	 	 if($this->duration && $this->max_duration && ($this->duration !== $this->max_duration)){
 	 	 	 $this->errors[] = "Having duration and maximum duration at the same time is ambigous!";
 	 	 }
 
-	 	 if($this->duration && $this->min_duration){
+	 	 if($this->duration && $this->min_duration && ($this->duration !== $this->min_duration)){
 	 	 	 $this->errors[] = "Having duration and minimum duration at the same time is ambigous!";
 	 	 }
 
-	 	 if($this->max_duration && $this->min_duration){
-	 	 	 if($this->min_duration > $this->max_duration){
-	 	 	 	 $this->errors[] = "Minimum duration cannot be more than the maximum duration!";
-	 	 	 }
+	 	 if($this->max_duration && $this->min_duration && ($this->min_duration > $this->max_duration)){
+	 	 	 $this->errors[] = "Minimum duration cannot be more than the maximum duration!";
      	 }
 
      	 parent::validate_field_state();

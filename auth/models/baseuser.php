@@ -2,20 +2,21 @@
 namespace SaQle\Auth\Models;
 
 use SaQle\Orm\Entities\Model\Schema\{Model, Table};
-use SaQle\Auth\Models\Interfaces\IUser;
 use SaQle\Auth\Guards\Guard;
+use SaQle\Auth\interfaces\UserInterface;
 
-class BaseUser extends Model implements IUser {
+class BaseUser extends Model implements UserInterface {
 
 	 protected function table_schema(Table $table) : void {
 
 	 	 $table->primary_key('user_id');
 
 		 $table->fields([
-		     'first_name' => char_field()->required(),
-		     'last_name'  => char_field()->required(),
-		     'username'   => char_field()->required(),
-		     'password'   => password_field()->required(),
+		     'first_name'   => char_field()->required(),
+		     'last_name'    => char_field()->required(),
+		     'username'     => char_field()->required(),
+		     'password'     => password_field()->required(),
+		     'is_superuser' => boolean_field()->required(),
 		 ]);
 	 }
 

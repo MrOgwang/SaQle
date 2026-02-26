@@ -1,11 +1,11 @@
 <?php
 namespace SaQle\Auth\Strategies;
 
-use SaQle\Auth\Strategies\Interfaces\LoginStrategy;
-use SaQle\Auth\Models\Interfaces\IUser;
+use SaQle\Auth\Interfaces\LoginStrategyInterface;
+use SaQle\Auth\Interfaces\UserInterface;
 
-class PasswordLoginStrategy implements LoginStrategy {
-     public function authenticate(array $credentials): ?IUser {
+class PasswordLoginStrategy implements LoginStrategyInterface {
+     public function authenticate(array $credentials): ?UserInterface {
          $username = $credentials['username'] ?? null;
          $password = $credentials['password'] ?? null;
 
@@ -13,8 +13,8 @@ class PasswordLoginStrategy implements LoginStrategy {
 
          $password = md5($password);
 
-         $user_model = config('auth_model_class');
-         return $user_model::get()->select(['user_id'])->where('password__eq', $password)->where('username__eq', $username)->limit(1, 1)->first_or_default();
+         $user_model = config('auth.model_class');
+         return $user_model::get()->select(['user_id'])->where('password__eq', $password)->where('username__eq', $username)->limit(1, 1)->first_or_null();
 
          return $user;
      }

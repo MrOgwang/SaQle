@@ -1,11 +1,11 @@
 <?php
 namespace SaQle\Auth\Strategies;
 
-use SaQle\Auth\Strategies\Interfaces\LoginStrategy;
-use SaQle\Auth\Models\Interfaces\IUser;
+use SaQle\Auth\Interfaces\LoginStrategyInterface;
+use SaQle\Auth\Interfaces\UserInterface;
 
-class GoogleLoginStrategy implements LoginStrategy {
-    public function authenticate(array $credentials): ?IUser {
+class GoogleLoginStrategy implements LoginStrategyInterface {
+    public function authenticate(array $credentials): ?UserInterface {
         $idToken = $credentials['id_token'] ?? null;
         if (!$idToken) return null;
 

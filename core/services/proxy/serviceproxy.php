@@ -8,8 +8,9 @@ use SaQle\Core\Events\EventMetadata;
 use SaQle\Core\Events\Event;
 use SaQle\Core\Events\GenericEvent;
 use SaQle\Http\Request\Request;
+use SaQle\Core\Services\IService;
 
-final class ServiceProxy {
+final class ServiceProxy implements IService {
 
      public function __construct(
          private object $target,
@@ -19,6 +20,7 @@ final class ServiceProxy {
 
      public function __call(string $method, array $args): mixed {
          $ref_method = new ReflectionMethod($this->target, $method);
+         
          $context = new EventContext(
              service: $this->target,
              method: $method,

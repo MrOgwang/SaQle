@@ -6,9 +6,9 @@ use SaQle\Http\Response\Types\RedirectResponse;
 use SaQle\Http\Request\Data\Session;
 use SaQle\Core\Config\ConfigRepository;
 use SaQle\Http\Request\Request;
-use SaQle\Core\Support\AppContext;
+use SaQle\Core\Support\{Directory, AppContext};
+use SaQle\Core\Events\{EventBus, Event};
 use SaQle\App;
-use Exception;
 
 if(!function_exists('app')){
      function app() : App {
@@ -93,7 +93,7 @@ if(!function_exists('redirect')){
 
 if(!function_exists('import_routes')){
      function import_routes(string $app, string $type = 'web'){
-         $path = config('base_path').'/apps/'.$app.'/routes/'.$type.'.php';
+         $path = config('base_path').'/modules/'.$app.'/routes/'.$type.'.php';
          if(file_exists($path)){
              return require $path;
          }
@@ -191,5 +191,18 @@ if (!function_exists('saqle_validate')){
         // Return boolean only
         return $result->isvalid;
     }
+}
+
+if(!function_exists('saqle_dir')){
+     function saqle_dir(): Directory {
+         return new Directory();
+     }
+}
+
+if(!function_exists('event')){
+     function event(Event $event) : void {
+         $bus = resolve(EventBus::class);
+         $bus->dispatch($event);
+     }
 }
 

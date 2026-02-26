@@ -21,7 +21,7 @@ use SaQle\Middleware\MiddlewareRequestInterface;
 use SaQle\App;
 
 class CorsMiddleware extends IMiddleware{
-      public function handle(MiddlewareRequestInterface &$request){
+      public function handle(MiddlewareRequestInterface $request){
            $app         = app();
            $origins     = $app->cors->get_origins();
            $headers     = $app->cors->get_headers();

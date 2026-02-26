@@ -33,10 +33,8 @@ class DateField extends TemporalField {
      }
 
      protected function validate_field_state(){
-         if($this->max_date && $this->min_date){
-             if($this->min_date > $this->max_date){
-                 $this->errors[] = "Minimum date cannot be more than the maximum date!";
-             }
+         if($this->max_date && $this->min_date && ($this->min_date > $this->max_date)){
+             $this->errors[] = "Minimum date cannot be more than the maximum date!";
          }
 
          parent::validate_field_state();

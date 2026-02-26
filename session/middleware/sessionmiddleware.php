@@ -12,7 +12,7 @@ class SessionMiddleware extends IMiddleware implements ScopedMiddleware{
          return [RequestIntent::WEB, RequestIntent::AJAX];
      }
 
-     public function handle(MiddlewareRequestInterface &$request){
+     public function handle(MiddlewareRequestInterface $request){
          
          if(session_status() === PHP_SESSION_NONE){
              session_start();

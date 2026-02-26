@@ -4,8 +4,8 @@ namespace SaQle\Build\Commands;
 class ResetDatabase {
      
      public function reset_database(){
-         foreach(config('connections') as $connection_name => $params){
-             $schema = config('schemas')[$connection_name];
+         foreach(config('db.connections') as $connection_name => $params){
+             $schema = config('db.schemas')[$connection_name];
              $schema_instance = new $schema();
              $models = $schema_instance->get_models();
              foreach($models as $table_name => $modelclass){

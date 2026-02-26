@@ -58,7 +58,7 @@ class ConnectionConfig {
 	}
 
 	public static function from_connection(string $connection){
-		$db_config = config('connections')[$connection];
+		$db_config = config('db.connections')[$connection];
 		return new static(
 			 driver: $db_config['driver'], 
 		     database: $db_config['database'], 

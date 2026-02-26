@@ -2,10 +2,10 @@
 
 namespace SaQle\Core\Ui;
 
-use SaQle\Auth\Models\Interfaces\IUser;
+use SaQle\Auth\Interfaces\UserInterface;
 use DOMDocument;
 
-class View{
+class View {
 
      private string $content;
 
@@ -82,7 +82,7 @@ class View{
      }
 
      private function css_names_to_links(array $names){
-         $path  = config('root_domain')."static/css/";
+         $path  = config('app.root_domain')."static/css/";
          $links = [];
          foreach ($names as $n){
              $css_file_path = $path.$n.".css";
@@ -91,7 +91,7 @@ class View{
          return $links;
      }
      private function js_names_to_links(array $names){
-         $path = config('root_domain')."static/js/";
+         $path = config('app.root_domain')."static/js/";
          $links = [];
          foreach ($names as $n){
              $js_file_path = $path.$n.".js";

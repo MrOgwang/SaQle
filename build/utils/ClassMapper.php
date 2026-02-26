@@ -83,11 +83,11 @@ class ClassMapper{
           * */
          $components_dirs = [path_join([config('base_path'), 'components'])];
 
-         foreach(config('installed_apps') as $f){
-             $components_dirs[] = path_join([config('base_path'), 'apps', $f, 'components']);
+         foreach(config('app.modules') as $f){
+             $components_dirs[] = path_join([config('base_path'), 'modules', $f, 'components']);
          }
 
-         foreach(config('extra_components_dirs') as $d){
+         foreach(config('app.extra_components_dirs') as $d){
              $components_dirs[] = path_join([config('base_path'), $d]);
          }
 
@@ -102,18 +102,21 @@ class ClassMapper{
          $components = [];
 
          foreach($components_dirs as $dir){
+             if(!is_dir($dir))
+                 continue;
+             
              $dir_iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir));
              foreach($dir_iterator as $file){
                  if($file->isFile()){
                      $component_name = str_replace(".php", "", $file->getFilename());
-                     $component_name = str_replace(".".config('component_template_ext'), "", $component_name);
+                     $component_name = str_replace(".".config('app.component_template_ext'), "", $component_name);
                      $path           = $file->getRealPath();
 
                      if(!isset($components[$component_name])){
                          $components[$component_name] = ['controller' => '', 'controller_path' => '', 'template_path' => ''];
                      }
 
-                     if($file->getExtension() === config('component_template_ext')){
+                     if($file->getExtension() === config('app.component_template_ext')){
                          $components[$component_name]['template_path'] = $path;
                      }elseif($file->getExtension() === 'php'){
                          $components[$component_name]['controller_path'] = $path;
@@ -150,11 +153,11 @@ class ClassMapper{
           * */
          $models_dirs = [path_join([config('base_path'), 'models'])];
 
-         foreach(config('installed_apps') as $f){
-             $models_dirs[] = path_join([config('base_path'), 'apps', $f, 'models']);
+         foreach(config('app.modules') as $f){
+             $models_dirs[] = path_join([config('base_path'), 'modules', $f, 'models']);
          }
 
-         foreach(config('extra_models_dirs') as $d){
+         foreach(config('app.extra_models_dirs') as $d){
              $models_dirs[] = path_join([config('base_path'), $d]);
          }
 
@@ -165,6 +168,9 @@ class ClassMapper{
          $models = [];
 
          foreach($models_dirs as $dir){
+             if(!is_dir($dir))
+                 continue;
+
              $dir_iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir));
              foreach($dir_iterator as $file){
                  if($file->isFile() && $file->getExtension() === 'php'){

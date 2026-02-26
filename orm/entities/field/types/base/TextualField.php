@@ -86,18 +86,16 @@ class TextualField extends Field {
 	 }
 
 	 protected function validate_field_state(){
-	 	 if($this->length && $this->max_length){
+	 	 if($this->length && $this->max_length && ($this->length !== $this->max_length)){
 	 	 	 $this->errors[] = "Having length and maximum length at the same time is ambigous!";
 	 	 }
 
-	 	 if($this->length && $this->min_length){
+	 	 if($this->length && $this->min_length && ($this->length !== $this->min_length)){
 	 	 	 $this->errors[] = "Having length and minimum length at the same time is ambigous!";
 	 	 }
 
-	 	 if($this->max_length && $this->min_length){
-	 	 	 if($this->min_length > $this->max_length){
-	 	 	 	 $this->errors[] = "Minimum length cannot be more than the maximum length!";
-	 	 	 }
+	 	 if($this->max_length && $this->min_length && ($this->min_length > $this->max_length)){
+	 	 	 $this->errors[] = "Minimum length cannot be more than the maximum length!";
      	 }
 
      	 if($this->required && $this->blank){
@@ -108,22 +106,22 @@ class TextualField extends Field {
 	 }
 
 	 protected function initialize_defaults(){
+
+	 	 if(!$this->native_type){
+     	 	 $this->native_type = "string";
+     	 }
+
 	 	 if($this->length){
 	 	 	 $this->max_length = $this->length;
 	 	 	 $this->min_length = $this->length;
 	 	 }
 
+	 	 if($this->required === true){
+	 	 	 $this->blank = false;
+	 	 }
+
 	 	 parent::initialize_defaults();
      }
-
-     protected function initialize_defaults(){
-     	 
-     	 if(!$this->native_type){
-     	 	 $this->native_type = "string";
-     	 }
-
-     	 parent::initialize_defaults();
-     	 
-     }
+     
 }
 

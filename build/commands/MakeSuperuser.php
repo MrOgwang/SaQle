@@ -4,7 +4,7 @@ namespace SaQle\Build\Commands;
 class MakeSuperuser{
      
      private function make_superuser(string $project_root, $email, $password){
-         $model_class_schema = config('auth_model_class');
+         $model_class_schema = config('auth.model_class');
          $model_class        = $model_class_schema;
          $user               = (new $model_class(...[
             'username'       => $email,

@@ -130,7 +130,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 
      private function create_shared_meta(string $class_name){
      	 $table = new Table();
-     	 $table->primary_key('id', config('primary_key_type')); //default primary key
+     	 $table->primary_key('id', config('model.pk_type')); //default primary key
          $table->set_table_defaults($class_name);
          $this->table_schema($table);
          self::$shared_meta[$class_name] = $table;
@@ -198,12 +198,13 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
      }
 
 	 public static function get_table_and_connection(?string $connection = null){
-	 	 $connection = $connection ?? config('default_connection');
+	 	 $connection = ($connection ?? config('db.default_connection')) ?? array_keys(config('db.connections'), [])[0] ?? '';
+
 	 	 if(!$connection || !MigrationUtils::is_schema_defined($connection)){
 	 	 	 throw new Exception("Please provide a valid database connection name!");
 	 	 }
 
-         $schema = $schema = config('schemas')[$connection];
+         $schema = $schema = config('db.schemas')[$connection];
          $schema_instance = new $schema();
          $models = $schema_instance->get_models();
          $model_classes = array_values($models);
@@ -518,7 +519,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
      	 	 $field = $this->table->get_clean_fields()[$field_name];
      	 	 $validator = $field->validator();
 
-     	 	 $result = $validator->validate($field_name, $field_value);
+     	 	 //$result = $validator->validate($field_name, $field_value);
      	 }
 
      	 return true;
@@ -662,7 +663,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
      private static function get_model_setup(){
      	 $model = get_called_class();
      	 $model_instance = $model::make();
-     	 return $model_instance->meta;
+     	 return $model_instance->table;
      }
 
      //get all the model fields
@@ -745,7 +746,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 
      //get all the models that belong to the same schema as this one
 	 public function get_sibling_models(){
-	 	 $schema = config('schemas')[$this->table->get_connection_name()];
+	 	 $schema = config('db.schemas')[$this->table->get_connection_name()];
 	 	 return new $schema()->get_models();
 	 }
 

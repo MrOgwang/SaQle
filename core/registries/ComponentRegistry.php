@@ -105,7 +105,7 @@ final class ComponentRegistry {
 
              $extension = pathinfo($template_path, PATHINFO_EXTENSION);
 
-             $template_ext = config('component_template_ext');
+             $template_ext = config('app.component_template_ext');
 
              if (strtolower($extension) !== strtolower($template_ext)) {
                  throw new InvalidArgumentException("Invalid template file type! Expected an .".$template_ext." file.");

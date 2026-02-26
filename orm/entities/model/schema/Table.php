@@ -96,7 +96,7 @@ final class Table {
       * 
       * RETURN_EXISTING - Return existing record(s) as it is. (alongside newly added ones if multiple records are being inserted)
       * 
-      * Defaults to the value set using config('action_on_duplicate') constant in app config, which defaults to ABORT_WITH_ERROR
+      * Defaults to the value set using config('model.action_on_duplicate') constant in app config, which defaults to ABORT_WITH_ERROR
       * 
       * */
      private string $_action_on_duplicate = '';
@@ -202,8 +202,8 @@ final class Table {
 
      //add or remove creator and modifier fields depending on with_user_audit setting
      private function get_user_audit_fields(bool $switch = true) : array {
-         if($this->with_user_audit){
-             $auth_model_class = config('auth_model_class');
+         if($this->_with_user_audit){
+             $auth_model_class = config('auth.model_class');
              if($this->assert_model_exists($auth_model_class)){
                  return [
                      $this->created_by_field => $this->audit_fields_override[$this->created_by_field] ??  
@@ -238,7 +238,7 @@ final class Table {
                  $this->deleted_at_field => $this->audit_fields_override[$this->deleted_at_field] ?? new DateTimeField()
              ];
 
-             $auth_model_class = config('auth_model_class');
+             $auth_model_class = config('auth.model_class');
              if($this->assert_model_exists($auth_model_class)){
                 $fields[$this->deleted_by_field] = $this->audit_fields_override[$this->deleted_by_field] ?? 
                 new OneToOne(related_model: $auth_model_class, foreign_key: $auth_model_class::get_pk_name());
@@ -264,17 +264,17 @@ final class Table {
 
      public function set_table_defaults($model_class){
          $this->model_class = $model_class;
-         $this->_with_user_audit = config('with_user_audit');
-         $this->_with_timestamps = config('with_timestamps');
-         $this->_with_soft_delete = config('with_soft_delete');
-         $this->created_at_field = config('created_at_field');
-         $this->created_by_field = config('created_by_field');
-         $this->modified_at_field = config('modified_at_field');
-         $this->modified_by_field = config('modified_by_field');
-         $this->deleted_field = config('deleted_field');
-         $this->deleted_at_field = config('deleted_at_field');
-         $this->deleted_by_field = config('deleted_by_field');
-         $this->action_on_duplicate(config('action_on_duplicate'));
+         $this->_with_user_audit = config('model.with_user_audit');
+         $this->_with_timestamps = config('model.with_timestamps');
+         $this->_with_soft_delete = config('model.with_soft_delete');
+         $this->created_at_field = config('model.created_at_field');
+         $this->created_by_field = config('model.created_by_field');
+         $this->modified_at_field = config('model.modified_at_field');
+         $this->modified_by_field = config('model.modified_by_field');
+         $this->deleted_field = config('model.deleted_field');
+         $this->deleted_at_field = config('model.deleted_at_field');
+         $this->deleted_by_field = config('model.deleted_by_field');
+         $this->action_on_duplicate(config('model.action_on_duplicate'));
      }
 
      public function clean_model_fields(){
@@ -282,13 +282,13 @@ final class Table {
          //create primary key field
          $pk = new Pk($this->pk_type);
 
-         $clean_fields = [$this->pk_name => $pk->resolve([
-             'model_class' => $this->model_class,
-             'model_pk'    => $this->pk_name,
-             'name'        => $this->pk_name
-         ])];
+         $all_fields = array_merge([
+             $this->pk_name => $pk->resolve()
+         ], $this->fields);
 
-         foreach($this->fields as $n => $v){
+         $clean_fields = [];
+
+         foreach($all_fields as $n => $v){
 
              //assert field instance
              Assert::isInstanceOf($v, IField::class, $n.' is not a field instance!');
@@ -299,7 +299,9 @@ final class Table {
              
              //each field knows to validate its own state
              if(!$field->is_state_valid()){
-                 throw new RuntimeException("The field: {$n} defined on the model: {$this->model_class} is not correctly defined!");
+                 print_r($field);
+                 $errors = implode("\n", $field->get_errors());
+                 throw new RuntimeException("The field: {$n} defined on the model: {$this->model_class} is not correctly defined!\n {$errors}");
              }
 
              $clean_fields[$n] = $field;
@@ -341,7 +343,7 @@ final class Table {
 
      public function primary_key(string $name, ?string $type = null){
          $this->pk_name = $name;
-         $this->pk_type = $type ?? config('primary_key_type');
+         $this->pk_type = $type ?? config('model.pk_type');
      }
 
      public function temporary(bool $temporary = true){

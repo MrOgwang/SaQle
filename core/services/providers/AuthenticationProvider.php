@@ -18,38 +18,58 @@
  * */
 namespace SaQle\Core\Services\Providers;
 
-use SaQle\Auth\Utils\AuthManager;
+use SaQle\Auth\Interfaces\{
+     StrategyRegistryInterface,
+     UserProviderInterface,
+     IdentityProviderResolverInterface
+};
+use SaQle\Auth\Identity\Providers\{
+     DefaultUserProvider
+};
+use SaQle\Auth\Identity\Resolvers\{
+     DefaultIdentityProviderResolver
+};
+use SaQle\Core\Registries\LoginStrategyRegistry;
 use SaQle\Auth\Strategies\PasswordLoginStrategy;
-use SaQle\Auth\Providers\Resolver\DefaultProviderResolver;
 use SaQle\Core\Services\Providers\ServiceProvider;
 
 class AuthenticationProvider extends ServiceProvider {
      public function register(): void {
+         $this->app->container->singleton(
+             StrategyRegistryInterface::class,
+             LoginStrategyRegistry::class
+         );
+
+         /**
+          * Register the user provider. This provides the user object 
+          * to be injected into the request. This allows you the chance
+          * to define how the session user is fetched and the kind of properties you 
+          * want in the user object
+          * */
+         $this->app->container->singleton(
+             UserProviderInterface::class,
+             fn() => new DefaultUserProvider(config('auth.model_class'))
+         );
+
+
+         /**
+          * Register identity provider resolver. This is a callback that determines
+          * whether the request uses php sessions or jwt tokens to store and track 
+          * session.
+          * */
+         $this->app->container->singleton(
+             IdentityProviderResolverInterface::class,
+             DefaultIdentityProviderResolver::class
+         );
+
          /**
           * Register available login strategies. Login strategies are the several ways you
           * want to login users into the application. You will choose the strategy to use 
           * depending on your specific needs and circumstances
           * */
-         AuthManager::add_strategy('password', new PasswordLoginStrategy());
+         $registry = $this->app->container->resolve(StrategyRegistryInterface::class);
 
-         /**
-          * Register the user provider. This is a callback that will be used
-          * to fetch the user and inject it into the request. This allows you the chance
-          * to define how the session user is fetched and the kind of properties you 
-          * want in the user object
-          * */
-         AuthManager::set_user_provider(function(string|int $id){
-             //get and return the user here
-             $model = config('auth_model_class');
-             return $model::get()->where('user_id', $id)->first_or_default();
-         });
-
-         /**
-          * Register session provider resolver. This is a callback that determines
-          * whether the request uses php sessions or jwt tokens to store and track 
-          * session.
-          * */
-         AuthManager::set_session_provider_resolver([new DefaultProviderResolver(), 'resolve_provider']);
+         $registry->add('password', $this->app->container->resolve(PasswordLoginStrategy::class));
      }
 }
 

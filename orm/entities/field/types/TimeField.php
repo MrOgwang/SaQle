@@ -33,10 +33,8 @@ class TimeField extends TemporalField {
      }
 
      protected function validate_field_state(){
-         if($this->max_time && $this->min_time){
-             if($this->min_time > $this->max_time){
-                 $this->errors[] = "Minimum time cannot be more than the maximum time!";
-             }
+         if($this->max_time && $this->min_time && ($this->min_time > $this->max_time)){
+             $this->errors[] = "Minimum time cannot be more than the maximum time!";
          }
 
          parent::validate_field_state();

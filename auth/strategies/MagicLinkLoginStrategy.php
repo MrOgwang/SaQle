@@ -1,11 +1,11 @@
 <?php
 namespace SaQle\Auth\Strategies;
 
-use SaQle\Auth\Strategies\Interfaces\LoginStrategy;
-use SaQle\Auth\Models\Interfaces\IUser;
+use SaQle\Auth\Interfaces\LoginStrategyInterface;
+use SaQle\Auth\Interfaces\UserInterface;
 
-class MagicLinkLoginStrategy implements LoginStrategy {
-     public function authenticate(array $credentials): ?IUser {
+class MagicLinkLoginStrategy implements LoginStrategyInterface {
+     public function authenticate(array $credentials): ?UserInterface {
          $token = $credentials['token'] ?? null;
          if (!$token) return null;
 

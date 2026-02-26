@@ -39,8 +39,8 @@ class DbDataSourceManager extends DataSourceManager{
 	 	 $key_value = $this->get_key_val($key);
 
 	 	 return $this->optional ? 
-	 	 $class_name::get()->where($mapto, $key_value)->first_or_default() : 
-	 	 $class_name::get()->where($mapto, $key_value)->first();
+	 	 $class_name::get()->where($mapto, $key_value)->first_or_null() : 
+	 	 $class_name::get()->where($mapto, $key_value)->first_or_fail();
 	 }
 
 }

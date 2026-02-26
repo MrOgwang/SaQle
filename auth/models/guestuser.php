@@ -1,9 +1,9 @@
 <?php
 namespace SaQle\Auth\Models;
 
-use SaQle\Auth\Models\Interfaces\IUser;
+use SaQle\Auth\interfaces\UserInterface;
 
-class GuestUser implements IUser {
+class GuestUser implements UserInterface {
      //check if a user can perform an action
 	 public function check(string $action) : bool {
 	 	 return false;
