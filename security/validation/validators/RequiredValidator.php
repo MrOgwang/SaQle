@@ -5,14 +5,13 @@ namespace SaQle\Security\Validation\Validators;
 use SaQle\Security\Validation\Abstracts\IValidator;
 use SaQle\Security\Validation\Types\ValidationResult;
 
-class RequiredValidator extends IValidator
-{
-    public function validate(
-        string $field,
-        mixed $value,
-        mixed $threshold = null,
-        array $context = []
-    ): ValidationResult {
+class RequiredValidator extends IValidator {
+
+     protected function threshold_type(): string {
+         return 'bool';
+     }
+
+     public function validate(string $field, array $context = []): ValidationResult {
 
         // 1️⃣ Threshold must be boolean
         if (!is_bool($threshold)) {

@@ -2,6 +2,7 @@
 namespace SaQle\Http\Request\Data\Sources\Managers\Types;
 
 use SaQle\Core\Support\BindFrom;
+use SaQle\Core\Files\UploadedFile;
 use SaQle\Orm\Entities\Model\Schema\Model;
 use SaQle\Http\Request\Execution\TypeInspector;
 use InvalidArgumentException;
@@ -228,6 +229,12 @@ class InputDataSourceManager extends DataSourceManager{
          }
 
          $class_name = TypeInspector::get_class_name($this->type);
+
+         if($class_name === UploadedFile::class){
+             return $this->optional ? 
+             $this->request->data->get($this->from->key, $this->default) : 
+             $this->request->data->get_or_fail($this->from->key);
+         }
 
          if($class_name && !is_subclass_of($class_name, Model::class)){
              throw new Exception("Cannot bind data of type: {$class_name} from the input! Bind from container instead!");

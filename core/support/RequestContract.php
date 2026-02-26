@@ -1,73 +1,65 @@
 <?php
-declare(strict_types=1);
 
 namespace SaQle\Core\Support;
 
-use SaQle\Http\Request\Request;
+use ReflectionClass;
 use SaQle\Core\Exceptions\Http\UnauthorizedException;
+use SaQle\Core\Exceptions\Model\ValidationException;
 
 abstract class RequestContract {
-     //the current request object: carries input
-     protected Request $request;
 
-     //validated and normalized data
-     protected array $validated = [];
+     protected array $validated_data = [];
 
-     final public function __construct(Request $request){
-         $this->request = $request;
-         $this->authorize_request();
-         $this->validate_input();
-         $this->hydrate();
+     final public function validate_and_authorize(): void {
+         if(!$this->authorize()) {
+             throw new UnauthorizedException('This action is unauthorized.');
+         }
+
+         $this->perform_validation();
      }
 
-     //authorization gate
+     final public function validated(): array {
+         return $this->validated_data;
+     }
+
      abstract protected function authorize(): bool;
 
-     //validation rules mapped to declared properties
-     abstract protected function rules(): array;
+     protected function perform_validation(): void {
 
-     //sources from which to bind incoming input
-     protected function sources(): array {
-         //override if needed
-     }
+         $errors = [];
 
-     //optional input normalization hook
-     protected function prepare(): void {
-         //override if needed
-     }
+         $reflection = new ReflectionClass($this);
 
-     //Access validated data safely
-     final public function validated(): array {
-        return $this->validated;
-     }
+         foreach ($reflection->getProperties() as $property){
+             $attributes = $property->getAttributes(BindFrom::class);
 
-     //internal helpers
-
-     final protected function authorize_request(): void {
-         if(!$this->authorize()){
-             throw new UnauthorizedException();
-         }
-     }
-
-     final protected function validate_input(): void {
-         $this->prepare();
-
-         $rules = $this->rules();
-         $errors = Validator::validate($this->input, $rules);
-
-         if($errors){
-             throw new ValidationException($errors);
-         }
-
-         $this->validated = Validator::filtered($this->input, $rules);
-     }
-
-     //Hydrate typed properties
-     final protected function hydrate(): void {
-         foreach ($this->validated as $key => $value){
-             if(property_exists($this, $key)){
-                 $this->{$key} = $value;
+             if(!$attributes){
+                 continue;
              }
+
+             $bind_instance = $attributes[0]->newInstance();
+             $property_name = $property->getName();
+             $value         = $this->$property_name ?? null;
+             $rules         = RuleParser::parse($bind_instance->rules ?? []);
+
+             $validator = new FieldValidator(
+                 rules: $rules,
+                 array: false
+             );
+
+             $result = $validator->validate($property_name, $value);
+
+             if($result->isvalid){
+                 $this->validated_data[$property_name] = $value;
+             }else{
+                 $errors[$property_name] = $result->errors;
+             }
+         }
+
+         if(!empty($errors)){
+             throw new ValidationException([
+                 'errors' => $errors
+             ]);
          }
      }
 }

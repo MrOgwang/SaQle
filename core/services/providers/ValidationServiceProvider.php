@@ -30,7 +30,7 @@ class ValidationServiceProvider extends ServiceProvider {
          $this->app->rules->add('max', MaxValidator::class);
          $this->app->rules->add('unsigned', UnsignedValidator::class);
          $this->app->rules->add('type', NativeTypeValidator::class);
-         $this->app->rules->add('required', RequiredValidator::class);
+         $this->app->rules->add('required', RequiredValidator::class); //
          $this->app->rules->add('duration', DurationValidator::class);
          $this->app->rules->add('max_duration', MaxDurationValidator::class);
          $this->app->rules->add('min_duration', MinDurationValidator::class);

@@ -3,7 +3,7 @@ namespace SaQle\Orm\Entities\Model\Schema;
 
 use SaQle\Orm\Entities\Field\Interfaces\IField;
 use SaQle\Orm\Entities\Field\Types\{Pk, TextField, OneToOne, OneToMany, FloatField, IntegerField, ManyToMany, FileField, DateField, TimeField, DateTimeField, TimestampField, BooleanField, VirtualField};
-use SaQle\Core\Exceptions\Model\FieldValidationException;
+use SaQle\Core\Exceptions\Model\ValidationException;
 use SaQle\Commons\StringUtils;
 use SaQle\Orm\Entities\Model\Manager\{CreateManager, UpdateManager, DeleteManager, TruncateManager, ReadManager, RunManager};
 use SaQle\Orm\Entities\Model\Interfaces\{IModel, ITableSchema};
@@ -515,14 +515,25 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
       * */
      private function run_data_validation(array $data, bool $partial = false){
      	 
+     	 $errors = [];
+
      	 foreach($data as $field_name => $field_value){
      	 	 $field = $this->table->get_clean_fields()[$field_name];
+     	 	 
      	 	 $validator = $field->validator();
 
-     	 	 //$result = $validator->validate($field_name, $field_value);
+     	 	 /*$result = $validator->validate($field_name, $field_value);
+
+     	 	 if(!$result->isvalid){
+     	 	 	 $errors[$field_name] = $result->errors;
+             }*/
      	 }
 
-     	 return true;
+     	 if(!empty($errors)){
+             throw new ValidationException([
+                 'errors' => $errors
+             ]);
+         }
 	 }
 
 	 public function get_update_data($data, $request, $data_state = null, $skip_validation = false){
