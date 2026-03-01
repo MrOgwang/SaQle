@@ -7,7 +7,7 @@ final class ValidationResult {
      public function __construct(
          public readonly bool $isvalid,
          public readonly ?string $message = null,
-         public readonly ?mixed $normalized = null,
+         public readonly mixed $normalized = null,
      ) {}
 
      public static function pass(mixed $normalized = null): self {

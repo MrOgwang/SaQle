@@ -20,14 +20,17 @@ use SaQle\Security\Validation\Types\ValidationResult;
 use SaQle\Security\Validation\Abstracts\IValidator;
 
 class MaxLengthValidator extends IValidator {
+
+	 protected function threshold_type(): string {
+         return 'int';
+     }
 	
 	 public function validate(mixed $value, array $context = []) : ValidationResult {
-	 	 
-	 	 $isvalid = mb_strlen($value) <= (int)$threshold ? true : false;
 
-	 	 return new ValidationResult(
-             isvalid: $isvalid,
-             message: $isvalid ? null : "{$field} must be at most {$threshold} characters!"
-         );
+	 	 if(mb_strlen($value) <= $this->threshold){
+	 	 	 return new ValidationResult(true);
+	 	 }
+	 	
+	 	 return new ValidationResult(false, "{$this->field} must be at most {$this->threshold} characters!");
 	 }
 }

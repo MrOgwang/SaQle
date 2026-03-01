@@ -1,71 +1,49 @@
 <?php
-
 namespace SaQle\Security\Validation\Validators;
 
 use SaQle\Security\Validation\Abstracts\IValidator;
 use SaQle\Security\Validation\Types\ValidationResult;
+use SaQle\Core\Files\UploadedFile;
+use finfo;
 
-class MimeTypesValidator extends IValidator
-{
-    public function validate(
-        string $field,
-        mixed $value,
-        mixed $threshold = null,
-        array $context = []
-    ): ValidationResult {
+class MimeTypesValidator extends IValidator {
+     protected function threshold_type(): string {
+         return 'array';
+     }
 
-        // 1️⃣ Threshold must be non-empty array
-        if (!is_array($threshold) || empty($threshold)) {
-            return new ValidationResult(
-                false,
-                "mime_types rule for {$field} must be a non-empty array."
-            );
-        }
+     public function validate(mixed $value, array $context = []): ValidationResult {
 
-        // Normalize allowed MIME types
-        $allowed = array_map(
-            fn($type) => strtolower(trim((string)$type)),
-            $threshold
-        );
+         //normalize allowed MIME types
+         $allowed = array_map(fn($type) => strtolower(trim((string)$type)), $this->threshold);
 
-        // 2️⃣ Resolve file path
-        $filePath = null;
+         //resolve file path
+         $file_path = null;
 
-        if (is_array($value) && isset($value['tmp_name'])) {
-            $filePath = $value['tmp_name'];
-        } elseif (is_string($value) && file_exists($value)) {
-            $filePath = $value;
-        }
+         if($value instanceof UploadedFile){
+             $file_path = $value->tmp_name;
+         }elseif (is_string($value) && file_exists($value)){
+             $file_path = $value;
+         }
 
-        if (!$filePath || !file_exists($filePath)) {
-            return new ValidationResult(
-                false,
-                "{$field} must be a valid file."
-            );
-        }
+         if(!$file_path || !file_exists($file_path)){
+             return new ValidationResult(false, "{$this->field} must be a valid file.");
+         }
 
-        // 3️⃣ Detect real MIME type using finfo
-        $finfo = new \finfo(FILEINFO_MIME_TYPE);
-        $detectedMime = $finfo->file($filePath);
+         //Detect real MIME type using finfo
+         $finfo = new finfo(FILEINFO_MIME_TYPE);
+         $detected_mime = $finfo->file($file_path);
 
-        if (!$detectedMime) {
-            return new ValidationResult(
-                false,
-                "{$field} MIME type could not be determined."
-            );
-        }
+         if(!$detected_mime){
+             return new ValidationResult(false, "{$this->field} MIME type could not be determined.");
+         }
 
-        $detectedMime = strtolower($detectedMime);
+         $detected_mime = strtolower($detected_mime);
 
-        // 4️⃣ Validate against allowed list
-        if (!in_array($detectedMime, $allowed, true)) {
-            return new ValidationResult(
-                false,
-                "{$field} must be one of the following MIME types: "
-                . implode(', ', $allowed) . "."
-            );
-        }
+         //Validate against allowed list
+         if(!in_array($detected_mime, $allowed, true)){
+             return new ValidationResult(false, "{$field} must be one of the following MIME types: ".implode(', ', $allowed) . ".");
+         }
 
-        return new ValidationResult(true, null);
-    }
+         return new ValidationResult(true, null);
+     }
 }

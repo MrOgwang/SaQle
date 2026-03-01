@@ -11,31 +11,17 @@ class RequiredValidator extends IValidator {
          return 'bool';
      }
 
-     public function validate(string $field, array $context = []): ValidationResult {
+     public function validate(mixed $value, array $context = []): ValidationResult {
+         //if required is false, always pass
+         if($this->threshold === false){
+             return new ValidationResult(true, null);
+         }
 
-        // 1️⃣ Threshold must be boolean
-        if (!is_bool($threshold)) {
-            return new ValidationResult(
-                false,
-                "Required rule for {$field} must be true or false."
-            );
-        }
+         //Determine presence
+         if(is_null($value)){
+             return new ValidationResult(false, "{$this->field} is required.");
+         }
 
-        // 2️⃣ If required = false → always pass
-        if ($threshold === false) {
-            return new ValidationResult(true, null);
-        }
-
-        // 3️⃣ Determine presence
-        $exists = $context['exists'] ?? true;
-
-        if (!$exists || $value === null) {
-            return new ValidationResult(
-                false,
-                "{$field} is required."
-            );
-        }
-
-        return new ValidationResult(true, null);
-    }
+         return new ValidationResult(true, null);
+     }
 }

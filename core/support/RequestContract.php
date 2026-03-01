@@ -15,7 +15,11 @@ abstract class RequestContract {
              throw new UnauthorizedException('This action is unauthorized.');
          }
 
+         $this->before_validation();
+
          $this->perform_validation();
+
+         $this->after_validation();
      }
 
      final public function validated(): array {
@@ -61,5 +65,15 @@ abstract class RequestContract {
                  'errors' => $errors
              ]);
          }
+     }
+
+     //called before data enters validation
+     protected function before_validation(){
+         //do nothing
+     }
+
+     //called after is validated
+     protected function after_validation(){
+         //do nothing
      }
 }

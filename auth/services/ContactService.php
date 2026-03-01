@@ -2,7 +2,7 @@
 namespace SaQle\Auth\Services;
 
 use SaQle\Auth\Interfaces\ContactRepositoryInterface;
-use RuntimeException;
+use SaQle\Core\Exceptions\Base\DomainException;
 
 class ContactService {
      protected ContactRepositoryInterface $repository;
@@ -20,7 +20,7 @@ class ContactService {
       * */
      public function ensure_available(string $contact, ?string $type = null, ?string $owner_type = null): void {
          if($this->repository->exists($contact, $type, $owner_type)){
-             throw new RuntimeException("The provided {$type} already exists.");
+             throw new DomainException("The provided {$type} already exists.");
          }
      }
 }

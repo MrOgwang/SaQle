@@ -34,65 +34,60 @@ abstract class IValidator {
          $type = $this->threshold_type();
 
          return match($type){
-             'int' => $this->coerceInt($threshold),
-             'float' => $this->coerceFloat($threshold),
-             'string' => $this->coerceString($threshold),
-             'bool' => $this->coerceBool($threshold),
-             'array' => $this->coerceArray($threshold),
+             'int' => $this->coerce_int($threshold),
+             'float' => $this->coerce_float($threshold),
+             'string' => $this->coerce_string($threshold),
+             'bool' => $this->coerce_bool($threshold),
+             'array' => $this->coerce_array($threshold),
              default => throw new RuntimeException("Unsupported threshold type '$type' in validator"),
-         };
-
-         return match ($type){
-             'int'    => (int)$threshold,
-             'float'  => (float)$threshold,
-             'string' => (string)$threshold,
-             'bool'   => is_string($threshold) && strtolower(trim($threshold)) === 'false' ? false : (bool)$threshold,
-             'array'  => is_array($threshold) ? $threshold : [$threshold],
-             default  => $threshold, // fallback, keep as-is
          };
      }
 
-     protected function coerceInt(mixed $value): int
-    {
-        if (is_numeric($value)) {
+     protected function coerce_int(mixed $value): int {
+         if (is_numeric($value)) {
             return (int) $value;
-        }
-        throw new RuntimeException("Cannot coerce threshold to int: " . get_debug_type($value));
-    }
+         }
+         throw new RuntimeException("Cannot coerce threshold to int: " . get_debug_type($value));
+     }
 
-    protected function coerceFloat(mixed $value): float
-    {
-        if (is_numeric($value)) {
-            return (float) $value;
-        }
-        throw new RuntimeException("Cannot coerce threshold to float: " . get_debug_type($value));
-    }
+     protected function coerce_float(mixed $value): float {
+         if (is_numeric($value)) {
+             return (float) $value;
+         }
+         throw new RuntimeException("Cannot coerce threshold to float: " . get_debug_type($value));
+     }
 
-    protected function coerceString(mixed $value): string
-    {
-        if (is_scalar($value)) {
+     protected function coerce_string(mixed $value): string {
+         if (is_scalar($value)) {
             return (string) $value;
-        }
-        throw new RuntimeException("Cannot coerce threshold to string: " . get_debug_type($value));
-    }
+         }
+         throw new RuntimeException("Cannot coerce threshold to string: " . get_debug_type($value));
+     }
 
-    protected function coerceBool(mixed $value): bool
-    {
-        if (is_bool($value) || $value === 1 || $value === 0 || $value === '1' || $value === '0') {
-            return (bool) $value;
-        }
-        throw new RuntimeException("Cannot coerce threshold to bool: " . get_debug_type($value));
-    }
+     protected function coerce_bool(mixed $value): bool {
+         if(is_string($value) && in_array(strtolower(trim($value)), ['true', 'false'])){
+             return match(strtolower(trim($value))){
+                'true' => true,
+                'false' => false
+             };
+         }
 
-    protected function coerceArray(mixed $value): array
-    {
-        if (is_array($value)) {
+         if(is_bool($value) || $value === 1 || $value === 0 || $value === '1' || $value === '0'){
+             return (bool)$value;
+         }
+
+         throw new RuntimeException("Cannot coerce threshold to bool: ".get_debug_type($value));
+     }
+
+     protected function coerce_array(mixed $value): array {
+         if (is_array($value)) {
             return $value;
-        }
-        // Coerce single values into array for choice validators
-        return [$value];
-    }
-    
+         }
+
+         //Coerce single values into array for choice validators
+         return [$value];
+     }
+
 	 abstract public function validate(mixed $value, array $context = []): ValidationResult;
      
      public function stop_on_fail() : bool {

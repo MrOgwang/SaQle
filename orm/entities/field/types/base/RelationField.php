@@ -124,6 +124,8 @@ class RelationField extends Field {
 	 	 if($this instanceof OneToOne){
 	 	 	 if(!$this->column){
 	 	 	 	 $this->column = $this->name."_id";
+
+	 	 	 	 //$this->column = $this->name;
 	 	 	 }
 
              //the local key defaults to the column name

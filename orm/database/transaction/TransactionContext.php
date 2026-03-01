@@ -33,7 +33,7 @@ final class TransactionContext {
          return $entry['envelope'];
      }
 
-     public static function current(string $connection_key): ?PDO {
+     public static function current(string $connection_key): ? array {
          if(!isset(self::$stack[$connection_key])){
              return null;
          }

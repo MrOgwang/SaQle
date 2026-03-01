@@ -61,7 +61,14 @@ class ChoiceField extends CharField {
 	 }
 
 	 public function use_keys(bool $use_keys = true){
+	 	 if(!$this->choices){
+	 	 	 throw new RuntimeException("Use keys cannot be called before specifying choices!");
+	 	 }
+
+	 	 $this->choices = array_keys($this->choices);
+
 	 	 $this->_use_keys = $use_keys;
+	 	 
 	 	 return $this;
 	 }
 }

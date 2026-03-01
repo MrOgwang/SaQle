@@ -4,6 +4,10 @@ namespace SaQle\Orm\Entities\Field\Types;
 
 use SaQle\Core\Support\CropMode;
 use SaQle\Orm\Entities\Field\Attributes\FieldDefinition;
+use SaQle\Core\Files\Commits\{
+	 ImageFileCommitter,
+	 FileCommitInterface
+};
 
 class ImageField extends MediaField {
 	
@@ -48,6 +52,10 @@ class ImageField extends MediaField {
 
          parent::initialize_defaults();
 
+     }
+
+     public function get_committer(): FileCommitInterface {
+         return new ImageFileCommitter($this);
      }
 }
 

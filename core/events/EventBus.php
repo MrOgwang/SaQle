@@ -16,7 +16,9 @@ final class EventBus {
                  break; // Stop dispatching further listeners
              }
 
-             (new $listener_class)->handle($event);
+             $listener = resolve($listener_class);
+
+             $listener->handle($event);
          }
      }
 }

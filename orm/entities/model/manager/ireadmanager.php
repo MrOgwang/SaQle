@@ -76,6 +76,8 @@ class IReadManager extends QueryManager {
 	 	 $this->__groupConstruct();
 
      	 $this->register_joining_model(table: $this->model->table->get_table_name(), tblref: $tableref, as: $tablealiase);
+
+     	 $this->dbdriver->set_read_query($this);
 	 }
 
 	 //Set sql and data

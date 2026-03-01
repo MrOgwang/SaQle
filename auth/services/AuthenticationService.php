@@ -67,7 +67,9 @@ class AuthenticationService implements IService {
 
              $user = $this->user_provider->find($user_id);
 
-             event(new LoginSucceeded($user));
+             //event(new LoginSucceeded($user));
+             echo "Found user!";
+             print_r($user);
              return new AuthResult(true, $user, $identity_key, "Login successful");
          }catch(Throwable $e){
              //log internally
@@ -86,7 +88,7 @@ class AuthenticationService implements IService {
          return $this->user_provider->find($user_id);
      }
 
-     #[Emits(before: [Logout::class])]
+     //#[Emits(before: [Logout::class])]
      public function logout(){
 
          $identity_provider = $this->identity_resolver->resolve();

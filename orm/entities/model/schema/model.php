@@ -16,6 +16,7 @@ use SaQle\Core\Assert\Assert;
 use Exception;
 use JsonSerializable;
 use InvalidArgumentException;
+use ReflectionClass;
 
 abstract class Model implements ITableSchema, IModel, JsonSerializable{
 	 use StringUtils;
@@ -106,6 +107,9 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 
      public function initialize_model_data(array $data, bool $return = true){
      	 Assert::isNonEmptyMap($data, "The data provided is not properly defined!");
+
+         //convert columns to fields
+     	 $data = $this->format_data($data);
 
          //ensure all the data keys are field names defined on model
  	 	 $this->assert_correct_fields($data);
@@ -537,6 +541,8 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 	 }
 
 	 public function get_update_data($data, $request, $data_state = null, $skip_validation = false){
+	 	 $column_refs = $this->table->get_table_column_names();
+
 	 	 //convert any values coming in with column names to field names
 	 	 $data = $this->format_data($data);
 
@@ -549,7 +555,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
          //strip the primary key field, navigtaional and virtual fields, and the deleted field
 	 	 unset($data[$this->table->get_deleted_field()]);
 	 	 //unset($data[$this->table->get_pk_name()]);
-	 	 $actual_fields = array_keys($this->table->get_table_column_names());
+	 	 $actual_fields = array_keys($column_refs);
 
          $clean_data = [];
      	 foreach(array_keys($data) as $_dk){
@@ -564,10 +570,10 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 
 	 	 //Inject modifier and modified date time fields
 	 	 if($this->table->has_user_audit()){
-	 	 	$data[$this->table->get_modified_by_field()] = $request->user->user_id ?? 0; #Id of current user
+	 	 	$data[$column_refs[$this->table->get_modified_by_field()]] = $request->user->user_id ?? 0; #Id of current user
 	 	 }
 	 	 if($this->table->has_timestamps()){
-	 	 	 $data[$this->table->get_modified_at_field()] = time(); #Current date time
+	 	 	 $data[$column_refs[$this->table->get_modified_at_field()]] = time(); #Current date time
 	 	 }
 
 	 	 //Prepare file data.

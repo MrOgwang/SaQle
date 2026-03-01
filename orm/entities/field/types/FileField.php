@@ -5,7 +5,14 @@ namespace SaQle\Orm\Entities\Field\Types;
 use SaQle\Orm\Entities\Field\Types\Base\Field;
 use SaQle\Orm\Database\ColumnType;
 use Closure;
-use SaQle\Orm\Entities\Field\Attributes\{FieldDefinition, ShouldValidate};
+use SaQle\Orm\Entities\Field\Attributes\{
+	 FieldDefinition, 
+	 ShouldValidate
+};
+use SaQle\Core\Files\Commits\{
+	 DefaultFileCommitter,
+	 FileCommitInterface
+};
 
 class FileField extends Field {
 	 /**
@@ -170,6 +177,10 @@ class FileField extends Field {
 
          parent::initialize_defaults();
 
+     }
+
+     public function get_committer(): FileCommitInterface {
+         return new DefaultFileCommitter($this);
      }
 }
 

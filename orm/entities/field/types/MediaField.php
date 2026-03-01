@@ -4,7 +4,14 @@ namespace SaQle\Orm\Entities\Field\Types;
 
 use SaQle\Core\Support\CropMode;
 use Closure;
-use SaQle\Orm\Entities\Field\Attributes\{FieldDefinition, ShouldValidate};
+use SaQle\Orm\Entities\Field\Attributes\{
+	 FieldDefinition, 
+	 ShouldValidate
+};
+use SaQle\Core\Files\Commits\{
+	 MediaFileCommitter,
+	 FileCommitInterface
+};
 
 class MediaField extends FileField {
 	 
@@ -153,5 +160,9 @@ class MediaField extends FileField {
 
      	 parent::validate_field_state();
 	 }
+
+	 public function get_committer(): FileCommitInterface {
+         return new MediaFileCommitter($this);
+     }
 }
 

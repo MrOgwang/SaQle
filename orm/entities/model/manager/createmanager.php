@@ -12,6 +12,7 @@ use SaQle\Orm\Entities\Model\Schema\Model;
 use SaQle\Core\Files\FileCommitter;
 use SaQle\Orm\Entities\Model\Collection\ModelCollection;
 use SaQle\Orm\Entities\Model\Interfaces\IModel;
+use SaQle\Core\Files\Commits\FileCommitCoordinator;
 use InvalidArgumentException;
 use Exception;
 use PDO;
@@ -103,6 +104,9 @@ class CreateManager extends QueryManager{
 	 }
 	 
 	 public function now(){
+
+	 	 $file_commiter = new FileCommitCoordinator();
+
 	 	 try{
 	 	 	 //connect to the database
 	 	 	 $this->dbdriver->connect_with_database();
@@ -137,7 +141,7 @@ class CreateManager extends QueryManager{
 		 	 $result = $this->is_multiple_inserts() ? $rows : $rows[0];
 
 		 	 //save files if any
-		 	 //FileCommitter::commit($this->model, $this->get_files(), $result);
+		 	 $file_commiter->commit($this->model, $this->get_files(), $result);
 
              //send a post insert signal to observers
              $this->dispatch_event($this->model::class, ModelEventPhase::CREATED, $named_args, resolve('request')->user, $result);
@@ -145,6 +149,9 @@ class CreateManager extends QueryManager{
      	     return $result;
 
      	 }catch(Exception $ex){
+
+     	 	 $file_commiter->rollback();
+     	 	 
      	 	 throw $ex;
      	 }
 	 }
