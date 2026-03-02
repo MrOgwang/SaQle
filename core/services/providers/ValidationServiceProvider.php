@@ -31,9 +31,9 @@ class ValidationServiceProvider extends ServiceProvider {
          $this->app->rules->add('unsigned', UnsignedValidator::class);
          $this->app->rules->add('type', NativeTypeValidator::class);
          $this->app->rules->add('required', RequiredValidator::class); //
-         $this->app->rules->add('duration', DurationValidator::class);
-         $this->app->rules->add('max_duration', MaxDurationValidator::class);
-         $this->app->rules->add('min_duration', MinDurationValidator::class);
+         $this->app->rules->add('duration', DurationValidator::class); //
+         $this->app->rules->add('max_duration', MaxDurationValidator::class); //
+         $this->app->rules->add('min_duration', MinDurationValidator::class); //
          $this->app->rules->add('schemes', SchemesValidator::class);
          $this->app->rules->add('require_tld', RequireTldValidator::class);
          $this->app->rules->add('min_time', MinTimeValidator::class);
@@ -41,16 +41,16 @@ class ValidationServiceProvider extends ServiceProvider {
          $this->app->rules->add('slug', SlugValidator::class);
          $this->app->rules->add('international', InternationalPhoneValidator::class);
          $this->app->rules->add('min_strength', MinStrengthValidator::class);
-         $this->app->rules->add('max_width', MaxWidthValidator::class);
-         $this->app->rules->add('min_width', MinWidthValidator::class);
-         $this->app->rules->add('width', WidthValidator::class);
-         $this->app->rules->add('max_height', MaxHeightValidator::class);
-         $this->app->rules->add('min_height', MinHeightValidator::class);
-         $this->app->rules->add('height', HeightValidator::class);
-         $this->app->rules->add('aspect_ratio', AspectRatioValidator::class);
-         $this->app->rules->add('max_size', MaxSizeValidator::class);
-         $this->app->rules->add('min_size', MinSizeValidator::class);
-         $this->app->rules->add('extensions', ExtensionsValidator::class);
+         $this->app->rules->add('max_width', MaxWidthValidator::class); //
+         $this->app->rules->add('min_width', MinWidthValidator::class); //
+         $this->app->rules->add('width', WidthValidator::class); //
+         $this->app->rules->add('max_height', MaxHeightValidator::class); //
+         $this->app->rules->add('min_height', MinHeightValidator::class); //
+         $this->app->rules->add('height', HeightValidator::class); //
+         $this->app->rules->add('aspect_ratio', AspectRatioValidator::class); //
+         $this->app->rules->add('max_size', MaxSizeValidator::class); //
+         $this->app->rules->add('min_size', MinSizeValidator::class); //
+         $this->app->rules->add('extensions', ExtensionsValidator::class); //
          $this->app->rules->add('mime_types', MimeTypesValidator::class); //
          $this->app->rules->add('whitelist', WhitelistValidator::class);
          $this->app->rules->add('blacklist', BlacklistValidator::class);

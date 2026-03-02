@@ -18,21 +18,4 @@ class GenericModelCollection extends ModelCollection {
      protected function type(): string {
          return $this->type;
      }
-
-     public static function from_objects(string $type, array $objects = []){
-         $models = [];
-         foreach($objects as $object){
-             $models[] = new $type(...get_object_vars($object));
-         }
-
-         return new static($type, $models);
-     }
-
-     public static function from_arrays(string $type, array $elements = []){
-
-     }
-
-     public static function from_models(string $type, array $elements = []){
-
-     }
 }

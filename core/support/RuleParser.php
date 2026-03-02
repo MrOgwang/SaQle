@@ -9,7 +9,7 @@ final class RuleParser {
      *
      * Rules:
      * 1. No threshold → true
-     * 2. 'choices' with comma-separated values → array
+     * 2. 'choices', 'mime_types', 'extensions' with comma-separated values → array
      * 3. Everything else → raw threshold string
      */
      public static function parse(array $rules): array {
@@ -31,7 +31,7 @@ final class RuleParser {
              $threshold = trim($parts[1]);
 
              //Special handling for choices
-             if($rule_name === 'choices'){
+             if(in_array($rule_name, ['choices', 'mime_types', 'extensions'])){
                  $parsed[$rule_name] = array_map(
                     'trim',
                     explode(',', $threshold)

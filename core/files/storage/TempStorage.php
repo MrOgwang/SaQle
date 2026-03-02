@@ -6,7 +6,10 @@ use SaQle\Core\Files\{TempFileRef, UploadedFile};
 use RuntimeException;
 
 final class TempStorage {
-     private const BASE = config('base_path').'/storage/tmp/uploads';
+
+     private static function base(): string {
+         return config('base_path') . '/storage/tmp/uploads';
+     }
 
      public static function store(string $model, string $field, string $session, UploadedFile $file): TempFileRef {
          $file_id = bin2hex(random_bytes(8));
@@ -36,7 +39,7 @@ final class TempStorage {
      }
 
      public static function resolve(TempFileRef $ref): string {
-         $glob = glob(self::BASE."/{$ref->model}/{$ref->field}/{$ref->session}/*/{$ref->file_id}.*");
+         $glob = glob(self::base()."/{$ref->model}/{$ref->field}/{$ref->session}/*/{$ref->file_id}.*");
 
          if(!$glob){
              throw new RuntimeException("Temp file not found");
@@ -46,7 +49,7 @@ final class TempStorage {
      }
 
      private static function path(...$parts): string {
-         return self::BASE.'/'.implode('/', $parts);
+         return self::base().'/'.implode('/', $parts);
      }
 
      private static function ensure_dir(string $dir): void {
@@ -56,7 +59,7 @@ final class TempStorage {
      }
 
      private static function write_meta(string $model, string $field, string $session, array $file_meta): void {
-         $meta_path = self::BASE."/{$model}/{$field}/{$session}/meta.json";
+         $meta_path = self::base()."/{$model}/{$field}/{$session}/meta.json";
 
          $meta = is_file($meta_path) ? 
          json_decode(file_get_contents($meta_path), true) : 

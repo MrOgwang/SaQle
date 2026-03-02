@@ -5,8 +5,11 @@ namespace SaQle\Core\Files\Commits;
 final class FileCommitCoordinator {
      protected array $committed = [];
 
-     public function commit(object $model, array $files, array $row): void {
-         foreach($files['references'] ?? [] as $field_name => $refs){
+     public function commit(object $model, array $files, mixed $row): void {
+
+         print_r($files);
+
+         /*foreach($files['references'] ?? [] as $field_name => $refs){
 
              $field = $model->meta->fields[$field_name];
 
@@ -21,7 +24,7 @@ final class FileCommitCoordinator {
              $paths = $committer->commit($model, $refs, $row);
 
              $this->committed[] = ['committer' => $committer, 'paths' => $paths];
-         }
+         }*/
      }
 
      public function rollback(): void {

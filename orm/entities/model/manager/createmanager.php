@@ -159,16 +159,11 @@ class CreateManager extends QueryManager{
 	 private function get_created_rows($statement){
 	 	 //after successful execute
 		 if($this->dbdriver->supports_returning()){
-		     $rows = $statement->fetchAll(PDO::FETCH_OBJ);
+		     
+		     $type = $this->get_model_class();
 
-		     $collection_class = $this->get_collection_class();
-	 	 	 if($collection_class == GenericModelCollection::class){
-	 	 	 	 $rows = $collection_class::from_objects($this->get_model_class(), $rows);
-	 	 	 }else{
-	 	 	 	 $rows = new $collection_class($rows);
-	 	 	 }
-
-	 	 	 return $rows;
+		     return $type::hyrate_collection($statement->fetchAll(PDO::FETCH_OBJ));
+		     
 		 }
 
 		 if($this->get_primary_key_type() === 'GUID'){

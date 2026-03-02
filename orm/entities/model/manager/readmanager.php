@@ -119,12 +119,8 @@ final class ReadManager extends IReadManager {
 
 	 	 //convert rows to model collection first!
 	 	 if(!$stack_active && $this->model::class !== "SaQle\Orm\Entities\Model\TempId"){
-	 	 	 $collection_class = $this->model::class::collection_class();
-	 	 	 if($collection_class == GenericModelCollection::class){
-	 	 	 	 $rows = $collection_class::from_objects($this->model::class, $rows);
-	 	 	 }else{
-	 	 	 	 $rows = new $collection_class($rows);
-	 	 	 }
+	 	 	 $type = $this->model::class;
+	 	 	 $rows = $type::hyrate_collection($rows);
 	 	 }
 
 	 	 //process includes and return

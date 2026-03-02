@@ -8,12 +8,8 @@ use SaQle\Orm\Entities\Field\Attributes\{
 	 FieldDefinition, 
 	 ShouldValidate
 };
-use SaQle\Core\Files\Commits\{
-	 MediaFileCommitter,
-	 FileCommitInterface
-};
 
-class MediaField extends FileField {
+abstract class MediaField extends FileField {
 	 
 	 protected string $media_type;
 
@@ -160,9 +156,5 @@ class MediaField extends FileField {
 
      	 parent::validate_field_state();
 	 }
-
-	 public function get_committer(): FileCommitInterface {
-         return new MediaFileCommitter($this);
-     }
 }
 

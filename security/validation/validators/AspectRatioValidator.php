@@ -4,113 +4,45 @@ namespace SaQle\Security\Validation\Validators;
 
 use SaQle\Security\Validation\Abstracts\IValidator;
 use SaQle\Security\Validation\Types\ValidationResult;
+use SaQle\Security\Validation\Utils\MediaValidationHelper;
 
 class AspectRatioValidator extends IValidator {
-    public function validate(
-        string $field,
-        mixed $value,
-        mixed $threshold = null,
-        array $context = []
-    ): ValidationResult {
 
-        // 1️⃣ Validate threshold
-        if (
-            !is_array($threshold) ||
-            count($threshold) !== 2 ||
-            !is_numeric($threshold[0]) ||
-            !is_numeric($threshold[1]) ||
-            $threshold[0] <= 0 ||
-            $threshold[1] <= 0
-        ) {
-            return new ValidationResult(
-                false,
-                "aspect_ratio rule for {$field} must be [width_ratio, height_ratio]."
-            );
-        }
+     use MediaValidationHelper;
 
-        $ratioW = (int)$threshold[0];
-        $ratioH = (int)$threshold[1];
+     protected function threshold_type(): string { 
+         return 'array'; // Example: [16, 9]
+     }
 
-        // 2️⃣ Resolve file path
-        $filePath = null;
+     public function validate(mixed $value, array $context = []): ValidationResult {
+         //validate threshold
+         if(!is_array($this->threshold) || count($this->threshold) !== 2 || !is_numeric($this->threshold[0]) ||
+            !is_numeric($this->threshold[1]) || $this->threshold[0] <= 0 || $this->threshold[1] <= 0
+         ){
+             return new ValidationResult(
+                 false,
+                 "Aspect ratio rule for {$this->field} must be [width_ratio, height_ratio]."
+             );
+         }
 
-        if (is_array($value) && isset($value['tmp_name'])) {
-            $filePath = $value['tmp_name'];
-        } elseif (is_string($value) && file_exists($value)) {
-            $filePath = $value;
-        }
+         $path = $value->tmp_name;
 
-        if (!$filePath || !file_exists($filePath)) {
-            return new ValidationResult(
-                false,
-                "{$field} must be a valid uploaded file."
-            );
-        }
+         if(($context['media_type'] ?? null) === 'image'){
+             [$width, $height] = getimagesize($path);
+         }else{
+             $meta = $this->get_video_meta_data($path);
+             if(!$meta) return new ValidationResult(false, "{$this->field} video metadata not readable.");
+             $width = (int)$meta['width'];
+             $height = (int)$meta['height'];
+         }
 
-        // 3️⃣ Detect mime
-        $mime = mime_content_type($filePath);
+         [$w_ratio, $h_ratio] = ...$this->threshold;
 
-        $width = null;
-        $height = null;
+         if($width * $h_ratio !== $height * $w_ratio){
+             $ratio_string = implode(":", $this->threshold);
+             return new ValidationResult(false, "{$this->field} must have aspect ratio [{$ratio_string}].");
+         }
 
-        // 4️⃣ Image handling
-        if (str_starts_with($mime, 'image/')) {
-            $size = @getimagesize($filePath);
-
-            if (!$size) {
-                return new ValidationResult(
-                    false,
-                    "{$field} is not a valid image file."
-                );
-            }
-
-            $width = $size[0];
-            $height = $size[1];
-        }
-
-        // 5️⃣ Video handling via ffprobe
-        elseif (str_starts_with($mime, 'video/')) {
-
-            $cmd = "ffprobe -v error -select_streams v:0 "
-                . "-show_entries stream=width,height "
-                . "-of csv=s=x:p=0 "
-                . escapeshellarg($filePath);
-
-            $output = shell_exec($cmd);
-
-            if (!$output || !str_contains($output, 'x')) {
-                return new ValidationResult(
-                    false,
-                    "{$field} video dimensions could not be determined."
-                );
-            }
-
-            [$width, $height] = array_map('intval', explode('x', trim($output)));
-        }
-
-        else {
-            return new ValidationResult(
-                false,
-                "{$field} must be an image or video file."
-            );
-        }
-
-        // 6️⃣ Validate dimensions
-        if (!$width || !$height) {
-            return new ValidationResult(
-                false,
-                "{$field} dimensions are invalid."
-            );
-        }
-
-        // 7️⃣ Compare aspect ratio using cross multiplication
-        if ($width * $ratioH !== $height * $ratioW) {
-            return new ValidationResult(
-                false,
-                "{$field} must have an aspect ratio of {$ratioW}:{$ratioH}."
-            );
-        }
-
-        return new ValidationResult(true, null);
-    }
+         return new ValidationResult(true, null);
+     }
 }

@@ -10,7 +10,7 @@ use SaQle\Orm\Entities\Field\Attributes\{
 	 ShouldValidate
 };
 use SaQle\Core\Files\Commits\{
-	 DefaultFileCommitter,
+	 FileCommitter,
 	 FileCommitInterface
 };
 
@@ -180,7 +180,7 @@ class FileField extends Field {
      }
 
      public function get_committer(): FileCommitInterface {
-         return new DefaultFileCommitter($this);
+         return new FileCommitter($this);
      }
 }
 

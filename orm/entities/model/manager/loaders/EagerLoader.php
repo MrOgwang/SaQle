@@ -60,18 +60,9 @@ class EagerLoader {
                  $local_key = $include_data['local_key'];
                  $local_key_value = $p->$local_key;
                  if($include_data['multiple']){
-                     //$p->$assign_to = $include_data['mapped'][$local_key_value] ?? [];
-                     if($model_collection_class == GenericModelCollection::class){
-                         $p->$assign_to = $model_collection_class::from_objects($model_class, $include_data['mapped'][$local_key_value] ?? []);
-                     }else{
-                         $p->$assign_to = new $model_collection_class($include_data['mapped'][$local_key_value] ?? []);
-                     }
+                     $p->$assign_to = $model_class::hyrate_collection($include_data['mapped'][$local_key_value] ?? []);
                  }else{
-                     $p->$assign_to = new $model_class(
-                         ...get_object_vars($include_data['mapped'][$local_key_value][0])
-                     ) ?? null;
-
-                     //$p->$assign_to = $include_data['mapped'][$local_key_value][0] ?? null;
+                     $p->$assign_to = $model_class::from_db(...get_object_vars($include_data['mapped'][$local_key_value][0]));
                  }
              }
             

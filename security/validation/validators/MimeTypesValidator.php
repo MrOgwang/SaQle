@@ -7,21 +7,22 @@ use SaQle\Core\Files\UploadedFile;
 use finfo;
 
 class MimeTypesValidator extends IValidator {
-     protected function threshold_type(): string {
-         return 'array';
+
+     protected function threshold_type() : string {
+        return 'array';
      }
 
-     public function validate(mixed $value, array $context = []): ValidationResult {
+     public function validate(mixed $value, array $context = []) : ValidationResult {
 
-         //normalize allowed MIME types
+         //Normalize allowed MIME types
          $allowed = array_map(fn($type) => strtolower(trim((string)$type)), $this->threshold);
 
-         //resolve file path
+         //Resolve file path
          $file_path = null;
 
          if($value instanceof UploadedFile){
              $file_path = $value->tmp_name;
-         }elseif (is_string($value) && file_exists($value)){
+         }elseif (is_string($value) && file_exists($value)) {
              $file_path = $value;
          }
 
@@ -33,15 +34,40 @@ class MimeTypesValidator extends IValidator {
          $finfo = new finfo(FILEINFO_MIME_TYPE);
          $detected_mime = $finfo->file($file_path);
 
-         if(!$detected_mime){
+         if(!$detected_mime) {
              return new ValidationResult(false, "{$this->field} MIME type could not be determined.");
          }
 
          $detected_mime = strtolower($detected_mime);
 
-         //Validate against allowed list
-         if(!in_array($detected_mime, $allowed, true)){
-             return new ValidationResult(false, "{$field} must be one of the following MIME types: ".implode(', ', $allowed) . ".");
+         //Extract major type (e.g. "image" from "image/jpeg")
+         [$detected_major] = explode('/', $detected_mime, 2);
+
+         $is_valid = false;
+
+         foreach($allowed as $type){
+
+             //Wildcard support: image/*, video/*
+             if(str_ends_with($type, '/*')){
+                 $allowed_major = rtrim($type, '/*');
+                 if($allowed_major === $detected_major){
+                     $is_valid = true;
+                     break;
+                 }
+             }else{
+                 //Exact match
+                 if($type === $detected_mime){
+                     $is_valid = true;
+                     break;
+                 }
+             }
+         }
+
+         if(!$is_valid){
+             return new ValidationResult(
+                 false, 
+                 "{$this->field} must be one of the following MIME types: ".implode(', ', $allowed)."."
+             );
          }
 
          return new ValidationResult(true, null);

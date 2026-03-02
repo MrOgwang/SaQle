@@ -201,6 +201,25 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
          return $model;
      }
 
+     final static public function hyrate_collection(array $objects) {
+
+     	 $models = [];
+
+     	 foreach($objects as $obj){
+     	 	 $models[] = self::from_db(...get_object_vars($obj));
+     	 }
+
+     	 $collection_class = self::collection_class();
+
+ 	 	 if($collection_class == GenericModelCollection::class){
+ 	 	 	 $collection = new GenericModelCollection(get_called_class(), $models);
+ 	 	 }else{
+ 	 	 	 $collection = new $collection_class($models);
+ 	 	 }
+
+ 	 	 return $collection;
+     }
+
 	 public static function get_table_and_connection(?string $connection = null){
 	 	 $connection = ($connection ?? config('db.default_connection')) ?? array_keys(config('db.connections'), [])[0] ?? '';
 
@@ -220,15 +239,18 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
          return [$connection, array_keys($models)[$index]];
 	 }
 
-	 protected function save_model_files(array &$kwargs) {
-	     if(empty($this->table->get_file_field_names())){
+	 protected function save_model_files(array &$kwargs){
+
+	 	 $file_field_names = $this->table->get_file_field_names();
+
+	     if(empty($file_field_names)){
 	         return;
 	     }
 
 	     $model = strtolower((new ReflectionClass($this))->getShortName());
 	     $session = bin2hex(random_bytes(16));
 
-	     foreach($this->table->get_file_field_names() as $ffn){
+	     foreach($file_field_names as $ffn){
 
 	         if(!array_key_exists($ffn, $kwargs)){
 	             continue;

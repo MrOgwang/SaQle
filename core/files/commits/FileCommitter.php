@@ -6,12 +6,13 @@ use SaQle\Orm\Entities\Field\Types\FileField;
 use SaQle\Core\Files\Storage\{TempStorage, StorageFactory};
 use RuntimeException;
 
-final class DefaultFileCommitter implements FileCommitInterface {
+class FileCommitter implements FileCommitInterface {
 
      protected FileField $field;
+     
      protected array $committed = [];
 
-     public function __construct(FileField $field) {
+     public function __construct(FileField $field){
          $this->field = $field;
      }
 
