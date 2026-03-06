@@ -10,7 +10,7 @@ use SaQle\Orm\Entities\Model\Interfaces\{IModel, ITableSchema};
 use SaQle\Orm\Entities\Model\Collection\GenericModelCollection;
 use SaQle\Core\Exceptions\Model\{UndefinedFieldException, MissingRequiredFieldsException};
 use SaQle\Build\Utils\MigrationUtils;
-use SaQle\Core\Files\{TempFileRef, UploadedFile};
+use SaQle\Core\Files\{TempFileRef, UploadedFile, StoredFile, StoredFileCollection};
 use SaQle\Core\Files\Storage\TempStorage;
 use SaQle\Core\Assert\Assert;
 use Exception;
@@ -178,6 +178,10 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
      final public function get_file_references(){
      	 return $this->files['references'];
      }
+
+     final public function get_upload_session(){
+     	 return $this->files['file_upload_session'];
+     }
      
      final public static function make(){
      	 self::$from_static_method = true;
@@ -201,18 +205,20 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
          return $model;
      }
 
-     final static public function hyrate_collection(array $objects) {
+     final static public function hydrate_collection(array $objects) {
+
+     	 $model_class = get_called_class();
 
      	 $models = [];
 
      	 foreach($objects as $obj){
-     	 	 $models[] = self::from_db(...get_object_vars($obj));
+     	 	 $models[] = $model_class::from_db(...get_object_vars($obj));
      	 }
 
-     	 $collection_class = self::collection_class();
+     	 $collection_class = $model_class::collection_class();
 
  	 	 if($collection_class == GenericModelCollection::class){
- 	 	 	 $collection = new GenericModelCollection(get_called_class(), $models);
+ 	 	 	 $collection = new GenericModelCollection($model_class, $models);
  	 	 }else{
  	 	 	 $collection = new $collection_class($models);
  	 	 }
@@ -346,19 +352,32 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
      }
 
      private function render_field(string $name){
+     	 $value = $this->data[$name] ?? "";
 
-     	 if(!array_key_exists($name, $this->table->get_clean_fields())){
-     	 	 return $this->data[$name];
+     	 if(array_key_exists($name, $this->table->get_clean_fields())){ 
+     	 	 $field = $this->table->get_clean_fields()[$name];
+     	 	 if($field instanceof FileField || is_subclass_of($field::class, FileField::class)){
+
+     	 	 	 $default_url = $field->get_default_url();
+     	 	 	 if(is_callable($default_url)){
+     	 	 	 	 $default_url = $default_url($this);
+     	 	 	 }
+
+     	 	 	 if($field->get_multiple()){
+     	 	 	 	$value = StoredFileCollection::from_json($value, $default_url);
+     	 	 	 }else{
+     	 	 	 	 $value = StoredFile::from_json($value);
+     	 	 	 	 if(!$value && $default_url){
+     	 	 	 	 	 $value = StoredFile::default($default_url);
+     	 	 	 	 }
+     	 	 	 }
+     	 	 }
+
+     	 	 $field->value($value);
+     	 	 $value = $field->render_field($this);
      	 }
 
-     	 $field = $this->table->get_clean_fields()[$name];
-     	 $render_callback = $field->get_render_callback();
-
-     	 if($render_callback){
-     	 	 return $render_callback($this->data);
-     	 }
-
-     	 return $this->data[$name];
+     	 return $value;
      }
 
 	 public function __get($name){
@@ -391,6 +410,24 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
      	 }
 
      	 return $model->table->get_clean_fields()[$name];
+     }
+
+     /**
+     * Return only specified fields from the model
+     *
+     * @param array $fields
+     * @return array
+     */
+     public function only(array $fields): array {
+         $result = [];
+
+         foreach ($fields as $field) {
+             if (isset($this->$field) || property_exists($this, $field)) {
+                 $result[$field] = $this->$field;
+             }
+         }
+
+         return $result;
      }
 
      /**

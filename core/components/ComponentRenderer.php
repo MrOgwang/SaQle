@@ -62,26 +62,26 @@ class ComponentRenderer {
      }
 
      private function inject_dynamic(string $html, ComponentNode $node): string {
-         // Match <component:dynamic />, allowing arbitrary whitespace
+         // Match <component:slot />, allowing arbitrary whitespace
          $pattern = '/<component:slot\s*\/>/i';
 
-         // If no dynamic slot exists, return early
-         if (!preg_match($pattern, $html)) {
+         //If no dynamic slot exists, return early
+         if(!preg_match($pattern, $html)) {
              return $html;
          }
 
-         // Resolve the dynamic child (by convention: first child)
+         //Resolve the dynamic child (by convention: first child)
          $child = $node->children[0] ?? null;
 
-         // If no child exists, remove the dynamic slot entirely
-         if (!$child) {
+         //If no child exists, remove the dynamic slot entirely
+         if(!$child) {
              return preg_replace($pattern, '', $html);
          }
 
-         // Render the child using the parent context
+         //Render the child using the parent context
          $rendered = $this->render($child, $node->context);
 
-         // Replace the FIRST occurrence only
+         //Replace the FIRST occurrence only
          return preg_replace($pattern, $rendered, $html, 1);
      }
 

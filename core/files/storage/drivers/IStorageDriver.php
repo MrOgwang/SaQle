@@ -11,7 +11,9 @@ interface IStorageDriver {
 
      public function read(string $path): mixed;
 
-     public function url(string $path): ?string;
-
      public function path(string $path): ?string;
+
+     public function config(): array;
+
+     public function public_url(string $path): ?string;
 }

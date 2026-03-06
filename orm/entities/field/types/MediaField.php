@@ -45,23 +45,6 @@ abstract class MediaField extends FileField {
 	 #[ShouldValidate()]
 	 protected ?array $aspect_ratio = null;
 
-	 /**
-      * Where there were no files uploaded, but there is a default file that can be shown, return its path
-      * 
-      * This is particularly useful for images and videos
-      * 
-      * */
-	 protected null|string|Closure $default_url = null;
-
-	 public function default_url(string|callable $url){
-	 	 $this->default_url = $url;
-	 	 return $this;
-	 }
-
-	 public function get_default_url(){
-	 	 return $this->default_url;
-	 }
-
 	 public function max_width(mixed $max_width){
 	 	 $this->max_width = $max_width;
 	 	 return $this;

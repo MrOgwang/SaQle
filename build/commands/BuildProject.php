@@ -21,6 +21,11 @@ class BuildProject{
 
      protected function get_all_files(bool $changed = false){
          $files = [];
+
+         //check saqle routes
+         foreach ($this->watch_dirs as $dir){
+             $this->scan_dir(path_join([config('saqle_routes_dirs')[0], $dir]), $files, $dir, $changed);
+         }
     
          //check project folder
          foreach ($this->watch_dirs as $dir){
@@ -33,7 +38,7 @@ class BuildProject{
                  $this->scan_dir( path_join([config('base_path'), 'modules', $app, $dir]), $files, $dir, $changed, $app);
              }
          }
-
+         
          //remove deleted files from manifest
          foreach(array_keys($this->manifest->data) as $file){
              if(!file_exists($file)){

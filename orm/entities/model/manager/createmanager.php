@@ -72,6 +72,10 @@ class CreateManager extends QueryManager{
 	 	 return $this->extract_data('files');
 	 }
 
+	 public function get_upload_session(){
+	 	 return $this->model->get_upload_session();
+	 }
+
 	 public function get_duplicate_action(){
 	 	 return $this->model instanceof ModelCollection ? 
 	 	 $this->model[0]->table->get_action_on_duplicate() :
@@ -93,7 +97,6 @@ class CreateManager extends QueryManager{
 	 }
 
 	 public function get_primary_key_values(){
-	 	 //print_r($this->model->get_data());
 	 	 return $this->model instanceof ModelCollection ? 
 	 	 $this->model->pluck_unique($this->model[0]->table->get_pk_name()) :
 	 	 [$this->model->get_data()[$this->model->table->get_pk_name()]];
@@ -108,11 +111,15 @@ class CreateManager extends QueryManager{
 	 	 $file_commiter = new FileCommitCoordinator();
 
 	 	 try{
+	 	 	 $multiple = $this->is_multiple_inserts();
+
 	 	 	 //connect to the database
 	 	 	 $this->dbdriver->connect_with_database();
 
 	 	 	 //get query info
 	 	 	 $query_info = $this->get_query_info();
+
+	 	 	 print_r($this->get_data());
 
 	 	 	 //send a pre insert signal to observers
 		 	 $named_args = $this->get_named_args('insert', $query_info, null, null, $this->get_data(), $this->get_files());
@@ -140,8 +147,19 @@ class CreateManager extends QueryManager{
 
 		 	 $result = $this->is_multiple_inserts() ? $rows : $rows[0];
 
-		 	 //save files if any
-		 	 $file_commiter->commit($this->model, $this->get_files(), $result);
+             /**
+              * Save files if any:
+              * 
+              * WARNING: Don't allow file uploads for multiple inserts at the moment until
+              * this is clearly looked at.
+              * */
+		 	 if(!$multiple){
+		 	 	 $file_commiter->commit($this->model, $this->get_files(), $this->get_upload_session(), $result);
+		 	     $saved_files = $file_commiter->get_comitted_files();
+
+		 	     //update created row
+		 	     $result = $this->update_files($result, $saved_files);
+		 	 }
 
              //send a post insert signal to observers
              $this->dispatch_event($this->model::class, ModelEventPhase::CREATED, $named_args, resolve('request')->user, $result);
@@ -156,13 +174,25 @@ class CreateManager extends QueryManager{
      	 }
 	 }
 
+	 private function update_files($created_row, $saved_files){
+	 	 if($saved_files){
+	 	 	 $model_class = $this->get_model_class();
+	 	     $pk_name = $this->get_primary_key_column();
+	 	     $pk_value = $created_row->$pk_name;
+
+	 	     return $model_class::update($saved_files)->where($pk_name, $pk_value)->now();
+	 	 }
+
+	 	 return $created_row;
+	 }
+
 	 private function get_created_rows($statement){
 	 	 //after successful execute
 		 if($this->dbdriver->supports_returning()){
 		     
 		     $type = $this->get_model_class();
 
-		     return $type::hyrate_collection($statement->fetchAll(PDO::FETCH_OBJ));
+		     return $type::hydrate_collection($statement->fetchAll(PDO::FETCH_OBJ));
 		     
 		 }
 

@@ -46,10 +46,10 @@ class FileField extends Field {
 	 protected string $storage = "default"; //public, private
 
 	 //Upload path: This is where the file will be uploaded to
-	 protected null|string|array|Closure $upload_to = null;
+	 protected null|string|Closure $upload_to = null;
 
 	 //a callback to rename the file
-	 protected null|array|Closure $rename_callback = null;
+	 protected null|Closure $rename_to = null;
 
 	 //these fields are required to properly setup path and rename
 	 protected ?array $depends_on = null;
@@ -81,6 +81,23 @@ class FileField extends Field {
 	 #[ShouldValidate()]
 	 protected ?array $mime_types = null;
 
+	 /**
+      * Where there were no files uploaded, but there is a default file that can be shown, return its path
+      * 
+      * This is particularly useful for images and videos
+      * 
+      * */
+	 protected null|string|Closure $default_url = null;
+
+	 public function default_url(string|callable $url){
+	 	 $this->default_url = $url;
+	 	 return $this;
+	 }
+
+	 public function get_default_url(){
+	 	 return $this->default_url;
+	 }
+
 	 public function depends_on(array $fields){
 	 	 $this->depends_on = $fields;
 	 	 return $this;
@@ -99,13 +116,13 @@ class FileField extends Field {
 	 	 return $this->upload_to;
 	 }
 
-	 public function rename_callback(callable|string $rename_callback){
-	 	 $this->rename_callback = $rename_callback;
+	 public function rename_to(callable|string $rename_to){
+	 	 $this->rename_to = $rename_to;
 	 	 return $this;
 	 }
 
-	 public function get_rename_callback(){
-	 	 return $this->rename_callback;
+	 public function get_rename_to(){
+	 	 return $this->rename_to;
 	 }
 
 	 public function max_size(mixed $size){
@@ -173,7 +190,7 @@ class FileField extends Field {
      protected function initialize_defaults(){
 
          $this->native_type = "file";
-         $this->type = ColumnType::CHAR;
+         $this->type = ColumnType::TEXT;
 
          parent::initialize_defaults();
 

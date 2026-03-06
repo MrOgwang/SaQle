@@ -28,15 +28,24 @@ if(!function_exists('request')){
      }
 }
 
-if(!function_exists('file_logger')){
-     function file_logger(){
-        return resolve(FileLogger::class);
+if(!function_exists('log_to_file')){
+     function log_to_file(string $log){
+         $logger = new FileLogger( path_join([config('base_path'), 'logs', 'errors.txt']) );
+         $timestamp = time();
+         $time = date("g:i A", $timestamp);
+         $logger->log_to_file($time." -- ".$log."\n\n");
      }
 }
 
 if(!function_exists('config')){
      function config(string $key, mixed $default = null): mixed {
          return app()->container->resolve(ConfigRepository::class)->get($key, $default);
+     }
+}
+
+if(!function_exists('config_all')){
+     function config_all(): mixed {
+         return app()->container->resolve(ConfigRepository::class)->all();
      }
 }
 
@@ -88,17 +97,6 @@ if(!function_exists('path_join')){
 if(!function_exists('redirect')){
      function redirect(?string $url = null, int $status = HttpMessage::FOUND, mixed $data = null, ?string $message = null){
          return new RedirectResponse(url: $url, status: $status)->send();
-     }
-}
-
-if(!function_exists('import_routes')){
-     function import_routes(string $app, string $type = 'web'){
-         $path = config('base_path').'/modules/'.$app.'/routes/'.$type.'.php';
-         if(file_exists($path)){
-             return require $path;
-         }
-
-         return [];
      }
 }
 
@@ -206,3 +204,54 @@ if(!function_exists('event')){
      }
 }
 
+if(!function_exists('media_root')){
+     function media_root(string $path, bool $public = true) : string {
+         return !$public ? path_join([config('base_path'), $path], true) : path_join([config('document_root'), $path], true);
+     }
+}
+
+if(!function_exists('encrypt')){
+     function encrypt($plain_text, $key = '', $salt = ''){
+         $secret_key = hash_pbkdf2("sha256", $key, $salt, 10000, 32, true); // 32 bytes for AES-256
+
+         $iv = openssl_random_pseudo_bytes(16); // 128-bit IV
+
+         $encrypted = openssl_encrypt($plain_text, 'AES-256-CBC', $secret_key, OPENSSL_RAW_DATA, $iv);
+
+         if($encrypted === false){
+             throw new Exception('Encryption failed');
+         }
+         
+         return base64_encode($iv.$encrypted);
+     }
+ }
+
+ if(!function_exists('decrypt')){
+     function decrypt($encrypted_text, $key = '', $salt = ''){
+         $secret_key = hash_pbkdf2("sha256", $key, $salt, 10000, 32, true); // 32 bytes for AES-256
+
+         $decoded = base64_decode($encrypted_text, true);
+
+         if($decoded === false || strlen($decoded) < 17){
+             return false;
+         }
+
+         $iv = substr($decoded, 0, 16);
+         $ciphertext = substr($decoded, 16);
+
+         return openssl_decrypt($ciphertext, 'AES-256-CBC', $secret_key, OPENSSL_RAW_DATA, $iv);
+     }
+}
+
+function base64_to_url(string $b64): string {
+    return rtrim(strtr($b64, '+/', '-_'), '=');
+}
+
+function url_to_base64(string $url): string {
+    $b64 = strtr($url, '-_', '+/');
+    $padding = strlen($b64) % 4;
+    if ($padding > 0) {
+        $b64 .= str_repeat('=', 4 - $padding);
+    }
+    return $b64;
+}

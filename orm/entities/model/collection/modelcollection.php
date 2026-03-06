@@ -6,6 +6,7 @@ namespace SaQle\Orm\Entities\Model\Collection;
 use SaQle\Core\Collection\Base\TypedCollection;
 use SaQle\Orm\Entities\Model\Interfaces\IModel;
 use SaQle\Orm\Entities\Model\Manager\CreateManager;
+use InvalidArgumentException;
 
 abstract class ModelCollection extends TypedCollection implements IModel {
 
@@ -57,8 +58,9 @@ abstract class ModelCollection extends TypedCollection implements IModel {
          }
 
          //Case 2: many objects (array of associative arrays)
-         foreach ($data as $item) {
-             if(!is_array($item) || !is_assoc($item)){
+         foreach($data as $item){
+             $tmp_item = !is_array($item) ? (array)$item : $item;
+             if(!is_assoc($tmp_item)){
                 throw new InvalidArgumentException(
                     "The data to insert is not properly defined!"
                 );
@@ -98,6 +100,15 @@ abstract class ModelCollection extends TypedCollection implements IModel {
          }
 
          return $files;
+     }
+
+     final public function get_upload_session(){
+         $sessions = [];
+         foreach($this->elements as $el){
+             $sessions[] = $el->get_upload_session();
+         }
+
+         return $sessions;
      }
 
      public function get_update_columns(){

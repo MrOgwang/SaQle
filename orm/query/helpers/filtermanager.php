@@ -89,12 +89,22 @@ trait FilterManager{
 	 }
 
 	 public function gwhere($callback){
+	 	 $this->before_where("", "");
+
 	 	 $this->wbuilder->group_aggregate($this, $callback, '&');
+
+	 	 $this->after_where("", "");
+
 	 	 return $this;
 	 }
 
 	 public function or_gwhere($callback){
+	 	 $this->before_where("", "");
+
 	 	 $this->wbuilder->group_aggregate($this, $callback, '|');
+
+	 	 $this->after_where("", "");
+
 	 	 return $this;
 	 }
 

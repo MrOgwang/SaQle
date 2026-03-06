@@ -3,11 +3,9 @@ declare(strict_types = 1);
 
 namespace SaQle\Orm\Entities\Model\Manager;
 
-use SaQle\Orm\Operations\Crud\RunOperation;
-use SaQle\Orm\Connection\Connection;
-
 use SaQle\Orm\Entities\Model\Schema\Model;
 use SaQle\Core\Exceptions\Model\RunOperationFailedException;
+use PDO;
 
 class RunManager extends QueryManager {
 	
@@ -64,7 +62,7 @@ class RunManager extends QueryManager {
 			 	 ]);
 			 }
 
-			 return match($operation){
+			 return match($this->operation){
 			 	 'insert' => $this->handle_insert($statement),
 			 	 'select' => $this->handle_select($statement, $this->multiple),
 			 	 'update' => $this->handle_update($statement),

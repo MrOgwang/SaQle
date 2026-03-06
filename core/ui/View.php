@@ -101,54 +101,29 @@ class View {
      }
 
      public function view(){
-         //extract the data
-         extract($this->data);
+         extract($this->data, EXTR_SKIP);
 
-         //replace template syntax with php syntax
-         /*$this->content = preg_replace("/{{\s*(.+?)\s*}}/", "<?php echo htmlspecialchars($1, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8', false); ?>", $this->content);*/
-         $this->content = preg_replace("/{{\s*(.+?)\s*}}/", "<?php echo $1; ?>", $this->content);
-         $this->content = preg_replace('/{!!\s*(.+?)\s*!!}/', '<?php echo $1; ?>', $this->content);
-         $this->content = preg_replace('/@if\(\s*(.+?)\s*\)/', '<?php if($1): ?>', $this->content);
-         $this->content = preg_replace('/@elseif\(\s*(.+?)\s*\)/', '<?php elseif($1): ?>', $this->content);
+         //raw output
+         $this->content = preg_replace('/{!!\s*(.*?)\s*!!}/s', '<?php echo $1; ?>', $this->content);
+
+         //escaped/normal output
+         $this->content = preg_replace(
+             '/{{\s*(.*?)\s*}}/s', 
+             "<?php echo htmlspecialchars($1, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8'); ?>", 
+             $this->content
+         );
+
+         $this->content = preg_replace('/@if\(\s*(.*?)\s*\)/', '<?php if($1): ?>', $this->content);
+         $this->content = preg_replace('/@elseif\(\s*(.*?)\s*\)/', '<?php elseif($1): ?>', $this->content);
+
          $this->content = str_replace('@else', '<?php else: ?>', $this->content);
          $this->content = str_replace('@endif', '<?php endif; ?>', $this->content);
-         $this->content = preg_replace('/@foreach\(\s*(.+?)\s*\)/', '<?php foreach($1): ?>', $this->content);
+
+         $this->content = preg_replace('/@foreach\(\s*(.*?)\s*\)/', '<?php foreach($1): ?>', $this->content);
          $this->content = str_replace('@endforeach', '<?php endforeach; ?>', $this->content);
-         
-         $this->content = preg_replace_callback('/@cannot\((.*?)\)/', function ($matches) use ($session_user){
-            return "<?php if (\$session_user && \$session_user->cannot({$matches[1]})): ?>";
-         }, $this->content);
-         $this->content = str_replace('@endcannot', '<?php endif; ?>', $this->content);
 
-         $this->content = preg_replace_callback('/@can\((.*?)\)/', function ($matches) use ($session_user){
-            return "<?php if (\$session_user && \$session_user->can({$matches[1]})): ?>";
-         }, $this->content);
-         $this->content = str_replace('@endcan', '<?php endif; ?>', $this->content);
-
-         $this->content = preg_replace_callback('/@isnot\((.*?)\)/', function ($matches) use ($session_user) {
-            return "<?php if (\$session_user && \$session_user->isnot({$matches[1]})): ?>";
-         }, $this->content);
-         $this->content = str_replace('@endisnot', '<?php endif; ?>', $this->content);
-
-         $this->content = preg_replace_callback('/@is\((.*?)\)/', function ($matches) use ($session_user) {
-            return "<?php if (\$session_user && \$session_user->is({$matches[1]})): ?>";
-         }, $this->content);
-         $this->content = str_replace('@endis', '<?php endif; ?>', $this->content);
-
-         $this->content = preg_replace_callback('/@hasnot\((.*?)\)/', function ($matches) use ($session_user) {
-            return "<?php if (\$session_user && \$session_user->hasnot({$matches[1]})): ?>";
-         }, $this->content);
-         $this->content = str_replace('@endhasnot', '<?php endif; ?>', $this->content);
-
-         $this->content = preg_replace_callback('/@has\((.*?)\)/', function ($matches) use ($session_user) {
-            return "<?php if (\$session_user && \$session_user->has({$matches[1]})): ?>";
-         }, $this->content);
-         $this->content = str_replace('@endhas', '<?php endif; ?>', $this->content);
-         
          ob_start();
-         eval('?>'.$this->content);
-         $final = ob_get_clean();
-
-         return $final;
+         eval('?>' . $this->content);
+         return ob_get_clean();
      }
 }

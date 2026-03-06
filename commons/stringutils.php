@@ -1,6 +1,8 @@
 <?php
 namespace SaQle\Commons;
+
 use stdClass;
+
 trait StringUtils{
 	 public static function random_string($max_length = 30, $min_length = 30){
 		 $min_length = $max_length < $min_length ? $max_length : $min_length;

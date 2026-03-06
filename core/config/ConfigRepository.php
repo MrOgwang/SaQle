@@ -43,4 +43,8 @@ final class ConfigRepository {
      public function pop(): void {
          $this->items = array_pop($this->stack);
      }
+
+     public function merge(array $config): void {
+         $this->items = array_merge($this->items, $config);
+     }
 }

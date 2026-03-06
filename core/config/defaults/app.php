@@ -1,7 +1,5 @@
 <?php
 
-use SaQle\Core\Files\Storage\Drivers\LocalStorageDriver;
-
 return [
 
      //the name of the application.
@@ -22,30 +20,20 @@ return [
       * */
  	 'modules' => [],
 
- 	 //the name of the root media folder
- 	 'media_folder' => 'media',
-
      //the url for media
      'media_url' => '/media/',
 
      //the media url encryption key
-     'media_key' => '',
+     'media_encrypt_key' => '',
+
+     //the media url encryption salt
+     'media_encrypt_salt' => '',
 
      //the url prefix for cron jobs
      'cron_url' => '/cron/',
 
- 	 //whether to keep media in document root i.e public folder
- 	 'hidden_media_folder' => false,
-
      //media storage drivers
-     'media_storage_drivers' => [
-         'local' => [
-             'driver' => LocalStorageDriver::class,
-             'root' => '/var/www/app/public/uploads',
-             'visibility' => 'public',
-             'base_url' => 'https://example.com/uploads',
-         ],
-     ],
+     'media_storage_drivers' => [],
 
  	 //api url prefixes
  	 'api_url_prefixes' => ['/api/v1/'],

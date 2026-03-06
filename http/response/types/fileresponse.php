@@ -26,6 +26,7 @@ class FileResponse{
          $file_data = json_decode($decoded);
          $file_name = $file_data->file_name;
          $file_path = $file_data->path;
+         
          $abs_path = rtrim($file_path, '/\\').DIRECTORY_SEPARATOR.$file_name;
          if (file_exists($abs_path)){
              $mime = mime_content_type($abs_path);

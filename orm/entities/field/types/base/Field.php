@@ -176,12 +176,21 @@ class Field implements IField {
 	 	 return $this->primary;
 	 }
 
-	 public function render_callback(callable $callback){
+	 public function render(callable $callback){
 	 	 $this->render_callback = $callback;
 	 	 return $this;
 	 }
 
-	 public function get_render_callback(){
+	 public function render_field(mixed $object){
+	 	 $callback = $this->render_callback;
+	 	 if($callback){
+	 	 	 return $callback($this->value, $object);
+	 	 }
+
+	 	 return $this->value;
+	 }
+
+	 public function get_render(){
 	 	 return $this->render_callback;
 	 }
 

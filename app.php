@@ -19,10 +19,9 @@ use SaQle\Core\Services\Providers\{
 };
 use SaQle\Http\Cors\CorsConfig;
 use SaQle\Core\Support\AppContext;
-use SaQle\Core\Config\{ConfigRepository, AppSetup};
+use SaQle\Core\Config\{ConfigRepository, AppSetup, Config};
 use SaQle\Http\Request\{Request, Runtime};
 use SaQle\Session\Providers\SessionProvider;
-use SaQle\Routes\Providers\RoutingProvider;
 use SaQle\Auth\Guards\GuardManager;
 
 final class App {
@@ -45,21 +44,25 @@ final class App {
          $this->rules      = new RuleHandlerRegistry();
          $this->disks      = new StorageRegistry();
 
-         // 3. Load environment & helpers
+         $this->container->singleton(ConfigRepository::class, fn() => new ConfigRepository([]));
+
+         //2. load framework configurations
+         $config = $setup->get_framework_configs();
+         $this->expose_configs($config);
+
+         //4. Load environment & helpers
          $this->initialize();
 
-         // 4. Load config
-         $config = $setup->get_configurations();
+         //5. Load project configurations
+         $config = array_merge($config, $setup->get_project_configs());
+         $this->expose_configs($config);
 
-         // 5. Remaining services
+         //6. Remaining services
          $this->cors   = new CorsConfig($setup->cors);
-         $this->events = new CachedEventRegistry(
-             $config['base_path'],
-             $config['class_mappings_dir']
-         );
+         $this->events = new CachedEventRegistry();
 
-         // 6. Register framework + app providers
-         $this->boot($config);
+         //7. Register framework + app providers
+         $this->boot();
      }
 
      private function initialize() : void {
@@ -72,8 +75,12 @@ final class App {
          $this->load_environment();
      }
 
-     public function boot(array $config): void {
-         $this->container->singleton(ConfigRepository::class, fn() => new ConfigRepository($config));
+     private function expose_configs(array $config){
+         $repo = $this->container->resolve(ConfigRepository::class);
+         $repo->merge($config);
+     }
+
+     public function boot(): void {
          $this->register_middlewares();
          $this->register_providers();
      }
@@ -98,7 +105,6 @@ final class App {
              SessionProvider::class,
              ValidationServiceProvider::class,
              StorageServiceProvider::class
-             //RoutingProvider::class
          ];
 
          foreach(array_merge($framework_providers, $this->setup->providers) as $provider){

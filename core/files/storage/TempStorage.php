@@ -8,7 +8,7 @@ use RuntimeException;
 final class TempStorage {
 
      private static function base(): string {
-         return config('base_path') . '/storage/tmp/uploads';
+         return config('base_path').'/storage/tmp/uploads';
      }
 
      public static function store(string $model, string $field, string $session, UploadedFile $file): TempFileRef {
@@ -35,7 +35,15 @@ final class TempStorage {
             'stored_at'     => time()
          ]);
 
-         return new TempFileRef($model, $field, $session, $file_id);
+         return new TempFileRef(
+             $model, 
+             $field, 
+             $session, 
+             $file_id, 
+             $file->name,
+             $file->type,
+             $file->size
+         );
      }
 
      public static function resolve(TempFileRef $ref): string {
@@ -75,5 +83,9 @@ final class TempStorage {
          $meta['files'][] = $file_meta;
 
          file_put_contents($meta_path, json_encode($meta, JSON_PRETTY_PRINT), LOCK_EX);
+     }
+
+     public static function cleanup_session(string $upload_session_id){
+         //To DO
      }
 }

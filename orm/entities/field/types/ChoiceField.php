@@ -7,6 +7,9 @@ use RuntimeException;
 use SaQle\Orm\Entities\Field\Attributes\{FieldDefinition, ShouldValidate};
 
 class ChoiceField extends CharField {
+
+	 private ?array $raw_choices = null;
+
 	 //the choices to pick from
 	 #[ShouldValidate()]
 	 protected ?array $choices = null {
@@ -36,13 +39,14 @@ class ChoiceField extends CharField {
 	 //the human readable label for particular choice
 	 public mixed $label {
 	 	 get {
-	 	 	return $this->choices[$this->value] ?? $this->value;
+	 	 	return $this->raw_choices[$this->value] ?? $this->value;
 	 	 }
 	 }
 
 	 protected bool $_use_keys = false;
 
 	 public function choices(array $choices){
+	 	 $this->raw_choices = $choices;
 	 	 $this->choices = $choices;
 	 	 return $this;
 	 }

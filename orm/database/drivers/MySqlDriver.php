@@ -382,12 +382,13 @@ class MySqlDriver extends DbDriver {
              if($islength)
                  return "VARCHAR(".$islength.")";
 
-     	 	 return match($context->size){
+     	 	 return match($context->size ?? ''){
      	 	 	 'regular' => 'TEXT',
      	 	 	 'big'     => 'LONGTEXT',
      	 	 	 'medium'  => 'MEDIUMTEXT',
      	 	 	 'small'   => 'SMALLTEXT',
-     	 	 	 'tiny'    => 'TINYTEXT'
+     	 	 	 'tiny'    => 'TINYTEXT',
+                 default   => 'TEXT'
      	 	 };
      	 }
 

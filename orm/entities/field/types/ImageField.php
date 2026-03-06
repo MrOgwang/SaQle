@@ -54,8 +54,8 @@ class ImageField extends MediaField {
 
      }
 
-     public function get_committer(): FileCommitInterface {
+     /*public function get_committer(): FileCommitInterface {
          return new ImageFileCommitter($this);
-     }
+     }*/
 }
 

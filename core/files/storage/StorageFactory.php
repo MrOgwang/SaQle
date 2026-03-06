@@ -3,6 +3,7 @@
 namespace SaQle\Core\Files\Storage;
 
 use SaQle\Core\Files\Storage\Drivers\LocalStorageDriver;
+use SaQle\Core\Files\Generators\DefaultPrivateFileUrlGenerator;
 use RuntimeException;
 
 final class StorageFactory {
@@ -14,9 +15,10 @@ final class StorageFactory {
          if(!$config){
              $config = [
                  'driver' => LocalStorageDriver::class,
-                 'root' => base_path('storage/uploads'),
+                 'root' => media_root('media', false),
                  'visibility' => 'private',
-                 'base_url' => null,
+                 'base_url' => '/media',
+                 'private_url_generator' => DefaultPrivateFileUrlGenerator::class
              ];
          }
 
