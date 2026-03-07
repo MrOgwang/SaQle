@@ -104,7 +104,7 @@ final class ParameterResolver {
              $optional = $param->isOptional();
          }else{
              $default = $param->hasDefaultValue() ? $param->getDefaultValue() : null;
-             $optional = $param_type?->allowsNull() ?? true;
+             $optional = $param_type?->allowsNull() ?? false;
          }
 
          $datasettings = ['name' => $param_name, 'type' => $param_type, 'default' => $default, 'optional' => $optional];

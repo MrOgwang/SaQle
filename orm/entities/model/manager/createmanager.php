@@ -118,9 +118,7 @@ class CreateManager extends QueryManager{
 
 	 	 	 //get query info
 	 	 	 $query_info = $this->get_query_info();
-
-	 	 	 print_r($this->get_data());
-
+	 	 	 
 	 	 	 //send a pre insert signal to observers
 		 	 $named_args = $this->get_named_args('insert', $query_info, null, null, $this->get_data(), $this->get_files());
 		 	 $this->dispatch_event($this->model::class, ModelEventPhase::CREATING, $named_args, resolve('request')->user);

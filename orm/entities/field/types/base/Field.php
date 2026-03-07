@@ -209,7 +209,7 @@ class Field implements IField {
 
 	         $attribute_instance = $attributes[0]->newInstance();
 
-	         $key = $attribute_instance->key ?? $property->getName();
+	         $key = $attribute_instance->get_key() ?? $property->getName();
 	         $value = $property->getValue($this);
 
 	         $result[$key] = $value;

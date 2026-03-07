@@ -5,44 +5,28 @@ namespace SaQle\Security\Validation\Validators;
 use SaQle\Security\Validation\Abstracts\IValidator;
 use SaQle\Security\Validation\Types\ValidationResult;
 
-class UnsignedValidator extends IValidator
-{
-    public function validate(
-        string $field,
-        mixed $value,
-        mixed $threshold = null,
-        array $context = []
-    ): ValidationResult {
+class UnsignedValidator extends IValidator {
+     protected function threshold_type(): string {
+         return 'bool';
+     }
 
-        // 1️⃣ Threshold must be boolean
-        if (!is_bool($threshold)) {
-            return new ValidationResult(
-                false,
-                "Unsigned rule for {$field} must be true or false."
-            );
-        }
+     public function validate(mixed $value, array $context = []): ValidationResult {
 
-        // 2️⃣ Value must be numeric (int or float)
-        if (!is_int($value) && !is_float($value)) {
-            return new ValidationResult(
-                false,
-                "{$field} must be a numeric value."
-            );
-        }
+         //value must be numeric (int or float)
+         if(!is_int($value) && !is_float($value)){
+             return new ValidationResult(false, "{$this->field} must be a numeric value.");
+         }
 
-        // 3️⃣ If unsigned = false → allow everything
-        if ($threshold === false) {
-            return new ValidationResult(true, null);
-        }
+         //if unsigned = false → allow everything
+         if($this->threshold === false) {
+             return new ValidationResult(true, null);
+         }
 
-        // 4️⃣ unsigned = true → disallow negatives
-        if ($value < 0) {
-            return new ValidationResult(
-                false,
-                "{$field} must be an unsigned number."
-            );
-        }
+         //unsigned = true → disallow negatives
+         if($value < 0){
+             return new ValidationResult(false, "{$this->field} must be an unsigned number.");
+         }
 
-        return new ValidationResult(true, null);
-    }
+         return new ValidationResult(true, null);
+     }
 }

@@ -17,7 +17,7 @@
 
 namespace SaQle\Apis\Mpesa;
 
-class StkPush{
+class StkPush {
 	 /**
 	  * Default timezone - if not provided, defaults to DEFAULT_TIMEZONE setting.
 	  * @var string
@@ -69,7 +69,7 @@ class StkPush{
      * New StkPush instance
      * @param array $settings: key => value array of configuration parameters
      **/
-	 public function __construct(...$settings) : void{
+	 public function __construct(...$settings){
 	 	$this->timezone            = $settings['timezone'];
 	 	$this->consumer_key        = $settings['consumer_key'];
 	 	$this->consumer_secret     = $settings['consumer_secret'];

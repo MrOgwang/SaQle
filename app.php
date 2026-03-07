@@ -1,6 +1,7 @@
 <?php
-
 namespace SaQle;
+
+//require __DIR__.'/vendor/autoload.php';
 
 use SaQle\Core\Services\Container\Container;
 use SaQle\Core\Registries\{

@@ -20,14 +20,18 @@ use SaQle\Security\Validation\Types\ValidationResult;
 use SaQle\Security\Validation\Abstracts\IValidator;
 
 class LengthValidator extends IValidator {
+
+	 protected function threshold_type(): string {
+         return 'int';
+     }
 	
 	 public function validate(mixed $value, array $context = []) : ValidationResult {
 	 	 
-	 	 $isvalid = mb_strlen($value) === (int)$threshold ? true : false;
+	 	 $isvalid = mb_strlen($value) === (int)$this->threshold ? true : false;
 
 	 	 return new ValidationResult(
              isvalid: $isvalid,
-             message: $isvalid ? null : "{$field} must have exactly {$threshold} characters!"
+             message: $isvalid ? null : "{$this->field} must have exactly {$this->threshold} characters!"
          );
 	 }
 }

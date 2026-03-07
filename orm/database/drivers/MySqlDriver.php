@@ -392,7 +392,11 @@ class MySqlDriver extends DbDriver {
      	 	 };
      	 }
 
-     	 if(ColumnType::FLOAT === $type || ColumnType::DOUBLE || ColumnType::DATE || ColumnType::TIME || ColumnType::JSON){
+     	 if(ColumnType::FLOAT === $type || 
+            ColumnType::DOUBLE === $type || 
+            ColumnType::DATE === $type || 
+            ColumnType::TIME === $type || 
+            ColumnType::JSON === $type){
      	 	 return strtoupper($type->value);
      	 }
 
@@ -422,7 +426,9 @@ class MySqlDriver extends DbDriver {
      	 if(!$def)
      	 	 return "";
 
-     	 $sql = [$def->column, $this->resolve_db_column_type($def->type, $def)];
+         $column_type = $this->resolve_db_column_type($def->type, $def);
+
+     	 $sql = [$def->column, $column_type];
 
      	 if($def->primary){
      	 	 $sql[] = $def->type === ColumnType::CHAR ? "PRIMARY KEY" : "AUTO_INCREMENT PRIMARY KEY";
@@ -430,7 +436,7 @@ class MySqlDriver extends DbDriver {
 
      	 $sql[] = $def->required ? "NOT NULL" : "NULL";
 
-     	 if(ColumnType::DATETIME === $def->type){
+     	 if($column_type === 'DATETIME'){
      	 	 $sql[] = $def->auto_now_add ? "DEFAULT CURRENT_TIMESTAMP" : "";
 		     $sql[] = $def->auto_now ? "ON UPDATE CURRENT_TIMESTAMP" : "";
      	 }

@@ -35,6 +35,7 @@ abstract class RequestContract {
          $reflection = new ReflectionClass($this);
 
          foreach ($reflection->getProperties() as $property){
+             $type = $property->getType();
              $attributes = $property->getAttributes(BindFrom::class);
 
              if(!$attributes){
@@ -44,19 +45,27 @@ abstract class RequestContract {
              $bind_instance = $attributes[0]->newInstance();
              $property_name = $property->getName();
              $value         = $this->$property_name ?? null;
-             $rules         = RuleParser::parse($bind_instance->rules ?? []);
+             $optional      = $type?->allowsNull() ?? false;
 
-             $validator = new FieldValidator(
-                 rules: $rules,
-                 array: false
-             );
+             /**
+              * Validate only non optional properties or
+              * optional properties for which values have been provided
+              * */
+             if(!$optional || ($optional && !is_null($value))){
 
-             $result = $validator->validate($property_name, $value);
+                 $rules = RuleParser::parse($bind_instance->rules ?? []);
 
-             if($result->isvalid){
-                 $this->validated_data[$property_name] = $value;
+                 $validator = new FieldValidator(rules: $rules, array: false);
+
+                 $result = $validator->validate($property_name, $value);
+
+                 if($result->isvalid){
+                     $this->validated_data[$property_name] = $value;
+                 }else{
+                     $errors[$property_name] = $result->errors;
+                 }
              }else{
-                 $errors[$property_name] = $result->errors;
+                 $this->validated_data[$property_name] = $value;
              }
          }
 

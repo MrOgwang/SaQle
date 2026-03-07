@@ -20,14 +20,18 @@ use SaQle\Security\Validation\Types\ValidationResult;
 use SaQle\Security\Validation\Abstracts\IValidator;
 
 class MinValidator extends IValidator {
+
+	 protected function threshold_type(): string { 
+         return 'int';
+     }
 	
 	 public function validate(mixed $value, array $context = []) : ValidationResult {
 	 	 
-	 	 $isvalid = $value >= $threshold ? true : false;
+	 	 $isvalid = $value >= $this->threshold ? true : false;
 
 	 	 return new ValidationResult(
              isvalid: $isvalid,
-             message: $isvalid ? null : "{$field} must be at least {$threshold}"
+             message: $isvalid ? null : "{$this->field} must be at least {$this->threshold}"
          );
 	 }
 	 

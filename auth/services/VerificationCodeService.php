@@ -47,10 +47,7 @@ class VerificationCodeService {
          return $this->repository->save($contact, $code_str, time() + $expires_in_seconds, $type);
      }
 
-     public function confirm_code(string $contact, string $code): void {
-         $saved_code = $this->repository->find_last_by_contact($contact);
-         if(!$saved_code || $saved_code->code !== $code) {
-             throw new RuntimeException("Invalid verification code provided.");
-         }
+     public function confirm_code(string $contact, string $code) : mixed {
+         return $this->repository->find_last_by_contact($contact);
      }
 }

@@ -475,6 +475,10 @@ final class Table {
          $this->fields = $fields;
      }
 
+     public function relations(array $fields){
+         $this->fields = $fields;
+     }
+
      public function get_defined_field_names(){
          return $this->defined_field_names;
      }

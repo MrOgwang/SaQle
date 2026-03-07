@@ -536,20 +536,23 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
      	 	 }
      	 }
 
-     	 /*/Inject creator and modifier fields, created and modified date time fields and deleted fields
+     	 $user_id = request()->user->user_id ?? null;
+
+     	 //inject creator and modifier fields, created and modified date time fields and deleted fields
 	 	 if($this->table->has_user_audit()){
-	 	 	 $data_to_save[$this->table->get_created_by_field()] = $request->user->user_id ?? 0; #Id of current user
-	 	 	 $data_to_save[$this->table->get_modified_by_field()] = $request->user->user_id ?? 0; #Id of current user
+	 	 	 $data[$this->table->get_created_by_field()] = $user_id;
+	 	 	 $data[$this->table->get_modified_by_field()] = $user_id;
 	 	 }
 	 	 if($this->table->has_timestamps()){
-	 	 	 $data_to_save[$this->table->get_created_at_field()] = time(); #current date time.
-	 	 	 $data_to_save[$this->table->get_modified_at_field()] = time(); #Current date time
+	 	 	 $data[$this->table->get_created_at_field()] = time();
+	 	 	 $data[$this->table->get_modified_at_field()] = time();
 	 	 }
 	 	 if($this->table->has_soft_delete()){
-	 	 	 $data_to_save[$this->table->get_deleted_field()] = 0; #0 or 1, will be updated according to the operation
-	 	 	 $data_to_save[$this->table->get_deleted_by_field()] = $request->user->user_id ?? 0; #Id of current user
-	 	 	 $data_to_save[$this->table->get_deleted_at_field()] = time(); #current date and time stamp
-	 	 }*/
+	 	 	 $data[$this->table->get_deleted_field()] = 0;
+	 	 	 $data[$this->table->get_deleted_by_field()] = null;
+	 	 	 $data[$this->table->get_deleted_at_field()] = null;
+	 	 }
+
      }
 
      /**

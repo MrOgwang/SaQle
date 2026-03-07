@@ -27,7 +27,7 @@ class MaxLengthValidator extends IValidator {
 	
 	 public function validate(mixed $value, array $context = []) : ValidationResult {
 
-	 	 if(mb_strlen($value) <= $this->threshold){
+	 	 if(mb_strlen($value ?? "") <= $this->threshold){
 	 	 	 return new ValidationResult(true);
 	 	 }
 	 	

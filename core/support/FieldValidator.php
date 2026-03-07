@@ -41,7 +41,7 @@ class FieldValidator {
              if(!$result->isvalid){
                  $errors[] = $result->message;
 
-                 if($mode === ValidationMode::FAIL_FAST || $validator->stop_on_fail()){
+                 if($this->mode === ValidationMode::FAIL_FAST || $validator->stop_on_fail()){
                      break;
                  }
              }
