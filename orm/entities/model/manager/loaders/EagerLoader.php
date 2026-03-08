@@ -53,7 +53,7 @@ class EagerLoader {
 
              //load includes
              $include_data = $loader->load($connection, $parents, $relation, $nested, $tuning, $relation_stack);
-             
+
              //atach to parents
              foreach($parents as $p){
                  $assign_to = $include_data['assign_to'];

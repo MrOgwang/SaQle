@@ -12,11 +12,11 @@ class BaseUser extends Model implements UserInterface {
 	 	 $table->primary_key('user_id');
 
 		 $table->fields([
-		     'first_name'   => char_field()->required(),
-		     'last_name'    => char_field()->required(),
-		     'username'     => char_field()->required(),
-		     'password'     => password_field()->required(),
-		     'is_superuser' => boolean_field()->required(),
+		     'first_name'   => Table::char_field()->required(),
+		     'last_name'    => Table::char_field()->required(),
+		     'username'     => Table::char_field()->required(),
+		     'password'     => Table::password_field()->required(),
+		     'is_superuser' => Table::boolean_field()->required(),
 		 ]);
 	 }
 

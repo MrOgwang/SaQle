@@ -76,7 +76,6 @@ final class RelationLoader {
      }
      
      private function window_function_fetch($connection, $foreign_model, $foreign_key, $pkey_values, $field_name, $with, $tuning, $through, $relation_stack){
-         echo "Using window function!\n";
          if($through){
              $original_foreignkey = $foreign_key;
              $foreign_key = $through[3];
@@ -236,13 +235,15 @@ final class RelationLoader {
          );
 
          $map = [];
-         if($this->should_unpack($related, $assign_to_field)) {
+         if($this->should_unpack($related, $assign_to_field)){
              foreach($related as $row){
-                 $map[$row->$local_key] = json_decode($row->$assign_to_field);
+                 //$map[$row->$local_key] = json_decode($row->$assign_to_field); //this has to be looked into further
+                 $map[$row->$foreign_key] = json_decode($row->$assign_to_field);
              }
          }else{
              foreach($related as $row){
-                 $map[$row->$local_key][] = $row;
+                 //$map[$row->$local_key][] = $row;
+                 $map[$row->$foreign_key][] = $row;
              }
          }
 
@@ -261,8 +262,6 @@ final class RelationLoader {
 
      protected function load_without_limit(string $connection, array | ModelCollection $parents, RelationField $relation,
       mixed $nested, RelationStack $relation_stack){
-         echo "Using without limit!\n";
-
          $local_key = $relation->get_local_key();
          $foreign_key = $relation->get_foreign_key();
          $related_model = $relation->get_related_model();

@@ -528,7 +528,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 
      	 	 if(!array_key_exists($f->get_name(), $data)){
      	 	 	 if($f->is_primary()){
-     	 	 	 	 $data[$f->get_name()] = $this->table->get_pk_type() === 'GUID' ? $this->guid() : 1;
+     	 	 	 	 $data[$f->get_name()] = $this->table->get_pk_type() === 'UUID' ? $this->guid() : 1;
      	 	 	 	 continue;
      	 	 	 }
 
@@ -540,19 +540,18 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 
      	 //inject creator and modifier fields, created and modified date time fields and deleted fields
 	 	 if($this->table->has_user_audit()){
-	 	 	 $data[$this->table->get_created_by_field()] = $user_id;
-	 	 	 $data[$this->table->get_modified_by_field()] = $user_id;
+	 	 	 $data['author'] = $user_id;
+	 	 	 $data['modifier'] = $user_id;
 	 	 }
 	 	 if($this->table->has_timestamps()){
-	 	 	 $data[$this->table->get_created_at_field()] = time();
-	 	 	 $data[$this->table->get_modified_at_field()] = time();
+	 	 	 $data['created_at'] = time();
+	 	 	 $data['modified_at'] = time();
 	 	 }
 	 	 if($this->table->has_soft_delete()){
-	 	 	 $data[$this->table->get_deleted_field()] = 0;
-	 	 	 $data[$this->table->get_deleted_by_field()] = null;
-	 	 	 $data[$this->table->get_deleted_at_field()] = null;
+	 	 	 $data['is_removed'] = 0;
+	 	 	 $data['remover'] = null;
+	 	 	 $data['removed_at'] = null;
 	 	 }
-
      }
 
      /**
@@ -615,7 +614,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
          $this->run_data_validation($data, true);
 
          //strip the primary key field, navigtaional and virtual fields, and the deleted field
-	 	 unset($data[$this->table->get_deleted_field()]);
+	 	 unset($data[$this->table->get_is_removed_column()]);
 	 	 //unset($data[$this->table->get_pk_name()]);
 	 	 $actual_fields = array_keys($column_refs);
 
@@ -627,16 +626,16 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
      	 }
      	 $data = $clean_data;
 
-	 	 //Make sure data only uses db column names.
-	 	 $data = $this->format_data($data, 'columns');
-
-	 	 //Inject modifier and modified date time fields
+     	 //Inject modifier and modified date time fields
 	 	 if($this->table->has_user_audit()){
-	 	 	$data[$column_refs[$this->table->get_modified_by_field()]] = $request->user->user_id ?? 0; #Id of current user
+	 	 	$data['modifier'] = $request->user->user_id ?? null;
 	 	 }
 	 	 if($this->table->has_timestamps()){
-	 	 	 $data[$column_refs[$this->table->get_modified_at_field()]] = time(); #Current date time
+	 	 	 $data['modified_at'] = time();
 	 	 }
+
+	 	 //Make sure data only uses db column names.
+	 	 $data = $this->format_data($data, 'columns');
 
 	 	 //Prepare file data.
 	 	 $file_data = $this->prepare_file_data($data, $data_state);

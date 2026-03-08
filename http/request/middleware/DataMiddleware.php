@@ -75,28 +75,32 @@ class DataMiddleware extends IMiddleware {
      private function normalize_files(array $files): array {
          $normalized = [];
 
-         foreach ($files as $field => $info){
+         foreach ($files as $field => $file){
 
-             if(is_array($info['name'])){ //multiple files were uploaded
+             if(is_array($file['name'])){ //multiple files were uploaded
+
                  $normalized[$field] = [];
-
-                 foreach ($info['name'] as $i => $name){
-                     $normalized[$field][] = new UploadedFile(
-                         name:     $name,
-                         tmp_name: $info['tmp_name'][$i],
-                         size:     $info['size'][$i],
-                         error:    $info['error'][$i],
-                         type:     $info['type'][$i]
-                     );
+                 foreach($file['name'] as $i => $name){
+                     if($file['error'][$i] !== UPLOAD_ERR_NO_FILE){
+                         $normalized[$field][] = new UploadedFile(
+                             name:     $name,
+                             tmp_name: $info['tmp_name'][$i],
+                             size:     $info['size'][$i],
+                             error:    $info['error'][$i],
+                             type:     $info['type'][$i]
+                         );
+                     }
                  }
              }else{ //a single file was uploaded
-                 $normalized[$field] = new UploadedFile(
-                     name:     $info['name'],
-                     tmp_name: $info['tmp_name'],
-                     size:     $info['size'],
-                     error:    $info['error'],
-                     type:     $info['type']
-                 );
+                 if($file['error'] !== UPLOAD_ERR_NO_FILE){
+                     $normalized[$field] = new UploadedFile(
+                         name:     $info['name'],
+                         tmp_name: $info['tmp_name'],
+                         size:     $info['size'],
+                         error:    $info['error'],
+                         type:     $info['type']
+                     );
+                 }
              }
          }
 

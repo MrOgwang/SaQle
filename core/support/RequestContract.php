@@ -44,9 +44,10 @@ abstract class RequestContract {
 
              $bind_instance = $attributes[0]->newInstance();
              $property_name = $property->getName();
+
              $value         = $this->$property_name ?? null;
              $optional      = $type?->allowsNull() ?? false;
-
+             
              /**
               * Validate only non optional properties or
               * optional properties for which values have been provided

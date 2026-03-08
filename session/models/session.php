@@ -8,8 +8,8 @@ class Session extends Model {
 	 protected function table_schema(Table $table) : void {
 	 	 
 	 	 $table->fields([
-		     'session_id' => char_field()->max_length(100)->required(),
-		     'session_data' => text_field()
+		     'session_id' => Table::char_field()->max_length(100)->required(),
+		     'session_data' => Table::text_field()
 	 	 ]);
 
 	 	 $table->with_user_audit(false);

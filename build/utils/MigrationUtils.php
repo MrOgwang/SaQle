@@ -2,6 +2,7 @@
 namespace SaQle\Build\Utils;
 
 use SaQle\Orm\Database\Schema;
+use SaQle\Orm\Entities\Model\Schema\Model;
 use RuntimeException;
 
 class MigrationUtils {
@@ -19,6 +20,15 @@ class MigrationUtils {
          }
          
          return true;
+     }
+
+     public static function is_model_defined(string $model_class){
+        
+         if($model_class && class_exists($model_class) && is_subclass_of($model_class, Model::class)){
+             return true;
+         }
+
+         return false;
      }
 
      public static function get_class_namespace(string $long_class_name){

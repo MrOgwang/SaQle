@@ -3,7 +3,13 @@ namespace SaQle\Orm\Entities\Model\Schema;
 
 use SaQle\Core\Assert\Assert;
 use SaQle\Orm\Entities\Field\Interfaces\IField;
-use SaQle\Orm\Entities\Field\Types\{Pk, BooleanField, FileField, OneToOne, DateTimeField, VirtualField, ManyRelation};
+use SaQle\Orm\Entities\Field\Types\{
+     Pk, VirtualField, VideoField, ImageField, UuidField, UrlField,
+     TimeField, TextField, SlugField, PhoneField, PasswordField, JsonField,
+     IpAddressField, IntegerField, FloatField, FileField, EmailField,
+     DecimalField, DateTimeField, DateField, ChoiceField, CharField, 
+     BooleanField, OneToOne, ManyRelation
+};
 use SaQle\Orm\Entities\Field\Types\Base\RelationField;
 use RuntimeException;
 
@@ -63,25 +69,25 @@ final class Table {
      private array $table_column_names = [];
 
      //the name of the created at field
-     private string $created_at_field = '';
+     private string $created_at_column = '';
 
      //the name of the created by field
-     private string $created_by_field = '';
+     private string $author_column = '';
 
      //the name of the modified at field
-     private string $modified_at_field = '';
+     private string $modified_at_column = '';
 
      //the name of the modified by field
-     private string $modified_by_field = '';
+     private string $modifier_column = '';
 
      //the name of the deleted field
-     private string $deleted_field = '';
+     private string $is_removed_column = '';
 
      //the name of the deleted at field
-     private string $deleted_at_field = '';
+     private string $removed_at_column = '';
 
      //the name of the deleted by field
-     private string $deleted_by_field = '';
+     private string $remover_column = '';
 
      /**
       * Tell the model the action to take when an attempt to insert
@@ -182,37 +188,21 @@ final class Table {
       * */
      private array $file_required_fields = [];
 
-     /**
-      * this is a property used to override the auto added fields from with_user_audit, with_timestamps and with_soft_delete settings.
-      * Instead of the default field types provided, provide a field name with a different field type
-      * to override the default ones.
-      *
-      * */
-     private array $audit_fields_override = [];
-
      private array $unique_constraints = [];
-
-     private function assert_model_exists(string $model_class){
-         if($model_class && class_exists($model_class) && is_subclass_of($model_class, Model::class)){
-             return true;
-         }
-
-         return false;
-     }
 
      //add or remove creator and modifier fields depending on with_user_audit setting
      private function get_user_audit_fields(bool $switch = true) : array {
          if($this->_with_user_audit){
-             $auth_model_class = config('auth.model_class');
-             if($this->assert_model_exists($auth_model_class)){
-                 return [
-                     $this->created_by_field => $this->audit_fields_override[$this->created_by_field] ??  
-                     new OneToOne(related_model: $auth_model_class, foreign_key: $auth_model_class::get_pk_name()),
+             $fields = [
+                 'author' => self::author_field()->column($this->get_author_column()),
+                 'modifier' => self::modifier_field()->column($this->get_modifier_column())
+             ];
 
-                     $this->modified_by_field => $this->audit_fields_override[$this->modified_by_field] ?? 
-                     new OneToOne(related_model: $auth_model_class, foreign_key: $auth_model_class::get_pk_name())
-                 ];
+             if($this->_with_soft_delete){
+                 $fields['remover'] = self::remover_field()->column($this->get_remover_column());
              }
+
+             return $fields;
          }
 
          return [];
@@ -221,10 +211,16 @@ final class Table {
      //add or remove created at and modified at date time stamps depending on with_timestamps setting
      private function get_timestamp_fields(bool $switch = true) : array {
          if($this->_with_timestamps){
-             return [
-                 $this->created_at_field => $this->audit_fields_override[$this->created_at_field] ?? new DateTimeField(),
-                 $this->modified_at_field => $this->audit_fields_override[$this->modified_at_field] ?? new DateTimeField()
+             $fields = [
+                 'created_at' => self::created_at_field()->column($this->get_created_at_column()),
+                 'modified_at' => self::modified_at_field()->column($this->get_modified_at_column())
              ];
+
+             if($this->_with_soft_delete){
+                 $fields['removed_at'] = self::removed_at_field()->column($this->get_removed_at_column());
+             }
+
+             return $fields;
          }
 
          return [];
@@ -233,18 +229,9 @@ final class Table {
      //add or remove soft delete fields depending on with_soft_delete setting
      private function get_delete_fields(bool $switch = true) : array {
          if($this->_with_soft_delete){
-             $fields = [
-                 $this->deleted_field => $this->audit_fields_override[$this->deleted_field] ?? new BooleanField(),
-                 $this->deleted_at_field => $this->audit_fields_override[$this->deleted_at_field] ?? new DateTimeField()
+             return [
+                 'is_removed' => self::is_removed_field()->column($this->get_is_removed_column())
              ];
-
-             $auth_model_class = config('auth.model_class');
-             if($this->assert_model_exists($auth_model_class)){
-                $fields[$this->deleted_by_field] = $this->audit_fields_override[$this->deleted_by_field] ?? 
-                new OneToOne(related_model: $auth_model_class, foreign_key: $auth_model_class::get_pk_name());
-             }
-
-             return $fields;
          }
 
          return [];
@@ -259,7 +246,15 @@ final class Table {
 
          $this->audit_field_names = array_keys($audit_fields);
 
-         $this->fields = array_merge($this->fields, $audit_fields);
+         $fields_add = [];
+
+         foreach($audit_fields as $audit_field_name => $audit_field){
+             if(!array_key_exists($audit_field_name, $this->fields)){
+                 $fields_add[$audit_field_name] = $audit_field;
+             }
+         }
+
+         $this->fields = array_merge($this->fields, $fields_add);
      }
 
      public function set_table_defaults($model_class){
@@ -267,13 +262,13 @@ final class Table {
          $this->_with_user_audit = config('model.with_user_audit');
          $this->_with_timestamps = config('model.with_timestamps');
          $this->_with_soft_delete = config('model.with_soft_delete');
-         $this->created_at_field = config('model.created_at_field');
-         $this->created_by_field = config('model.created_by_field');
-         $this->modified_at_field = config('model.modified_at_field');
-         $this->modified_by_field = config('model.modified_by_field');
-         $this->deleted_field = config('model.deleted_field');
-         $this->deleted_at_field = config('model.deleted_at_field');
-         $this->deleted_by_field = config('model.deleted_by_field');
+         $this->created_at_column = config('model.created_at_column');
+         $this->author_column = config('model.author_column');
+         $this->modified_at_column = config('model.modified_at_column');
+         $this->modifier_column = config('model.modifier_column');
+         $this->is_removed_column = config('model.is_removed_column');
+         $this->removed_at_column = config('model.removed_at_column');
+         $this->remover_column = config('model.remover_column');
          $this->action_on_duplicate(config('model.action_on_duplicate'));
      }
 
@@ -299,7 +294,6 @@ final class Table {
              
              //each field knows to validate its own state
              if(!$field->is_state_valid()){
-                 print_r($field);
                  $errors = implode("\n", $field->get_errors());
                  throw new RuntimeException("The field: {$n} defined on the model: {$this->model_class} is not correctly defined!\n {$errors}");
              }
@@ -418,32 +412,32 @@ final class Table {
          return $this->table_column_names;
      }
 
-     public function get_created_at_field(){
-         return $this->created_at_field;
+     public function get_created_at_column(){
+         return $this->created_at_column;
      }
 
-     public function get_created_by_field(){
-         return $this->created_by_field;
+     public function get_author_column(){
+         return $this->author_column;
      }
 
-     public function get_modified_at_field(){
-         return $this->modified_at_field;
+     public function get_modified_at_column(){
+         return $this->modified_at_column;
      }
 
-     public function get_modified_by_field(){
-         return $this->modified_by_field;
+     public function get_modifier_column(){
+         return $this->modifier_column;
      }
 
-     public function get_deleted_at_field(){
-         return $this->deleted_at_field;
+     public function get_removed_at_column(){
+         return $this->removed_at_column;
      }
 
-     public function get_deleted_by_field(){
-         return $this->deleted_by_field;
+     public function get_remover_column(){
+         return $this->remover_column;
      }
 
-     public function get_deleted_field(){
-         return $this->deleted_field;
+     public function get_is_removed_column(){
+         return $this->is_removed_column;
      }
 
      public function get_action_on_duplicate(){
@@ -475,10 +469,6 @@ final class Table {
          $this->fields = $fields;
      }
 
-     public function relations(array $fields){
-         $this->fields = $fields;
-     }
-
      public function get_defined_field_names(){
          return $this->defined_field_names;
      }
@@ -499,7 +489,144 @@ final class Table {
         return $this->file_required_fields;
      }
 
-     public function audit_fields_override(array $overrides){
-         $this->audit_fields_override = $overrides;
+     //field creation methods
+
+     public static function many_of(string $model, ?string $local_key = null, ?string $foreign_key = null): IField {
+         return new ManyRelation(model: $model, local_key: $local_key, foreign_key: $foreign_key);
      }
+
+     public static  function one_of(string $model, ?string $local_key = null, ?string $foreign_key = null): IField {
+         return new OneToOne(related_model: $model, local_key: $local_key, foreign_key: $foreign_key);
+     }
+
+     public static function boolean_field(...$kwargs): IField {
+         return new BooleanField(...$kwargs);
+     }
+
+     public static function char_field(...$kwargs): IField {
+         return new CharField(...$kwargs);
+     }
+
+     public static function choice_field(...$kwargs): IField {
+         return new ChoiceField(...$kwargs);
+     }
+
+     public static function date_field(...$kwargs): IField {
+         return new DateField(...$kwargs);
+     }
+
+     public static function datetime_field(...$kwargs): IField {
+         return new DateTimeField(...$kwargs);
+     }
+
+     public static function decimal_field(...$kwargs): IField {
+         return new DecimalField(...$kwargs);
+     }
+
+     public static function email_field(...$kwargs): IField {
+         return new EmailField(...$kwargs);
+     }
+
+     public static function file_field(...$kwargs): IField {
+         return new FileField(...$kwargs);
+     }
+
+     public static function float_field(...$kwargs): IField {
+         return new FloatField(...$kwargs);
+     }
+
+     public static function integer_field(...$kwargs): IField {
+         return new IntegerField(...$kwargs);
+     }
+
+     public static function ip_address_field(...$kwargs): IField {
+         return new IpAddressField(...$kwargs);
+     }
+
+     public static function json_field(...$kwargs): IField {
+         return new JsonField(...$kwargs);
+     }
+
+     public static function password_field(...$kwargs): IField {
+         return new PasswordField(...$kwargs);
+     }
+
+     public static function phone_field(...$kwargs): IField {
+         return new PhoneField(...$kwargs);
+     }
+
+     public static function slug_field(...$kwargs): IField {
+         return new SlugField(...$kwargs);
+     }
+
+     public static function text_field(...$kwargs): IField {
+         return new TextField(...$kwargs);
+     }
+
+     public static function time_field(...$kwargs): IField {
+         return new TimeField(...$kwargs);
+     }
+
+     public static function url_field(...$kwargs): IField {
+         return new UrlField(...$kwargs);
+     }
+
+     public static function uuid_field(...$kwargs): IField {
+         return new UuidField(...$kwargs);
+     }
+
+     public static function image_field(...$kwargs): IField {
+         return new ImageField(...$kwargs);
+     }
+
+     public static function virtual_field(...$kwargs): IField {
+         return new VirtualField(...$kwargs);
+     }
+
+     public static function video_field(...$kwargs): IField {
+         return new VideoField(...$kwargs);
+     }
+
+     private static function assert_auth_model_exists(string $field) : string {
+
+         $model_class = config('auth.model_class');
+
+         if($model_class && class_exists($model_class) && is_subclass_of($model_class, Model::class)){
+             return $model_class;
+         }
+
+         throw new RuntimeException("Cannot creat {$field} field. The user model has not been defined!");
+     }
+
+     public static function author_field() : IField {
+         $auth_model = self::assert_auth_model_exists('author');
+         return self::one_of($auth_model, foreign_key: $auth_model::get_pk_name())->column(config('model.author_column'));
+     }
+
+     public static function modifier_field() : IField {
+         $auth_model = self::assert_auth_model_exists('modifier');
+         return self::one_of($auth_model, foreign_key: $auth_model::get_pk_name())->column(config('model.modifier_column'));
+     }
+
+     public static function remover_field() : IField {
+         $auth_model = self::assert_auth_model_exists('remover');
+         return self::one_of($auth_model, foreign_key: $auth_model::get_pk_name())->column(config('model.remover_column'));
+     }
+
+     public static function created_at_field() : IField {
+         return self::datetime_field()->column(config('model.created_at_column'));
+     }
+
+     public static function modified_at_field() : IField {
+         return self::datetime_field()->column(config('model.modified_at_column'));
+     }
+
+     public static function removed_at_field() : IField {
+         return self::datetime_field()->column(config('model.removed_at_column'));
+     }
+
+     public static function is_removed_field() : IField {
+         return self::boolean_field()->column(config('model.is_removed_column'));
+     }
+
 }

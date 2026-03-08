@@ -64,7 +64,7 @@ class MySqlDriver extends DbDriver {
          $data = $where_clause->data ? array_merge([1], $where_clause->data) : [1];
          $database = $this->config->get_database();
          $table = $manager->table_name();
-         $fields = ['deleted'];
+         $fields = [config('model.is_removed_column')];
          $clause   = $where_clause->clause;
          $fieldstring = implode(" = ?, ", $fields)." = ?";
          $sql = "UPDATE {$database}.{$table} SET {$fieldstring}{$clause}";

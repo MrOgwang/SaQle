@@ -46,8 +46,6 @@ final class WebResponseStrategy implements ResponseStrategy {
              //$tree = ErrorComponentTree::from_status($result->status);
          }else{
              $tree = new ComponentTreeBuilder()->build($request->route->compiled_target[0], $request->route->layout);
-
-             //print_r($tree);
          }
 
          $context = new ComponentContext($this->prepare_context($request));

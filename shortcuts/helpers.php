@@ -243,15 +243,19 @@ if(!function_exists('encrypt')){
      }
 }
 
-function base64_to_url(string $b64): string {
-    return rtrim(strtr($b64, '+/', '-_'), '=');
+if(!function_exists('base64_to_url')){
+     function base64_to_url(string $b64): string {
+        return rtrim(strtr($b64, '+/', '-_'), '=');
+     }
 }
 
-function url_to_base64(string $url): string {
-    $b64 = strtr($url, '-_', '+/');
-    $padding = strlen($b64) % 4;
-    if ($padding > 0) {
-        $b64 .= str_repeat('=', 4 - $padding);
-    }
-    return $b64;
+if(!function_exists('url_to_base64')){
+     function url_to_base64(string $url): string {
+        $b64 = strtr($url, '-_', '+/');
+        $padding = strlen($b64) % 4;
+        if ($padding > 0) {
+            $b64 .= str_repeat('=', 4 - $padding);
+        }
+        return $b64;
+     }
 }

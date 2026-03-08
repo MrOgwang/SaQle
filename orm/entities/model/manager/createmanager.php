@@ -194,7 +194,7 @@ class CreateManager extends QueryManager{
 		     
 		 }
 
-		 if($this->get_primary_key_type() === 'GUID'){
+		 if($this->get_primary_key_type() === 'UUID'){
 		 	 $pk_values = $this->get_primary_key_values();
 		 }else{
 		 	 $first_id = (int)$this->dbdriver->get_connection()->lastInsertId();

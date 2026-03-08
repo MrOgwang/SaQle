@@ -16,7 +16,7 @@ class Pk implements IField {
 
      public function resolve(): IField {
          return match ($this->strategy){
-             'GUID' => $this->build_uuid(),
+             'UUID' => $this->build_uuid(),
              'AUTO' => $this->build_integer(),
          };
      }

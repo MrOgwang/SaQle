@@ -10,11 +10,11 @@ class Migration extends Model {
 		 $table->primary_key("migration_id");
 
 	 	 $table->fields([
-		     'migration_name' => text_field()->required(),
-		     'migration_timestamp' => integer_field()->size('big')->required()->unsigned(),
-		     'prev_migration_name' => text_field(),
-		     'prev_migration_timestamp' => integer_field()->size('big')->unsigned(),
-		     'is_migrated' => boolean_field()->required()
+		     'migration_name' => Table::text_field()->required(),
+		     'migration_timestamp' => Table::integer_field()->size('big')->required()->unsigned(),
+		     'prev_migration_name' => Table::text_field(),
+		     'prev_migration_timestamp' => Table::integer_field()->size('big')->unsigned(),
+		     'is_migrated' => Table::boolean_field()->required()
 		 ]);
 
 		 $table->with_user_audit(false);

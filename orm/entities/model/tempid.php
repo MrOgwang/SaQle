@@ -7,12 +7,13 @@ use SaQle\Orm\Entities\Model\Schema\Table;
 
 class TempId extends TempModel {
 	 protected function table_schema(Table $table) : void {
+
 	 	 $table->fields([
-	 	 	 'id' => new Pk(config('model.pk_type')),
 		     'id_value' => strtolower(config('model.pk_type')) === 'auto' ? 
-		                   new IntegerField(required: true, unsigned: true, min: 1) : 
-		                   new CharField(required: true)
+		      Table::integer_field()->required()->unsigned()->min(1) : 
+		      Table::char_field()->required()
 	 	 ]);
+
 	 	 $table->with_user_audit(false);
 		 $table->with_timestamps(false);
 		 $table->with_soft_delete(false);

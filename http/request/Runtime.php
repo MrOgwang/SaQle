@@ -14,7 +14,7 @@ class Runtime {
          return (new MiddlewareGroup())->handle($request);
      }
 
-     private function execute_action(Request $request) {
+     private function execute_action(Request $request){
          $compiled_target = $request->route->compiled_target;
          return (new ActionExecutor())->execute($request, $compiled_target[1], $compiled_target[2]);
      }
@@ -36,9 +36,16 @@ class Runtime {
 
      public function handle(Request $request){
          try{
+
              $request  = $this->bootstrap_request($request);
-             $result   = $this->execute_action($request);
-             $response = $this->resolve_response($request, $result);
+
+             if($request->is_web_request()){
+                 $response = $this->resolve_response($request, ok());
+             }else{
+                 $result = $this->execute_action($request);
+                 $response = $this->resolve_response($request, $result);
+             }
+            
              $response->send();
          }catch(Throwable $e){
             $this->handle_exception($e, $request);

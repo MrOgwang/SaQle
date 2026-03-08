@@ -7,8 +7,9 @@ use SaQle\Core\Collection\Base\TypedCollection;
 use SaQle\Orm\Entities\Model\Interfaces\IModel;
 use SaQle\Orm\Entities\Model\Manager\CreateManager;
 use InvalidArgumentException;
+use JsonSerializable;
 
-abstract class ModelCollection extends TypedCollection implements IModel {
+abstract class ModelCollection extends TypedCollection implements IModel, JsonSerializable {
 
      private ?string $connection = null;
 
@@ -123,5 +124,9 @@ abstract class ModelCollection extends TypedCollection implements IModel {
 
      public function pluck_unique(string $field) : array {
          return array_values(array_unique($this->pluck($field)));
+     }
+
+     public function jsonSerialize() : mixed {
+         return $this->items();
      }
 }
