@@ -40,6 +40,9 @@ class QueryManager {
 	 }
 
 	 public function connection_name(){
+	 	 if($this->model instanceof ModelCollection){
+	 	 	 //print_r($this->model[0]);
+	 	 }
 	 	 return $this->model instanceof ModelCollection ? $this->model[0]->table->get_connection_name() : $this->model->table->get_connection_name();
 	 }
 

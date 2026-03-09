@@ -51,7 +51,7 @@ class CreateManager extends QueryManager{
      }
 
      private function extract_data(string $type = 'data'){
-     	 $origianl_data = $type === 'data' ? $this->model->get_data() : $this->model->get_file_references();
+     	 $origianl_data = $type === 'data' ? $this->model->get_insert_data() : $this->model->get_file_references();
 	 	 if(is_assoc($origianl_data)){
              return $this->swap_properties_with_columns($origianl_data);
          }

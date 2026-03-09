@@ -47,6 +47,11 @@ abstract class ModelCollection extends TypedCollection implements IModel, JsonSe
      //add new row(s) to database or batch create new instances
      public static function create(array $data) : CreateManager {
          self::assert_valid_data($data);
+
+         foreach($data as $d){
+             $d->set_table_and_connection();
+         }
+
          return new CreateManager(new static($data));
      }
 
@@ -80,6 +85,15 @@ abstract class ModelCollection extends TypedCollection implements IModel, JsonSe
          $data = [];
          foreach($this->elements as $el){
              $data[] = $el->get_data();
+         }
+
+         return $data;
+     }
+
+     public function get_insert_data(){
+         $data = [];
+         foreach($this->elements as $el){
+             $data[] = $el->get_insert_data();
          }
 
          return $data;

@@ -259,3 +259,30 @@ if(!function_exists('url_to_base64')){
         return $b64;
      }
 }
+
+if(!function_exists('mask_email')){
+     function mask_email(?string $email = null): string {
+         if(!$email)
+             return $email;
+
+         [$name, $domain] = explode('@', $email);
+
+         $visible = substr($name, 0, 3);
+         $masked = str_repeat('*', max(strlen($name) - 3, 0));
+
+         return $visible.$masked.'@'.$domain;
+     }
+}
+
+if(!function_exists('mask_phone')){
+     function mask_phone(?string $phone = null): string {
+         if(!$phone)
+             return $phone;
+         
+         $start = substr($phone, 0, 3);
+         $end = substr($phone, -2);
+         $masked = str_repeat('*', strlen($phone) - 5);
+
+         return $start.$masked.$end;
+     }
+}

@@ -171,6 +171,20 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
      	 return $this->data;
      }
 
+     final public function get_insert_data(){
+     	 //remove navigation fields
+     	 $nav_field_names = $this->table->get_nav_field_names();
+     	 $insert_data = [];
+
+     	 foreach($this->data as $key => $value){
+     	 	 if(!in_array($key, $nav_field_names)){
+     	 	 	 $insert_data[$key] = $value;
+     	 	 }
+     	 }
+
+     	 return $insert_data;
+     }
+
      final public function get_files(){
      	 return $this->files;
      }
