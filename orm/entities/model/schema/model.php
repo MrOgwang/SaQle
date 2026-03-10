@@ -671,6 +671,40 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 	 	 return new CreateManager($model_instance);
 	 }
 
+     public static function create_many(array $data) : CreateManager {
+         $model_class = get_called_class();
+         $collection_class = $model_class::collection_class();
+
+         //assert data is valid
+         $collection_class::assert_valid_data($data);
+
+         $converted_data = [];
+
+         //convert the data to an array of models and set connection
+         foreach($data as $d){
+
+             if($d instanceof Model){
+                 $d->set_table_and_connection();
+                 $converted_data[] = $d;
+                 continue;
+             }
+
+             if(is_array($d) || is_object($d)){
+                 $model_instance = is_array($d) ? new $model_class(...$d) : new $model_class(...(array)$d);
+                 $model_instance->set_table_and_connection();
+                 $converted_data[] = $model_instance;
+             }
+         }
+         
+         if($collection_class == GenericModelCollection::class){
+             $collection = new GenericModelCollection($model_class, $converted_data);
+         }else{
+             $collection = new $collection_class($converted_data);
+         }
+
+         return new CreateManager($collection);
+     }
+
 	 //update exisitng rows (s)
 	 public static function update(array $data){
 	 	 $model_instance = self::make();

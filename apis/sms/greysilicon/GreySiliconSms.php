@@ -60,8 +60,8 @@ class GreySiliconSms {
 
 	 	 //set headers
          $headers = [
-         	 "Authorization: Bearer ".$this->api_token,
-         	 "Content-Type: application/json"
+         	 "Authorization" => "Bearer ".$this->api_token,
+         	 "Content-Type" => "application/json"
          ];
 
          //set data

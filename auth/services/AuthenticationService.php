@@ -68,8 +68,6 @@ class AuthenticationService implements IService {
              $user = $this->user_provider->find($user_id);
 
              //event(new LoginSucceeded($user));
-             echo "Found user!";
-             print_r($user);
              return new AuthResult(true, $user, $identity_key, "Login successful");
          }catch(Throwable $e){
              //log internally

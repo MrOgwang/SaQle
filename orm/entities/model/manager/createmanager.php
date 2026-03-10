@@ -165,10 +165,9 @@ class CreateManager extends QueryManager{
      	     return $result;
 
      	 }catch(Exception $ex){
-
      	 	 $file_commiter->rollback();
-     	 	 
-     	 	 throw $ex;
+     	 	 log_to_file($ex->getMessage());
+     	 	 throw new Exception("An error occurred while attempting to create!");
      	 }
 	 }
 

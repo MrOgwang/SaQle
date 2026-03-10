@@ -26,7 +26,7 @@ class ComponentTreeBuilder {
          //2. Create all nodes first
          $nodes = [];
 
-         foreach ($component_names as $component_name) {
+         foreach ($component_names as $component_name){
              $definition = ComponentRegistry::get_definition($component_name);
 
              if(!$definition) {

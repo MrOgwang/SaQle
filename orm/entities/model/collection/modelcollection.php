@@ -6,8 +6,10 @@ namespace SaQle\Orm\Entities\Model\Collection;
 use SaQle\Core\Collection\Base\TypedCollection;
 use SaQle\Orm\Entities\Model\Interfaces\IModel;
 use SaQle\Orm\Entities\Model\Manager\CreateManager;
+use SaQle\Orm\Entities\Model\Schema\Model;
 use InvalidArgumentException;
 use JsonSerializable;
+use RuntimeException;
 
 abstract class ModelCollection extends TypedCollection implements IModel, JsonSerializable {
 
@@ -46,6 +48,11 @@ abstract class ModelCollection extends TypedCollection implements IModel, JsonSe
 
      //add new row(s) to database or batch create new instances
      public static function create(array $data) : CreateManager {
+         $collection_class = get_called_class();
+         if($collection_class == GenericModelCollection::class){
+             throw new RuntimeException("Create cannot be called on a generic collection!");
+         }
+
          self::assert_valid_data($data);
 
          foreach($data as $d){
@@ -65,6 +72,10 @@ abstract class ModelCollection extends TypedCollection implements IModel, JsonSe
 
          //Case 2: many objects (array of associative arrays)
          foreach($data as $item){
+             if($item instanceof Model){
+                 break;
+             }
+
              $tmp_item = !is_array($item) ? (array)$item : $item;
              if(!is_assoc($tmp_item)){
                 throw new InvalidArgumentException(
