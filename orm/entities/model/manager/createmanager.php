@@ -177,7 +177,7 @@ class CreateManager extends QueryManager{
 	 	     $pk_name = $this->get_primary_key_column();
 	 	     $pk_value = $created_row->$pk_name;
 
-	 	     return $model_class::update($saved_files)->where($pk_name, $pk_value)->now();
+	 	     return $model_class::update($saved_files)->where($pk_name, $pk_value)->now()[0] ?? null;
 	 	 }
 
 	 	 return $created_row;

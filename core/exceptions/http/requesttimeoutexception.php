@@ -1,10 +1,10 @@
 <?php
 namespace SaQle\Core\Exceptions\Http;
 
-use SaQle\Core\Exceptions\Base\FatalException;
+use SaQle\Core\Exceptions\Base\HttpException;
 use SaQle\Core\FeedBack\FeedBack;
 
-class RequestTimeoutException extends FatalException {
+class RequestTimeoutException extends HttpException {
      public function __construct(string $message = '', array $data = []){
      	 parent::__construct($message, FeedBack::REQUEST_TIMEOUT, $data);
      }

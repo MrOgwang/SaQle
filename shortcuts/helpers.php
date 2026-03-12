@@ -286,3 +286,21 @@ if(!function_exists('mask_phone')){
          return $start.$masked.$end;
      }
 }
+
+if(!function_exists('flash')){
+     function flash(?string $key = null): mixed {
+         $session = request()->session();
+         
+         if(!$session->exists('flash')){
+             return null;
+         }
+
+         if(!$key){
+             return $session->get('flash');
+         }
+
+         $flash = $session->get('flash');
+
+         return $flash->$key ?? null;
+     }
+}

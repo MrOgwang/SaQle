@@ -1,8 +1,8 @@
 <?php
 namespace SaQle\Core\Exceptions\Data;
 
-use SaQle\Core\Exceptions\Base\FatalException;
+use SaQle\Core\Exceptions\Base\HttpException;
 
-class InvalidInputException extends FatalException{
+class InvalidInputException extends HttpException{
      
 }

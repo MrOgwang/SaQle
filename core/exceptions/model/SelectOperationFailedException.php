@@ -1,14 +1,14 @@
 <?php
 namespace SaQle\Core\Exceptions\Model;
 
-use SaQle\Core\Exceptions\Base\FatalException;
+use SaQle\Core\Exceptions\Base\HttpException;
 use SaQle\Core\FeedBack\FeedBack;
 
 /**
  * This exception is thrown when a insert operation fails
  * */
 
-class SelectOperationFailedException extends FatalException{
+class SelectOperationFailedException extends HttpException{
      public function __construct(array $context){
          parent::__construct(
              message   : "Select operation failed on the table: ".$context['table']."!",

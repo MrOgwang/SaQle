@@ -18,6 +18,7 @@ class FeedBack {
      const NOT_ACCEPTABLE        = 406;
      const REQUEST_TIMEOUT       = 408;
      const CONFLICT              = 409;
+     const UNPROCESSABLE_ENTITY  = 422;
      const TOO_MANY_REQUESTS     = 429;
      const INTERNAL_SERVER_ERROR = 500;
      const SERVICE_UNAVAILABLE   = 503;

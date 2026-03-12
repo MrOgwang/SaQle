@@ -1,8 +1,12 @@
 <?php
 namespace SaQle\Http\Response\Types;
 
-class RedirectResponse{
+use SaQle\Http\Response\HttpResponse;
+
+class RedirectResponse extends HttpResponse {
+
      protected ?string $url = null;
+
      protected int $status = 302;
 
      public function __construct(?string $url = null, int $status = 302){
@@ -15,7 +19,7 @@ class RedirectResponse{
          return $protocol.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
      }
 
-     public function send(){
+     public function send() : void {
          http_response_code($this->status);
          header("Location: {$this->url}");
          exit;

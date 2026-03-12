@@ -69,6 +69,11 @@ final class ComponentRegistry {
          $component = self::get($component_name);
          $controller = $component['controller'];
          $template_path = $component['template_path'];
+         $real_template_path = path_join(
+             $component['owner'] === 'project' ? 
+             [config('base_path'), $template_path] : 
+             [config('framework_path'), $template_path]
+         );
 
          if(!$controller && !$template_path){
              throw new InvalidArgumentException('A component must have a controller, a template or both!');
@@ -99,7 +104,7 @@ final class ComponentRegistry {
 
          //if there is a template_path, ensure the file exists
          if($template_path){
-             if(!file_exists($template_path)){
+             if(!file_exists($real_template_path)){
                  throw new InvalidArgumentException('The template file: '.$template_path.' does not exist!');
              }
 
@@ -111,7 +116,7 @@ final class ComponentRegistry {
                  throw new InvalidArgumentException("Invalid template file type! Expected an .".$template_ext." file.");
              }
 
-             $resolved_component[3] = $template_path;
+             $resolved_component[3] = $real_template_path;
          }
 
          return $resolved_component;

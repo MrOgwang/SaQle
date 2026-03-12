@@ -24,6 +24,21 @@ use RecursiveIteratorIterator;
 use RecursiveDirectoryIterator;
 
 class ClassMapper{
+     private function normalize_path(string $path){
+         $owner = "project";
+
+         if(str_starts_with($path, config('base_path'))){
+             $path = str_replace(config('base_path').DIRECTORY_SEPARATOR, '', $path);
+             $owner = "project";
+         }elseif(str_starts_with($path, config('framework_path'))){
+             $path = str_replace(config('framework_path').DIRECTORY_SEPARATOR, '', $path);
+             $owner = "framework";
+         }
+         
+         $path = str_replace('\\', '/', $path); // normalize slashes
+
+         return [$path, $owner];
+     }
 
      private function get_model_classes_from_file(string $file): array {
          $declaredBefore = get_declared_classes();
@@ -110,19 +125,20 @@ class ClassMapper{
                  if($file->isFile()){
                      $component_name = str_replace(".php", "", $file->getFilename());
                      $component_name = str_replace(".".config('app.component_template_ext'), "", $component_name);
-                     $path           = $file->getRealPath();
+                     $real_path      = $file->getRealPath();
+                     [$compile_path, $owner] = $this->normalize_path($real_path);
 
                      if(!isset($components[$component_name])){
-                         $components[$component_name] = ['controller' => '', 'controller_path' => '', 'template_path' => ''];
+                         $components[$component_name] = ['controller' => '', 'controller_path' => '', 'template_path' => '', 'owner' => $owner];
                      }
 
                      if($file->getExtension() === config('app.component_template_ext')){
-                         $components[$component_name]['template_path'] = $path;
+                         $components[$component_name]['template_path'] = $compile_path;
                      }elseif($file->getExtension() === 'php'){
-                         $components[$component_name]['controller_path'] = $path;
+                         $components[$component_name]['controller_path'] = $compile_path;
 
                          //read file contents
-                         $content = file_get_contents($path);
+                         $content = file_get_contents($real_path);
 
                          //extract namespace
                          preg_match('/namespace\s+([^;]+);/', $content, $namespace_match);

@@ -84,21 +84,21 @@ class DataMiddleware extends IMiddleware {
                      if($file['error'][$i] !== UPLOAD_ERR_NO_FILE){
                          $normalized[$field][] = new UploadedFile(
                              name:     $name,
-                             tmp_name: $info['tmp_name'][$i],
-                             size:     $info['size'][$i],
-                             error:    $info['error'][$i],
-                             type:     $info['type'][$i]
+                             tmp_name: $file['tmp_name'][$i],
+                             size:     $file['size'][$i],
+                             error:    $file['error'][$i],
+                             type:     $file['type'][$i]
                          );
                      }
                  }
              }else{ //a single file was uploaded
                  if($file['error'] !== UPLOAD_ERR_NO_FILE){
                      $normalized[$field] = new UploadedFile(
-                         name:     $info['name'],
-                         tmp_name: $info['tmp_name'],
-                         size:     $info['size'],
-                         error:    $info['error'],
-                         type:     $info['type']
+                         name:     $file['name'],
+                         tmp_name: $file['tmp_name'],
+                         size:     $file['size'],
+                         error:    $file['error'],
+                         type:     $file['type']
                      );
                  }
              }

@@ -154,4 +154,9 @@ abstract class ModelCollection extends TypedCollection implements IModel, JsonSe
      public function jsonSerialize() : mixed {
          return $this->items();
      }
+
+     public function randomize() : static {
+         shuffle($this->elements);
+         return $this;
+     }
 }

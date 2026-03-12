@@ -3,34 +3,48 @@ namespace SaQle\Http\Request;
 
 use Throwable;
 use SaQle\Middleware\Factory\MiddlewareGroup;
-use SaQle\Log\FileLogger;
-use SaQle\Http\Request\Execution\ActionExecutor;
 use SaQle\Http\Response\ResponseResolver;
-use SaQle\Core\Exceptions\ExceptionMapper;
+use SaQle\Core\Exceptions\Abstracts\FrameworkException;
+use SaQle\Http\Response\{HttpResponse, HttpMessage};
 
 class Runtime {
+
      private function bootstrap_request(Request $request) : Request {
          date_default_timezone_set(config('app.timezone'));
          return (new MiddlewareGroup())->handle($request);
      }
 
-     private function execute_action(Request $request){
-         $compiled_target = $request->route->compiled_target;
-         return (new ActionExecutor())->execute($request, $compiled_target[1], $compiled_target[2]);
-     }
-
-     private function resolve_response(Request $request, $result) {
+     private function resolve_response(Request $request, ?HttpMessage $result = null) : HttpResponse {
          return (new ResponseResolver())->resolve($request, $result);
      }
 
-     private function handle_exception(Throwable $e, Request $request): void {
-         $logger = new FileLogger( path_join([config('base_path'), 'logs', 'errors.txt']) );
-         $timestamp = time();
-         $time = date("g:i A", $timestamp);
-         $logger->log_to_file($time." -- ".$e."\n\n");
+     private function handle_exception(Throwable $e, Request $request) : void {
+         log_to_file($e);
 
-         $result = (new ExceptionMapper())->map($e, $request);
-         $response = $this->resolve_response($request, $result);
+         if($e instanceof FrameworkException){
+             $log_exception = $e->get_log();
+             if($log_exception){
+                 log_to_file($e);
+             }
+
+             $flash_exception = $e->get_flash();
+             if($flash_exception){
+                 $request->session->set('flash', (object)[
+                     'message' => $e->getMessage()
+                 ], true);
+             }
+
+             $http_message = new HttpMessage($e->getCode(), $e->get_context(), $e->getMessage());
+
+             $http_message->redirect($e->get_redirect());
+         }else{
+             $http_message = new HttpMessage(HttpMessage::INTERNAL_SERVER_ERROR, $e->getTrace(), $e->getMessage());
+
+             $http_message->redirect("/error/500");
+         }
+
+         $response = $this->resolve_response($request, $http_message);
+
          $response->send();
      }
 
@@ -38,17 +52,11 @@ class Runtime {
          try{
 
              $request  = $this->bootstrap_request($request);
-
-             if($request->is_web_request()){
-                 $response = $this->resolve_response($request, ok());
-             }else{
-                 $result = $this->execute_action($request);
-                 $response = $this->resolve_response($request, $result);
-             }
-            
+             $response = $this->resolve_response($request);
              $response->send();
+
          }catch(Throwable $e){
-            $this->handle_exception($e, $request);
+             $this->handle_exception($e, $request);
          }
      }
 }

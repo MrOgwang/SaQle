@@ -1,7 +1,7 @@
 <?php
 namespace SaQle\Core\Exceptions\Data;
 
-use SaQle\Core\Exceptions\Base\FatalException;
+use SaQle\Core\Exceptions\Base\HttpException;
 use SaQle\Core\FeedBack\FeedBack;
 
 /**
@@ -9,7 +9,7 @@ use SaQle\Core\FeedBack\FeedBack;
  * request context object
  * */
 
-class KeyNotFoundException extends FatalException {
+class KeyNotFoundException extends HttpException {
 
      public function __construct(string $key, array $context = []){
          parent::__construct(

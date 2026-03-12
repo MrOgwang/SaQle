@@ -33,6 +33,10 @@ final class Session {
          return self::real()->exists($key);
      }
 
+     public static function has(string $key): bool {
+         return self::real()->exists($key);
+     }
+
      public static function remove(string $key): bool {
          self::real()->remove($key);
      }

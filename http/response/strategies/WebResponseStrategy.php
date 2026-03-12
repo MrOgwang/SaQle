@@ -9,6 +9,7 @@ use SaQle\Core\Components\{ComponentTreeBuilder, ComponentRenderer, ComponentCon
 use SaQle\Core\Ui\Template;
 use SaQle\Http\Request\Middleware\CsrfMiddleware;
 use SaQle\Auth\Models\GuestUser;
+use SaQle\Http\Request\Execution\ActionExecutor;
 
 final class WebResponseStrategy implements ResponseStrategy {
 
@@ -18,10 +19,6 @@ final class WebResponseStrategy implements ResponseStrategy {
 
      private function prepare_context(Request $request){
          $context = [];
-
-         //add feedback context
-         //$efb = ExceptionFeedBack::init();
-         //$context = array_merge($context, $efb->acquire_context());
 
          //inject global context data
          $context = array_merge($context, Template::init()::get_context());
@@ -34,22 +31,22 @@ final class WebResponseStrategy implements ResponseStrategy {
 
          //inject the user
          $context['session_user'] = $request->user ?? new GuestUser();
-
+         
          return $context;
      }
 
-     public function build(Request $request, HttpMessage $result): HttpResponse {
-         //use the component tree and component rendere to build the html here
+     public function build(Request $request, ?HttpMessage $result = null) : HttpResponse {
 
-         if($result->code >= 400){
-             //construct tree for error page
-             //$tree = ErrorComponentTree::from_status($result->status);
-         }else{
-             $target_component = $request->route->compiled_target[0];
-             $target_action = $request->route->compiled_target[2] ?? null;
-             $leaf_component = $target_action ? $target_component."@".$target_action : $target_component;
-             $tree = new ComponentTreeBuilder()->build($leaf_component, $request->route->layout);
+         //use the component tree and component rendere to build the html here
+         if($request->route->compiled_target[0] === 'privatefile'){
+             $result = ActionExecutor::execute($request);
+             return new HtmlResponse('', $result->code);
          }
+
+         $target_component = $request->route->compiled_target[0];
+         $target_action = $request->route->compiled_target[2] ?? null;
+         $leaf_component = $target_action ? $target_component."@".$target_action : $target_component;
+         $tree = new ComponentTreeBuilder()->build($leaf_component, $request->route->layout ?? []);
 
          $context = new ComponentContext($this->prepare_context($request));
 
@@ -59,6 +56,6 @@ final class WebResponseStrategy implements ResponseStrategy {
 
          $html = $renderer->wrap_root($html);
 
-         return new HtmlResponse($html, $result->code);
+         return new HtmlResponse($html);
      }
 }

@@ -1,7 +1,7 @@
 <?php
 namespace SaQle\Core\Exceptions\Model;
 
-use SaQle\Core\Exceptions\Base\FatalException;
+use SaQle\Core\Exceptions\Base\HttpException;
 use SaQle\Core\FeedBack\FeedBack;
 
 /**
@@ -9,7 +9,7 @@ use SaQle\Core\FeedBack\FeedBack;
  * found in a database context class
  * */
 
-class ModelNotFoundException extends FatalException {
+class ModelNotFoundException extends HttpException {
 
      public function __construct(string $name, array $context = []){
          parent::__construct(

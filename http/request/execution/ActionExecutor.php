@@ -9,9 +9,15 @@ use SaQle\Http\Response\HttpMessage;
 use SaQle\Core\Support\Allow;
 
 final class ActionExecutor {
-     public function execute(Request $request, ?string $controller = null, ?string $method = null): HttpMessage {
+    
+     public static function execute(Request $request, ?string $controller = null, ?string $method = null): HttpMessage {
+
          if(!$controller || !$method){
-             return ok();
+             $controller = $request->route->compiled_target[1];
+             $method = $request->route->compiled_target[2];
+             if(!$controller || !$method){
+                 return ok();
+             }
          }
 
          try{
@@ -37,4 +43,5 @@ final class ActionExecutor {
              throw $e;
          }
      }
+
 }

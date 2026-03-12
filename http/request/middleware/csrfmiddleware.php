@@ -34,7 +34,7 @@ class CsrfMiddleware extends IMiddleware implements ScopedMiddleware{
          $submitted_token = $request->data->get($token_key, $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '');
 
          if(!$submitted_token || $submitted_token !== $token){
-             unauthorized_exception('CSRF token validation failed');
+             unauthorized_exception('CSRF token validation failed')->throw();
          }
          
      	 parent::handle($request);

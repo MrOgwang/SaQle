@@ -18,7 +18,7 @@ use JsonSerializable;
 use InvalidArgumentException;
 use ReflectionClass;
 
-abstract class Model implements ITableSchema, IModel, JsonSerializable{
+abstract class Model implements ITableSchema, IModel, JsonSerializable {
 	 use StringUtils;
 
      /**
@@ -736,6 +736,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable{
 	 //run custom sql and data
 	 public static function run(string $sql, string $operation, ?array $data = null, bool $multiple = true){
 	 	 $model_instance = self::make();
+         $model_instance->set_table_and_connection();
 	 	 return new RunManager($model_instance, $sql, $operation, $data, $multiple);
 	 }
 

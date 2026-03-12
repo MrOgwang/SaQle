@@ -1,7 +1,7 @@
 <?php
 namespace SaQle\Core\Exceptions\Model;
 
-use SaQle\Core\Exceptions\Base\FatalException;
+use SaQle\Core\Exceptions\Base\HttpException;
 use SaQle\Core\FeedBack\FeedBack;
 
 /**
@@ -9,7 +9,7 @@ use SaQle\Core\FeedBack\FeedBack;
  * have not been provided
  * */
 
-class MissingRequiredFieldsException extends FatalException {
+class MissingRequiredFieldsException extends HttpException {
      public function __construct(string $message, array $context = []){
          parent::__construct(
              message   : $message,

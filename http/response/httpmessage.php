@@ -22,6 +22,13 @@ use SaQle\Core\FeedBack\FeedBack;
 
 class HttpMessage extends FeedBack {
 
+	/**
+	 * Redirect url
+	 * 
+	 * @var string
+	 * */
+	 private string $redirect_url = "";
+
 	 /**
 	 * Http response code description
 	 * 
@@ -63,5 +70,14 @@ class HttpMessage extends FeedBack {
      * */
 	 public static function from_feedback(FeedBack $fb){
 		 return new self($fb->code, $fb->data, $fb->message);
+	 }
+
+	 public function get_redirect(){
+	 	 return $this->redirect_url;
+	 }
+
+	 public function redirect(string $url){
+	 	 $this->redirect_url = $url;
+	 	 return $this;
 	 }
 }

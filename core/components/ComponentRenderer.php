@@ -38,7 +38,7 @@ class ComponentRenderer {
          //1. Execute controller (activate node)
          $node->active = true;
 
-         $data = $this->run_controller($node->def->controller, $node->def->method)->data ?? [];
+         $data = ActionExecutor::execute($this->request, $node->def->controller, $node->def->method)->data ?? [];
          $node->context = new ComponentContext($data, $parent_ctx);
 
          //2. Render template (conditions evaluated here)
@@ -126,12 +126,5 @@ class ComponentRenderer {
              return '';
 
          },  $html);
-     }
-
-     private function run_controller(?string $class = null, ?string $method = null): HttpMessage {
-         if(!$class || !$method)
-             return ok();
-
-         return (new ActionExecutor())->execute($this->request, $class, $method);
      }
 }

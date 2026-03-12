@@ -15,11 +15,11 @@ class ComponentTreeBuilder {
      *
      * @return ComponentNode  Root (top-most) component node
      */
-     public function build(string $leaf_component, array $wrappers): ComponentNode {
+     public function build(string $leaf_component, array $wrappers) : ComponentNode {
          // 1. Normalize input into a single ordered list
          $component_names = array_values(array_merge($wrappers, [$leaf_component]));
 
-         if(empty($component_names)) {
+         if(empty($component_names)){
              throw new LogicException('Cannot build component tree from empty input.');
          }
 
@@ -47,7 +47,7 @@ class ComponentTreeBuilder {
              $child->parent = $parent;
          }
 
-         // 4. First element is always the root
+         //4. First element is always the root
          return $nodes[0];
      }
 }

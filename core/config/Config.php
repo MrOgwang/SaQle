@@ -54,13 +54,16 @@ final class Config {
          return self::load_configurations($config_dir);
      }
 
-     public static function get_framework_configs($environment, $base_path, $document_root){
+     public static function get_framework_configs($environment, $base_path, $framework_path, $document_root){
          return [
              //the environment
              'environment'   => $environment,
 
              //project root directory
              'base_path'     => $base_path,
+
+             //framework path
+             'framework_path' => $framework_path,
 
              //project document root
              'document_root' => $document_root,

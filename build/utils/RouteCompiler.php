@@ -10,7 +10,7 @@ final class RouteCompiler {
      public static function compile() {
         
          $routes = Router::all();
-
+         
          $compiled = [];
 
          foreach ($routes as $route){
