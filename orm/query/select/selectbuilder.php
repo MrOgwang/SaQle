@@ -117,19 +117,22 @@ class SelectBuilder{
 	 		 	 	 ){
 	 		 	 	 	 //$file_meta_fields = array_unique(array_merge($file_field_config['path'], $file_field_config['rename'], $file_field_config['dpath']));
 	 		 	 	 	 $file_meta_fields = $file_field_config;
-	 		 	 	 	 foreach($file_meta_fields as $fmf){
-	 		 	 	 	 	 //the file meta field must not already be existing in the field list in any format: fully qualified or not
-	 		 	 	 	 	 if(!in_array($fmf, $this->selected) &&
-			 		 	 	 	!in_array($table_name.".".$fmf, $this->selected) &&
-			 		 	 	 	!in_array($db_name.".".$table_name.".".$fmf, $this->selected)
-			 		 	 	 ){
-			 		 	 	 	 $selected[] = match($config['fnqm']){
-					 		 	 	 'N-QUALIFY' => $fmf,
-					 		 	 	 'F-QUALIFY' => $db_name.".".$table_name.".".$fmf,
-					 		 	 	 'H-QUALIFY' => $table_name.".".$fmf
-					 		 	 };
-			 		 	 	 }
+	 		 	 	 	 if($file_meta_fields){
+		 		 	 	 	 foreach($file_meta_fields as $fmf){
+		 		 	 	 	 	 //the file meta field must not already be existing in the field list in any format: fully qualified or not
+		 		 	 	 	 	 if(!in_array($fmf, $this->selected) &&
+				 		 	 	 	!in_array($table_name.".".$fmf, $this->selected) &&
+				 		 	 	 	!in_array($db_name.".".$table_name.".".$fmf, $this->selected)
+				 		 	 	 ){
+				 		 	 	 	 $selected[] = match($config['fnqm']){
+						 		 	 	 'N-QUALIFY' => $fmf,
+						 		 	 	 'F-QUALIFY' => $db_name.".".$table_name.".".$fmf,
+						 		 	 	 'H-QUALIFY' => $table_name.".".$fmf
+						 		 	 };
+				 		 	 	 }
+		 		 	 	 	 }
 	 		 	 	 	 }
+
 	 		 	 	 	 $selected = array_unique($selected);
 	 		 	 	 }
 	 		 	 }
