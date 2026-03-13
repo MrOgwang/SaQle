@@ -15,7 +15,7 @@ class PasswordLoginStrategy implements LoginStrategyInterface {
          $password = md5($password);
 
          $user_model = config('auth.model_class');
-         $user = $user_model::get()->select(['user_id'])->where('password__eq', $password)->where('username__eq', $username)->limit(1, 1)->first_or_null();
+         $user = $user_model::get()->select(['user_id'])->where('password__eq', $password)->where('username__eq', $username)->limit(1)->first_or_null();
          
          return $user;
      }

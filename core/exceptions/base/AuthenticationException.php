@@ -27,6 +27,6 @@ class AuthenticationException extends FrameworkException {
          array $context = [], 
          ?Throwable $prev = null
      ){
-         parent::__construct($message, FeedBack::UNAUTHORIZED, $data, $prev);
+         parent::__construct($message, FeedBack::UNAUTHORIZED, $context, $prev);
      }
 }

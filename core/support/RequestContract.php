@@ -4,7 +4,7 @@ namespace SaQle\Core\Support;
 
 use ReflectionClass;
 use SaQle\Core\Exceptions\Http\UnauthorizedException;
-use SaQle\Core\Exceptions\Model\ValidationException;
+use SaQle\Core\Exceptions\Base\ValidationException;
 
 abstract class RequestContract {
 
@@ -71,7 +71,7 @@ abstract class RequestContract {
          }
 
          if(!empty($errors)){
-             throw new ValidationException([
+             throw new ValidationException(context: [
                  'errors' => $errors
              ]);
          }

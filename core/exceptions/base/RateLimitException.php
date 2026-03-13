@@ -26,6 +26,6 @@ class RateLimitException extends FrameworkException {
      	 array $context = [], 
      	 ?Throwable $prev = null
      ){
-         parent::__construct($message, FeedBack::TOO_MANY_REQUESTS, $data, $prev);
+         parent::__construct($message, FeedBack::TOO_MANY_REQUESTS, $context, $prev);
      }
 }

@@ -27,6 +27,6 @@ class ServerException extends FrameworkException {
      	 array $context = [], 
      	 ?Throwable $prev = null
      ){
-         parent::__construct($message, FeedBack::INTERNAL_SERVER_ERROR, $data, $prev);
+         parent::__construct($message, FeedBack::INTERNAL_SERVER_ERROR, $context, $prev);
      }
 }

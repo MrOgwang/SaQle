@@ -22,15 +22,13 @@ class Runtime {
          log_to_file($e);
 
          if($e instanceof FrameworkException){
-             $log_exception = $e->get_log();
-             if($log_exception){
-                 log_to_file($e);
-             }
-
              $flash_exception = $e->get_flash();
              if($flash_exception){
                  $request->session->set('flash', (object)[
-                     'message' => $e->getMessage()
+                     'message' => $e->getMessage(),
+                     'context' => $e->get_context(),
+                     'code'    => $e->getCode(),
+                     'type'    => 'error'
                  ], true);
              }
 

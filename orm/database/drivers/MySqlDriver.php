@@ -201,7 +201,7 @@ class MySqlDriver extends DbDriver {
          $manager->set_data($prepared_data);
      }
 
-     public function set_read_query(QueryManager $manager) : void {
+     private function construct_read_query(QueryManager $manager, bool $is_count = false) : void {
          $where_clause = $manager->wbuilder->get_where_clause(
              $manager->get_query_reference_map(), 
              $manager->get_configurations()
@@ -214,7 +214,7 @@ class MySqlDriver extends DbDriver {
              $data = array_merge($join_clause_data, $where_clause_data);
          }
 
-         $select       = $manager->get_selected();
+         $select       = $is_count ? "COUNT(*) As records_count" : $manager->get_selected();
          $database     = $manager->get_query_reference_map()->find_database_name(0);
          $table        = $manager->get_query_reference_map()->find_table_name(0);
          $table_aka    = $manager->get_query_reference_map()->find_table_aliase(0);
@@ -235,14 +235,32 @@ class MySqlDriver extends DbDriver {
          }
 
          $sql         .= $from_ref;
-         $sql         .= $join_clause->clause;
-         $sql         .= $where_clause->clause;
-         $sql         .= $manager->get_groupby_clause();
-         $sql         .= $manager->obuilder->construct_order_clause();
-         $sql         .= $manager->lbuilder->construct_limit_clause();
-         
+         if(!$is_count){
+             $sql     .= $join_clause->clause;
+             $sql     .= $where_clause->clause;
+             $sql     .= $manager->get_groupby_clause();
+             $sql     .= $manager->obuilder->construct_order_clause();
+             $sql     .= $manager->lbuilder->construct_limit_clause();
+         }else{
+             $sql     .= $join_clause->clause;
+             $sql     .= $where_clause->clause;
+             /**
+              * Group By is a special case when handling counts,
+              * deal with this later
+              * */
+             //$sql   .= $manager->get_groupby_clause();
+         }
+        
          $manager->set_sql($sql);
          $manager->set_data($data);
+     }
+
+     public function set_read_query(QueryManager $manager) : void {
+         $this->construct_read_query($manager);
+     }
+
+     public function set_count_query(QueryManager $manager) : void {
+         $this->construct_read_query($manager, true);
      }
 
      protected function check_column_exists(string $table, string $column) : bool {

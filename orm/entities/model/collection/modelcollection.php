@@ -15,6 +15,8 @@ abstract class ModelCollection extends TypedCollection implements IModel, JsonSe
 
      private ?string $connection = null;
 
+     public ?Paginator $paginator = null;
+
      public function __construct(array $elements = []){
          parent::__construct($elements);
      }
@@ -27,6 +29,14 @@ abstract class ModelCollection extends TypedCollection implements IModel, JsonSe
 
      public function get_connection(){
          return $this->connection;
+     }
+
+     public function set_paginator(Paginator $paginator){
+         $this->paginator = $paginator;
+     }
+
+     public function get_paginator(){
+         return $this->paginator;
      }
 
      public function initialize_data(array $elements = []){
@@ -158,5 +168,35 @@ abstract class ModelCollection extends TypedCollection implements IModel, JsonSe
      public function randomize() : static {
          shuffle($this->elements);
          return $this;
+     }
+
+     //pagination helper methods
+
+     public function page(){
+         return $this->paginator ? $this->paginator->page : 1;
+     }
+
+     public function per_page_count(){
+         return $this->paginator ? $this->paginator->per_page : count($this->elements);
+     }
+
+     public function total_records(){
+         return $this->paginator ? $this->paginator->total_records : count($this->elements);
+     }
+
+     public function total_pages(){
+         return $this->paginator ? $this->paginator->total_pages : 1;
+     }
+
+     public function has_next(): bool {
+         return $this->paginator ? $this->paginator->has_next() : false;
+     }
+
+     public function has_prev(): bool{
+         return $this->paginator ? $this->paginator->has_prev() : false;
+     }
+
+     public function pages($window = 2){
+         return $this->paginator ? $this->paginator->pages() : [1];
      }
 }

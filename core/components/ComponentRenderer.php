@@ -38,7 +38,19 @@ class ComponentRenderer {
          //1. Execute controller (activate node)
          $node->active = true;
 
-         $data = ActionExecutor::execute($this->request, $node->def->controller, $node->def->method)->data ?? [];
+         $http_message = ActionExecutor::execute($this->request, $node->def->controller, $node->def->method);
+         $data = $http_message->data ?? [];
+
+         $flash_response = $http_message->get_flash();
+         if($flash_response){
+             $request->session->set('flash', (object)[
+                 'message' => $http_message->message,
+                 'context' => $http_message->data,
+                 'code'    => $http_message->code,
+                 'type'    => 'response'
+             ], true);
+         }
+
          $node->context = new ComponentContext($data, $parent_ctx);
 
          //2. Render template (conditions evaluated here)

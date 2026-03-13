@@ -376,7 +376,7 @@ class MakeMigrations {
                      //Database exists, acquire the timestamp for the last snapshot.
                      $last_migration = Migration::get()
                      ->order(fields: ['migration_timestamp'], direction: 'DESC')
-                     ->limit(page: 1, records: 1)
+                     ->limit(1)
                      ->first_or_null();
 
                      if($last_migration){

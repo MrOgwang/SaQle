@@ -100,91 +100,70 @@ class View {
          return $links;
      }
 
-     private function parse_parentheses($text, $start_pos){
-         $depth = 0;
-         $length = strlen($text);
+     //first trial
+     /*public function view(){
+         extract($this->data, EXTR_SKIP);
 
-         for($i = $start_pos; $i < $length; $i++){
-             if($text[$i] === '('){
-                 $depth++;
-             }
+         //raw output
+         $this->content = preg_replace('/{!!\s*(.*?)\s*!!}/s', '<?php echo $1; ?>', $this->content);
 
-             if($text[$i] === ')'){
-                 $depth--;
+         //escaped/normal output
+         $this->content = preg_replace(
+             '/{{\s*(.*?)\s*}}/s', 
+             "<?php echo htmlspecialchars($1, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8'); ?>", 
+             $this->content
+         );
 
-                 if($depth === 0){
-                     return [
-                        'expression' => substr($text, $start_pos + 1, $i - $start_pos - 1),
-                        'end' => $i
-                     ];
-                 }
-             }
-         }
+         $this->content = preg_replace('/@if\s*\((.*?)\)/s', '<?php if(($1)): ?>', $this->content);
+         $this->content = preg_replace('/@elseif\s*\((.*?)\)/s', '<?php elseif(($1)): ?>', $this->content);
 
-         return null;
-     }
+         $this->content = str_replace('@else', '<?php else: ?>', $this->content);
+         $this->content = str_replace('@endif', '<?php endif; ?>', $this->content);
 
-     private function compile_directives($template){
-         $output = '';
-         $length = strlen($template);
+         $this->content = preg_replace('/@foreach\s*\((.*?)\)/s', '<?php foreach($1): ?>', $this->content);
+         $this->content = str_replace('@endforeach', '<?php endforeach; ?>', $this->content);
 
-         for($i = 0; $i < $length; $i++){
-             if($template[$i] === '@'){
-                 if(substr($template, $i, 4) === '@if('){
-                     $parsed = $this->parse_parentheses($template, $i + 3);
+         ob_start();
+         eval('?>' . $this->content);
+         return ob_get_clean();
+     }*/
 
-                     $expr = $parsed['expression'];
-                     $i = $parsed['end'];
+     //second trial
+     /*public function view(){
+         extract($this->data, EXTR_SKIP);
 
-                     $output .= "<?php if(($expr)): ?>";
-                     continue;
-                 }
+         //raw output
+         $this->content = preg_replace('/{!!\s*(.*?)\s*!!}/s', '<?php echo $1; ?>', $this->content);
 
-                 if(substr($template, $i, 9) === '@foreach('){
-                     $parsed = $this->parse_parentheses($template, $i + 8);
+         //escaped/normal output
+         $this->content = preg_replace(
+             '/{{\s*(.*?)\s*}}/s', 
+             "<?php echo htmlspecialchars($1, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8'); ?>", 
+             $this->content
+         );
 
-                     $expr = $parsed['expression'];
-                     $i = $parsed['end'];
+         //conditionals
+         $this->content = preg_replace('/\B@if\s*\(((?:[^()]+|(?R))*)\)/', '<?php if(($1)): ?>', $this->content);
 
-                     $output .= "<?php foreach($expr): ?>";
-                     continue;
-                 }
+         $this->content = preg_replace('/\B@elseif\s*\(((?:[^()]+|(?R))*)\)/', '<?php elseif(($1)): ?>', $this->content);
 
-                 if(substr($template, $i, 7) === '@elseif'){
-                     $parsed = $this->parse_parentheses($template, $i + 7);
+         $this->content = str_replace('@else', '<?php else: ?>', $this->content);
 
-                     $expr = $parsed['expression'];
-                     $i = $parsed['end'];
+         $this->content = str_replace('@endif', '<?php endif; ?>', $this->content);
 
-                     $output .= "<?php elseif(($expr)): ?>";
-                     continue;
-                 }
+         //loops
+         $this->content = preg_replace('/\B@foreach\s*\(((?:[^()]+|(?R))*)\)/', '<?php foreach(($1)): ?>', $this->content);
 
-                 if(substr($template, $i, 5) === '@else'){
-                     $output .= "<?php else: ?>";
-                     $i += 4;
-                     continue;
-                 }
+         $this->content = str_replace('@endforeach', '<?php endforeach; ?>', $this->content);
 
-                 if(substr($template, $i, 6) === '@endif'){
-                     $output .= "<?php endif; ?>";
-                     $i += 5;
-                     continue;
-                 }
+         log_to_file($this->content);
 
-                 if(substr($template, $i, 11) === '@endforeach'){
-                     $output .= "<?php endforeach; ?>";
-                     $i += 10;
-                     continue;
-                 }
-             }
+         ob_start();
+         eval('?>' . $this->content);
+         return ob_get_clean();
+     }*/
 
-             $output .= $template[$i];
-         }
-
-         return $output;
-     }
-
+     //third trial
      public function view(){
          extract($this->data, EXTR_SKIP);
 
@@ -198,8 +177,22 @@ class View {
              $this->content
          );
 
-         $this->content = $this->compile_directives($this->content);
+         //conditionals
+         $this->content = preg_replace('/@if\s*\(([^)]*)\)/', '<?php if(($1)): ?>', $this->content);
+
+         $this->content = preg_replace('/@elseif\s*\(([^)]*)\)/', '<?php elseif(($1)): ?>', $this->content);
+
+         $this->content = str_replace('@else', '<?php else: ?>', $this->content);
+
+         $this->content = str_replace('@endif', '<?php endif; ?>', $this->content);
+
+         //loops
+         $this->content = preg_replace('/@foreach\s*\(([^)]*)\)/', '<?php foreach(($1)): ?>', $this->content);
          
+         $this->content = str_replace('@endforeach', '<?php endforeach; ?>', $this->content);
+
+         log_to_file($this->content);
+
          ob_start();
          eval('?>' . $this->content);
          return ob_get_clean();

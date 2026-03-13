@@ -27,6 +27,6 @@ class ConflictException extends FrameworkException {
      	 array $context = [], 
      	 ?Throwable $prev = null
      ){
-         parent::__construct($message, FeedBack::CONFLICT, $data, $prev);
+         parent::__construct($message, FeedBack::CONFLICT, $context, $prev);
      }
 }

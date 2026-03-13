@@ -30,18 +30,20 @@ class ValidationException extends FrameworkException {
          array $context = [], 
          ?Throwable $prev = null
      ){
-         parent::__construct($message, FeedBack::UNPROCESSABLE_ENTITY, $data, $prev);
+         parent::__construct(
+             $message ?: $this->format_errors($context['errors'] ?? []), 
+             FeedBack::UNPROCESSABLE_ENTITY, 
+             $context, 
+             $prev
+         );
      }
 
      public function errors(): array {
         return $this->get_context()['errors'] ?? [];
      }
 
-     public function format_errors($errors): string {
-
-         $errors = $this->errors();
-
-         $output = "Validation errors: \n\n";
+     private function format_errors($errors) : string {
+         $output = $this->safe_message.": \n\n";
 
          foreach($errors as $field => $messages){
              $output .= strtoupper($field) . ":\n";

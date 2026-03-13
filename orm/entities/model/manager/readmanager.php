@@ -10,7 +10,7 @@
  use SaQle\Orm\Entities\Model\Manager\Utils\EventUtils;
  use SaQle\Core\Events\ModelEventPhase;
  use SaQle\Orm\Entities\Model\Manager\Loaders\{RelationStack, EagerLoader};
- use SaQle\Orm\Entities\Model\Collection\{GenericModelCollection, ModelCollection};
+ use SaQle\Orm\Entities\Model\Collection\{GenericModelCollection, ModelCollection, Paginator};
  use SaQle\Orm\Entities\Field\Types\Base\RelationField;
  use Exception;
  use Closure;
@@ -28,7 +28,24 @@ final class ReadManager extends IReadManager {
 	 }
 
 	 public function all(){
-	 	 return $this->get();
+
+	 	 $collection = $this->get();
+
+	 	 if($this->paginate){
+	 	 	 $total = $this->count();
+	 	 	 $page = $this->lbuilder->limit->page;
+	 	 	 $records = $this->lbuilder->limit->records;
+
+	 	 	 $paginator = new Paginator();
+	 	 	 $paginator->page = $page;
+	 	 	 $paginator->per_page = $records;
+	 	 	 $paginator->total_records = $total;
+	 	 	 $paginator->total_pages = ceil($total / $records);
+
+	 	 	 $collection->set_paginator($paginator);
+	 	 }
+
+	 	 return $collection;
 	 }
 
 	 public function first_or_fail(){
@@ -202,5 +219,16 @@ final class ReadManager extends IReadManager {
 
 	 	 $this->sbuilder->withcallbacks = $callables;
 	 	 return $this;
+	 }
+
+	 public function count(){
+
+	 	 $this->dbdriver->set_count_query($this);
+
+	 	 $query_info = $this->get_query_info();
+	 	 
+	 	 $result = $this->model::class::run($query_info['sql'], 'select', $query_info['data'])->now();
+
+	 	 return $result[0]->records_count;
 	 }
 }

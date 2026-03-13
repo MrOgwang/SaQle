@@ -23,13 +23,29 @@ trait LimitManager{
 
      /**
      * Limit the number of rows returned by a select query.
+     * @param int records - the number of records to fetch.
+     */
+     public function limit(int $count){
+         $this->before_limit();
+
+         $this->lbuilder->limit = new Limit(page: 1, records: $count);
+
+         $this->after_limit();
+
+         return $this;
+     }
+
+     /**
+     * Paginate the rows returned by a select query.
      * @param int $page - the page to fetch
      * @param int records - the number of records to fetch.
      */
-     public function limit(int $page = 1, int $records = 10){
+     public function paginate(int $page, int $count){
+         $this->paginate = true;
+
          $this->before_limit();
 
-         $this->lbuilder->limit = new Limit(page: $page, records: $records);
+         $this->lbuilder->limit = new Limit(page: $page, records: $count);
 
          $this->after_limit();
 

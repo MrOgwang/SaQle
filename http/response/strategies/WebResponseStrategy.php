@@ -23,6 +23,15 @@ final class WebResponseStrategy implements ResponseStrategy {
          //inject global context data
          $context = array_merge($context, Template::init()::get_context());
 
+         //inject flash message and context
+         $context['flash'] = null;
+
+         $session = request()->session();
+         if($session->exists('flash')){
+             $context['flash'] = $session->get('flash');
+             $session->remove('flash');
+         }
+
          //inject csrf token input here
          $token_key = CsrfMiddleware::get_token_key();
          $token     = CsrfMiddleware::get_token();

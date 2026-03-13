@@ -3,7 +3,7 @@ namespace SaQle\Orm\Entities\Model\Schema;
 
 use SaQle\Orm\Entities\Field\Interfaces\IField;
 use SaQle\Orm\Entities\Field\Types\{Pk, TextField, OneToOne, OneToMany, FloatField, IntegerField, ManyToMany, FileField, DateField, TimeField, DateTimeField, TimestampField, BooleanField, VirtualField};
-use SaQle\Core\Exceptions\Model\ValidationException;
+use SaQle\Core\Exceptions\Base\ValidationException;
 use SaQle\Commons\StringUtils;
 use SaQle\Orm\Entities\Model\Manager\{CreateManager, UpdateManager, DeleteManager, TruncateManager, ReadManager, RunManager};
 use SaQle\Orm\Entities\Model\Interfaces\{IModel, ITableSchema};
@@ -609,7 +609,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
      	 }
 
      	 if(!empty($errors)){
-             throw new ValidationException([
+             throw new ValidationException(context: [
                  'errors' => $errors
              ]);
          }

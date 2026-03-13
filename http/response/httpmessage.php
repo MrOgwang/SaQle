@@ -30,6 +30,20 @@ class HttpMessage extends FeedBack {
 	 private string $redirect_url = "";
 
 	 /**
+	  * Whether to log to file
+	  * 
+	  * @var bool
+	  * */
+     private bool $do_log = true;
+
+     /**
+      * Whether to flash message and context to session
+      * 
+      * @var bool
+      * */
+     private bool $do_flash = false;
+
+	 /**
 	 * Http response code description
 	 * 
 	 * @var string
@@ -80,4 +94,22 @@ class HttpMessage extends FeedBack {
 	 	 $this->redirect_url = $url;
 	 	 return $this;
 	 }
+
+	 public function flash(bool $flash = true){
+         $this->do_flash = $flash;
+         return $this;
+     }
+
+     public function get_flash(){
+         return $this->do_flash;
+     }
+
+     public function log(bool $log = true){
+         $this->do_log = $log;
+         return $this;
+     }
+
+     public function get_log(){
+         return $this->do_log;
+     }
 }

@@ -30,6 +30,8 @@ class IReadManager extends QueryManager {
 		 GroupManager::__construct as private __groupConstruct;
 	 }
 
+	 protected bool $paginate = false;
+
  	 /**
  	 * a key => value array of configuration parameters
  	 * */

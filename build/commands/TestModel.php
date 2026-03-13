@@ -13,14 +13,14 @@ class TestModel {
              //tuning seems to cause a problem!
              [
                  'films' => function($q){
-                      return $q->limit(1, 5)->order(['length'], 'ASC');
+                      return $q->limit(5)->order(['length'], 'ASC');
                   }
              ]
-         )->limit(page: 1, records: 5)->all();
+         )->limit(5)->all();
          print_r($actors);*/
 
-         //$films = Film::using('sakila')->get()->limit(page: 1, records: 5)->all();
-         $films = Film::using('sakila')->get()->with(['actors'])->limit(page: 1, records: 5)->all();
+         //$films = Film::using('sakila')->get()->limit(5)->all();
+         $films = Film::using('sakila')->get()->with(['actors'])->limit(5)->all();
          //print_r($films);
          /*foreach($films as $index => $flm) {
              $n = $index + 1;
