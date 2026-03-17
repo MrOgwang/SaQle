@@ -20,6 +20,7 @@ use SaQle\Middleware\IMiddleware;
 use SaQle\Middleware\MiddlewareRequestInterface;
 use SaQle\Auth\Services\AuthenticationService;
 use SaQle\Core\Services\IService;
+use SaQle\Core\Support\ActorContext;
 
 class AuthenticationMiddleware extends IMiddleware {
      
@@ -35,6 +36,7 @@ class AuthenticationMiddleware extends IMiddleware {
 
          if($user){
              $request->session->set('user', $user, true);
+             ActorContext::set($user);
          }
          
          parent::handle($request);

@@ -9,6 +9,7 @@ use SaQle\Http\Request\Request;
 use SaQle\Core\Support\{Directory, AppContext};
 use SaQle\Core\Events\{EventBus, Event};
 use SaQle\App;
+use SaQle\Core\Support\ActorContext;
 
 if(!function_exists('app')){
      function app() : App {
@@ -285,5 +286,11 @@ if(!function_exists('mask_phone')){
          $masked = str_repeat('*', strlen($phone) - 5);
 
          return $start.$masked.$end;
+     }
+}
+
+if(!function_exists('actor')){
+     function actor() : mixed {
+         return ActorContext::get();
      }
 }

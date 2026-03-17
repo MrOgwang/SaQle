@@ -23,6 +23,7 @@ use SaQle\Core\Config\{ConfigRepository, AppSetup, Config};
 use SaQle\Http\Request\{Request, Runtime};
 use SaQle\Session\Providers\SessionProvider;
 use SaQle\Auth\Guards\GuardManager;
+use SaQle\Build\Manage\Manage;
 
 final class App {
      public MiddlewareRegistry $middleware;
@@ -114,5 +115,9 @@ final class App {
 
      public function run(): void {
          new Runtime()->handle(Request::init());
+     }
+
+     public function run_cli($args){
+         (new Manage($args))();
      }
 }

@@ -7,9 +7,9 @@ use SaQle\Build\Commands\{MakeMigrations, Migrate, MakeCollections, MakeModels,
 };
 use SaQle\Build\Utils\MigrationUtils;
 use Exception;
+use SaQle\Core\Support\ActorContext;
 
-
-class Manage{
+class Manage {
 	 private string $command      = '';
 	 private array  $arguments    = [];
 	 private string $project_root = '';
@@ -87,7 +87,20 @@ class Manage{
 	 	 return $this->extract_args($expected_short, $expected_long, $args);
 	 }
 
+	 private function bootstrap() : void {
+         date_default_timezone_set(config('app.timezone'));
+
+	     //Default CLI actor
+	     ActorContext::set((object)[
+	         'user_id' => null,
+	         'first_name' => 'System'
+	     ]);
+	 }
+
 	 public function __invoke(){
+
+	 	 $this->bootstrap();
+
 		 switch ($this->command){
 		     case 'make:migrations':
 	             $migration_name = $this->arguments['name'] ?? null;

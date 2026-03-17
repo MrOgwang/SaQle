@@ -550,7 +550,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
      	 	 }
      	 }
 
-     	 $user_id = request()->user->user_id ?? null;
+     	 $user_id = actor()->id();
 
      	 //inject creator and modifier fields, created and modified date time fields and deleted fields
 	 	 if($this->table->has_user_audit()){
@@ -615,7 +615,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
          }
 	 }
 
-	 public function get_update_data($data, $request, $data_state = null, $skip_validation = false){
+	 public function get_update_data($data, $data_state = null, $skip_validation = false){
 	 	 $column_refs = $this->table->get_table_column_names();
 
 	 	 //convert any values coming in with column names to field names
@@ -642,7 +642,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
 
      	 //Inject modifier and modified date time fields
 	 	 if($this->table->has_user_audit()){
-	 	 	$data['modifier'] = $request->user->user_id ?? null;
+	 	 	$data['modifier'] = actor()->id();
 	 	 }
 	 	 if($this->table->has_timestamps()){
 	 	 	 $data['modified_at'] = time();
