@@ -11,15 +11,15 @@ class Order{
 	 	 get => $this->fields;
 	 }
 
-	 public private(set) string $direction {
-	 	 set(string $value){
+	 public private(set) array $direction {
+	 	 set(array $value){
 	 	 	 $this->direction = $value;
 	 	 }
 
 	 	 get => $this->direction;
 	 }
 
-	 public function __construct($fields, $direction){
+	 public function __construct(array $fields, array $direction){
 		 $this->fields    = $fields;
 		 $this->direction = $direction;
 	 }

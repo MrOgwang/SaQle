@@ -12,6 +12,16 @@ use InvalidArgumentException;
 use RuntimeException;
 
 final class Route {
+
+     //if this is an event stream route, customize the event info here
+     public private(set) ?array $sse_event = null {
+         set(?array $value){
+             $this->sse_event = $value;
+         }
+
+         get => $this->sse_event;
+     }
+
      //the route url
      public string $url {
          set(string $value){
@@ -258,6 +268,24 @@ final class Route {
       * */
      public function respond_with(array $restype){
          $this->restype = array_unique(array_merge($this->restype ?? [], $restype));
+         return $this;
+     }
+
+     /**
+      * Customize event meta data for event stream
+      * routes.
+      * 
+      * @var string event - the name of event
+      * @var int interval - the interval for sleep
+      * */
+     public function sse(string $event, int $interval){
+         $meta = [
+             'event' => $event,
+             'interval' => $interval
+         ];
+
+         $this->sse_event = $meta;
+
          return $this;
      }
 }

@@ -13,6 +13,16 @@ class SseResponse extends HttpResponse{
          header('Content-Type: text/event-stream');
          header('Cache-Control: no-cache');
          header('Connection: keep-alive');
+         header('X-Accel-Buffering: no');
+
+         // Disable buffering
+         @ini_set('output_buffering', 'off');
+         @ini_set('zlib.output_compression', false);
+
+         while(ob_get_level() > 0){
+             ob_end_flush();
+         }
+         
          ($this->callback)();
      }
 }

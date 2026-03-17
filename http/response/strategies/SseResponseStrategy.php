@@ -18,12 +18,34 @@ final class SseResponseStrategy implements ResponseStrategy {
      }
 
      private function stream(Request $request): void {
+
+         $event_id = 0;
+         $event = "message";
+         $interval = 1;
+
+         if($request->route->sse){
+             $event = $request->route->sse['event'];
+             $interval = $request->route->sse['interval'];
+         }
+
          while(true){
 
-             $result = ActionExecutor::execute($request);
+             if(connection_aborted()){
+                 break;
+             }
 
-             // controller called repeatedly or service polled
-             sleep(1);
+             $result = ActionExecutor::execute($request)->data;
+
+             $event_id++;
+
+             echo "id: {$event_id}\n";
+             echo "event: {$event}\n";
+             echo "data: " . json_encode($result) . "\n\n";
+
+             ob_flush();
+             flush();
+
+             sleep($interval);
          }
      }
 }

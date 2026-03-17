@@ -4,6 +4,7 @@ declare(strict_types = 1);
 namespace SaQle\Orm\Query\Helpers;
 
 use SaQle\Orm\Query\Order\{OrderBuilder, Order};
+use RuntimeException;
 
 trait OrderManager{
      /**
@@ -26,8 +27,33 @@ trait OrderManager{
      * @param array $fields     - the field names to order based on
      * @param string $direction - order ASC or DESC
      */
-     public function order(array $fields, string $direction = "ASC"){
+     public function order(array $fields, array | string $direction){
          $this->before_order();
+
+         $direction = !is_array($direction) ? [ trim($direction) !== "" ? trim($direction) : "ASC"] : $direction;
+
+         if(empty($direction)){
+             $direction = ['ASC'];
+         }
+
+         $direction = array_map('strtoupper', $direction);
+
+         foreach($direction as $dir){
+             if(!in_array($dir, ["ASC", "DESC"])){
+                 throw new RuntimeException("Invalid direction specified for order!");
+             }
+         }
+
+         $field_count = count($fields);
+         $dir_count   = count($direction);
+
+         if($dir_count < $field_count){
+             $last = end($direction);
+
+             for($i = $dir_count; $i < $field_count; $i++) {
+                $direction[] = $last;
+             }
+         }
 
          $this->obuilder->order = new Order(fields: $fields, direction: $direction);
 

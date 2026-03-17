@@ -41,6 +41,9 @@ final class MatchedRoute {
 
          //the prefix the url came with
          public ?string $prefix = null,
+
+         //the sse meta data
+         public ?array $sse = null,
      ){}
 
      //check if the matched route supports a given response type

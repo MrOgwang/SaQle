@@ -42,7 +42,8 @@ final class RouteCompiler {
                  'guards'          => $route->guards,
                  'layout'          => $route->layout,
                  'restype'         => $route->restype,
-                 'trail'           => $route->trail
+                 'trail'           => $route->trail,
+                 'sse_event'       => $route->sse_event
              ]
          ];
      }

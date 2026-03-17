@@ -169,9 +169,22 @@ final class Router {
                  'requires'     => $r->requires(...$params),
                  'requires_any' => $r->requires_any(...$params),
                  'requires_all' => $r->requires_all(...$params),
-                 'respond_with' => $r->respond_with(...$params)
+                 'respond_with' => $r->respond_with(...$params),
+                 'sse'          => $r->sse(...$params)
              };
          }
+     }
+
+     /**
+      * Customize event meta data for event stream
+      * routes.
+      * 
+      * @var string event - the name of event
+      * @var int interval - the interval for sleep
+      * */
+     public function sse(string $event, int $interval){
+         $this->apply_decoration('sse', ...['event' => $event, 'interval' => $interval]);
+         return $this;
      }
 
      /**
@@ -293,7 +306,7 @@ final class Router {
         // Merge all prefixes
         $all_prefixes = array_merge(config('app.api_url_prefixes'), config('app.sse_url_prefixes'));
 
-        // Get all compiled routes from your registry
+        //Get all compiled routes from your registry
         $compiled_routes = RouteRegistry::all();
 
         // Parse URI

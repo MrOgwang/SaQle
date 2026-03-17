@@ -12,14 +12,21 @@ class OrderBuilder{
 	 }
 
 	 public function construct_order_clause(){
-		 $order_clause = "";
-		 if(!is_null($this->order)){
-			 $order_fields = [];
-			 foreach($this->order->fields as $field){
-			 	 $order_fields[] = $field;
-			 }
-			 $order_clause = " ORDER BY ".implode(", ", $order_fields)." ".$this->order->direction;
-		 }
-		 return $order_clause;
+	     $order_clause = "";
+
+	     if(!is_null($this->order)){
+	        $order_fields = [];
+
+	        foreach($this->order->fields as $i => $field){
+	            $direction = $this->order->direction[$i] ?? 'ASC';
+
+	            $order_fields[] = "($field IS NULL)";
+	            $order_fields[] = "$field $direction";
+	        }
+
+	        $order_clause = " ORDER BY ".implode(", ", $order_fields);
+	     }
+
+	     return $order_clause;
 	 }
 }

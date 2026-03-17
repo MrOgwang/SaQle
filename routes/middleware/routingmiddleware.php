@@ -43,7 +43,8 @@ class RoutingMiddleware extends IMiddleware{
              $match['route']['guards'],
              $match['route']['restype'],
              $match['route']['trail'],
-             $match['prefix']
+             $match['prefix'],
+             $match['route']['sse_event'] ?? null
          );
 
          $request->route = $matched_route;
