@@ -40,36 +40,36 @@ class ValidationServiceProvider extends ServiceProvider {
          $this->app->rules->add('type', NativeTypeValidator::class); //
          $this->app->rules->add('uuid', UuidValidator::class); //
          $this->app->rules->add('unsigned', UnsignedValidator::class); //
-
-
-         $this->app->rules->add('min_length', MinLengthValidator::class);
-         $this->app->rules->add('length', LengthValidator::class);
-         $this->app->rules->add('pattern', RegexPatternValidator::class);
+         $this->app->rules->add('min_length', MinLengthValidator::class);//
+         $this->app->rules->add('length', LengthValidator::class);//
+         $this->app->rules->add('min', MinValidator::class); //
+         $this->app->rules->add('max', MaxValidator::class); //
+         $this->app->rules->add('min_strength', MinStrengthValidator::class); //
+         $this->app->rules->add('pattern', RegexPatternValidator::class); //
+         $this->app->rules->add('slug', SlugValidator::class); //
+         $this->app->rules->add('json', JsonValidator::class); //
+         $this->app->rules->add('ip', IpAddressValidator::class); //
+         $this->app->rules->add('url', UrlValidator::class); //
+         $this->app->rules->add('phone', PhoneValidator::class); //
+         $this->app->rules->add('schemes', SchemesValidator::class); //
+         $this->app->rules->add('whitelist', WhitelistValidator::class); //
+         $this->app->rules->add('blacklist', BlacklistValidator::class); //
+         $this->app->rules->add('precision', PrecisionValidator::class); //
+         $this->app->rules->add('scale', ScaleValidator::class); //
+         
          $this->app->rules->add('charset', CharacterSetValidator::class);
-         $this->app->rules->add('format', FormatValidator::class);
-         $this->app->rules->add('timezone', TimezoneValidator::class);
-         $this->app->rules->add('min', MinValidator::class);
-         $this->app->rules->add('max', MaxValidator::class);
-         $this->app->rules->add('schemes', SchemesValidator::class);
          $this->app->rules->add('require_tld', RequireTldValidator::class);
+         $this->app->rules->add('international', InternationalPhoneValidator::class);
+         $this->app->rules->add('countries', PhoneCountryValidator::class);
+
          $this->app->rules->add('min_time', MinTimeValidator::class);
          $this->app->rules->add('max_time', MaxTimeValidator::class);
-         $this->app->rules->add('slug', SlugValidator::class);
-         $this->app->rules->add('international', InternationalPhoneValidator::class);
-         $this->app->rules->add('min_strength', MinStrengthValidator::class);
-         $this->app->rules->add('whitelist', WhitelistValidator::class);
-         $this->app->rules->add('blacklist', BlacklistValidator::class);
          $this->app->rules->add('min_datetime', MinDateTimeValidator::class);
          $this->app->rules->add('max_datetime', MaxDateTimeValidator::class);
          $this->app->rules->add('min_date', MinDateValidator::class);
          $this->app->rules->add('max_date', MaxDateValidator::class);
-         $this->app->rules->add('scale', ScaleValidator::class);
-         $this->app->rules->add('precision', PrecisionValidator::class);
-         $this->app->rules->add('ip', IpAddressValidator::class);
-         $this->app->rules->add('json', JsonValidator::class);
-         $this->app->rules->add('phone', PhoneValidator::class);
-         $this->app->rules->add('countries', PhoneCountryValidator::class);
-         $this->app->rules->add('url', UrlValidator::class);
+         $this->app->rules->add('format', FormatValidator::class);
+         $this->app->rules->add('timezone', TimezoneValidator::class);
      }
 }
 

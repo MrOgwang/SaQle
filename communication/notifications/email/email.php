@@ -21,7 +21,7 @@ use SaQle\Communication\Notifications\INotification;
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-class Email implements INotification{
+class Email implements INotification {
 	 /**
 	 * Email host
 	 * @var string

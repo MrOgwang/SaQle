@@ -5,70 +5,68 @@ namespace SaQle\Security\Validation\Validators;
 use SaQle\Security\Validation\Abstracts\IValidator;
 use SaQle\Security\Validation\Types\ValidationResult;
 
-class BlacklistValidator extends IValidator
-{
-    public function validate(
-        string $field,
-        mixed $value,
-        mixed $threshold = null,
-        array $context = []
-    ): ValidationResult {
+class BlacklistValidator extends IValidator {
 
-        // 1️⃣ Threshold must be non-empty array
-        if (!is_array($threshold) || empty($threshold)) {
-            return new ValidationResult(
-                false,
-                "blacklist rule for {$field} must be a non-empty array."
-            );
-        }
+     protected function threshold_type() : string {
+         return 'array';
+     }
 
-        // 2️⃣ Value must be string
-        if (!is_string($value) || trim($value) === '') {
-            return new ValidationResult(
-                false,
-                "{$field} must be a valid email."
-            );
-        }
+     public function validate(mixed $value, array $context = []) : ValidationResult {
 
-        $value = strtolower(trim($value));
+         //threshold must be non-empty array
+         if(!is_array($this->threshold) || empty($this->threshold)){
+             return new ValidationResult(
+                 false,
+                 "blacklist rule for {$this->field} must be a non-empty array."
+             );
+         }
 
-        // 3️⃣ Validate email structure first
-        if (!filter_var($value, FILTER_VALIDATE_EMAIL)) {
-            return new ValidationResult(
-                false,
-                "{$field} must be a valid email address."
-            );
-        }
+         //value must be string
+         if(!is_string($value) || trim($value) === ''){
+             return new ValidationResult(
+                 false,
+                 "{$this->field} must be a valid email."
+             );
+         }
 
-        // 4️⃣ Normalize blacklist
-        $blacklist = array_map(
-            fn($item) => strtolower(trim((string)$item)),
-            $threshold
-        );
+         $value = strtolower(trim($value));
 
-        $domain = substr(strrchr($value, "@"), 1); // domain only
+         //validate email structure first
+         if(!filter_var($value, FILTER_VALIDATE_EMAIL)){
+             return new ValidationResult(
+                 false,
+                 "{$this->field} must be a valid email address."
+             );
+         }
 
-        foreach ($blacklist as $blocked) {
-            if (str_starts_with($blocked, '@')) {
-                // Domain block
-                if ($domain === ltrim($blocked, '@')) {
-                    return new ValidationResult(
-                        false,
-                        "{$field} is blacklisted."
-                    );
-                }
-            } else {
-                // Exact email block
-                if ($value === $blocked) {
-                    return new ValidationResult(
-                        false,
-                        "{$field} is blacklisted."
-                    );
-                }
-            }
-        }
+         //normalize blacklist
+         $blacklist = array_map(
+             fn($item) => strtolower(trim((string)$item)),
+             $this->threshold
+         );
 
-        // Not blacklisted → pass
-        return new ValidationResult(true, null);
-    }
+         $domain = substr(strrchr($value, "@"), 1); // domain only
+
+         foreach($blacklist as $blocked){
+             if(str_starts_with($blocked, '@')){
+                 //Domain block
+                 if($domain === ltrim($blocked, '@')){
+                     return new ValidationResult(
+                         false,
+                         "{$this->field} is blacklisted."
+                     );
+                 }
+             }else{
+                 //Exact email block
+                 if($value === $blocked){
+                     return new ValidationResult(
+                         false,
+                         "{$this->field} is blacklisted."
+                     );
+                 }
+             }
+         }
+
+         return new ValidationResult(true, null);
+     }
 }

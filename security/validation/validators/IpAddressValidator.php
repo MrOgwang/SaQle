@@ -5,47 +5,37 @@ namespace SaQle\Security\Validation\Validators;
 use SaQle\Security\Validation\Abstracts\IValidator;
 use SaQle\Security\Validation\Types\ValidationResult;
 
-class IpAddressValidator extends IValidator
-{
-    public function validate(
-        string $field,
-        mixed $value,
-        mixed $threshold = null,
-        array $context = []
-    ): ValidationResult {
+class IpAddressValidator extends IValidator {
 
-        // 1️⃣ Threshold must be boolean
-        if (!is_bool($threshold)) {
-            return new ValidationResult(
-                false,
-                "ip rule for {$field} must be true or false."
-            );
-        }
+     protected function threshold_type(): string {
+         return 'bool';
+     }
 
-        // 2️⃣ Disabled → always pass
-        if ($threshold === false) {
-            return new ValidationResult(true, null);
-        }
+     public function validate(mixed $value, array $context = []) : ValidationResult {
 
-        // 3️⃣ Must be string
-        if (!is_string($value) || trim($value) === '') {
-            return new ValidationResult(
-                false,
-                "{$field} must be a valid IP address."
-            );
-        }
+         //disabled → always pass
+         if($this->threshold === false){
+             return new ValidationResult(true, null);
+         }
 
-        $value = trim($value);
+         //value must be string
+         if(!is_string($value) || trim($value) === '') {
+             return new ValidationResult(
+                 false,
+                "{$this->field} must be a valid IP address."
+             );
+         }
 
-        // 4️⃣ Validate IP
-        if (!filter_var($value, FILTER_VALIDATE_IP)) {
-            return new ValidationResult(
-                false,
-                "{$field} must be a valid IP address."
-            );
-        }
+         $value = trim($value);
 
-        // 5️⃣ Passed
-        return new ValidationResult(true, null);
-    }
+         //validate IP
+         if(!filter_var($value, FILTER_VALIDATE_IP)){
+             return new ValidationResult(
+                 false,
+                 "{$this->field} must be a valid IP address."
+             );
+         }
+
+         return new ValidationResult(true, null);
+     }
 }

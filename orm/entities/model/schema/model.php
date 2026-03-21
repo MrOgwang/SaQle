@@ -550,7 +550,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
      	 	 }
      	 }
 
-     	 $user_id = actor()->id();
+     	 $user_id = actor()?->user_id ?? null;
 
      	 //inject creator and modifier fields, created and modified date time fields and deleted fields
 	 	 if($this->table->has_user_audit()){
@@ -642,7 +642,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
 
      	 //Inject modifier and modified date time fields
 	 	 if($this->table->has_user_audit()){
-	 	 	$data['modifier'] = actor()->id();
+	 	 	$data['modifier'] = actor()?->user_id ?? null;
 	 	 }
 	 	 if($this->table->has_timestamps()){
 	 	 	 $data['modified_at'] = time();

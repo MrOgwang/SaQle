@@ -5,42 +5,33 @@ namespace SaQle\Security\Validation\Validators;
 use SaQle\Security\Validation\Abstracts\IValidator;
 use SaQle\Security\Validation\Types\ValidationResult;
 
-class PrecisionValidator extends IValidator
-{
-    public function validate(
-        string $field,
-        mixed $value,
-        mixed $threshold = null,
-        array $context = []
-    ): ValidationResult {
+class PrecisionValidator extends IValidator {
 
-        // 1️⃣ Threshold must be integer >= 1
-        if (!is_int($threshold) || $threshold < 1) {
-            return new ValidationResult(
-                false,
-                "precision rule for {$field} must be a positive integer."
-            );
-        }
+     protected function threshold_type() : string {
+         return 'int';
+     }
 
-        // 2️⃣ Value must be numeric
-        if (!is_numeric($value)) {
-            return new ValidationResult(
-                false,
-                "{$field} must be numeric."
-            );
-        }
+     public function validate(mixed $value, array $context = []) : ValidationResult {
 
-        $valueStr = preg_replace('/[^0-9]/', '', (string)$value); // remove decimal & sign
+         //value must be numeric
+         if(!is_numeric($value)){
+             return new ValidationResult(
+                 false,
+                 "{$this->field} must be numeric."
+             );
+         }
 
-        $digits = strlen($valueStr);
+         $value_str = preg_replace('/[^0-9]/', '', (string)$value); // remove decimal & sign
 
-        if ($digits > $threshold) {
-            return new ValidationResult(
-                false,
-                "{$field} must have at most {$threshold} total digits."
-            );
-        }
+         $digits = strlen($value_str);
 
-        return new ValidationResult(true, null);
-    }
+         if($digits > $threshold){
+             return new ValidationResult(
+                 false,
+                 "{$this->field} must have at most {$this->threshold} total digits."
+             );
+         }
+
+         return new ValidationResult(true, null);
+     }
 }

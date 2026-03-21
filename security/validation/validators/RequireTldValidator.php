@@ -5,8 +5,12 @@ namespace SaQle\Security\Validation\Validators;
 use SaQle\Security\Validation\Abstracts\IValidator;
 use SaQle\Security\Validation\Types\ValidationResult;
 
-class RequireTldValidator extends IValidator
-{
+class RequireTldValidator extends IValidator {
+
+     protected function threshold_type() : string {
+         return 'bool';
+     }
+
     public function validate(
         string $field,
         mixed $value,

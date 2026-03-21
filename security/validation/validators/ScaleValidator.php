@@ -5,44 +5,43 @@ namespace SaQle\Security\Validation\Validators;
 use SaQle\Security\Validation\Abstracts\IValidator;
 use SaQle\Security\Validation\Types\ValidationResult;
 
-class ScaleValidator extends IValidator
-{
-    public function validate(
-        string $field,
-        mixed $value,
-        mixed $threshold = null,
-        array $context = []
-    ): ValidationResult {
+class ScaleValidator extends IValidator {
+    
+     protected function threshold_type() : string {
+         return 'int';
+     }
 
-        // 1️⃣ Threshold must be integer >= 0
-        if (!is_int($threshold) || $threshold < 0) {
-            return new ValidationResult(
-                false,
-                "scale rule for {$field} must be a non-negative integer."
-            );
-        }
+     public function validate(mixed $value, array $context = []) : ValidationResult {
 
-        // 2️⃣ Value must be numeric
-        if (!is_numeric($value)) {
-            return new ValidationResult(
-                false,
-                "{$field} must be numeric."
-            );
-        }
+         //threshold must be integer >= 0
+         if(!is_int($this->threshold) || $this->threshold < 0){
+             return new ValidationResult(
+                 false,
+                 "scale rule for {$this->field} must be a non-negative integer."
+             );
+         }
 
-        $valueStr = (string)$value;
+         //value must be numeric
+         if(!is_numeric($value)){
+             return new ValidationResult(
+                 false,
+                 "{$this->field} must be numeric."
+             );
+         }
 
-        // 3️⃣ Count digits after decimal
-        $parts = explode('.', $valueStr);
-        $scaleDigits = isset($parts[1]) ? strlen(rtrim($parts[1], '0')) : 0;
+         $value_str = (string)$value;
 
-        if ($scaleDigits > $threshold) {
-            return new ValidationResult(
-                false,
-                "{$field} must have at most {$threshold} digits after the decimal point."
-            );
-        }
+         //count digits after decimal
+         $parts = explode('.', $value_str);
+         $scale_digits = isset($parts[1]) ? strlen(rtrim($parts[1], '0')) : 0;
 
-        return new ValidationResult(true, null);
-    }
+         if($scale_digits > $this->threshold){
+             return new ValidationResult(
+                 false,
+                 "{$this->field} must have at most {$this->threshold} digits after the decimal point."
+             );
+         }
+
+         return new ValidationResult(true, null);
+     }
 }

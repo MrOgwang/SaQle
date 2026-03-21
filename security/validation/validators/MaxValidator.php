@@ -26,12 +26,14 @@ class MaxValidator extends IValidator {
      }
 	
 	 public function validate(mixed $value, array $context = []) : ValidationResult {
-	 	 
-	 	 $isvalid = $value <= $this->threshold ? true : false;
+
+	 	 if($value <= $this->threshold){
+	 	 	 return new ValidationResult(true);
+	 	 }
 
 	 	 return new ValidationResult(
-             isvalid: $isvalid,
-             message: $isvalid ? null : "{$this->field} must be at most {$this->threshold}"
+             false,
+             "{$this->field} must be at most {$this->threshold}"
          );
 	 }
 }

@@ -20,17 +20,20 @@ use SaQle\Security\Validation\Types\ValidationResult;
 use SaQle\Security\Validation\Abstracts\IValidator;
 
 class MinLengthValidator extends IValidator {
+
 	 protected function threshold_type(): string { 
          return 'int';
      }
 	
 	 public function validate(mixed $value, array $context = []) : ValidationResult {
-	 	 
-	 	 $isvalid = mb_strlen($value) >= (int)$this->threshold ? true : false;
 
+	 	 if(mb_strlen($value ?? "") >= $this->threshold){
+	 	 	 return new ValidationResult(true);
+	 	 }
+	 	
 	 	 return new ValidationResult(
-             isvalid: $isvalid,
-             message: $isvalid ? null : "{$this->field} must be at least {$this->threshold} characters!"
+	 	 	 false,
+             "{$this->field} must be at least {$this->threshold} characters!"
          );
 	 }
 }

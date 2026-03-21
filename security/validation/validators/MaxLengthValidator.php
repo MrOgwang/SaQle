@@ -21,7 +21,7 @@ use SaQle\Security\Validation\Abstracts\IValidator;
 
 class MaxLengthValidator extends IValidator {
 
-	 protected function threshold_type(): string {
+	 protected function threshold_type() : string {
          return 'int';
      }
 	

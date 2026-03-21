@@ -5,68 +5,67 @@ namespace SaQle\Security\Validation\Validators;
 use SaQle\Security\Validation\Abstracts\IValidator;
 use SaQle\Security\Validation\Types\ValidationResult;
 
-class SchemesValidator extends IValidator
-{
-    public function validate(
-        string $field,
-        mixed $value,
-        mixed $threshold = null,
-        array $context = []
-    ): ValidationResult {
+class SchemesValidator extends IValidator {
+    
+     protected function threshold_type() : string {
+         return 'array';
+     }
 
-        // 1️⃣ Threshold must be a non-empty array
-        if (!is_array($threshold) || empty($threshold)) {
-            return new ValidationResult(
-                false,
-                "Schemes rule for {$field} must be a non-empty array."
-            );
-        }
+     public function validate(mixed $value, array $context = []) : ValidationResult {
 
-        // Normalize allowed schemes to lowercase
-        $allowedSchemes = array_map(
-            fn($scheme) => strtolower(trim((string)$scheme)),
-            $threshold
-        );
+         //threshold must be a non-empty array
+         if(!is_array($this->threshold) || empty($this->threshold)){
+             return new ValidationResult(
+                 false,
+                 "Schemes rule for {$field} must be a non-empty array."
+             );
+         }
 
-        // 2️⃣ Value must be string
-        if (!is_string($value) || trim($value) === '') {
-            return new ValidationResult(
-                false,
-                "{$field} must be a valid URL."
-            );
-        }
+         //normalize allowed schemes to lowercase
+         $allowed_schemes = array_map(
+             fn($scheme) => strtolower(trim((string)$scheme)),
+             $this->threshold
+         );
 
-        $value = trim($value);
+         //value must be string
+         if(!is_string($value) || trim($value) === ''){
+             return new ValidationResult(
+                 false,
+                 "{$this->field} must be a valid URL."
+             );
+         }
 
-        // 3️⃣ Validate URL structure
-        if (!filter_var($value, FILTER_VALIDATE_URL)) {
-            return new ValidationResult(
-                false,
-                "{$field} must be a valid URL."
-            );
-        }
+         $value = trim($value);
 
-        // 4️⃣ Extract scheme safely
-        $scheme = parse_url($value, PHP_URL_SCHEME);
+         //validate URL structure
+         if(!filter_var($value, FILTER_VALIDATE_URL)){
+             return new ValidationResult(
+                 false,
+                 "{$this->field} must be a valid URL."
+             );
+         }
 
-        if ($scheme === null) {
-            return new ValidationResult(
-                false,
-                "{$field} must contain a URL scheme."
-            );
-        }
+         //Extract scheme safely
+         $scheme = parse_url($value, PHP_URL_SCHEME);
 
-        $scheme = strtolower($scheme);
+         if($scheme === null){
+             return new ValidationResult(
+                 false,
+                 "{$this->field} must contain a URL scheme."
+             );
+         }
 
-        // 5️⃣ Validate scheme membership
-        if (!in_array($scheme, $allowedSchemes, true)) {
-            return new ValidationResult(
-                false,
-                "{$field} must use one of the following schemes: " .
-                implode(', ', $allowedSchemes) . "."
-            );
-        }
+         $scheme = strtolower($scheme);
 
-        return new ValidationResult(true, null);
-    }
+         //validate scheme membership
+         if(!in_array($scheme, $allowed_schemes, true)){
+             return new ValidationResult(
+                 false,
+                 "{$this->field} must use one of the following schemes: " .
+                 implode(', ', $allowed_schemes) . "."
+             );
+         }
+
+         return new ValidationResult(true, null);
+     }
 }
