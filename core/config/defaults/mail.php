@@ -5,6 +5,9 @@
  * */
 
 return [
+     //Email driver
+     'driver' => 'smtp',
+
      //Email user name
      'username' => '',
 
@@ -21,6 +24,9 @@ return [
      'sender_name' => '',
 
      //Email sender address
-     'sender_address' => ''
+     'sender_address' => '',
+
+     //Email encryption
+     'encryption' => 'ssl'
  ]
 ?>

@@ -1,5 +1,5 @@
 <?php
-namespace SaQle\Communication\Notifications\Push;
+namespace SaQle\Core\Notifications\Push;
 
 use SaQle\Communication\Notifications\INotification;
 use ExpoSDK\Expo;
