@@ -2,7 +2,6 @@
 namespace SaQle\Core\Queue\Drivers;
 
 use SaQle\Core\Queue\Models\{Job, FailedJob};
-use SaQle\Core\Queue\Jobs\QueuedJob;
 use SaQle\Core\Support\Db;
 
 class DatabaseQueueDriver implements QueueDriverInterface {

@@ -9,8 +9,7 @@ use SaQle\Http\Request\Request;
 use SaQle\Core\Support\{Directory, AppContext};
 use SaQle\Core\Events\{EventBus, Event};
 use SaQle\App;
-use SaQle\Core\Support\{Mail, ActorContext};
-use SaQle\Core\Notifications\Mail\Mailable;
+use SaQle\Core\Support\ActorContext;
 
 
 if(!function_exists('app')){
@@ -294,11 +293,5 @@ if(!function_exists('mask_phone')){
 if(!function_exists('actor')){
      function actor() : mixed {
          return ActorContext::get();
-     }
-}
-
-if(!function_exists('saqle_send_email')){
-     function saqle_send_email(Mailable $mail) : bool {
-         return Mail::send($mail);
      }
 }

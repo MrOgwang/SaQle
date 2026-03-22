@@ -3,32 +3,26 @@
 namespace SaQle\Core\Queue\Manager;
 
 use SaQle\Core\Queue\Jobs\Job;
-use SaQle\Core\Queue\Drivers\QueueDriverInterface;
-
-/*class QueueManager {
-
-     public function __construct(
-         protected QueueDriverInterface $driver
-     ){}
-
-     public function dispatch(Job $job, array $options = []): void {
-
-         $this->driver->push($job, [
-            'queue'    => $options['queue'] ?? 'default',
-            'delay'    => $job->get_delay(),
-            'priority' => $job->get_priority(),
-            'tries'    => $job->get_tries()
-         ]);
-
-     }
-}*/
+use SaQle\Core\Queue\Drivers\{
+     QueueDriverInterface,
+     DatabaseQueueDriver
+};
 
 class QueueManager {
 
      protected $driver;
 
-     public function __construct(QueueDriverInterface $driver){
-         $this->driver = $driver;
+     public function __construct(){
+         $this->driver = $this->resolve_driver();
+     }
+
+     protected function resolve_driver() : QueueDriverInterface {
+         $driver = config('queue.driver');
+
+         return match($driver){
+             'db' => new DatabaseQueueDriver(),
+             default => new DatabaseQueueDriver()
+         };
      }
 
      public function dispatch(Job $job, $queue = 'default', $priority = 0, $delay = 0){

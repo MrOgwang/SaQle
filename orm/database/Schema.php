@@ -7,6 +7,7 @@ use SaQle\Orm\Entities\Model\Interfaces\{IThroughModel, ITempModel};
 use SaQle\Core\Migration\Models\Migration;
 use SaQle\Session\Models\Session;
 use SaQle\Orm\Entities\Model\TempId;
+use SaQle\Core\Queue\Models\{FailedJob, Job, JobBatch};
 use RuntimeException;
 
 abstract class Schema {
@@ -90,7 +91,10 @@ abstract class Schema {
      	 if($schema_class === get_class($this)){
      	 	 return [
      	 	 	 'migrations' => Migration::class,
-	 	 	     'sessions' => Session::class
+	 	 	     'sessions' => Session::class,
+	 	 	     'framework_queue_failed_jobs' => FailedJob::class,
+	 	 	     'framework_queue_jobs' => Job::class,
+	 	 	     'framework_queue_job_batches' => JobBatch::class
      	 	 ];
      	 }
 

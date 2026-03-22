@@ -3,7 +3,7 @@ namespace SaQle\Core\Queue\Jobs;
 
 use SaQle\Core\Queue\Models\JobBatch as JobBatchModel;
 
-class JobBatch{
+class JobBatch {
 
      protected $id;
 
