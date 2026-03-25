@@ -73,7 +73,6 @@ final class App {
          require_once __DIR__.'/shortcuts/arrays.php';
          require_once __DIR__.'/shortcuts/http_responses.php';
          require_once __DIR__.'/shortcuts/http_exceptions.php';
-         require_once __DIR__.'/shortcuts/mail.php';
          $this->load_environment();
      }
 

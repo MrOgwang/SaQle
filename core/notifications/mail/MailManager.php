@@ -8,6 +8,7 @@ use SaQle\Core\Notifications\Mail\Transport\{
      MailgunTransport, 
      SendmailTransport
  };
+ use SaQle\Core\Support\Mailable;
 
 class MailManager {
 

@@ -3,7 +3,7 @@
 namespace SaQle\Core\Notifications\Mail\Jobs;
 
 use SaQle\Core\Queue\Jobs\Job;
-use SaQle\Core\Notifications\Mail\Mailable;
+use SaQle\Core\Support\Mailable;
 use SaQle\Core\Support\Mail;
 
 class SendMailJob extends Job {

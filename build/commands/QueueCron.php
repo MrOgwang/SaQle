@@ -1,37 +1,34 @@
 <?php
 namespace SaQle\Build\Commands;
 
-class QueueCron {
+use SaQle\Core\Queue\Worker\QueueWorker;
+
+class QueueCron{
 
      static public function execute(){
-         log_to_file("Running cron!");
-     }
+         $queues = array_values(config('queue.routing', []));
 
-     public function handle(){
+         $workers = [];
 
-        $queues = config('queue.queues');
+         foreach($queues as $queue_name){
+             $workers[] = new QueueWorker($queue_name);
+         }
 
-        $start = time();
-        $max_runtime = 50;
+         $start = time();
+         $max_runtime = 50;
 
-        while(true) {
+         while(true){
 
-            if(time() - $start > $max_runtime) {
-                echo "Cron worker exiting\n";
-                break;
-            }
+             if(time() - $start > $max_runtime){
+                 echo "Cron worker exiting\n";
+                 break;
+             }
 
-            foreach($queues as $queue_name => $config) {
+             foreach($workers as $worker){
+                 $processed = $worker->run_once();
+             }
 
-                $worker = new QueueWorker(
-                    Queue::driver(),
-                    $queue_name
-                );
-
-                $worker->run_once();
-            }
-
-            sleep(2);
-        }
+             sleep(2);
+         }
      }
 }

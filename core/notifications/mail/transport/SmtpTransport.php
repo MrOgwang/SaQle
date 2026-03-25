@@ -4,7 +4,7 @@ namespace SaQle\Core\Notifications\Mail\Transport;
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
-use SaQle\Core\Notifications\Mail\Mailable;
+use SaQle\Core\Support\Mailable;
 
 class SmtpTransport implements TransportInterface {
 

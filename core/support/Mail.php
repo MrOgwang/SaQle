@@ -2,7 +2,7 @@
 
 namespace SaQle\Core\Support;
 
-use SaQle\Core\Notifications\Mail\Mailable;
+use SaQle\Core\Support\Mailable;
 use SaQle\Core\Notifications\Mail\Jobs\SendMailJob;
 use SaQle\Core\Queue\Manager\QueueManager;
 
@@ -13,12 +13,14 @@ class Mail {
      }
 
      public static function queue(Mailable $mail, int $delay = 0, int $priority = 0){
+
+         $queue = config('queue.routing', [])['mail'] ?? "emails";
          
-         $queue = new QueueManager();
+         $manager = new QueueManager();
 
          $job = new SendMailJob($mail);
 
-         $queue->dispatch($job, config('queue.email', 'emails'), $priority, $delay);
+         $manager->dispatch($job, $queue, $priority, $delay);
 
      }
 

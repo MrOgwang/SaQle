@@ -14,4 +14,8 @@ abstract class Job implements JobInterface {
      public function middleware(){
          return [];
      }
+
+     public function default_queue(){
+         return config('queue.default');
+     }
 }

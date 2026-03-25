@@ -1,6 +1,6 @@
 <?php
 
-namespace SaQle\Core\Notifications\Mail;
+namespace SaQle\Core\Support;
 
 use Exception;
 use SaQle\Core\Notifications\Mail\Events\{
@@ -8,15 +8,24 @@ use SaQle\Core\Notifications\Mail\Events\{
      MailSent, 
      MailFailed
 };
+use SaQle\Core\Notifications\Mail\MailManager;
 
-abstract class Mailable {
-     public array $to = [];
-     public array $cc = [];
-     public array $bcc = [];
-     public array $attachments = [];
-     public string $subject = '';
-     public string $body = '';
-     public bool $is_html = true;
+abstract class Mailable implements Queueable {
+
+     use QueueJob;
+
+     protected array  $data        = [];
+     public    array  $to          = [];
+     public    array  $cc          = [];
+     public    array  $bcc         = [];
+     public    array  $attachments = [];
+     public    string $subject     = '';
+     public    string $body        = '';
+     public    bool   $is_html     = true;
+
+     public function __construct(array $data = []){
+         $this->data = $data;
+     }
 
      abstract public function build() : void;
 
@@ -82,5 +91,23 @@ abstract class Mailable {
      public function attach(string $path, string $name = '') : self {
          $this->attachments[] = [$path, $name];
          return $this;
+     }
+
+     //queueing methods
+
+     public function queue_job_handler() : array {
+         return ['send' => []];
+     }
+
+     public function queue_job_payload() : array {
+         return $this->data;
+     }
+
+     public static function init_queue_job(array $data) : Queueable {
+         return new static($data);
+     }
+
+     public function default_queue() : string {
+         return config('queue.routing', [])['mail'] ?? "emails";
      }
 }

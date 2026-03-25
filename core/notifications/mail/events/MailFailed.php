@@ -3,7 +3,7 @@ namespace SaQle\Core\Notifications\Mail\Events;
 
 use SaQle\Core\Events\Event;
 use SaQle\Core\Events\EventContext;
-use SaQle\Core\Notifications\Mail\Mailable;
+use SaQle\Core\Support\Mailable;
 
 final class MailFailed extends Event {
 

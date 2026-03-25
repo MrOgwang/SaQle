@@ -22,19 +22,24 @@ class DatabaseQueueDriver implements QueueDriverInterface {
 
      public function pop($queue){
 
-         return Db::transaction(function(){
-             $select_sql = "SELECT * FROM jobs 
-                     WHERE queue = ? AND available_at <= ? AND (reserved_at IS NULL OR reserved_at <= ?)
-                     ORDER BY priority DESC, id ASC
-                     LIMIT 1
-                     FOR UPDATE
-             ";
+         return Db::transaction(function() use ($queue){
 
-             $job = Job::run($select_sql, "select", [$queue, time(), time() - $this->visibility_timeout], false)->now();
+             $timeout = $this->visibility_timeout;
+
+             $query = Job::get()->where('queue', $queue)->where('available_at__lte', time())
+                    ->gwhere(function($q) use ($timeout) {
+                         return $q->where('reserved_at', null)->or_where('reserved_at__lte', time() - $timeout);
+                    })
+                    ->order(['priority'], "DESC")
+                    ->limit(1);
+
+             $job = $query->first_or_null();
 
              if($job){
-                 $update_sql = "UPDATE jobs SET reserved_at = ?, attempts = attempts + 1 WHERE id = ?";
-                 Job::run($update_sql, "update", [time(), $job->id])->now();
+                 Job::update([
+                    'reserved_at' => time(),
+                    'attempts' => $job->attempts + 1
+                 ])->where('id', $job->id)->now();
              }
 
              return $job;
