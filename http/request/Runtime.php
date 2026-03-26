@@ -48,7 +48,7 @@ class Runtime {
 
      public function handle(Request $request){
          try{
-
+            
              $request  = $this->bootstrap_request($request);
              $response = $this->resolve_response($request);
              $response->send();

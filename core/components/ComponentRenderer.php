@@ -7,13 +7,11 @@ use SaQle\Core\Forms\{FormRuntimeContext, AutoForm};
 use SaQle\Http\Response\HttpMessage;
 use SaQle\Http\Request\Execution\ActionExecutor;
 use SaQle\Http\Request\Request;
-use SaQle\Core\Ui\View;
-use SaQle\Commons\StringUtils;
+use SaQle\Core\Ui\{View, AssetManager};
 use RuntimeException;
 
 class ComponentRenderer {
-     use StringUtils;
-
+     
      private $attributes = ['css' => [], 'js' => [], 'title' => '', 'meta' => ''];
 
      public function __construct(private Request $request){
@@ -21,23 +19,27 @@ class ComponentRenderer {
      }
 
      public function wrap_root(string $html){
+         $assets = AssetManager::output();
+
          $page_component = ComponentRegistry::resolve_component('page', 'GET', 'layout');
-
-         $page = new View($page_component[3], true);
-
-         return self::set_template_context($page->get_template(), [
-             'content' => $html, 
-             'title'   => $this->attributes['title'], 
-             'css'     => implode("\n", array_unique($this->attributes['css'])), 
-             'js'      => implode("\n", array_unique($this->attributes['js'])), 
+         $page = new View($page_component[3]);
+         $page->set_context([
+             'content' => $html,
+             'css'     => $assets['css'],
+             'js'      => $assets['js'],
+             'title'   => $this->attributes['title'],
              'meta'    => $this->attributes['meta']
-         ], true);
+         ]);
+
+         return $page->render();
      }
 
-     public function render(ComponentNode $node, ?ComponentContext $parent_ctx = null): string {
-         //1. Execute controller (activate node)
+     public function render(ComponentNode $node, ?ComponentContext $parent_ctx = null, array $props = []): string {
+         
+         //1. activate node
          $node->active = true;
 
+         //2. Execute controller
          $http_message = ActionExecutor::execute($this->request, $node->def->controller, $node->def->method);
          $data = $http_message->data ?? [];
 
@@ -53,21 +55,22 @@ class ComponentRenderer {
 
          $node->context = new ComponentContext($data, $parent_ctx);
 
-         //2. Render template (conditions evaluated here)
-         $view = new View($node->def->template_path, true);
-         $meta = $view->get_meta();
-         $title = $view->get_title();
-         $this->attributes['css'] = array_merge($this->attributes['css'], $view->get_css());
-         $this->attributes['js'] = array_merge($this->attributes['js'], $view->get_js());
-         $this->attributes['title'] = $title ? $title : $this->attributes['title'];
-         $this->attributes['meta'] = $meta ? $meta : $this->attributes['meta'];
-         $view->set_context($node->context->expose());
-         $html = $view->view();
+         //3. Register component assets
+         $css = $node->def->css();
+         $js = $node->def->js();
+         
+         AssetManager::add_css($css);
+         AssetManager::add_js($js);
 
-         //3. Resolve dynamic slot
+         //4. Render compiled view
+         $view = new View($node->def->template_path);
+         $view->set_context($node->context->expose());
+         $html = $view->render();
+
+         //5. Resolve dynamic slot
          $html = $this->inject_dynamic($html, $node);
 
-         //4. Resolve inline components
+         //6. Resolve inline components
          $html = $this->inject_inline_components($html, $node);
 
          return $html;
@@ -97,19 +100,41 @@ class ComponentRenderer {
          return preg_replace($pattern, $rendered, $html, 1);
      }
 
+     private function parse_attributes(string $attr_string) : array {
+         preg_match_all('/(\w+)=["\']([^"\']+)["\']/', $attr_string, $matches);
+
+         $attrs = [];
+         foreach($matches[1] as $i => $key){
+             $attrs[$key] = $matches[2][$i];
+         }
+
+         return $attrs;
+     }
+
      private function inject_inline_components(string $html, ComponentNode $node): string {
 
-         // Regex matches either <component:block name='...'> or <component:form name='...'/>
-         $pattern = '/<component:(block|form)\s+name=[\'"]([\w\-]+)[\'"]\s*\/>/i';
+         $pattern = '/<component:(block|form)\s+([^\/]+)\s*\/>/i';
 
          return preg_replace_callback($pattern, function($matches) use ($node) {
              
              $type = strtolower($matches[1]);  // 'block' or 'form'
-             $name = $matches[2];               // component or form name
+
+             $attr_string = $matches[2];
+
+             $attrs = $this->parse_attributes($attr_string);
+
+             $name = $attrs['name'] ?? null; //component or form name
+
+             if(!$name){
+                 return "<!-- component missing name -->";
+             }
+
+             unset($attrs['name']); // rest = props
 
              if($type === 'block'){
                  //Resolve block from registry
                  $def = ComponentRegistry::get_definition($name);
+                 
                  if(!$def){
                     return "<!-- Block '{$name}' not found -->";
                  }
@@ -117,7 +142,7 @@ class ComponentRenderer {
                  $child = new ComponentNode($def);
                  $child->parent = $node;
 
-                 return $this->render($child, $node->context);
+                 return $this->render($child, $node->context, $attrs);
              }
 
              if($type === 'form') {

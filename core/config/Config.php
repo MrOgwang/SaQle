@@ -83,6 +83,13 @@ final class Config {
              'templates_cache_dir' => '/storage/framework/build/cache/templates/',
 
              /**
+             * The directory in which compiled assets(css/js/media) will be cached. 
+             * This is used by the framework and cannot be customized
+             * at the moment
+             * */
+             'assets_cache_dir' => '/storage/framework/build/cache/assets/',
+
+             /**
              * The directory in which compiled forms will be cached. 
              * This is used by the framework and cannot be customized
              * at the moment
@@ -92,6 +99,8 @@ final class Config {
              'saqle_components_dirs' => [realpath(__DIR__.'/../../components')],
 
              'saqle_routes_dirs' => [realpath(__DIR__.'/../../routes')],
+
+             'static_assets_route' => '/private-asset'
          ];
      }
 }

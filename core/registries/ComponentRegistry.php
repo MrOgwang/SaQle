@@ -37,7 +37,13 @@ final class ComponentRegistry {
 
      public static function get_definition(string $name): ComponentDefinition {
          $resolved_component = self::resolve_component($name, 'GET', 'layout');
-         return new ComponentDefinition($resolved_component[0], $resolved_component[3], $resolved_component[1], $resolved_component[2]);
+         return new ComponentDefinition(
+             name: $resolved_component[0], 
+             path: dirname($resolved_component[3]),
+             template_path: $resolved_component[3], 
+             controller: $resolved_component[1], 
+             method: $resolved_component[2]
+         );
      }
 
      public static function assert_components_exist(array $components){

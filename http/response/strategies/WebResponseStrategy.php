@@ -47,7 +47,7 @@ final class WebResponseStrategy implements ResponseStrategy {
      public function build(Request $request, ?HttpMessage $result = null) : HttpResponse {
 
          //use the component tree and component rendere to build the html here
-         if($request->route->compiled_target[0] === 'privatefile'){
+         if(in_array($request->route->compiled_target[0], ['privatefile', 'staticfile'])){
              $result = ActionExecutor::execute($request);
              return new HtmlResponse('', $result->code);
          }

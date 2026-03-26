@@ -66,7 +66,6 @@ class MiddlewareGroup extends BaseMiddlewareGroup{
          }
 
          $middleware = $middlewares[0];
-         //$instance = new $middleware();
          $instance   = resolve($middleware);
 
          $this->assign_middlewares($instance, $middlewares, 1);

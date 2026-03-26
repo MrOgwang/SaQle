@@ -1,7 +1,7 @@
 <?php
 namespace SaQle\Build\Commands;
 
-use SaQle\Build\Utils\{Manifest, ClassMapper, RouteCompiler, TemplateCompiler, EventCompiler,
+use SaQle\Build\Utils\{Manifest, ClassMapper, RouteCompiler, EventCompiler,
  FormCompiler};
 use SaQle\Routes\Router;
 use RecursiveIteratorIterator;
@@ -123,10 +123,7 @@ class BuildProject{
 
                  //compile routes
                  RouteCompiler::compile();
-
-                 //compile the templates
-                 TemplateCompiler::compile();
-
+                 
                  //compile events
                  EventCompiler::compile();
 
