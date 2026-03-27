@@ -77,6 +77,7 @@ return [
  	 
  	 //system administrator settings
  	 'system_admin_email' => '',
+     
  	 'system_admin_name'  => ''
  ]
 ?>

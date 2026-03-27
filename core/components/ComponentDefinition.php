@@ -59,7 +59,7 @@ class ComponentDefinition {
                      $files = array_merge($files, $component->js($loaded_components));
                  }
              }else{
-                $files[] = path_join([config('base_path'), "public/static/css/", "{$dep}.js"]);
+                $files[] = path_join([config('base_path'), "public/static/js/", "{$dep}.js"]);
              }
          }
 

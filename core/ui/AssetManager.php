@@ -16,6 +16,20 @@ class AssetManager {
          self::$js = array_merge(self::$js, $files);
      }
 
+     private static function assets_to_links(array $assets, string $type){
+
+         if($type === "css"){
+             return array_map(function($a){
+                return "<link rel='stylesheet' href='{$a}'>"; $n * 2;
+             }, $assets);
+         }
+
+         return array_map(function($a){
+            return "<script src='{$a}'></script>";
+         }, $assets);
+
+     }
+
      public static function output(): array {
 
          $cache_path = path_join([config('base_path'), config('assets_cache_dir')]);
@@ -24,42 +38,38 @@ class AssetManager {
              mkdir($cache_path, 0777, true);
          }
 
-         $css_file = self::build(self::$css, 'css', $cache_path);
-         $js_file  = self::build(self::$js, 'js', $cache_path);
+         $css_files = self::build(self::$css, 'css', $cache_path);
+         $js_files  = self::build(self::$js, 'js', $cache_path);
 
          return [
-            'css' => $css_file ? "<link rel='stylesheet' href='{$css_file}'>" : '',
-            'js'  => $js_file ? "<script src='{$js_file}'></script>" : ''
+            'css' => $css_files ? implode("\n", self::assets_to_links($css_files, "css")) : '',
+            'js'  => $js_files ? implode("\n", self::assets_to_links($js_files, "js")) : ''
          ];
      }
 
-     private static function build(array $files, string $type, string $path): ?string {
+     private static function build(array $files, string $type, string $path): array {
 
-         if(empty($files)) return null;
+         $assets = [];
 
-         $hash = md5(implode('|', $files));
-         $filename = "app_{$hash}";
-         $filename2 = "app_{$hash}.{$type}";
-         $output = path_join([$path, $filename2]);
+         foreach($files as $file){
+             $hash = md5($file);
+             $filename = pathinfo($file, PATHINFO_FILENAME);
+             $output_filename = "{$filename}_{$hash}";
+             $output_path = path_join([$path, $output_filename.".{$type}"]);
 
-         if(!file_exists($output)){
-
-             $content = '';
-
-             foreach(array_unique($files) as $file){
-                 $content .= file_get_contents($file)."\n";
+             if(!file_exists($output_path)){
+                 $content = self::minify(file_get_contents($file));
+                 file_put_contents($output_path, $content);
              }
 
-             $content = self::minify($content);
-
-             file_put_contents($output, $content);
+             $assets[] = config("static_assets_route")."/{$type}/{$output_filename}";
          }
 
-         return config("static_assets_route")."/{$type}/{$filename}";
+         return $assets;
      }
 
      private static function minify($content){
-         // simple minifier (can upgrade later)
+         //simple minifier: TODO, upgrade minifier later
          return preg_replace('/\s+/', ' ', $content);
      }
 }

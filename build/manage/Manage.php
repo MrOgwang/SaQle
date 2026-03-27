@@ -3,7 +3,8 @@ namespace SaQle\Build\Manage;
 
 use SaQle\Build\Commands\{MakeMigrations, Migrate, MakeCollections, MakeModels, 
 	MakeThroughs, SeedDatabase, ResetDatabase, MakeSuperuser, StartProject, 
-	StartApps, MakeResources, BuildProject, TestModel, RunCron, QueueCron
+	StartApps, MakeResources, BuildProject, TestModel, RunCron, QueueCron,
+	MakeComponent
 };
 use SaQle\Build\Utils\MigrationUtils;
 use Exception;
@@ -16,6 +17,7 @@ class Manage {
 	 public function __construct($args){
 	 	 $this->command = $args[1] ?? null;
 	 	 $this->arguments = match($this->command){
+	 	 	'make:component'   => $this->extract_makecomponent_args($args),
 	 	 	'make:migrations'  => $this->extract_makemigrations_args($args),
 	 	 	'make:resources'   => [],
 	 	 	'migrate'          => [],
@@ -50,6 +52,12 @@ class Manage {
 	 	 	 }
 	 	 }
 	 	 return $extracted_args;
+	 }
+
+	 private function extract_makecomponent_args(array $args){
+	 	 $expected_short = ['-n', '-m'];
+	 	 $expected_long  = ['--name', '--module'];
+	 	 return $this->extract_args($expected_short, $expected_long, $args);
 	 }
 
 	 private function extract_makemigrations_args(array $args){
@@ -103,6 +111,16 @@ class Manage {
 	 	 $this->bootstrap();
 
 		 switch ($this->command){
+		 	 case 'make:component':
+	             $name = $this->arguments['name'] ?? null;
+	             $module = $this->arguments['module'] ?? null;
+
+	             if(!$name){
+	             	 throw new Exception("Please provide a component name!");
+	             }
+
+	             MakeComponent::execute($name, $module);
+			 break;
 		     case 'make:migrations':
 	             $migration_name = $this->arguments['name'] ?? null;
 	             $schema_name = $this->arguments['schema'] ?? null;

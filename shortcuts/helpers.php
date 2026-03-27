@@ -97,6 +97,13 @@ if(!function_exists('path_join')){
      }
 }
 
+if(!function_exists('base_path')){
+     function base_path(...$parts) : string {
+         array_unshift($parts, config('base_path'));
+         return path_join($parts);
+     }
+}
+
 if(!function_exists('redirect')){
      function redirect(?string $url = null, int $status = HttpMessage::FOUND, mixed $data = null, ?string $message = null){
          return new RedirectResponse(url: $url, status: $status)->send();
