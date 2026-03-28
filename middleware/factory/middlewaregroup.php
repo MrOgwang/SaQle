@@ -15,17 +15,17 @@ use SaQle\Http\Request\Request;
 class MiddlewareGroup extends BaseMiddlewareGroup{
 	 protected function get_pre_routing_middlewares(): array {
          return [
-         	 RequestIntentMiddleware::class,
-             RoutingMiddleware::class,
+         	 RequestIntentMiddleware::class
          ];
      }
 
      protected function get_post_routing_middlewares(): array {
          return [
-         	 CanonicalUrlMiddleware::class,
-             CorsMiddleware::class,
              SessionMiddleware::class,
              AuthenticationMiddleware::class,
+             RoutingMiddleware::class,
+         	 CanonicalUrlMiddleware::class,
+             CorsMiddleware::class,
              DataMiddleware::class,
              CsrfMiddleware::class,
              AuthorizationMiddleware::class,

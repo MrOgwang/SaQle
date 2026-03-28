@@ -117,14 +117,26 @@ class ClassMapper{
          $components = [];
 
          foreach($components_dirs as $dir){
-             if(!is_dir($dir))
-                 continue;
+             if(!is_dir($dir)){
+                continue;
+             }
              
              $dir_iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir));
              foreach($dir_iterator as $file){
                  if($file->isFile()){
+
+                     $extension = $file->getExtension();
+                     if(in_array($extension, ['json', 'css', 'js'])){
+                         continue;
+                     }
+
                      $component_name = str_replace(".php", "", $file->getFilename());
                      $component_name = str_replace(".".config('app.component_template_ext'), "", $component_name);
+
+                     if(array_key_exists($component_name, $components)){
+                         continue;
+                     }
+
                      $real_path      = $file->getRealPath();
                      [$compile_path, $owner] = $this->normalize_path($real_path);
 
