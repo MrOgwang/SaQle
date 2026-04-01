@@ -1,7 +1,7 @@
 <?php
 namespace SaQle\Core\Exceptions\Model;
 
-use SaQle\Core\Exceptions\Base\HttpException;
+use SaQle\Core\Exceptions\Abstracts\FrameworkException;
 use SaQle\Core\FeedBack\FeedBack;
 
 /**
@@ -9,7 +9,7 @@ use SaQle\Core\FeedBack\FeedBack;
  * is encountered
  * */
 
-class UndefinedFieldException extends HttpException {
+class UndefinedFieldException extends FrameworkException {
      public function __construct(string $message, array $context = []){
          parent::__construct(
              message   : $message,

@@ -7,7 +7,7 @@ declare(strict_types = 1);
 namespace SaQle\Routes;
 
 use SaQle\Core\Assert\Assert;
-use SaQle\Core\Registries\ComponentRegistry;
+use SaQle\Core\Components\ComponentDefinition;
 use InvalidArgumentException;
 
 final class MatchedRoute {
@@ -22,7 +22,10 @@ final class MatchedRoute {
          public string $method,
 
          //the route handler
-         public array $compiled_target,
+         public ComponentDefinition $compiled_target,
+
+         //the route name
+         public string $name, 
 
          //the route handler
          public ?string $model_class = null,

@@ -2,6 +2,7 @@
 namespace SaQle\Core\FeedBack;
 
 class FeedBack {
+	
 	 const PROCESSING            = 102;
      const OK                    = 200;
      const CREATED               = 201;

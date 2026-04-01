@@ -15,34 +15,39 @@ final class ResponseResolver {
 
      public function resolve(Request $request, ?HttpMessage $result = null) : HttpResponse {
 
+         $response_strategies = [
+             new SseResponseStrategy(),
+             new JsonResponseStrategy()
+         ];
+
          /**
-          * The only time the result is not null,
-          * is when an exception has happened!
+          * The only time the result is not null, is when an exception has happened
+          * 
+          * An exception occured and this is a post/put/patch/delete request
           * */
-         $strategies = !$result ? $this->strategies() : $this->exception_strategies();
-        
-         foreach($strategies as $strategy){
+         if($result && strtolower($request->route->method) !== 'get'){
+
+             $response_strategies[] = new RedirectResponseStrategy();
+
+             /**
+              * When exceptions happen for submit requests(post, put, patch, delete), this is the redirect
+              * philosophy:
+              * 
+              * ValidationException(validation related errors) - redirect back
+              * DomainException(business rules related errors) - (redirect to a meaninful page defined by the developer)
+              * SystemErrors                                   - redirect to the relevant error page
+              * */
+
+         }else{
+             $response_strategies[] = new WebResponseStrategy();
+         }
+
+         foreach($response_strategies as $strategy){
              if($strategy->supports($request)){
                  return $strategy->build($request, $result);
              }
          }
 
          throw new RuntimeException('No response strategy matched');
-     }
-
-     private function strategies(): array {
-         return [
-             new SseResponseStrategy(),
-             new JsonResponseStrategy(),
-             new WebResponseStrategy(),
-         ];
-     }
-
-     private function exception_strategies(): array {
-         return [
-             new SseResponseStrategy(),
-             new JsonResponseStrategy(),
-             new RedirectResponseStrategy(),
-         ];
      }
 }

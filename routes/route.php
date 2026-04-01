@@ -13,6 +13,15 @@ use RuntimeException;
 
 final class Route {
 
+     //name of route
+     public private(set) ?string $name = null {
+         set(?string $value){
+             $this->name = $value;
+         }
+
+         get => $this->name;
+     }
+
      //if this is an event stream route, customize the event info here
      public private(set) ?array $sse_event = null {
          set(?array $value){
@@ -61,7 +70,8 @@ final class Route {
 
      /**
       * componentname@method  - the component name and the method to execute
-      * componentname         - just the component name, the method to excute will be determined automatically if a component has a controller
+      * componentname         - just the component name, 
+      * the method to excute will be determined automatically if a component has a controller
       * 
       * */
      public string $target {
@@ -71,6 +81,8 @@ final class Route {
              $this->compiled_target = $compiled_target;
 
              $this->target = !is_null($compiled_target[2]) ? $compiled_target[0]."@".$compiled_target[2] : $compiled_target[0];
+
+             $this->name = !is_null($compiled_target[2]) ? $compiled_target[0].".".$compiled_target[2] : $compiled_target[0].".".strtolower($this->method);
          }
 
          get => $this->target;
@@ -287,5 +299,9 @@ final class Route {
          $this->sse_event = $meta;
 
          return $this;
+     }
+
+     public function set_name(string $name){
+         $this->name = $name;
      }
 }

@@ -13,14 +13,26 @@ class ComponentDefinition {
          public string $path,
 
          //the components template path
-         public string $template_path,
+         public ?string $template_path = null,
 
          //the controller class name
          public ?string $controller = null,
 
          //the controller method to execute
          public ?string $method = null,
-     ) {}
+
+         //whether its a proxy
+         public bool $proxy = false
+     ){
+
+         /**
+          * Resolve decoy components here. A decoy component
+          * is used to return a particular component based on a condition
+          * */
+         /*if($this->controller && is_a($this->controller, $parentClassName, true);){
+             'SaQle\\Components\\StaticFile\\StaticFile'
+         }*/
+     }
 
      private function get_dependencies() : array {
          $json_file = "{$this->path}/{$this->name}.json";

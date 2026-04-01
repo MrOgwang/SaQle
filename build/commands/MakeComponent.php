@@ -4,7 +4,7 @@ namespace SaQle\Build\Commands;
 use Exception;
 
 final class MakeComponent {
-     public static function execute(string $name, ?string $module = null){
+     public static function execute(string $name, ?string $module = null, bool $proxy = false){
          
          $name_slug = self::slug($name);
          $module_slug = $module ? self::slug($module, "Module") : "";
@@ -26,11 +26,13 @@ final class MakeComponent {
 
          mkdir($component_path, 0777, true);
 
-         self::create_php($component_path, $name_slug, $namespace);
-         self::create_html($component_path, $name_slug);
-         self::create_css($component_path, $name_slug);
-         self::create_js($component_path, $name_slug);
-         self::create_json($component_path, $name_slug);
+         self::create_php($component_path, $name_slug, $namespace, $proxy);
+         if(!$proxy){
+             self::create_html($component_path, $name_slug);
+             self::create_css($component_path, $name_slug);
+             self::create_js($component_path, $name_slug);
+             self::create_json($component_path, $name_slug);
+         }
 
          cli_log("Component {$name} created successfully.\n");
      }
@@ -43,9 +45,10 @@ final class MakeComponent {
          return strtolower($name);
      }
 
-     private static function create_php($path, $slug, $namespace){
+     private static function create_php($path, $slug, $namespace, $proxy){
          $class = ucfirst($slug);
 
+         if(!$proxy){
          $content = <<<PHP
 <?php
 
@@ -58,6 +61,22 @@ class {$class} {
 }
 
 PHP;
+     }else{
+        $content = <<<PHP
+<?php
+
+namespace {$namespace};
+
+use SaQle\Core\Support\ResolverComponent;
+
+class {$class} extends ResolverComponent {
+     public function get_component() : string {
+        return "";
+     }
+}
+
+PHP;
+     }
 
          file_put_contents("{$path}/{$slug}.php", $content);
      }

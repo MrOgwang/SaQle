@@ -42,7 +42,8 @@ final class ComponentRegistry {
              path: dirname($resolved_component[3]),
              template_path: $resolved_component[3], 
              controller: $resolved_component[1], 
-             method: $resolved_component[2]
+             method: $resolved_component[2],
+             proxy: $resolved_component[4]
          );
      }
 
@@ -55,7 +56,13 @@ final class ComponentRegistry {
      }
 
      public static function resolve_component(string $reference, string $http_verb, string $type = 'target'){
-         $resolved_component = [null, null, null, null]; //[component_name, controller_class_name, controller_method, template_path]
+         $resolved_component = [
+             null, //component name
+             null, //controller class name
+             null, //controller method
+             null, //template path
+             false //proxy
+         ]; 
 
          //target must be a non empty string, otherwise complain loudly
          Assert::stringNotEmpty($reference, 'A component must be a non empty string!');
@@ -73,8 +80,11 @@ final class ComponentRegistry {
           * otherwise it can have both a template and a controller.
           * */
          $component = self::get($component_name);
+         $resolved_component[4] = $component['proxy'];
+
          $controller = $component['controller'];
          $template_path = $component['template_path'];
+
          $real_template_path = path_join(
              $component['owner'] === 'project' ? 
              [config('base_path'), $template_path] : 

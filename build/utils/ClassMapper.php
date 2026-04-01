@@ -20,6 +20,7 @@ namespace SaQle\Build\Utils;
 
 use SaQle\controllers\Page;
 use SaQle\Orm\Entities\Model\Schema\Model;
+use SaQle\Core\Support\ResolverComponent;
 use RecursiveIteratorIterator;
 use RecursiveDirectoryIterator;
 
@@ -133,15 +134,17 @@ class ClassMapper{
                      $component_name = str_replace(".php", "", $file->getFilename());
                      $component_name = str_replace(".".config('app.component_template_ext'), "", $component_name);
 
-                     if(array_key_exists($component_name, $components)){
-                         continue;
-                     }
-
                      $real_path      = $file->getRealPath();
                      [$compile_path, $owner] = $this->normalize_path($real_path);
 
                      if(!isset($components[$component_name])){
-                         $components[$component_name] = ['controller' => '', 'controller_path' => '', 'template_path' => '', 'owner' => $owner];
+                         $components[$component_name] = [
+                             'controller' => '', 
+                             'controller_path' => '', 
+                             'template_path' => '', 
+                             'owner' => $owner,
+                             'proxy' => false
+                         ];
                      }
 
                      if($file->getExtension() === config('app.component_template_ext')){
@@ -161,7 +164,13 @@ class ClassMapper{
                          $class_name = $class_match[1] ?? null;
 
                          if($namespace && $class_name){
-                             $components[$component_name]['controller'] = $namespace . '\\' . $class_name;
+                             $namespaced_class_name = $namespace.'\\'.$class_name;
+
+                             if(is_a($namespaced_class_name, ResolverComponent::class, true)){
+                                 $components[$component_name]['proxy'] = true;
+                             }
+
+                             $components[$component_name]['controller'] = $namespaced_class_name;
                          }
                      }
                  }

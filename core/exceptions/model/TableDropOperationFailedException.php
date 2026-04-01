@@ -1,14 +1,14 @@
 <?php
 namespace SaQle\Core\Exceptions\Model;
 
-use SaQle\Core\Exceptions\Base\HttpException;
+use SaQle\Core\Exceptions\Abstracts\FrameworkException;
 use SaQle\Core\FeedBack\FeedBack;
 
 /**
  * This exception is thrown when a insert operation fails
  * */
 
-class TableDropOperationFailedException extends HttpException{
+class TableDropOperationFailedException extends FrameworkException{
      public function __construct(array $context){
          parent::__construct(
              message   : "Table drop operation failed on the table: ".$context['table']."!",

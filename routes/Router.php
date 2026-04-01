@@ -20,10 +20,13 @@ namespace SaQle\Routes;
 
 use SaQle\Core\Assert\Assert;
 use SaQle\Core\Registries\RouteRegistry;
+use RuntimeException;
 
 final class Router {
 
      protected static array $group_stack = [];
+
+     protected static array $route_names = [];
 
      //only one instance of router must exist
      protected static ?self $instance = null;
@@ -163,16 +166,42 @@ final class Router {
 
          $last_batch = self::$routes[ count(self::$routes) - 1];
 
-         foreach($last_batch as $r){
-             match($deco){
-                 'compose_with' => $r->compose_with(...$params),
-                 'requires'     => $r->requires(...$params),
-                 'requires_any' => $r->requires_any(...$params),
-                 'requires_all' => $r->requires_all(...$params),
-                 'respond_with' => $r->respond_with(...$params),
-                 'sse'          => $r->sse(...$params)
-             };
+         if($deco === 'name'){
+             foreach($last_batch as $r_index => $r){
+                 $name = $params['name'][$r_index] ?? null;
+                 if($name && !in_array($name, self::$route_names)){
+                     $r->set_name($name);
+                     self::$route_names[] = $name;
+                 }else{
+                    throw new RuntimeException("No name defined for the route - {$r->method} : {$r->url}");
+                 }
+             }
+         }else{
+             foreach($last_batch as $r){
+                 match($deco){
+                     'compose_with' => $r->compose_with(...$params),
+                     'requires'     => $r->requires(...$params),
+                     'requires_any' => $r->requires_any(...$params),
+                     'requires_all' => $r->requires_all(...$params),
+                     'respond_with' => $r->respond_with(...$params),
+                     'sse'          => $r->sse(...$params)
+                 };
+             }
          }
+     }
+
+     /**
+      * Provide a custom route name.
+      * 
+      * @var string name - name of route
+      * */
+     public function name(array | string $name){
+         if(!is_array($name)){
+             $name = [$name];
+         }
+
+         $this->apply_decoration('name', ...['name' => $name]);
+         return $this;
      }
 
      /**

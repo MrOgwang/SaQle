@@ -19,26 +19,30 @@ class Runtime {
      }
 
      private function handle_exception(Throwable $e, Request $request) : void {
+
          log_to_file($e);
 
          if($e instanceof FrameworkException){
-             $flash_exception = $e->get_flash();
-             if($flash_exception){
+
+             $http_message = $e->get_http_message();
+
+             $flash_response = $http_message->get_flash();
+
+             if($flash_response){
+
                  $request->session->set('flash', (object)[
-                     'message' => $e->getMessage(),
-                     'context' => $e->get_context(),
-                     'code'    => $e->getCode(),
+                     'message' => $http_message->message,
+                     'context' => $http_message->data,
+                     'code'    => $http_message->code,
                      'type'    => 'error'
                  ], true);
+
              }
 
-             $http_message = new HttpMessage($e->getCode(), $e->get_context(), $e->getMessage());
-
-             $http_message->redirect($e->get_redirect());
          }else{
              $http_message = new HttpMessage(HttpMessage::INTERNAL_SERVER_ERROR, $e->getTrace(), $e->getMessage());
 
-             $http_message->redirect("/error/500");
+             $http_message->redirect(route('app.error', ['code' => $http_message->code]));
          }
 
          $response = $this->resolve_response($request, $http_message);

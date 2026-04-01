@@ -13,8 +13,8 @@ final class ActionExecutor {
      public static function execute(Request $request, ?string $controller = null, ?string $method = null): HttpMessage {
 
          if(!$controller || !$method){
-             $controller = $request->route->compiled_target[1];
-             $method = $request->route->compiled_target[2];
+             $controller = $request->route->compiled_target->controller;
+             $method = $request->route->compiled_target->method;
              if(!$controller || !$method){
                  return ok();
              }

@@ -12,21 +12,15 @@ function create_feedback(int $code, mixed $data = null, string $message = '', st
      return HttpMessage::from_feedback($fb);
 }
 
-if(!function_exists('ok')){
-     function ok(mixed $data = null, string $message = '', string $action = ''){
-         return create_feedback(FeedBack::OK, $data, $message, $action);
-     }
-}
-
 if(!function_exists('processing')){
      function processing(mixed $data = null, string $message = '', string $action = ''){
          return create_feedback(FeedBack::PROCESSING, $data, $message, $action);
      }
 }
 
-if(!function_exists('payment_required')){
-     function payment_required(mixed $data = null, string $message = '', string $action = ''){
-         return create_feedback(FeedBack::PAYMENT_REQUIRED, $data, $message, $action);
+if(!function_exists('ok')){
+     function ok(mixed $data = null, string $message = '', string $action = ''){
+         return create_feedback(FeedBack::OK, $data, $message, $action);
      }
 }
 
@@ -69,6 +63,12 @@ if(!function_exists('bad_request')){
 if(!function_exists('unauthorized')){
      function unauthorized(mixed $data = null, string $message = '', string $action = ''){
          return create_feedback(FeedBack::UNAUTHORIZED, $data, $message, $action);
+     }
+}
+
+if(!function_exists('payment_required')){
+     function payment_required(mixed $data = null, string $message = '', string $action = ''){
+         return create_feedback(FeedBack::PAYMENT_REQUIRED, $data, $message, $action);
      }
 }
 

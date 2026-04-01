@@ -1,7 +1,7 @@
 <?php
 namespace SaQle\Http\Request\Data;
 
-use SaQle\Http\Request\Data\Exceptions\KeyNotFoundException;
+use SaQle\Core\Exceptions\Data\KeyNotFoundException;
 use SaQle\Http\Request\RequestIntent;
 
 class Session extends Data {
@@ -35,7 +35,7 @@ class Session extends Data {
      public function get_or_fail(string $key) : mixed {
 
      	 if(!$this->exists($key)){
-     	 	 throw new KeyNotFoundException($key);
+     	 	 throw new KeyNotFoundException(context: ['type' => 'Session', 'key' => $key]);
      	 }
 
      	 return $this->get($key);

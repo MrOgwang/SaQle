@@ -5,11 +5,6 @@ namespace SaQle\Http\Response\Strategies;
 use SaQle\Http\Request\Request;
 use SaQle\Http\Response\{HttpResponse, HttpMessage};
 use SaQle\Http\Response\Types\RedirectResponse;
-use SaQle\Core\Components\{
-     ComponentTreeBuilder, 
-     ComponentRenderer, 
-     ComponentContext
-};
 
 final class RedirectResponseStrategy implements ResponseStrategy {
 

@@ -46,18 +46,31 @@ final class WebResponseStrategy implements ResponseStrategy {
 
      public function build(Request $request, ?HttpMessage $result = null) : HttpResponse {
 
+         $target_component = $request->route->compiled_target->name;
+
          //use the component tree and component rendere to build the html here
-         if(in_array($request->route->compiled_target[0], ['privatefile', 'staticfile'])){
+         if(in_array($target_component, ['privatefile', 'staticfile'])){
              $result = ActionExecutor::execute($request);
              return new HtmlResponse('', $result->code);
          }
 
-         $target_component = $request->route->compiled_target[0];
-         $target_action = $request->route->compiled_target[2] ?? null;
+         $target_action = $request->route->compiled_target->method ?? null;
          $leaf_component = $target_action ? $target_component."@".$target_action : $target_component;
-         $tree = new ComponentTreeBuilder()->build($leaf_component, $request->route->layout ?? []);
+         $layout = $request->route->layout ?? [];
+         $context = $this->prepare_context($request);
 
-         $context = new ComponentContext($this->prepare_context($request));
+         if($result){
+             $leaf_component = config('error.component')."@get";
+             $layout = [];
+             $context = array_merge($context, [
+                 'message' => $result->message, 
+                 'code' => $result->code
+             ]);
+         }
+
+         $tree = new ComponentTreeBuilder()->build($leaf_component, $layout);
+
+         $context = new ComponentContext($context);
 
          $renderer = new ComponentRenderer($request);
 

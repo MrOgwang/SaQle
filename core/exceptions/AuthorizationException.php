@@ -1,5 +1,5 @@
 <?php
-namespace SaQle\Core\Exceptions\Base;
+namespace SaQle\Core\Exceptions;
 
 use SaQle\Core\Exceptions\Abstracts\FrameworkException;
 use SaQle\Core\FeedBack\FeedBack;

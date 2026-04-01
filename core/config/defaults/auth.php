@@ -8,6 +8,8 @@ use SaQle\Auth\Models\BaseUser;
 use SaQle\Auth\Services\AuthenticationService;
 
 return [
+	 'route' => null,
+
 	 //This is the model that represents a user
 	 'model_class' => BaseUser::class,
 

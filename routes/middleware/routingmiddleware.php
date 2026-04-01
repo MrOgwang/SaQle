@@ -23,6 +23,7 @@ use SaQle\Middleware\IMiddleware;
 use SaQle\Routes\{Router, MatchedRoute};
 use SaQle\Core\Exceptions\Route\RouteNotFoundException;
 use SaQle\Core\Exceptions\Http\NotAcceptableException;
+use SaQle\Core\Components\ComponentDefinition;
 
 class RoutingMiddleware extends IMiddleware{
      
@@ -33,11 +34,21 @@ class RoutingMiddleware extends IMiddleware{
          if (!$match) throw new RouteNotFoundException(['url' => $request->uri()]);
 
          //set request route
+         $resolved_target = $match['route']['compiled_target'];
+
          $matched_route = new MatchedRoute(
              $match['route']['url'],
              $match['path'], 
              $match['method'], 
-             $match['route']['compiled_target'],
+             new ComponentDefinition(
+                 name: $resolved_target[0], 
+                 path: dirname($resolved_target[3] ?? ""),
+                 template_path: $resolved_target[3] ?? null, 
+                 controller: $resolved_target[1], 
+                 method: $resolved_target[2],
+                 proxy: $resolved_target[4]
+             ),
+             $match['route']['name'],
              $match['route']['model_class'],
              $match['route']['layout'],
              $match['route']['guards'],

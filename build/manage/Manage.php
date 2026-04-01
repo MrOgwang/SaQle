@@ -55,8 +55,8 @@ class Manage {
 	 }
 
 	 private function extract_makecomponent_args(array $args){
-	 	 $expected_short = ['-n', '-m'];
-	 	 $expected_long  = ['--name', '--module'];
+	 	 $expected_short = ['-n', '-m', '-p'];
+	 	 $expected_long  = ['--name', '--module', '--proxy'];
 	 	 return $this->extract_args($expected_short, $expected_long, $args);
 	 }
 
@@ -114,12 +114,13 @@ class Manage {
 		 	 case 'make:component':
 	             $name = $this->arguments['name'] ?? null;
 	             $module = $this->arguments['module'] ?? null;
+	             $proxy = array_key_exists('proxy', $this->arguments) ? true : false;
 
 	             if(!$name){
 	             	 throw new Exception("Please provide a component name!");
 	             }
 
-	             MakeComponent::execute($name, $module);
+	             MakeComponent::execute($name, $module, $proxy);
 			 break;
 		     case 'make:migrations':
 	             $migration_name = $this->arguments['name'] ?? null;

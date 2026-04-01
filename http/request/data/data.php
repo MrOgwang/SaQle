@@ -28,7 +28,7 @@ class Data{
 
      public function get_or_fail(string $key) : mixed {
      	 if(!array_key_exists($key, $this->data)){
-     	 	 throw new KeyNotFoundException($key);
+     	 	 throw new KeyNotFoundException(context: ['type' => 'Data', 'key' => $key]);
      	 }
 
      	 return $this->data[$key];

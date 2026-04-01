@@ -7,12 +7,25 @@ use InvalidArgumentException;
 final class RouteRegistry {
      private static ?array $routes = null;
 
-     public static function all(): array{
-         if (self::$routes === null) {
+     public static function all(): array {
+         if(self::$routes === null) {
              self::$routes = require path_join([config('base_path'), config('class_mappings_dir'), 'routes.php']);
          }
 
          return self::$routes;
+     }
+
+     public static function get(string $name) : ?array {
+        
+         $all_routes = self::all();
+
+         foreach($all_routes as $r){
+             if($r['route']['name'] === $name){
+                 return $r;
+             }
+         }
+
+         return null;
      }
 
      public static function cache_routes_mapping($routes_cache){

@@ -19,7 +19,9 @@ class ContactService {
       * */
      public function ensure_available(string $contact, ?string $type = null, ?string $owner_type = null): void {
          if($this->repository->exists($contact, $type, $owner_type)){
-             bad_request_exception("The provided {$type} already exists.")->flash()->throw();
+             bad_request_exception("The provided {$type} already exists.")->throw(function($response){
+                 return $response->flash()->reload();
+             });
          }
      }
 }

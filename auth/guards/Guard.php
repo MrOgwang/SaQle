@@ -3,14 +3,18 @@
 namespace SaQle\Auth\Guards;
 
 use Closure;
-use SaQle\Core\Exceptions\Http\UnauthorizedException;
 use SaQle\Core\FeedBack\FeedBack;
+use SaQle\Auth\Exceptions\AuthorizationException;
 
 final class Guard {
+
      protected static array $guards = [];
 
-     public static function add(string $name, Closure $rule): void {
-         self::$guards[$name] = $rule;
+     public static function add(string $name, Closure $evaluate, ?Closure $fail = null): void {
+         self::$guards[$name] = [
+             'evaluate' => $evaluate,
+             'fail'     => $fail
+         ];
      }
 
      protected static function evaluate(?Closure $callback, $user, array $args): bool {
@@ -25,17 +29,26 @@ final class Guard {
 
      public static function check(string $name, $user = null, ...$args): bool {
          return self::evaluate(
-             self::$guards[$name] ?? null,
+             self::$guards[$name]['evaluate'] ?? null,
              $user,
              $args
          );
      }
 
+     public static function fail(string $name) : mixed {
+
+         $fail_callback = self::$guards[$name]['fail'] ?? null;
+
+         if($fail_callback){
+             return $fail_callback(request());
+         }
+
+         return null;
+     }
+
      public static function authorize(string $name, $user = null, ...$args): true {
-         if (!self::check($name, $user, ...$args)) {
-             throw new UnauthorizedException(
-                 code: FeedBack::UNAUTHORIZED
-             );
+         if(!self::check($name, $user, ...$args)) {
+             throw new AuthorizationException('Unauthorized!');
          }
 
          return true;

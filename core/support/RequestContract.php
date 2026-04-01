@@ -3,8 +3,8 @@
 namespace SaQle\Core\Support;
 
 use ReflectionClass;
-use SaQle\Core\Exceptions\Http\UnauthorizedException;
-use SaQle\Core\Exceptions\Base\ValidationException;
+use SaQle\Auth\Exceptions\AuthorizationException;
+use SaQle\Core\Exceptions\ValidationException;
 
 abstract class RequestContract {
 
@@ -12,7 +12,7 @@ abstract class RequestContract {
 
      final public function validate_and_authorize(): void {
          if(!$this->authorize()) {
-             throw new UnauthorizedException('This action is unauthorized.');
+             throw new AuthorizationException('This action is unauthorized.');
          }
 
          $this->before_validation();

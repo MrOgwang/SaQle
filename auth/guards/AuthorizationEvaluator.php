@@ -7,7 +7,7 @@ use RuntimeException;
 final class AuthorizationEvaluator {
      public static function authorize(array $guard_groups): bool {
          foreach ($guard_groups as $group) {
-             if (!self::evaluate_group($group)) {
+             if(!self::evaluate_group($group)) {
                  return false;
              }
          }
@@ -23,11 +23,11 @@ final class AuthorizationEvaluator {
          $mode   = $group['mode'];
          $guards = $group['guards'];
 
-         if ($mode === 'all') {
+         if ($mode === 'all'){
              return self::check_all($guards);
          }
 
-         if ($mode === 'any') {
+         if ($mode === 'any'){
              return self::check_any($guards);
          }
 
@@ -35,8 +35,8 @@ final class AuthorizationEvaluator {
      }
 
      private static function check_all(array $guards): bool {
-         foreach ($guards as $guard) {
-             if (!Guard::check($guard)) {
+         foreach($guards as $guard){
+             if(!Guard::check($guard)) {
                  return false;
              }
          }
@@ -45,8 +45,8 @@ final class AuthorizationEvaluator {
      }
 
      private static function check_any(array $guards): bool {
-         foreach ($guards as $guard) {
-             if (Guard::check($guard)) {
+         foreach($guards as $guard){
+             if(Guard::check($guard)){
                  return true;
              }
          }

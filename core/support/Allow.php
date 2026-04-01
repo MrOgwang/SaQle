@@ -13,7 +13,7 @@ namespace SaQle\Core\Support;
 use Attribute;
 use Exception;
 use SaQle\Http\Response\HttpMessage;
-use SaQle\Core\Exceptions\Http\UnauthorizedException;
+use SaQle\Auth\Exceptions\AuthorizationException;
 
 #[Attribute(Attribute::TARGET_METHOD)]
 class Allow {
@@ -45,7 +45,7 @@ class Allow {
          };
 
          if(!$passed){
-             throw new UnauthorizedException(message: $this->message);
+             throw new AuthorizationException(message: $this->message);
          }
          
          return true;

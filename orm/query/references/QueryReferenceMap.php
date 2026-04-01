@@ -3,7 +3,10 @@ declare(strict_types = 1);
 
 namespace SaQle\Orm\Query\References;
 
-use SaQle\Core\Exceptions\{TableNotFoundException, DatabaseNotFoundException};
+use SaQle\Core\Exceptions\Database\{
+	 TableNotFoundException, 
+	 DatabaseNotFoundException
+};
 
 class QueryReferenceMap {
 
@@ -50,10 +53,10 @@ class QueryReferenceMap {
 	 */
 	 public function find_table_name(int $table_index) : string{
 	 	 if($table_index < 0 || $table_index >= count($this->tables)){
-	 	 	 throw new TableNotFoundException((Object)[
-	 	 	     'table_name'  => "",
-	 	 	     'table_index' => $table_index,
-	 	 	     'tables'      => $this->tables
+	 	 	 throw new TableNotFoundException(context: [
+	 	 	     'name' => "",
+	 	 	     'index' => $table_index,
+	 	 	     'tables' => $this->tables
 	 	     ]);
 	 	 }
 	 	 return $this->tables[$table_index];
@@ -66,10 +69,10 @@ class QueryReferenceMap {
 	 */
 	 public function find_table_aliase(int $table_index) : string{
 	 	 if($table_index < 0 || $table_index >= count($this->tables)){
-	 	 	 throw new TableNotFoundException((Object)[
-	 	 	     'table_name'  => "",
-	 	 	     'table_index' => $table_index,
-	 	 	     'tables'      => $this->tables
+	 	 	 throw new TableNotFoundException(context: [
+	 	 	     'name' => "",
+	 	 	     'index' => $table_index,
+	 	 	     'tables' => $this->tables
 	 	     ]);
 	 	 }
 	 	 return $this->aliases[$table_index];
@@ -82,10 +85,10 @@ class QueryReferenceMap {
 	 */
 	 public function find_table_refernce(int $table_index) : ?string{
 	 	 if($table_index < 0 || $table_index >= count($this->tablerefs)){
-	 	 	 throw new TableNotFoundException((Object)[
-	 	 	     'table_name'  => "",
-	 	 	     'table_index' => $table_index,
-	 	 	     'tables'      => $this->tablerefs
+	 	 	 throw new TableNotFoundException(context: [
+	 	 	     'name'  => "",
+	 	 	     'index' => $table_index,
+	 	 	     'tables' => $this->tablerefs
 	 	     ]);
 	 	 }
 	 	 return $this->tablerefs[$table_index];
@@ -98,12 +101,13 @@ class QueryReferenceMap {
 	 */
 	 public function find_database_name(int $database_index) : string{
 	 	 if($database_index < 0 || $database_index >= count($this->databases)){
-	 	 	 throw new DatabaseNotFoundException((Object)[
-	 	 	     'database_name'  => "",
-	 	 	     'database_index' => $database_index,
-	 	 	     'databases'      => $this->databases
+	 	 	 throw new DatabaseNotFoundException(context: [
+	 	 	     'name' => "",
+	 	 	     'index' => $database_index,
+	 	 	     'databases'=> $this->databases
 	 	     ]);
 	 	 }
+	 	 
 	 	 return $this->databases[$database_index];
 	 }
 

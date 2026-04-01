@@ -15,6 +15,7 @@ final class RouteCompiler {
 
          foreach ($routes as $route){
              $compiled[] = self::compile_route($route);
+             //$compiled[$route->name] = self::compile_route($route);
          }
 
          RouteRegistry::cache_routes_mapping($compiled, config('base_path'));
@@ -35,6 +36,7 @@ final class RouteCompiler {
              'pattern'     => '#^'.$pattern.'$#',
              'param_names' => $param_names,
              'route'       => [
+                 'name'            => $route->name,
                  'url'             => $route->url,
                  'target'          => $route->target,
                  'compiled_target' => $route->compiled_target,

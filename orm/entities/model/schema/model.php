@@ -3,7 +3,7 @@ namespace SaQle\Orm\Entities\Model\Schema;
 
 use SaQle\Orm\Entities\Field\Interfaces\IField;
 use SaQle\Orm\Entities\Field\Types\{Pk, TextField, OneToOne, OneToMany, FloatField, IntegerField, ManyToMany, FileField, DateField, TimeField, DateTimeField, TimestampField, BooleanField, VirtualField};
-use SaQle\Core\Exceptions\Base\ValidationException;
+use SaQle\Core\Exceptions\ValidationException;
 use SaQle\Commons\StringUtils;
 use SaQle\Orm\Entities\Model\Manager\{CreateManager, UpdateManager, DeleteManager, TruncateManager, ReadManager, RunManager};
 use SaQle\Orm\Entities\Model\Interfaces\{IModel, ITableSchema};

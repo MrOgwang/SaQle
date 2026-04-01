@@ -1,7 +1,7 @@
 <?php
 namespace SaQle\Core\Exceptions\Route;
 
-use SaQle\Core\Exceptions\Base\HttpException;
+use SaQle\Core\Exceptions\Abstracts\FrameworkException;
 use SaQle\Core\FeedBack\FeedBack;
 
 /**
@@ -9,7 +9,7 @@ use SaQle\Core\FeedBack\FeedBack;
  * provided for a route
  * */
 
-class MethodNotAllowedException extends HttpException{
+class MethodNotAllowedException extends FrameworkException{
      public function __construct(array $context){
          parent::__construct(
              message   : "The request method [".$context['method']."] is not allowed for the resource [".$context['url']."].  Valid methods are [".implode(',', $context['methods'])."]!",

@@ -2,22 +2,21 @@
 
 namespace SaQle\Core\Exceptions\Abstracts;
 
+use SaQle\Http\Response\HttpMessage;
+use SaQle\Core\Exceptions\ServerException;
 use Exception;
 use Throwable;
+use Closure;
 
 abstract class FrameworkException extends Exception {
 
-     //whether to flash the message and the context to session
-     private bool $do_flash = false;
+     //customize how to respond when this exception happens
+     protected ?HttpMessage $http_message = null;
 
-     //the url to redirect to
-     private string $redirect_url = "/error/500";
-
-     //whether to log to file
-     private bool $do_log = true;
-
+     //array of key => value context data
      protected array $context = [];
 
+     //front facing safe message
      protected string $safe_message = "An unexpected error occurred";
 
      public function __construct(
@@ -27,7 +26,21 @@ abstract class FrameworkException extends Exception {
          ?Throwable $previous = null
      ){
          parent::__construct($message ?: $this->safe_message, $code,  $previous);
+         
          $this->context = $context;
+
+         $this->initilialize_http_message($this->getCode(), $this->get_context(), $this->getMessage());
+     }
+
+     private function initilialize_http_message(int $code, array $context, string $message){
+         $this->http_message = new HttpMessage($code, $context, $message);
+
+         //set default redirect url, flash and log flags
+         $this->http_message->redirect(route('app.error', ['code' => $code]));
+
+         $this->http_message->log(false);
+
+         $this->http_message->flash(false);
      }
 
      public function get_context() : array {
@@ -38,34 +51,20 @@ abstract class FrameworkException extends Exception {
          return $this->safe_message;
      }
 
-     public function flash(bool $flash = true){
-         $this->do_flash = $flash;
-         return $this;
-     }
+     public function throw(?Closure $response = null){
 
-     public function redirect(string $url){
-         $this->redirect_url = $url;
-         return $this;
-     }
+         if($response){
+             $this->http_message = $response($this->http_message);
 
-     public function log(bool $log = true){
-         $this->do_log = $log;
-         return $this;
-     }
+             if(!$this->http_message instanceof HttpMessage){
+                 throw new ServerException("The response callback to ".$this::class.":throw() does not return a response!");
+             }
+         }
 
-     public function get_log(){
-         return $this->do_log;
-     }
-
-     public function get_flash(){
-         return $this->do_flash;
-     }
-
-     public function get_redirect(){
-         return $this->redirect_url;
-     }
-
-     public function throw(){
          throw $this;
+     }
+
+     public function get_http_message(){
+         return $this->http_message;
      }
 }

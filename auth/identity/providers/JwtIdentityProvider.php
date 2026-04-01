@@ -35,7 +35,7 @@ class JwtIdentityProvider implements IdentityProviderInterface {
          $auth_header = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
 
          if(!$auth_header)
-             unauthorized_exception("No authorization token provided for request")->throw();
+             authorization_exception("No authorization token provided for request")->throw();
 
          if(!preg_match('/^Bearer\s+(\S+)$/', $auth_header, $matches))
              bad_request_exception("Incomplete authorization header")->throw();
@@ -45,7 +45,7 @@ class JwtIdentityProvider implements IdentityProviderInterface {
 
          //check that token is not expired
          if(array_key_exists("exp", $data) && time() > $data['exp'])
-             unauthorized_exception("Authorization token expired!")->throw();
+             authorization_exception("Authorization token expired!")->throw();
 
          return $data['sub'] ?? null;
      }

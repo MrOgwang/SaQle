@@ -1,11 +1,10 @@
 <?php
 namespace SaQle\Core\Exceptions\Http;
 
-use SaQle\Core\Exceptions\Base\HttpException;
-use SaQle\Core\FeedBack\FeedBack;
+use SaQle\Core\Exceptions\RateLimitException;
 
-class TooManyRequestsException extends HttpException {
+class TooManyRequestsException extends RateLimitException {
      public function __construct(string $message = '', array $data = []){
-     	 parent::__construct($message, FeedBack::TOO_MANY_REQUESTS, $data);
+     	 parent::__construct($message, $data);
      }
 }
