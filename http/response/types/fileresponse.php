@@ -1,5 +1,10 @@
 <?php
-class FileResponse{
+
+namespace SaQle\Http\Response\Types;
+
+use SaQle\Http\Response\HttpResponse;
+
+class FileResponse extends HttpResponse {
      protected $filePath;
      protected $fileName;
      protected $status;

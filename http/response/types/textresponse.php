@@ -1,5 +1,9 @@
 <?php
-class TextResponse{
+namespace SaQle\Http\Response\Types;
+
+use SaQle\Http\Response\HttpResponse;
+
+class TextResponse extends HttpResponse {
      protected $text;
      protected $status;
 

@@ -38,7 +38,6 @@ final class WebResponseStrategy implements ResponseStrategy {
 
          $context[$token_key] = "<input type='hidden' id='".$token_key."' name='".$token_key."' value='".$token."'>";
 
-         //inject the user
          $context['session_user'] = $request->user ?? new GuestUser();
          
          return $context;
@@ -47,8 +46,7 @@ final class WebResponseStrategy implements ResponseStrategy {
      public function build(Request $request, ?HttpMessage $result = null) : HttpResponse {
 
          $target_component = $request->route->compiled_target->name;
-
-         //use the component tree and component rendere to build the html here
+         
          if(in_array($target_component, ['privatefile', 'staticfile'])){
              $result = ActionExecutor::execute($request);
              return new HtmlResponse('', $result->code);
