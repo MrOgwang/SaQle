@@ -3,7 +3,7 @@
 namespace SaQle\Core\Files\Storage;
 
 use SaQle\Core\Files\Storage\Drivers\LocalStorageDriver;
-use SaQle\Core\Files\Generators\DefaultPrivateFileUrlGenerator;
+use SaQle\Core\Files\Utils\DefaultFileUrlEncoder;
 use RuntimeException;
 
 final class StorageFactory {
@@ -18,7 +18,7 @@ final class StorageFactory {
                  'root' => media_root('media', false),
                  'visibility' => 'private',
                  'base_url' => '/media',
-                 'private_url_generator' => DefaultPrivateFileUrlGenerator::class
+                 'url_encoder' => DefaultFileUrlEncoder::class
              ];
          }
 

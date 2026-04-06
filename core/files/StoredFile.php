@@ -65,7 +65,11 @@ class StoredFile implements JsonSerializable{
      * Get the URL to the file
      */
      public function url(): string {
-         return $this->default_url ?: $this->get_storage()->url($this->meta);
+         if(!$this->meta){
+            return $this->default_url;
+         }
+
+         return $this->get_storage()->url($this->meta);
      }
 
      /**

@@ -31,7 +31,13 @@ class RoutingMiddleware extends IMiddleware{
          //find matching route
          $match = Router::find_matching_route($request->method(), $request->uri());
 
-         if (!$match) throw new RouteNotFoundException(['url' => $request->uri()]);
+         if(!$match){
+             $url = $request->uri();
+             throw new RouteNotFoundException(
+                 "The resource [".$url."] either does not exist or has been permanently moved!",
+                 ['url' => $url]
+             );
+         }
 
          //set request route
          $resolved_target = $match['route']['compiled_target'];

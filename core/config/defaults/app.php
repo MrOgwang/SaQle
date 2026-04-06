@@ -19,18 +19,12 @@ return [
       * A module is generally a folder with controllers, templates and routes
       * */
  	 'modules' => [],
-
-     //the url for media
-     'media_url' => '/media/',
-
+     
      //the media url encryption key
      'media_encrypt_key' => '',
 
      //the media url encryption salt
      'media_encrypt_salt' => '',
-
-     //the url prefix for cron jobs
-     'cron_url' => '/cron/',
 
      //media storage drivers
      'media_storage_drivers' => [],
@@ -66,10 +60,7 @@ return [
        * */
      'component_template_ext' => 'html',
 
-     //date and time formats
- 	 'date_added_format' => 'jS M Y',
- 	 'date_display_format' => 'jS M Y',
- 	 'datetime_display_format' => 'jS M Y h:s:m a',
+     //system date format
      'system_date_format' => 'd-m-Y',
 
      //default time zone

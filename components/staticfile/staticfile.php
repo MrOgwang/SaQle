@@ -11,42 +11,37 @@ class StaticFile {
              'js'  => 'application/javascript'
          ];
 
-         if(!isset($allowed_types[$type])) {
-             http_response_code(404);
-             exit;
+         if(!isset($allowed_types[$type])){
+             throw not_found_exception();
          }
 
          //strict filename validation (VERY IMPORTANT)
          //allows only letters, numbers, dash, underscore
          if(!preg_match('/^[a-zA-Z0-9_-]+$/', $file)){
-             http_response_code(400);
-             exit;
+             throw bad_request_exception();
          }
 
          //build base directory safely
          $base_dir = realpath(path_join([config('base_path'), config('assets_cache_dir')]));
 
          if($base_dir === false){
-             http_response_code(500);
-             exit;
+             throw internal_server_error_exception();
          }
 
          $path = realpath(path_join([$base_dir, $file.'.'.$type]));
 
          //ensure file exists AND is inside base directory
          if($path === false || !str_starts_with($path, $base_dir) || !is_file($path)){
-             http_response_code(404);
-             exit;
+             throw not_found_exception();
          }
 
-         //(security + caching)
-         header("Content-Type: {$allowed_types[$type]}");
-         header("X-Content-Type-Options: nosniff"); // prevent MIME sniffing
-         header("Cache-Control: public, max-age=31536000"); // 1 year
-         header("Content-Length: ".filesize($path));
-
-         readfile($path);
-         
-         exit;
+         return ok([
+             'size' => filesize($path),
+             'mime' => $allowed_types[$type],
+             'inline' => false,
+             'name' => "asset",
+             'path' => $path,
+             'cache' => true
+         ]);
      }
 }

@@ -11,11 +11,17 @@ use SaQle\Auth\Exceptions\AuthorizationException;
 class AuthorizationMiddleware extends IMiddleware {
      
       public function handle(MiddlewareRequestInterface $request){
-          
-           if(!AuthorizationEvaluator::authorize($request->route->guards ?? [])){
-                throw new AuthorizationException('Unauthorized');
-           }
 
-     	 parent::handle($request);
-      }
+         $result = AuthorizationEvaluator::authorize($request->route->guards ?? []);
+
+         if(!$result->passed){
+             if($result->on_fail){
+                 return call_user_func($result->on_fail);
+             }
+
+             throw new AuthorizationException('Unauthorized');
+         }
+
+         parent::handle($request);
+     }
 }

@@ -3,9 +3,19 @@
 namespace SaQle\Http\Response\Strategies;
 
 use SaQle\Http\Request\Request;
-use SaQle\Http\Response\{HttpResponse, HttpMessage};
-use SaQle\Http\Response\Types\HtmlResponse;
-use SaQle\Core\Components\{ComponentTreeBuilder, ComponentRenderer, ComponentContext};
+use SaQle\Http\Response\{
+     HttpResponse, 
+     HttpMessage
+};
+use SaQle\Http\Response\Types\{
+     FileResponse, 
+     HtmlResponse
+};
+use SaQle\Core\Components\{
+     ComponentTreeBuilder, 
+     ComponentRenderer, 
+     ComponentContext
+};
 use SaQle\Core\Ui\Template;
 use SaQle\Http\Request\Middleware\CsrfMiddleware;
 use SaQle\Auth\Models\GuestUser;
@@ -47,9 +57,10 @@ final class WebResponseStrategy implements ResponseStrategy {
 
          $target_component = $request->route->compiled_target->name;
          
-         if(in_array($target_component, ['privatefile', 'staticfile'])){
+         if(in_array($target_component, ['protectedfile', 'staticfile'])){
              $result = ActionExecutor::execute($request);
-             return new HtmlResponse('', $result->code);
+             $response = new FileResponse($result->data, $result->code);
+             return $response;
          }
 
          $target_action = $request->route->compiled_target->method ?? null;

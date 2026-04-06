@@ -95,6 +95,11 @@ class HttpMessage extends FeedBack {
 	 	 return $this;
 	 }
 
+	 public function reload(){
+	 	 $this->redirect_url = request()->uri();
+	 	 return $this;
+	 }
+
 	 public function flash(bool $flash = true){
          $this->do_flash = $flash;
          return $this;

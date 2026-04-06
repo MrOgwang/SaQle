@@ -36,19 +36,19 @@ final class Guard {
      }
 
      public static function fail(string $name) : mixed {
-
+        
          $fail_callback = self::$guards[$name]['fail'] ?? null;
 
          if($fail_callback){
-             return $fail_callback(request());
+             $fail_callback(request());
          }
 
-         return null;
+         throw new AuthorizationException('Unauthorized!');
      }
 
      public static function authorize(string $name, $user = null, ...$args): true {
-         if(!self::check($name, $user, ...$args)) {
-             throw new AuthorizationException('Unauthorized!');
+         if(!self::check($name, $user, ...$args)){
+             self::fail($name);
          }
 
          return true;

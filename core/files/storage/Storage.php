@@ -3,7 +3,7 @@
 namespace SaQle\Core\Files\Storage;
 
 use SaQle\Core\Files\Storage\Drivers\IStorageDriver;
-use SaQle\Core\Files\Generators\DefaultPrivateFileUrlGenerator;
+use SaQle\Core\Files\Utils\DefaultFileUrlEncoder;
 
 class Storage {
      public function __construct(
@@ -23,12 +23,18 @@ class Storage {
              return $this->driver->public_url($path);
          }
 
-         $generator_class = $this->driver->config()['private_url_generator']
-            ?? DefaultPrivateFileUrlGenerator::class;
+         $encoder_class = $this->driver->config()['url_encoder'] ?? DefaultFileUrlEncoder::class;
 
-         $generator = new $generator_class($this->driver);
+         $encoder = new $encoder_class($this->driver);
 
-         return $generator->generate($file_meta);
+         $token = $encoder->encode($file_meta);
+
+         $route_name = "app.".$file_meta['storage'].".media";
+
+         return route($route_name, [
+             'file' => rawurlencode($token),
+             'storage_key' => $file_meta['storage']
+         ]);
      }
 
      public function path(string $path) : string {

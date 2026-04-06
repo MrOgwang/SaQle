@@ -9,7 +9,7 @@ use SaQle\Http\Response\HttpMessage;
 use SaQle\Core\Support\Allow;
 
 final class ActionExecutor {
-    
+
      public static function execute(Request $request, ?string $controller = null, ?string $method = null): HttpMessage {
 
          if(!$controller || !$method){
@@ -19,7 +19,7 @@ final class ActionExecutor {
                  return ok();
              }
          }
-
+         
          try{
              $instance = new $controller();
 
