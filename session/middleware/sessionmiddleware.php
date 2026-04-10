@@ -2,23 +2,20 @@
 namespace SaQle\Session\Middleware;
 
 use SaQle\Middleware\IMiddleware;
-use SaQle\Middleware\MiddlewareRequestInterface;
-use SaQle\Http\Request\RequestIntent;
-use SaQle\Middleware\Interface\ScopedMiddleware;
+use SaQle\Http\Request\Request;
+use SaQle\Http\Response\Response;
 
-class SessionMiddleware extends IMiddleware implements ScopedMiddleware{
+class SessionMiddleware extends IMiddleware {
 
-     public static function scopes(): array {
-         return [RequestIntent::WEB, RequestIntent::AJAX];
-     }
-
-     public function handle(MiddlewareRequestInterface $request){
+     public function handle(Request $request, ?Response $response = null){
          
          if(session_status() === PHP_SESSION_NONE){
              session_start();
          }
 
-         parent::handle($request);
+         $request->session->activate_session();
+
+         parent::handle($request, $response);
      }
 }
 

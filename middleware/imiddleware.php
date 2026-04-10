@@ -1,15 +1,21 @@
 <?php
 namespace SaQle\Middleware;
 
-abstract class IMiddleware implements MiddlewareInterface{
+use SaQle\Http\Request\Request;
+use SaQle\Http\Response\Response;
+
+abstract class IMiddleware implements MiddlewareInterface {
+
 	 private ?MiddlewareInterface $middleware = null;
-     public function next(MiddlewareInterface $middleware) : MiddlewareInterface{
-     	$this->middleware = $middleware;
-     	return $this;
+
+     public function next(MiddlewareInterface $middleware) : MiddlewareInterface {
+     	 $this->middleware = $middleware;
+     	 return $this;
      }
-     public function handle(MiddlewareRequestInterface $request){
+
+     public function handle(Request $request, ?Response $response = null){
      	 if($this->middleware){
-     		 $this->middleware->handle($request);
+     		 $this->middleware->handle($request, $response);
      	 }
      }
 }

@@ -2,9 +2,9 @@
 
 namespace SaQle\Http\Response\Types;
 
-use SaQle\Http\Response\HttpResponse;
+use SaQle\Http\Response\Response;
 
-class JsonResponse extends HttpResponse {
+class JsonResponse extends Response {
      protected mixed $data;
      protected int $status;
      protected string $message;

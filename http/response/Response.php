@@ -2,6 +2,6 @@
 
 namespace SaQle\Http\Response;
 
-abstract class HttpResponse {
+abstract class Response {
      abstract public function send() : void;
 }

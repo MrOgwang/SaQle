@@ -3,16 +3,16 @@
 namespace SaQle\Http\Response\Strategies;
 
 use SaQle\Http\Request\Request;
-use SaQle\Http\Response\{HttpResponse, HttpMessage};
+use SaQle\Http\Response\{Response, HttpMessage};
 use SaQle\Http\Response\Types\RedirectResponse;
 
 final class RedirectResponseStrategy implements ResponseStrategy {
 
      public function supports(Request $request): bool {
-         return $request->is_web_request();
+         return $request->expects_redirect();
      }
 
-     public function build(Request $request, ?HttpMessage $result = null) : HttpResponse {
+     public function build(Request $request, ?HttpMessage $result = null) : Response {
          return new RedirectResponse($result->get_redirect());
      }
 }

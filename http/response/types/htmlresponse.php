@@ -1,9 +1,9 @@
 <?php
 namespace SaQle\Http\Response\Types;
 
-use SaQle\Http\Response\HttpResponse;
+use SaQle\Http\Response\Response;
 
-class HtmlResponse extends HttpResponse {
+class HtmlResponse extends Response {
      public function __construct(
          private string $html, 
          private int $status = 200

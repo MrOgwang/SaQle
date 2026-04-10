@@ -3,17 +3,17 @@
 namespace SaQle\Http\Response\Strategies;
 
 use SaQle\Http\Request\Request;
-use SaQle\Http\Response\{HttpResponse, HttpMessage};
+use SaQle\Http\Response\{Response, HttpMessage};
 use SaQle\Http\Response\Types\SseResponse;
 use SaQle\Http\Request\Execution\ActionExecutor;
 
 final class SseResponseStrategy implements ResponseStrategy {
 
      public function supports(Request $request): bool {
-         return $request->is_sse_request();
+         return $request->expects_sse();
      }
 
-     public function build(Request $request, ?HttpMessage $result = null) : HttpResponse {
+     public function build(Request $request, ?HttpMessage $result = null) : Response {
          return new SseResponse(fn() => $this->stream($request));
      }
 

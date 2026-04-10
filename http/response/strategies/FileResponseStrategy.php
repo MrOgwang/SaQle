@@ -4,23 +4,20 @@ namespace SaQle\Http\Response\Strategies;
 
 use SaQle\Http\Request\Request;
 use SaQle\Http\Response\{Response, HttpMessage};
-use SaQle\Http\Response\Types\JsonResponse;
+use SaQle\Http\Response\Types\FileResponse;
 use SaQle\Http\Request\Execution\ActionExecutor;
 
-final class JsonResponseStrategy implements ResponseStrategy {
+final class FileResponseStrategy implements ResponseStrategy {
 
      public function supports(Request $request): bool {
-         return $request->expects_json();
+         return $request->expects_file();
      }
 
      public function build(Request $request, ?HttpMessage $result = null) : Response {
 
          $result = $result ?? ActionExecutor::execute($request);
 
-         return new JsonResponse(
-             $result->data, 
-             $result->code, 
-             $result->message ? $result->message : $result->status_message 
-         );
+         return new FileResponse($result->data, $result->code);
+         
      }
 }

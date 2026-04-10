@@ -20,6 +20,8 @@ namespace SaQle\Routes;
 
 use SaQle\Core\Assert\Assert;
 use SaQle\Core\Registries\RouteRegistry;
+use SaQle\Http\Request\RequestScope;
+use SaQle\Http\Response\ResponseType;
 use RuntimeException;
 
 final class Router {
@@ -184,7 +186,8 @@ final class Router {
                      'requires_any' => $r->requires_any(...$params),
                      'requires_all' => $r->requires_all(...$params),
                      'respond_with' => $r->respond_with(...$params),
-                     'sse'          => $r->sse(...$params)
+                     'sse'          => $r->sse(...$params),
+                     'scope'        => $r->scope(...$params)
                  };
              }
          }
@@ -201,6 +204,16 @@ final class Router {
          }
 
          $this->apply_decoration('name', ...['name' => $name]);
+         return $this;
+     }
+
+     /**
+      * Provide a route scope
+      * 
+      * @var RequestScope $scope
+      * */
+     public function scope(RequestScope $scope){
+         $this->apply_decoration('scope', ...['scope' => $scope]);
          return $this;
      }
 
@@ -281,7 +294,7 @@ final class Router {
      /**
       * Set the response type from this route
       * */
-     public function respond_with(array $restype){
+     public function respond_with(ResponseType $restype){
          $this->apply_decoration('respond_with', ...['restype' => $restype]);
          return $this;
      }
@@ -316,6 +329,10 @@ final class Router {
              if (!empty($group['layouts'])) {
                  $router->compose_with($group['layouts']);
              }
+
+             if (!empty($group['scope'])) {
+                 $router->scope($group['scope']);
+             }
          }
      }
 
@@ -327,8 +344,12 @@ final class Router {
          self::with_group([$mode === 'all' ? 'guards_all' : 'guards_any' => $guards], $routes);
      }
 
-     public static function with_responses(array $types, callable $routes): void {
-         self::with_group(['restype' => $types], $routes);
+     public static function with_response(ResponseType $type, callable $routes): void {
+         self::with_group(['restype' => $type], $routes);
+     }
+
+     public static function with_scope(RequestScope $scope, callable $routes): void {
+         self::with_group(['scope' => $scope], $routes);
      }
 
      public static function find_matching_route(string $method, string $uri): ?array{

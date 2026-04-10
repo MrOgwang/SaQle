@@ -17,12 +17,13 @@
 namespace SaQle\Http\Request;
 
 use SaQle\Http\Request\Data\{Session, Data};
-use SaQle\Middleware\MiddlewareRequestInterface;
 use SaQle\Routes\MatchedRoute;
 use SaQle\Auth\Models\BaseUser;
+use SaQle\Http\Request\RequestScope;
+use SaQle\Http\Response\ResponseType;
 use Closure;
 
-class Request implements MiddlewareRequestInterface{
+class Request {
      //only one instance of a request will be available
 	 private static $instance;
 
@@ -95,16 +96,12 @@ class Request implements MiddlewareRequestInterface{
          get => $this->route;
      }
 
-     //the request intent(web, api, sse, ajax)
-     public RequestIntent $intent = RequestIntent::WEB {
-         set(RequestIntent $value){
-             $this->intent = $value;
-             if($this->intent === RequestIntent::WEB || $this->intent === RequestIntent::AJAX){
-                 $this->session->activate_session();
-             }
+     public ResponseType $responsetype = ResponseType::HTML {
+         set(ResponseType $value){
+             $this->responsetype = $value;
          }
 
-         get => $this->intent;
+         get => $this->responsetype;
      }
 
      //prevent direct creation of request object
@@ -175,21 +172,38 @@ class Request implements MiddlewareRequestInterface{
          return false;
      }
 
-     public function is_api_request() : bool{
-         return $this->intent === RequestIntent::API;
+     //request scope helpers
+
+     public function is_api_request() : bool {
+         return $this->route->scope === RequestScope::API;
      }
 
-     public function is_ajax_request() : bool{
-         return $this->intent === RequestIntent::AJAX;
+     public function is_web_request() : bool {
+         return $this->route->scope === RequestScope::WEB;
      }
 
-     public function is_sse_request() : bool{
-         return $this->intent === RequestIntent::SSE;
+     //response type helpers
+
+     public function expects_json() : bool {
+         return $this->responsetype === ResponseType::JSON;
      }
 
-     public function is_web_request() : bool{
-         return $this->intent === RequestIntent::WEB;
+     public function expects_html() : bool {
+         return $this->responsetype === ResponseType::HTML;
      }
+
+     public function expects_sse() : bool {
+         return $this->responsetype === ResponseType::SSE;
+     }
+
+     public function expects_redirect() : bool {
+         return $this->responsetype === ResponseType::REDIRECT;
+     }
+
+     public function expects_file() : bool {
+         return $this->responsetype === ResponseType::FILE;
+     }
+
 
      public function session() : Session {
          return $this->session;

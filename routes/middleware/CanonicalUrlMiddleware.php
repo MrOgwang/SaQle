@@ -16,13 +16,12 @@
  * */
 namespace SaQle\Routes\Middleware;
 
-use SaQle\Http\Request\RequestIntent;
-use SaQle\Middleware\Interface\ScopedMiddleware;
 use SaQle\Middleware\IMiddleware;
-use SaQle\Middleware\MiddlewareRequestInterface;
+use SaQle\Http\Request\Request;
+use SaQle\Http\Response\Response;
 use SaQle\Routes\Canonical\CanonicalUrlPolicy;
 
-final class CanonicalUrlMiddleware extends IMiddleware implements ScopedMiddleware {
+final class CanonicalUrlMiddleware extends IMiddleware {
 
      private CanonicalUrlPolicy $policy;
 
@@ -30,14 +29,10 @@ final class CanonicalUrlMiddleware extends IMiddleware implements ScopedMiddlewa
          $this->policy = resolve(CanonicalUrlPolicy::class);
      }
 
-     public static function scopes(): array {
-         return [RequestIntent::WEB]; //Only canonicalize web requests
-     }
-
-     public function handle(MiddlewareRequestInterface $request){
+     public function handle(Request $request, ?Response $response = null){
          //only safe methods
          if(!in_array($request->method(), ['GET', 'HEAD'])) {
-             parent::handle($request);
+             parent::handle($request, $response);
              return;
          }
 
@@ -47,6 +42,6 @@ final class CanonicalUrlMiddleware extends IMiddleware implements ScopedMiddlewa
              redirect($redirect->location, $redirect->status);
          }
 
-         parent::handle($request);
+         parent::handle($request, $response);
      }
 }

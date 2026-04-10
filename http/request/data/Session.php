@@ -2,7 +2,6 @@
 namespace SaQle\Http\Request\Data;
 
 use SaQle\Core\Exceptions\Data\KeyNotFoundException;
-use SaQle\Http\Request\RequestIntent;
 
 class Session extends Data {
 	 private array $pointers = [];

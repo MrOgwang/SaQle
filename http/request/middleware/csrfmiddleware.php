@@ -2,19 +2,14 @@
 namespace SaQle\Http\Request\Middleware;
 
 use SaQle\Middleware\IMiddleware;
-use SaQle\Middleware\MiddlewareRequestInterface;
-use SaQle\Http\Request\RequestIntent;
-use SaQle\Middleware\Interface\ScopedMiddleware;
+use SaQle\Http\Request\Request;
+use SaQle\Http\Response\Response;
 
-class CsrfMiddleware extends IMiddleware implements ScopedMiddleware{
+class CsrfMiddleware extends IMiddleware {
      private static string $token_key      = 'csrf_token';
      private static array  $except_methods = ['GET', 'HEAD', 'OPTIONS'];
 
-     public static function scopes(): array {
-         return [RequestIntent::WEB, RequestIntent::AJAX];
-     }
-
-     public function handle(MiddlewareRequestInterface $request){
+     public function handle(Request $request, ?Response $response = null){
 
          //Generate CSRF token if not set
          $token_key      = CsrfMiddleware::get_token_key();
@@ -26,7 +21,7 @@ class CsrfMiddleware extends IMiddleware implements ScopedMiddleware{
 
          //skip CSRF check for safe HTTP methods
          if(in_array($_SERVER['REQUEST_METHOD'], $except_methods)){
-             parent::handle($request);
+             parent::handle($request, $response);
              return;
          }
 
@@ -37,7 +32,7 @@ class CsrfMiddleware extends IMiddleware implements ScopedMiddleware{
              authorization_exception('CSRF token validation failed')->throw();
          }
          
-     	 parent::handle($request);
+     	 parent::handle($request, $response);
      }
 
      public static function get_token_key() : string {

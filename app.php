@@ -15,7 +15,8 @@ use SaQle\Core\Services\Providers\{
      EventServiceProvider, 
      AuthenticationProvider,
      ValidationServiceProvider,
-     StorageServiceProvider
+     StorageServiceProvider,
+     MiddlewareProvider
 };
 use SaQle\Http\Cors\CorsConfig;
 use SaQle\Core\Support\AppContext;
@@ -83,30 +84,14 @@ final class App {
      }
 
      public function boot(): void {
-         $this->register_middlewares();
-         $this->register_providers();
-     }
-
-     private function load_environment(): void {
-         ($this->setup->environment_loader && is_callable($this->setup->environment_loader)) ? (
-             ($this->setup->environment_loader)($this->setup->environment)
-         ) : null;
-     }
-
-     private function register_middlewares(): void {
-         foreach ($this->setup->middlewares as $mw) {
-             $this->middleware->register($mw);
-         }
-     }
-
-     private function register_providers(): void {
          $framework_providers = [
              FrameworkDIProvider::class,
              EventServiceProvider::class,
              AuthenticationProvider::class,
              SessionProvider::class,
              ValidationServiceProvider::class,
-             StorageServiceProvider::class
+             StorageServiceProvider::class,
+             MiddlewareProvider::class
          ];
 
          foreach(array_merge($framework_providers, $this->setup->providers) as $provider){
@@ -114,6 +99,12 @@ final class App {
          }
      }
 
+     private function load_environment(): void {
+         ($this->setup->environment_loader && is_callable($this->setup->environment_loader)) ? (
+             ($this->setup->environment_loader)($this->setup->environment)
+         ) : null;
+     }
+     
      public function run(): void {
          new Runtime()->handle(Request::init());
      }

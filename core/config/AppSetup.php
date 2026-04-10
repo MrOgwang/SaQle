@@ -11,7 +11,6 @@ final class AppSetup {
          public string $framework_path = '',
          public string $document_root = '',
          public array $providers = [],
-         public array $middlewares = [],
          public $environment_loader = null,
          public ?string $config_dir = null,
          public array $cors = [],

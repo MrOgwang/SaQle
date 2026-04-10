@@ -18,16 +18,19 @@
  * */
 namespace SaQle\Routes\Middleware;
 
-use SaQle\Middleware\MiddlewareRequestInterface;
+use SaQle\Http\Request\Request;
+use SaQle\Http\Response\Response;
 use SaQle\Middleware\IMiddleware;
 use SaQle\Routes\{Router, MatchedRoute};
 use SaQle\Core\Exceptions\Route\RouteNotFoundException;
 use SaQle\Core\Exceptions\Http\NotAcceptableException;
 use SaQle\Core\Components\ComponentDefinition;
+use SaQle\Http\Request\RequestScope;
+use SaQle\Http\Response\ResponseType;
 
-class RoutingMiddleware extends IMiddleware{
+class RoutingMiddleware extends IMiddleware {
      
-     public function handle(MiddlewareRequestInterface $request){
+     public function handle(Request $request, ?Response $response = null){
          //find matching route
          $match = Router::find_matching_route($request->method(), $request->uri());
 
@@ -55,28 +58,18 @@ class RoutingMiddleware extends IMiddleware{
                  proxy: $resolved_target[4]
              ),
              $match['route']['name'],
+             RequestScope::from($match['route']['scope']),
+             ResponseType::tryFrom($match['route']['restype'] ?? ""),
              $match['route']['model_class'],
              $match['route']['layout'],
              $match['route']['guards'],
-             $match['route']['restype'],
              $match['route']['trail'],
              $match['prefix'],
              $match['route']['sse_event'] ?? null
          );
 
          $request->route = $matched_route;
-
-         //check that route supports response type
-         $response_type = match($request->intent->value){
-             'api', 'ajax' => 'json',
-             'web'         => 'html',
-             'sse'         => 'sse'
-         };
-
-         if(!$request->route->supports($response_type)){
-             throw new NotAcceptableException('The route '.$request->route->url.' does not support [ '.$response_type.' ] responses!');
-         }
-
+         
          //set path params
          foreach($match['params'] as $pk => $pv){
              $request->add_path_param($pk, $pv);
@@ -87,6 +80,6 @@ class RoutingMiddleware extends IMiddleware{
              $request->add_query_param($qk, $qv);
          }
 
-     	 parent::handle($request);
+     	 parent::handle($request, $response);
      }
 }

@@ -8,6 +8,8 @@ namespace SaQle\Routes;
 
 use SaQle\Core\Assert\Assert;
 use SaQle\Core\Components\ComponentDefinition;
+use SaQle\Http\Request\RequestScope;
+use SaQle\Http\Response\ResponseType;
 use InvalidArgumentException;
 
 final class MatchedRoute {
@@ -27,6 +29,12 @@ final class MatchedRoute {
          //the route name
          public string $name, 
 
+         //the route scope
+         public RequestScope $scope, 
+
+         //the response types.
+         public ?ResponseType $restype = null,
+
          //the route handler
          public ?string $model_class = null,
 
@@ -35,9 +43,6 @@ final class MatchedRoute {
 
          //permissions, roles and attributes to enforce on route
          public ?array $guards = null,
-
-         //the response types.
-         public ?array $restype = null,
 
          //layout components
          public ?array $trail = null,

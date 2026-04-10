@@ -8,10 +8,21 @@ namespace SaQle\Routes;
 
 use SaQle\Core\Assert\Assert;
 use SaQle\Core\Registries\ComponentRegistry;
+use SaQle\Http\Request\RequestScope;
+use SaQle\Http\Response\ResponseType;
 use InvalidArgumentException;
 use RuntimeException;
 
 final class Route {
+
+     //scope of route
+     public private(set) ?RequestScope $scope = null {
+         set(?RequestScope $value){ 
+             $this->scope = $value;
+         }
+
+         get => $this->scope;
+     }
 
      //name of route
      public private(set) ?string $name = null {
@@ -121,25 +132,8 @@ final class Route {
          get => $this->guards;
      }
 
-     /**
-      * This is a list of the response types to be returned from this route. options include
-      * 
-      * html - respond with html, this is for web requests
-      * json - respond with json data for api requests
-      * sse  - respond with an event stream for server sent event requests
-      * */
-     public ?array $restype = null{
-         set(?array $value){
-             //check valid response types, otherwise complain loudly
-             foreach($value as $t){
-                 Assert::oneOf($t, ['html', 'json', 'sse']);
-             }
-
-             $this->restype = $value;
-         }
-
-         get => $this->restype;
-     }
+     //customize the response from this route
+     public ?ResponseType $restype = null;
 
      /**
       * The trail is an array of the components and actions
@@ -173,9 +167,7 @@ final class Route {
          $this->url    = $url;
          $this->target = $target;
          $this->model_class = $model_class;
-
-         //routes respond with html by default
-         $this->restype = ['html'];
+         $this->scope = RequestScope::WEB;
 	 }
 
      /**
@@ -275,11 +267,8 @@ final class Route {
          return $this;
      }
 
-     /**
-      * Set the response type from this route
-      * */
-     public function respond_with(array $restype){
-         $this->restype = array_unique(array_merge($this->restype ?? [], $restype));
+     public function respond_with(ResponseType $restype){
+         $this->restype = $restype;
          return $this;
      }
 
@@ -303,5 +292,9 @@ final class Route {
 
      public function set_name(string $name){
          $this->name = $name;
+     }
+
+     public function set_scope(RequestScope $scope){
+         $this->scope = $scope;
      }
 }

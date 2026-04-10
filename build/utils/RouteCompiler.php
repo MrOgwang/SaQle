@@ -37,13 +37,14 @@ final class RouteCompiler {
              'param_names' => $param_names,
              'route'       => [
                  'name'            => $route->name,
+                 'scope'           => $route->scope->value,
                  'url'             => $route->url,
                  'target'          => $route->target,
                  'compiled_target' => $route->compiled_target,
                  'model_class'     => $route->model_class,
                  'guards'          => $route->guards,
                  'layout'          => $route->layout,
-                 'restype'         => $route->restype,
+                 'restype'         => $route->restype?->value,
                  'trail'           => $route->trail,
                  'sse_event'       => $route->sse_event
              ]

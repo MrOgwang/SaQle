@@ -4,11 +4,10 @@ namespace SaQle\Http\Response\Strategies;
 
 use SaQle\Http\Request\Request;
 use SaQle\Http\Response\{
-     HttpResponse, 
+     Response, 
      HttpMessage
 };
 use SaQle\Http\Response\Types\{
-     FileResponse, 
      HtmlResponse
 };
 use SaQle\Core\Components\{
@@ -21,10 +20,10 @@ use SaQle\Http\Request\Middleware\CsrfMiddleware;
 use SaQle\Auth\Models\GuestUser;
 use SaQle\Http\Request\Execution\ActionExecutor;
 
-final class WebResponseStrategy implements ResponseStrategy {
+final class HtmlResponseStrategy implements ResponseStrategy {
 
      public function supports(Request $request): bool {
-         return $request->is_web_request();
+         return $request->expects_html();
      }
 
      private function prepare_context(Request $request){
@@ -53,16 +52,9 @@ final class WebResponseStrategy implements ResponseStrategy {
          return $context;
      }
 
-     public function build(Request $request, ?HttpMessage $result = null) : HttpResponse {
-
+     public function build(Request $request, ?HttpMessage $result = null) : Response {
+        
          $target_component = $request->route->compiled_target->name;
-         
-         if(in_array($target_component, ['protectedfile', 'staticfile'])){
-             $result = ActionExecutor::execute($request);
-             $response = new FileResponse($result->data, $result->code);
-             return $response;
-         }
-
          $target_action = $request->route->compiled_target->method ?? null;
          $leaf_component = $target_action ? $target_component."@".$target_action : $target_component;
          $layout = $request->route->layout ?? [];

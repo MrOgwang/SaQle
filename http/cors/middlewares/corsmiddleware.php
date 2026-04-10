@@ -17,11 +17,12 @@
 namespace SaQle\Http\Cors\Middlewares;
 
 use SaQle\Middleware\IMiddleware;
-use SaQle\Middleware\MiddlewareRequestInterface;
+use SaQle\Http\Request\Request;
+use SaQle\Http\Response\Response;
 use SaQle\App;
 
 class CorsMiddleware extends IMiddleware{
-      public function handle(MiddlewareRequestInterface $request){
+      public function handle(Request $request, ?Response $response = null){
            $app         = app();
            $origins     = $app->cors->get_origins();
            $headers     = $app->cors->get_headers();
@@ -54,6 +55,6 @@ class CorsMiddleware extends IMiddleware{
                 exit;
            }
 
-     	 parent::handle($request);
+     	 parent::handle($request, $response);
       }
 }

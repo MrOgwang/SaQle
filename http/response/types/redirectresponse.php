@@ -1,9 +1,9 @@
 <?php
 namespace SaQle\Http\Response\Types;
 
-use SaQle\Http\Response\HttpResponse;
+use SaQle\Http\Response\Response;
 
-class RedirectResponse extends HttpResponse {
+class RedirectResponse extends Response {
 
      protected ?string $url = null;
 

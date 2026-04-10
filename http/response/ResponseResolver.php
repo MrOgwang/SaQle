@@ -6,18 +6,20 @@ use SaQle\Http\Request\Request;
 use SaQle\Http\Response\Strategies\{
      SseResponseStrategy, 
      JsonResponseStrategy, 
-     WebResponseStrategy,
-     RedirectResponseStrategy
+     HtmlResponseStrategy,
+     RedirectResponseStrategy,
+     FileResponseStrategy
 };
 use RuntimeException;
 
 final class ResponseResolver {
 
-     public function resolve(Request $request, ?HttpMessage $result = null) : HttpResponse {
+     public function resolve(Request $request, ?HttpMessage $result = null) : Response {
 
          $response_strategies = [
              new SseResponseStrategy(),
-             new JsonResponseStrategy()
+             new JsonResponseStrategy(),
+             new FileResponseStrategy()
          ];
 
          /**
@@ -39,7 +41,7 @@ final class ResponseResolver {
               * */
 
          }else{
-             $response_strategies[] = new WebResponseStrategy();
+             $response_strategies[] = new HtmlResponseStrategy();
          }
 
          foreach($response_strategies as $strategy){

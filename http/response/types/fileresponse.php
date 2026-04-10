@@ -2,9 +2,9 @@
 
 namespace SaQle\Http\Response\Types;
 
-use SaQle\Http\Response\HttpResponse;
+use SaQle\Http\Response\Response;
 
-class FileResponse extends HttpResponse {
+class FileResponse extends Response {
 
      protected array $file_info;
      protected int $status;

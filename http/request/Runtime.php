@@ -2,19 +2,23 @@
 namespace SaQle\Http\Request;
 
 use Throwable;
-use SaQle\Middleware\Factory\MiddlewareGroup;
+use SaQle\Middleware\MiddlewareGroup;
 use SaQle\Http\Response\ResponseResolver;
 use SaQle\Core\Exceptions\Abstracts\FrameworkException;
-use SaQle\Http\Response\{HttpResponse, HttpMessage};
+use SaQle\Http\Response\{Response, HttpMessage};
 
 class Runtime {
 
      private function bootstrap_request(Request $request) : Request {
          date_default_timezone_set(config('app.timezone'));
-         return (new MiddlewareGroup())->handle($request);
+         return (new MiddlewareGroup())->handle_incoming($request, null);
      }
 
-     private function resolve_response(Request $request, ?HttpMessage $result = null) : HttpResponse {
+     private function bootstrap_response(Request $request, Response $response) : Response {
+         return (new MiddlewareGroup())->handle_outgoing($request, $response);
+     }
+
+     private function resolve_response(Request $request, ?HttpMessage $result = null) : Response {
          return (new ResponseResolver())->resolve($request, $result);
      }
 
@@ -55,6 +59,8 @@ class Runtime {
             
              $request  = $this->bootstrap_request($request);
              $response = $this->resolve_response($request);
+             $response = $this->bootstrap_response($request, $response);
+
              $response->send();
 
          }catch(Throwable $e){

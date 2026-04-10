@@ -1,10 +1,10 @@
 <?php
 namespace SaQle\Http\Response\Types;
 
-use SaQle\Http\Response\HttpResponse;
+use SaQle\Http\Response\Response;
 use Closure;
 
-class SseResponse extends HttpResponse{
+class SseResponse extends Response{
      public function __construct(
          private Closure $callback
      ){}
