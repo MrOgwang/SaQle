@@ -23,12 +23,15 @@ use SaQle\Core\Registries\RouteRegistry;
 use SaQle\Http\Request\RequestScope;
 use SaQle\Http\Response\ResponseType;
 use RuntimeException;
+use Closure;
 
 final class Router {
 
      protected static array $group_stack = [];
 
      protected static array $route_names = [];
+
+     protected static array $route_keys = [];
 
      //only one instance of router must exist
      protected static ?self $instance = null;
@@ -48,6 +51,22 @@ final class Router {
       * to apply shared route properties to a group of routes.
       * */
      protected static array $routes = [];
+
+     private static function route_key(string $method, string $url) : string {
+         return substr(hash('xxh128', $method.$url), 0, 16);
+     }
+
+     private static function assign_route_name(&$route, $name = null){
+
+         $name = $name ?? self::route_key($route->method, $route->url);
+         
+         if($name && !in_array($name, self::$route_names)){
+             $route->set_name($name);
+             self::$route_names[] = $name;
+         }else{
+            throw new RuntimeException("No name defined for the route - {$r->method} : {$r->url}");
+         }
+     }
      
      /**
       * Define a route for a get request
@@ -66,9 +85,12 @@ final class Router {
       * 
       * */
      static public function get(string $url, string $target, ?string $model_class = null) : Router {
+    
          $route = new Route('get', $url, $target, $model_class);
-
-         self::$routes[] = [$route];
+         $key = self::route_key($route->method, $route->url);
+         $route->set_key($key);
+         
+         self::$routes[] = [$key => $route];
 
          self::push_group_attributes();
 
@@ -77,9 +99,12 @@ final class Router {
 
      //parameters as descirbed in get
      static public function post(string $url, string $target, ?string $model_class = null) : Router {
+        
          $route = new Route('post', $url, $target, $model_class);
+         $key = self::route_key($route->method, $route->url);
+         $route->set_key($key);
 
-         self::$routes[] = [$route];
+         self::$routes[] = [$key => $route];
 
          self::push_group_attributes();
 
@@ -88,9 +113,12 @@ final class Router {
 
      //parameters as descirbed in get
      static public function patch(string $url, string $target, ?string $model_class = null) : Router {
-         $route = new Route('patch', $url, $target, $model_class);
 
-         self::$routes[] = [$route];
+         $route = new Route('patch', $url, $target, $model_class);
+         $key = self::route_key($route->method, $route->url);
+         $route->set_key($key);
+
+         self::$routes[] = [$key => $route];
 
          self::push_group_attributes();
 
@@ -99,9 +127,12 @@ final class Router {
 
      //parameters as descirbed in get
      static public function put(string $url, string $target, ?string $model_class = null) : Router {
-         $route = new Route('put', $url, $target, $model_class);
 
-         self::$routes[] = [$route];
+         $route = new Route('put', $url, $target, $model_class);
+         $key = self::route_key($route->method, $route->url);
+         $route->set_key($key);
+
+         self::$routes[] = [$key => $route];
 
          self::push_group_attributes();
 
@@ -110,9 +141,12 @@ final class Router {
 
      //parameters as descirbed in get
      static public function delete(string $url, string $target, ?string $model_class = null) : Router {
-         $route = new Route('delete', $url, $target, $model_class);
 
-         self::$routes[] = [$route];
+         $route = new Route('delete', $url, $target, $model_class);
+         $key = self::route_key($route->method, $route->url);
+         $route->set_key($key);
+
+         self::$routes[] = [$key => $route];
 
          self::push_group_attributes();
 
@@ -139,9 +173,14 @@ final class Router {
       * 
       * */
      static public function match(array $methods, string $url, string $target, ?string $model_class = null) : Router {
+         
          $routes = [];
          foreach($methods as $m){
-             $routes[] = new Route($m, $url, $target, $model_class);
+             $route = new Route($m, $url, $target, $model_class);
+             $key = self::route_key($route->method, $route->url);
+             $route->set_key($key);
+             
+             $routes[$key] = $route;
          }
 
          self::$routes[] = $routes;
@@ -149,6 +188,21 @@ final class Router {
          self::push_group_attributes();
 
          return static::instance();
+     }
+
+     public static function resolve(string $method, string $url, array $variants, Closure $resolver){
+
+         $variant_routes = [];
+
+         foreach($variants as $variant_name => $variant_callback){
+             $variant_routes[$variant_name] = $variant_callback(new Route($method, $url, "", null));
+         }
+
+         $route = new DeferedRoute($method, $url, $variant_routes, $resolver);
+         $key = self::route_key($route->method, $route->url);
+         $route->set_key($key);
+
+         self::$routes[] = [$key => $route];
      }
 
      public static function all(): array {
@@ -169,14 +223,10 @@ final class Router {
          $last_batch = self::$routes[ count(self::$routes) - 1];
 
          if($deco === 'name'){
-             foreach($last_batch as $r_index => $r){
-                 $name = $params['name'][$r_index] ?? null;
-                 if($name && !in_array($name, self::$route_names)){
-                     $r->set_name($name);
-                     self::$route_names[] = $name;
-                 }else{
-                    throw new RuntimeException("No name defined for the route - {$r->method} : {$r->url}");
-                 }
+             $r_index = 0;
+             foreach($last_batch as $r){
+                 self::assign_route_name($r, $params['name'][$r_index]);
+                 $r_index++;
              }
          }else{
              foreach($last_batch as $r){
@@ -375,10 +425,10 @@ final class Router {
         // Iterate over compiled routes
         foreach ($compiled_routes as $route) {
             // HTTP method check
-            if (strtoupper($route['method']) !== strtoupper($method)) continue;
+            if(strtoupper($route['method']) !== strtoupper($method)) continue;
 
             // Match path regex
-            if (preg_match($route['pattern'], $path_without_prefix, $matches)) {
+            if(preg_match($route['pattern'], $path_without_prefix, $matches)){
                 // Extract path params
                 $params = [];
                 if (!empty($route['param_names'])) {

@@ -24,6 +24,7 @@ class MiddlewareGroup {
              RoutingMiddleware::class,
              ResponseTypeMiddleware::class
          ];
+         
          $this->run_chain($pre_route, $request, $response);
 
          $middleware = app()->middleware->get_request_middleware($request);

@@ -44,20 +44,24 @@ final class FileResponse extends Response {
              $last_modified = gmdate('D, d M Y H:i:s', filemtime($path)).' GMT';
 
              $this
-             ->header('Cache-Control', 'public, max-age=31536000, immutable')
+             ->header('Cache-Control', 'public, max-age=31536000')
              ->header('Expires', gmdate('D, d M Y H:i:s', time() + 31536000).' GMT')
-             ->header('ETag', $etag)
+             ->header('ETag', "\"$etag\"")
              ->header('Last-Modified', $last_modified);
 
              //304 Not Modified
-             if(isset($_SERVER['HTTP_IF_NONE_MATCH']) && trim($_SERVER['HTTP_IF_NONE_MATCH']) === "\"$etag\""){
-                 $this->set_status(304);
-                 exit;
-             }
+             if(isset($_SERVER['HTTP_IF_NONE_MATCH'])){
+                 $client_etags = explode(',', $_SERVER['HTTP_IF_NONE_MATCH']);
 
-             if(isset($_SERVER['HTTP_IF_MODIFIED_SINCE']) && strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']) >= filemtime($path)){
-                 $this->set_status(304);
-                 exit;
+                 foreach ($client_etags as $client_etag){
+                     $client_etag = trim($client_etag, " W/\"");
+
+                     if($client_etag === $etag) {
+                         $this->set_status(304);
+                         $this->send_headers();
+                         exit;
+                     }
+                 }
              }
          }else{
              $this->header('Cache-Control', 'no-store, no-cache, must-revalidate');

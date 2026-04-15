@@ -15,6 +15,14 @@ use RuntimeException;
 
 final class Route {
 
+     public private(set) ?string $key = null {
+         set(?string $value){
+             $this->key = $value;
+         }
+
+         get => $this->key;
+     }
+
      //scope of route
      public private(set) ?RequestScope $scope = null {
          set(?RequestScope $value){ 
@@ -87,13 +95,14 @@ final class Route {
       * */
      public string $target {
          set(string $value){
-             $compiled_target = ComponentRegistry::resolve_component($value, $this->method, 'target');
 
-             $this->compiled_target = $compiled_target;
+             if($value){
+                 $compiled_target = ComponentRegistry::resolve_component($value, $this->method, 'target');
 
-             $this->target = !is_null($compiled_target[2]) ? $compiled_target[0]."@".$compiled_target[2] : $compiled_target[0];
+                 $this->compiled_target = $compiled_target;
 
-             $this->name = !is_null($compiled_target[2]) ? $compiled_target[0].".".$compiled_target[2] : $compiled_target[0].".".strtolower($this->method);
+                $this->target = !is_null($compiled_target[2]) ? $compiled_target[0]."@".$compiled_target[2] : $compiled_target[0];
+             }
          }
 
          get => $this->target;
@@ -169,6 +178,11 @@ final class Route {
          $this->model_class = $model_class;
          $this->scope = RequestScope::WEB;
 	 }
+
+     public function target(string $target){
+         $this->target = $target;
+         return $this;
+     }
 
      /**
       * Normalize a route url by:
@@ -294,7 +308,16 @@ final class Route {
          $this->name = $name;
      }
 
+     public function name(string $name){
+         $this->name = $name;
+         return $this;
+     }
+
      public function set_scope(RequestScope $scope){
          $this->scope = $scope;
+     }
+
+     public function set_key(string $key){
+         $this->key = $key;
      }
 }

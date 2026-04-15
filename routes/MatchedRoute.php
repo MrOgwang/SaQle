@@ -58,8 +58,4 @@ final class MatchedRoute {
      public function supports(string $response_type){
          return in_array($response_type, $this->restype, true);
      }
-
-     public function supported_responses(){
-         return $this->restype;
-     }
 }
