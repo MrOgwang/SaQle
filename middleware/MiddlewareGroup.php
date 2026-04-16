@@ -6,6 +6,8 @@ use SaQle\Http\Request\Request;
 use SaQle\Http\Response\Response;
 use SaQle\Routes\Middleware\RoutingMiddleware;
 use SaQle\Http\Request\Middleware\ResponseTypeMiddleware;
+use SaQle\Session\Middleware\SessionMiddleware;
+use SaQle\Auth\Middleware\AuthenticationMiddleware;
 
 class MiddlewareGroup {
 
@@ -21,7 +23,9 @@ class MiddlewareGroup {
      public function handle_incoming(Request $request, ?Response $response = null): Request {
 
          $pre_route = [
+             AuthenticationMiddleware::class,
              RoutingMiddleware::class,
+             SessionMiddleware::class,
              ResponseTypeMiddleware::class
          ];
          

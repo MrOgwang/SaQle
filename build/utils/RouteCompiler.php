@@ -7,7 +7,7 @@ use SaQle\Core\Registries\RouteRegistry;
 
 final class RouteCompiler {
 
-     public static function compile() {
+     public static function compile(){
         
          $routes = Router::all();
          
@@ -57,6 +57,7 @@ final class RouteCompiler {
          return [
              'key'         => $route->key,
              'type'        => $route instanceof Route ? 'normal' : 'conditional',
+             'resolver'    => $route instanceof Route ?  null : $route->resolver,
              'method'      => $route->method,
              'pattern'     => '#^'.$pattern.'$#',
              'param_names' => $param_names,

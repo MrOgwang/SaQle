@@ -17,7 +17,6 @@ class Session extends Data {
 
 	 	 if($persistent && $this->session_active){
 	 	 	 $_SESSION[$key] = $value;
-	 	 	 return;
 	 	 }
 
 	 	 parent::set($key, $value);
@@ -51,7 +50,6 @@ class Session extends Data {
      public function remove($key) : bool {
      	 if($this->session_active && array_key_exists($key, $_SESSION)){
      	 	 unset($_SESSION[$key]);
-	 	 	 return true;
 	 	 }
 	 	 
 	 	 return parent::remove($key);

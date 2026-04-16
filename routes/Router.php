@@ -20,6 +20,7 @@ namespace SaQle\Routes;
 
 use SaQle\Core\Assert\Assert;
 use SaQle\Core\Registries\RouteRegistry;
+use SaQle\Core\Support\RouteResolver;
 use SaQle\Http\Request\RequestScope;
 use SaQle\Http\Response\ResponseType;
 use RuntimeException;
@@ -31,7 +32,11 @@ final class Router {
 
      protected static array $route_names = [];
 
-     protected static array $route_keys = [];
+     /**
+      * The routes are batched(so this is technically an array of arrays). This is to make it easy
+      * to apply shared route properties to a group of routes.
+      * */
+     protected static array $routes = [];
 
      //only one instance of router must exist
      protected static ?self $instance = null;
@@ -45,12 +50,6 @@ final class Router {
 
          return static::$instance;
      }
-
-     /**
-      * The routes are batched(so this is technically an array of arrays). This is to make it easy
-      * to apply shared route properties to a group of routes.
-      * */
-     protected static array $routes = [];
 
      private static function route_key(string $method, string $url) : string {
          return substr(hash('xxh128', $method.$url), 0, 16);
@@ -190,15 +189,21 @@ final class Router {
          return static::instance();
      }
 
-     public static function resolve(string $method, string $url, array $variants, Closure $resolver){
+     public static function resolve(string $method, string $url, string $resolver_class){
+
+         if(!is_a($resolver_class, RouteResolver::class, true)){
+             throw new RuntimeException("The class {$resolver_class} must be an instance of a ".RouteResolver::class);
+         }
+
+         $resolver_instance = resolve($resolver_class);
 
          $variant_routes = [];
 
-         foreach($variants as $variant_name => $variant_callback){
+         foreach($resolver_instance->routes() as $variant_name => $variant_callback){
              $variant_routes[$variant_name] = $variant_callback(new Route($method, $url, "", null));
          }
 
-         $route = new DeferedRoute($method, $url, $variant_routes, $resolver);
+         $route = new DeferedRoute($method, $url, $variant_routes, $resolver_class);
          $key = self::route_key($route->method, $route->url);
          $route->set_key($key);
 
@@ -429,22 +434,41 @@ final class Router {
 
             // Match path regex
             if(preg_match($route['pattern'], $path_without_prefix, $matches)){
-                // Extract path params
-                $params = [];
-                if (!empty($route['param_names'])) {
-                    foreach ($route['param_names'] as $i => $name) {
-                        $params[$name] = $matches[$i + 1] ?? null;
-                    }
-                }
 
-                return [
-                    'route' => $route['route'],
-                    'params' => $params,
-                    'query' => $query_params,
-                    'path' => $path_without_prefix,
-                    'method' => $method,
-                    'prefix' => $prefix,
-                ];
+                 // Extract path params
+                 $params = [];
+                 if (!empty($route['param_names'])) {
+                     foreach ($route['param_names'] as $i => $name) {
+                         $params[$name] = $matches[$i + 1] ?? null;
+                     }
+                 }
+
+                 if($route['type'] === 'conditional'){
+
+                     $resolver_class = $route['resolver'];
+                     if(!is_a($resolver_class, RouteResolver::class, true)){
+                         throw new RuntimeException("The class {$resolver_class} must be an instance of a ".RouteResolver::class);
+                     }
+
+                     $resolver_instance = resolve($resolver_class);
+                     $route_details = $route['variants'][$resolver_instance->resolve(request())] ?? null;
+
+                     if(!$route_details){
+                         throw new RuntimeException("Invalid route resolver class definition for: {$resolver_class}!");
+                     }
+
+                 }else{
+                     $route_details = $route['route'];
+                 }
+
+                 return [
+                     'route' => $route_details,
+                     'params' => $params,
+                     'query' => $query_params,
+                     'path' => $path_without_prefix,
+                     'method' => $method,
+                     'prefix' => $prefix,
+                 ];
             }
         }
 

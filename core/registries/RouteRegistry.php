@@ -15,6 +15,11 @@ final class RouteRegistry {
          return self::$routes;
      }
 
+     public static function get_by_key(string $key) : ?array {
+         $all_routes = self::all();
+         return $all_routes[$key] ?? null;
+     }
+
      public static function get(string $name) : ?array {
         
          $all_routes = self::all();

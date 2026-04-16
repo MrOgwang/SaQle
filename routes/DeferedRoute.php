@@ -7,7 +7,6 @@ declare(strict_types = 1);
 namespace SaQle\Routes;
 
 use SaQle\Core\Assert\Assert;
-use Closure;
 
 final class DeferedRoute {
 
@@ -43,15 +42,15 @@ final class DeferedRoute {
          get => $this->routes;
      }
 
-     public private(set) Closure $resolver {
-         set(Closure $value){
+     public private(set) string $resolver {
+         set(string $value){
              $this->resolver = $value;
          }
 
          get => $this->resolver;
      }
 
-     public function __construct(string $method, string $url, array $routes, Closure $resolver){
+     public function __construct(string $method, string $url, array $routes, string $resolver){
          $this->method = $method;
          $this->url = $url;
          $this->routes = $routes;
