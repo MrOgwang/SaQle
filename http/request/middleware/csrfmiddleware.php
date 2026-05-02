@@ -1,28 +1,25 @@
 <?php
 namespace SaQle\Http\Request\Middleware;
 
-use SaQle\Middleware\IMiddleware;
-use SaQle\Http\Request\Request;
-use SaQle\Http\Response\Response;
+use SaQle\Middleware\MiddlewareInterface;
+use SaQle\Http\Response\HttpMessage;
 
-class CsrfMiddleware extends IMiddleware {
-     private static string $token_key      = 'csrf_token';
-     private static array  $except_methods = ['GET', 'HEAD', 'OPTIONS'];
+class CsrfMiddleware implements MiddlewareInterface {
 
-     public function handle(Request $request, ?Response $response = null){
+     private static string $token_key = 'csrf_token';
+     
+     public function handle($request, $response = null) : ?HttpMessage {
 
          //Generate CSRF token if not set
-         $token_key      = CsrfMiddleware::get_token_key();
-         $except_methods = CsrfMiddleware::get_except_methods();
-         $token          = $request->session->get($token_key);
+         $token_key = CsrfMiddleware::get_token_key();
+         $token = $request->session->get($token_key);
          if(!$token){
              $request->session->set($token_key, bin2hex(random_bytes(32)), true);
          }
 
          //skip CSRF check for safe HTTP methods
-         if(in_array($_SERVER['REQUEST_METHOD'], $except_methods)){
-             parent::handle($request, $response);
-             return;
+         if($request->is_safe()){
+             return null;
          }
 
          //validate CSRF token for state-changing requests
@@ -31,16 +28,12 @@ class CsrfMiddleware extends IMiddleware {
          if(!$submitted_token || $submitted_token !== $token){
              authorization_exception('CSRF token validation failed')->throw();
          }
-         
-     	 parent::handle($request, $response);
+
+         return null;
      }
 
      public static function get_token_key() : string {
          return self::$token_key;
-     }
-
-     public static function get_except_methods() : array {
-         return self::$except_methods;
      }
 
      public static function get_token(): string {

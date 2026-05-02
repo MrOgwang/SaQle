@@ -18,22 +18,24 @@
  * */
 namespace SaQle\Routes\Middleware;
 
-use SaQle\Http\Request\Request;
-use SaQle\Http\Response\Response;
-use SaQle\Middleware\IMiddleware;
-use SaQle\Routes\{Router, MatchedRoute};
+use SaQle\Middleware\MiddlewareInterface;
+use SaQle\Routes\{
+     Router, 
+     MatchedRoute
+};
 use SaQle\Core\Exceptions\Route\RouteNotFoundException;
 use SaQle\Core\Exceptions\Http\NotAcceptableException;
 use SaQle\Core\Components\ComponentDefinition;
 use SaQle\Http\Request\RequestScope;
 use SaQle\Http\Response\ResponseType;
+use SaQle\Http\Response\HttpMessage;
 
-class RoutingMiddleware extends IMiddleware {
+class RoutingMiddleware implements MiddlewareInterface {
      
-     public function handle(Request $request, ?Response $response = null){
+     public function handle($request, $response = null) : ?HttpMessage {
          //find matching route
          $match = Router::find_matching_route($request->method(), $request->uri());
-
+         
          if(!$match){
              $url = $request->uri();
              throw new RouteNotFoundException(
@@ -80,6 +82,6 @@ class RoutingMiddleware extends IMiddleware {
              $request->add_query_param($qk, $qv);
          }
 
-     	 parent::handle($request, $response);
+         return null;
      }
 }

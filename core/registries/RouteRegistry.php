@@ -21,16 +21,29 @@ final class RouteRegistry {
      }
 
      public static function get(string $name) : ?array {
+
+         $route = null;
         
          $all_routes = self::all();
 
          foreach($all_routes as $r){
-             if($r['route']['name'] === $name){
-                 return $r;
+             if($r['type'] === 'normal'){
+                 if($r['route']['name'] === $name){
+                     $route = $r;
+                     break;
+                 }
+             }else{
+                 foreach($r['variants'] as $var){
+                     if($var['name'] === $name){
+                         $route = $var;
+                         break 1;
+                         break 2;
+                     }
+                 }
              }
          }
-
-         return null;
+         
+         return $route;
      }
 
      public static function cache_routes_mapping($routes_cache){

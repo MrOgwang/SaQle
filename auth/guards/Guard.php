@@ -40,7 +40,7 @@ final class Guard {
          $fail_callback = self::$guards[$name]['fail'] ?? null;
 
          if($fail_callback){
-             $fail_callback(request());
+            return $fail_callback(request());
          }
 
          throw new AuthorizationException('Unauthorized!');
@@ -48,7 +48,7 @@ final class Guard {
 
      public static function authorize(string $name, $user = null, ...$args): true {
          if(!self::check($name, $user, ...$args)){
-             self::fail($name);
+             return self::fail($name);
          }
 
          return true;

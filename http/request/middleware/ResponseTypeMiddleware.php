@@ -1,17 +1,17 @@
 <?php
 namespace SaQle\Http\Request\Middleware;
 
-use SaQle\Middleware\IMiddleware;
-use SaQle\Http\Request\Request;
-use SaQle\Http\Response\Response;
+use SaQle\Middleware\MiddlewareInterface;
 use SaQle\Http\Response\ResponseTypeResolver;
+use SaQle\Http\Response\HttpMessage;
 
-class ResponseTypeMiddleware extends IMiddleware {
+class ResponseTypeMiddleware implements MiddlewareInterface {
      
-     public function handle(Request $request, ?Response $response = null){
+     public function handle($request, $response = null) : ?HttpMessage {
 
          $request->responsetype = new ResponseTypeResolver()->resolve($request);
 
-     	 parent::handle($request, $response);
+         return null;
+         
      }
 }

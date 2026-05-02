@@ -19,14 +19,25 @@ use SaQle\Core\Services\Providers\{
      MiddlewareProvider
 };
 use SaQle\Http\Cors\CorsConfig;
-use SaQle\Core\Support\AppContext;
-use SaQle\Core\Config\{ConfigRepository, AppSetup, Config};
-use SaQle\Http\Request\{Request, Runtime};
+use SaQle\Core\Support\{
+     AppContext,
+     AppStage
+};
+use SaQle\Core\Config\{
+     ConfigRepository, 
+     AppSetup, 
+     Config
+};
+use SaQle\Http\Request\{
+     Request, 
+     Runtime
+};
 use SaQle\Session\Providers\SessionProvider;
 use SaQle\Auth\Guards\GuardManager;
 use SaQle\Build\Manage\Manage;
 
 final class App {
+     private AppStage $stage;
      public MiddlewareRegistry $middleware;
      public Container $container;
      public CorsConfig $cors;
@@ -36,6 +47,9 @@ final class App {
      public StorageRegistry     $disks;
 
      public function __construct(private AppSetup $setup){
+
+         $this->set_stage(AppStage::INITIALIZING);
+
          // 1. Expose app early
          AppContext::set($this);
 
@@ -73,7 +87,7 @@ final class App {
          require_once __DIR__.'/shortcuts/routes.php';
          require_once __DIR__.'/shortcuts/dates.php';
          require_once __DIR__.'/shortcuts/arrays.php';
-         require_once __DIR__.'/shortcuts/responses.php';
+         require_once __DIR__.'/shortcuts/messages.php';
          require_once __DIR__.'/shortcuts/exceptions.php';
          $this->load_environment();
      }
@@ -83,7 +97,7 @@ final class App {
          $repo->merge($config);
      }
 
-     public function boot(): void {
+     private function boot(): void {
          $framework_providers = [
              FrameworkDIProvider::class,
              EventServiceProvider::class,
@@ -103,6 +117,18 @@ final class App {
          ($this->setup->environment_loader && is_callable($this->setup->environment_loader)) ? (
              ($this->setup->environment_loader)($this->setup->environment)
          ) : null;
+     }
+
+     public function set_stage(AppStage $stage): void {
+         $this->stage = $stage;
+     }
+
+     public function get_stage(): AppStage {
+         return $this->stage;
+     }
+
+     public function is_stage(AppStage $stage): bool {
+         return $this->stage === $stage;
      }
      
      public function run(): void {

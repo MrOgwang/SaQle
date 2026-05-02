@@ -27,6 +27,20 @@ class Request {
      //only one instance of a request will be available
 	 private static $instance;
 
+     private string $method;
+
+     private const SAFE_METHODS = ['GET', 'HEAD', 'OPTIONS'];
+
+     private const UNSAFE_METHODS = ['POST', 'PUT', 'PATCH', 'DELETE'];
+
+     public ?Data $attributes = null {
+         set(?Data $value){
+             $this->attributes = $value;
+         }
+
+         get => $this->attributes;
+     }
+
      //a wrapper around superglobals $_POST, $_GET and $_PATCH data
      public ?Data $data = null {
          set(?Data $value){
@@ -106,17 +120,40 @@ class Request {
 
      //prevent direct creation of request object
 	 private function __construct(){
-         $this->data    = new Data();
-         $this->headers = new Data();
-         $this->cookies = new Data();
-         $this->queries = new Data();
-         $this->params  = new Data();
-         $this->session = new Session($this);
+         $this->method     = $this->detect_method();
+         $this->data       = new Data();
+         $this->headers    = new Data();
+         $this->cookies    = new Data();
+         $this->queries    = new Data();
+         $this->params     = new Data();
+         $this->session    = new Session($this);
+         $this->attributes = new Data();
      }
 
      //prevent cloning and serialization of request object
      private function __clone(){}
      public function __wakeup(){}
+
+     private function detect_method() : string {
+
+         $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+
+         if($method === 'POST'){
+
+             $override = isset($_POST['_method']) ? 
+             strtoupper($_POST['_method']) : 
+             (isset($_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE']) ? 
+             strtoupper($_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE']) : null);
+
+             $allowed = ['PUT', 'PATCH', 'DELETE'];
+
+             if(in_array($override, $allowed, true)) {
+                 $method = $override;
+             }
+         }
+
+         return strtoupper($method);
+     }
 
      //initialize a new request object
      public static function init() : Request {
@@ -149,8 +186,8 @@ class Request {
          return parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '/';
      }
 
-     public function method(){
-         return strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
+     public function method() : string {
+         return $this->method;
      }
 
      public function header(string $name): ?string {
@@ -195,7 +232,7 @@ class Request {
      public function expects_sse() : bool {
          return $this->responsetype === ResponseType::SSE;
      }
-
+ 
      public function expects_redirect() : bool {
          return $this->responsetype === ResponseType::REDIRECT;
      }
@@ -207,5 +244,21 @@ class Request {
 
      public function session() : Session {
          return $this->session;
+     }
+
+     public function is(string $method): bool {
+         return $this->method === strtoupper($method);
+     }
+
+     public function is_get() : bool {
+         return $this->is('GET');
+     }
+
+     public function is_safe() : bool {
+         return in_array($this->method, self::SAFE_METHODS, true);
+     }
+
+     public function is_unsafe() : bool {
+         return in_array($this->method, self::UNSAFE_METHODS, true);
      }
 }

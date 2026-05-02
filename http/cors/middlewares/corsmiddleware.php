@@ -16,45 +16,61 @@
  * */
 namespace SaQle\Http\Cors\Middlewares;
 
-use SaQle\Middleware\IMiddleware;
-use SaQle\Http\Request\Request;
-use SaQle\Http\Response\Response;
+use SaQle\Middleware\MiddlewareInterface;
+use SaQle\Http\Response\HttpMessage;
 use SaQle\App;
 
-class CorsMiddleware extends IMiddleware{
-      public function handle(Request $request, ?Response $response = null){
+class CorsMiddleware implements MiddlewareInterface {
+
+      public function handle($request, $response = null) : ?HttpMessage {
            $app         = app();
            $origins     = $app->cors->get_origins();
            $headers     = $app->cors->get_headers();
            $methods     = $app->cors->get_methods();
            $credentials = $app->cors->allows_credentials();
 
-           $origin = $_SERVER['HTTP_ORIGIN'] ?? '*';
+           $origin = $request->header('Origin') ?? '*';
+
+           //Determine allowed origin
+           $allowed_origin = null;
 
            if(in_array('*', $origins)){
-                header("Access-Control-Allow-Origin: *");
-           }elseif(in_array($origin, $origins)) {
-                header("Access-Control-Allow-Origin: $origin");
+                $allowed_origin = '*';
+           }elseif(in_array($origin, $origins)){
+                $allowed_origin = $origin;
+           }
+           
+           if(!$allowed_origin){
+                return forbidden(message: 'CORS not allowed');
            }
 
-           header("Access-Control-Allow-Methods: ".implode(', ', $methods));
+           //Build headers array
+           $cors_headers = [];
+
+           if($allowed_origin){
+                $cors_headers['Access-Control-Allow-Origin'] = $allowed_origin;
+           }
+
+           $cors_headers['Access-Control-Allow-Methods'] = implode(', ', $methods);
 
            if(in_array('*', $headers)){
-               header("Access-Control-Allow-Headers: *");
+                $cors_headers['Access-Control-Allow-Headers'] = '*';
            }else{
-               header("Access-Control-Allow-Headers: ".implode(', ', $headers));
+                $cors_headers['Access-Control-Allow-Headers'] = implode(', ', $headers);
            }
 
            if($credentials){
-                header("Access-Control-Allow-Credentials: true");
+                $cors_headers['Access-Control-Allow-Credentials'] = 'true';
            }
 
-           //Handle OPTIONS request (Preflight)
-           if($_SERVER['REQUEST_METHOD'] === 'OPTIONS'){
-                http_response_code(204);
-                exit;
+           //short circuit for preflight
+           if($request->method() === 'OPTIONS'){
+                return no_content();
            }
 
-     	 parent::handle($request, $response);
+           //For normal requests → attach headers later (response middleware phase)
+           $request->attributes->set('cors_headers', $cors_headers);
+
+           return null;
       }
 }

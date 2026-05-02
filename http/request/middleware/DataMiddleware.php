@@ -11,13 +11,13 @@
  */
 namespace SaQle\Http\Request\Middleware;
 
-use SaQle\Middleware\IMiddleware;
-use SaQle\Http\Request\Request;
-use SaQle\Http\Response\Response;
+use SaQle\Middleware\MiddlewareInterface;
 use SaQle\Core\Files\UploadedFile;
+use SaQle\Http\Response\HttpMessage;
 
-class DataMiddleware extends IMiddleware {
-     public function handle(Request $request, ?Response $response = null){
+class DataMiddleware implements MiddlewareInterface {
+
+     public function handle($request, $response = null) : ?HttpMessage {
          $data = [];
 
          //1. Query parameters (GET)
@@ -68,8 +68,8 @@ class DataMiddleware extends IMiddleware {
          foreach ($data as $key => $value) {
              $request->data->set($key, $value);
          }
-
-         parent::handle($request, $response);
+         
+         return null;
      }
 
      //Normalize $_FILES into a predictable structure

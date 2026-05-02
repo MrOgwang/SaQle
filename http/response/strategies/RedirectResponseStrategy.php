@@ -13,6 +13,6 @@ final class RedirectResponseStrategy implements ResponseStrategy {
      }
 
      public function build(Request $request, ?HttpMessage $result = null) : Response {
-         return new RedirectResponse($result->get_redirect());
+         return new RedirectResponse($result->redirect_to());
      }
 }

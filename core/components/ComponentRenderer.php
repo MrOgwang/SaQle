@@ -42,9 +42,8 @@ class ComponentRenderer {
          //2. Execute controller
          $http_message = ActionExecutor::execute($this->request, $node->def->controller, $node->def->method);
          $data = $http_message->data ?? [];
-
-         $flash_response = $http_message->get_flash();
-         if($flash_response){
+         
+         if($http_message->should_flash()){
              $request->session->set('flash', (object)[
                  'message' => $http_message->message,
                  'context' => $http_message->data,

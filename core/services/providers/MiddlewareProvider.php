@@ -9,7 +9,10 @@ use SaQle\Http\Request\Middleware\{
      CsrfMiddleware
 };
 use SaQle\Auth\Middleware\AuthorizationMiddleware;
-use SaQle\Http\Cors\Middlewares\CorsMiddleware;
+use SaQle\Http\Cors\Middlewares\{
+     CorsMiddleware,
+     ApplyCorsHeadersMiddleware
+};
 use SaQle\Http\Request\RequestScope;
 
 class MiddlewareProvider extends ServiceProvider {
@@ -21,14 +24,20 @@ class MiddlewareProvider extends ServiceProvider {
          $this->app->middleware->add('data', DataMiddleware::class);
          $this->app->middleware->add('csrf', CsrfMiddleware::class, RequestScope::WEB);
          $this->app->middleware->add('authorization', AuthorizationMiddleware::class);
+         $this->app->middleware->add('applycors', ApplyCorsHeadersMiddleware::class);
 
-         //assign middlware: middleware is executed top to bottom
+         //assign request middlware: middleware is executed top to bottom
          $this->app->middleware->request([
              'canonicalurl',
              'cors',
              'data',
              'csrf',
              'authorization'
+         ]);
+
+         //assign response middlware: middleware is executed top to bottom
+         $this->app->middleware->response([
+             'applycors'
          ]);
 
      }

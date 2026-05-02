@@ -30,7 +30,7 @@ final class ResponseResolver {
          if($result && strtolower($request->route->method) !== 'get'){
 
              $response_strategies[] = new RedirectResponseStrategy();
-
+ 
              /**
               * When exceptions happen for submit requests(post, put, patch, delete), this is the redirect
               * philosophy:

@@ -29,18 +29,7 @@ abstract class FrameworkException extends Exception {
          
          $this->context = $context;
 
-         $this->initilialize_http_message($this->getCode(), $this->get_context(), $this->getMessage());
-     }
-
-     private function initilialize_http_message(int $code, array $context, string $message){
-         $this->http_message = new HttpMessage($code, $context, $message);
-
-         //set default redirect url, flash and log flags
-         $this->http_message->redirect(route('app.error', ['code' => $code]));
-
-         $this->http_message->log(false);
-
-         $this->http_message->flash(false);
+         $this->http_message = new HttpMessage($this->getCode(), $this->get_context(), $this->getMessage());
      }
 
      public function get_context() : array {
@@ -57,7 +46,7 @@ abstract class FrameworkException extends Exception {
              $this->http_message = $response($this->http_message);
 
              if(!$this->http_message instanceof HttpMessage){
-                 throw new ServerException("The response callback to ".$this::class.":throw() does not return a response!");
+                 throw new ServerException("The response callback to ".$this::class.":throw() does not return a HttpMessage instance!");
              }
          }
 

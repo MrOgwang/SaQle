@@ -10,6 +10,6 @@ use SaQle\Core\FeedBack\FeedBack;
  * */
 class RouteNotFoundException extends FrameworkException {
      public function __construct(string $message = '', array $data = []){
-         parent::__construct($message, FeedBack::INTERNAL_SERVER_ERROR, $data);
+         parent::__construct($message, FeedBack::NOT_FOUND, $data);
      }
 }

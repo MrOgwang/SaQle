@@ -10,11 +10,15 @@ class CorsConfig {
      private bool  $credentials = false;
 
      public function __construct(array $config){
-        
+         foreach($config as $key => $val){
+             if(method_exists($this, $key)){
+                 $this->$key($val);
+             } 
+         }
      }
 
      //boot time methods
-     public function origins(array $origins): self{
+     public function origins(array $origins): self {
          $this->origins = array_values(array_unique($origins));
          return $this;
      }

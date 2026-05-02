@@ -29,7 +29,5 @@ class AuthenticationException extends FrameworkException {
          ?Throwable $prev = null
      ){
          parent::__construct($message, FeedBack::UNAUTHORIZED, $context, $prev);
-
-         $this->redirect_url = config('auth.route', null);
      }
 }

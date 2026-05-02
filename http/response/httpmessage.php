@@ -22,26 +22,9 @@ use SaQle\Core\FeedBack\FeedBack;
 
 class HttpMessage extends FeedBack {
 
-	/**
-	 * Redirect url
-	 * 
-	 * @var string
-	 * */
-	 private string $redirect_url = "";
-
-	 /**
-	  * Whether to log to file
-	  * 
-	  * @var bool
-	  * */
-     private bool $do_log = true;
-
-     /**
-      * Whether to flash message and context to session
-      * 
-      * @var bool
-      * */
-     private bool $do_flash = false;
+	 private ?string $_redirect_to = null;
+     private bool    $_should_log = false;
+     private bool    $_should_flash = false;
 
 	 /**
 	 * Http response code description
@@ -86,35 +69,37 @@ class HttpMessage extends FeedBack {
 		 return new self($fb->code, $fb->data, $fb->message);
 	 }
 
-	 public function get_redirect(){
-	 	 return $this->redirect_url;
-	 }
 
-	 public function redirect(string $url){
-	 	 $this->redirect_url = $url;
+	 public function with_redirect(string $url){
+	 	 $this->_redirect_to = $url;
 	 	 return $this;
 	 }
 
-	 public function reload(){
-	 	 $this->redirect_url = request()->uri();
+	 public function with_reload(){
+	 	 $this->_redirect_to = request()->uri();
 	 	 return $this;
 	 }
 
-	 public function flash(bool $flash = true){
-         $this->do_flash = $flash;
+	 public function with_flash(bool $flash = true){
+         $this->_should_flash = $flash;
          return $this;
      }
 
-     public function get_flash(){
-         return $this->do_flash;
-     }
-
-     public function log(bool $log = true){
-         $this->do_log = $log;
+     public function with_log(bool $log = true){
+         $this->_should_log = $log;
          return $this;
      }
 
-     public function get_log(){
-         return $this->do_log;
+
+     public function should_flash(){
+         return $this->_should_flash;
      }
+
+     public function should_log(){
+         return $this->_should_log;
+     }
+
+     public function redirect_to(){
+	 	 return $this->_redirect_to;
+	 }
 }

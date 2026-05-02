@@ -5,16 +5,27 @@ use Throwable;
 use SaQle\Middleware\MiddlewareGroup;
 use SaQle\Http\Response\ResponseResolver;
 use SaQle\Core\Exceptions\Abstracts\FrameworkException;
-use SaQle\Http\Response\{Response, HttpMessage};
+use SaQle\Http\Response\{
+     Response, 
+     HttpMessage
+};
+use SaQle\Core\Support\{
+     AppContext,
+     AppStage
+};
 
 class Runtime {
 
-     private function bootstrap_request(Request $request) : Request {
+     private function app() {
+         return AppContext::get();
+     }
+
+     private function bootstrap_request(Request $request) : HttpMessage {
          date_default_timezone_set(config('app.timezone'));
          return (new MiddlewareGroup())->handle_incoming($request, null);
      }
 
-     private function bootstrap_response(Request $request, Response $response) : Response {
+     private function bootstrap_response(Request $request, Response $response) : HttpMessage {
          return (new MiddlewareGroup())->handle_outgoing($request, $response);
      }
 
@@ -24,44 +35,113 @@ class Runtime {
 
      private function handle_exception(Throwable $e, Request $request) : void {
 
-         log_to_file($e);
+         $http_message = $e instanceof FrameworkException ? 
+         $e->get_http_message() : 
+         new HttpMessage(HttpMessage::INTERNAL_SERVER_ERROR, $e->getTrace(), $e->getMessage());
 
-         if($e instanceof FrameworkException){
-
-             $http_message = $e->get_http_message();
-
-             $flash_response = $http_message->get_flash();
-
-             if($flash_response){
-
-                 $request->session->set('flash', (object)[
-                     'message' => $http_message->message,
-                     'context' => $http_message->data,
-                     'code'    => $http_message->code,
-                     'type'    => 'error'
-                 ], true);
-
-             }
-
-         }else{
-             $http_message = new HttpMessage(HttpMessage::INTERNAL_SERVER_ERROR, $e->getTrace(), $e->getMessage());
-
-             $http_message->redirect(route('app.error', ['code' => $http_message->code]));
+         /**
+          * Log the exception to file
+          * 
+          * Only when error logging is set to true in error config or
+          * logging was explicitly requested.
+          * 
+          * NOTE: In the future one flag must be able to override the other
+          * */
+         if($http_message->should_log() || config('error.should_log')){
+             log_to_file($e);
          }
+
+         /**
+          * Flash to session:
+          * 
+          * Only when flash was explicitly requested or 
+          * request is unsafe: (PUT, POST, PATCH, DELETE)
+          * */
+         if($http_message->should_flash() || $request->is_unsafe()){
+             $request->session->set('flash', (object)[
+                 'message' => $http_message->message,
+                 'context' => $http_message->data,
+                 'code'    => $http_message->code,
+                 'type'    => 'error'
+             ], true);
+         }
+         
+
+         /**
+          * For unsafe requests: (PUT, POST, PATCH, DELETE), 
+          * reload same page after flashing
+          * */
+         if($request->is_unsafe()){
+             $http_message->with_reload();
+         } 
+
+         /*$stage = $this->app()->get_stage();
+
+         if($stage === AppStage::REQUEST_BOOTSTRAP){
+             log_to_file('Inside middleware!');
+         }
+
+         if($stage === AppStage::REQUEST_RESOLUTION){
+             // Controller / route failure
+         }
+
+         if($stage === AppStage::RESPONSE_BOOTSTRAP){
+             // Response transformation failure
+         }*/
 
          $response = $this->resolve_response($request, $http_message);
 
          $response->send();
      }
 
+     private function short_circuit_response($request, $http_message){
+         $response = $this->resolve_response($request, $http_message);
+         $response->send();
+
+         $this->app()->set_stage(AppStage::TERMINATED);
+     }
+
      public function handle(Request $request){
          try{
-            
-             $request  = $this->bootstrap_request($request);
-             $response = $this->resolve_response($request);
-             $response = $this->bootstrap_response($request, $response);
 
-             $response->send();
+             //step 1: run request middleware
+             $this->app()->set_stage(AppStage::REQUEST_BOOTSTRAP);
+             $http_message = $this->bootstrap_request($request);
+             /**
+              * If request middleware returns an http_message,
+              * short circuit the request flow immediatly
+              * */
+             if($http_message){
+                 $this->short_circuit_response($request, $http_message);
+                 return;
+             }
+
+             //step 2: execute the controller action
+             $this->app()->set_stage(AppStage::REQUEST_RESOLUTION);
+             $response = $this->resolve_response($request);
+
+             //step 3: run response middleware
+             $this->app()->set_stage(AppStage::RESPONSE_BOOTSTRAP);
+             $http_message = $this->bootstrap_response($request, $response);
+             /**
+              * If response middleware returns an http_message, 
+              * override the response from controller execution.
+              * 
+              * Note: I am feeling uneasy about allowing developers
+              * to override responses from controllers in response middleware,
+              * as this turns middleware into some kind of controllers as well,
+              * so this might be disallowed in future once the benefits are 
+              * properly weighed!
+              * */
+             if($http_message){
+                 $this->short_circuit_response($request, $http_message);
+                 return;
+             }
+
+             //step 4: send the response from normal flow
+             $response->send(); 
+
+             $this->app()->set_stage(AppStage::TERMINATED);
 
          }catch(Throwable $e){
              $this->handle_exception($e, $request);

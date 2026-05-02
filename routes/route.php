@@ -18,6 +18,10 @@ final class Route {
      public private(set) ?string $key = null {
          set(?string $value){
              $this->key = $value;
+
+             if(is_null($this->name)){
+                 $this->name = $value;
+             }
          }
 
          get => $this->key;
@@ -219,9 +223,7 @@ final class Route {
          ComponentRegistry::assert_components_exist($layouts);
 
          $layouts = array_unique(array_merge($this->layout ?? [], $layouts));
-
-         //array_unshift($layouts, 'page');
-
+         
          $this->layout = $layouts;
 
          return $this;

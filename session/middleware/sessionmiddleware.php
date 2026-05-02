@@ -1,13 +1,12 @@
 <?php
 namespace SaQle\Session\Middleware;
 
-use SaQle\Middleware\IMiddleware;
-use SaQle\Http\Request\Request;
-use SaQle\Http\Response\Response;
+use SaQle\Middleware\MiddlewareInterface;
+use SaQle\Http\Response\HttpMessage;
 
-class SessionMiddleware extends IMiddleware {
+class SessionMiddleware implements MiddlewareInterface {
 
-     public function handle(Request $request, ?Response $response = null){
+     public function handle($request, $response = null) : ?HttpMessage {
          
          if($request->is_web_request()){
              if(session_status() === PHP_SESSION_NONE){
@@ -16,10 +15,13 @@ class SessionMiddleware extends IMiddleware {
 
              $request->session->activate_session();
 
-             $request->session->set('user', $request->user, true);
+             if($request->user){
+                 $request->session->set('user', $request->user, true);
+             }
          }
 
-         parent::handle($request, $response);
+         return null;
+         
      }
 }
 
