@@ -18,7 +18,7 @@ final class ActionExecutor {
              if(!$controller || !$method){
                  return ok();
              }
-         }
+         } 
          
          try{
              $instance = new $controller();

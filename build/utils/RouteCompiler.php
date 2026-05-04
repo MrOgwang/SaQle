@@ -36,7 +36,6 @@ final class RouteCompiler {
                  'guards'          => $r->guards,
                  'layout'          => $r->layout,
                  'restype'         => $r->restype?->value,
-                 'trail'           => $r->trail,
                  'sse_event'       => $r->sse_event
              ];
          }
@@ -71,7 +70,6 @@ final class RouteCompiler {
                  'guards'          => $route->guards,
                  'layout'          => $route->layout,
                  'restype'         => $route->restype?->value,
-                 'trail'           => $route->trail,
                  'sse_event'       => $route->sse_event
              ] : null,
              'variants'    => $route instanceof Route ? null : self::get_route_variants($route)

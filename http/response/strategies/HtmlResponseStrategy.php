@@ -12,8 +12,7 @@ use SaQle\Http\Response\Types\{
 };
 use SaQle\Core\Components\{
      ComponentTreeBuilder, 
-     ComponentRenderer, 
-     ComponentContext
+     ComponentRenderer
 };
 use SaQle\Core\Ui\Template;
 use SaQle\Http\Request\Middleware\CsrfMiddleware;
@@ -26,7 +25,7 @@ final class HtmlResponseStrategy implements ResponseStrategy {
          return $request->expects_html();
      }
 
-     private function prepare_context(Request $request){
+     private function prepare_context(Request $request) : array {
          $context = [];
 
          //inject global context data
@@ -52,30 +51,20 @@ final class HtmlResponseStrategy implements ResponseStrategy {
          return $context;
      }
 
-     public function build(Request $request, ?HttpMessage $result = null) : Response {
-        
+     public function build(Request $request, HttpMessage $result) : Response {
+
          $target_component = $request->route->compiled_target->name;
          $target_action = $request->route->compiled_target->method ?? null;
          $leaf_component = $target_action ? $target_component."@".$target_action : $target_component;
          $layout = $request->route->layout ?? [];
-         $context = $this->prepare_context($request);
-
-         if($result){
-             $leaf_component = config('error.component')."@get";
-             $layout = [];
-             $context = array_merge($context, [
-                 'message' => $result->message, 
-                 'code' => $result->code
-             ]);
-         }
-
+         
          $tree = new ComponentTreeBuilder()->build($leaf_component, $layout);
 
-         $context = new ComponentContext($context);
-
          $renderer = new ComponentRenderer($request);
-
-         $html = $renderer->render($tree, $context);
+         $html = $renderer->render(
+             $tree, 
+             array_merge($this->prepare_context($request), $result->data)
+         );
 
          $html = $renderer->wrap_root($html);
 

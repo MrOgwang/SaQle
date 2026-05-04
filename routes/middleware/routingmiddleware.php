@@ -65,7 +65,6 @@ class RoutingMiddleware implements MiddlewareInterface {
              $match['route']['model_class'],
              $match['route']['layout'],
              $match['route']['guards'],
-             $match['route']['trail'],
              $match['prefix'],
              $match['route']['sse_event'] ?? null
          );

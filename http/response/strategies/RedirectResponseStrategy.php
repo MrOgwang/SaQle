@@ -3,7 +3,10 @@
 namespace SaQle\Http\Response\Strategies;
 
 use SaQle\Http\Request\Request;
-use SaQle\Http\Response\{Response, HttpMessage};
+use SaQle\Http\Response\{
+     Response, 
+     HttpMessage
+};
 use SaQle\Http\Response\Types\RedirectResponse;
 
 final class RedirectResponseStrategy implements ResponseStrategy {
@@ -12,7 +15,7 @@ final class RedirectResponseStrategy implements ResponseStrategy {
          return $request->expects_redirect();
      }
 
-     public function build(Request $request, ?HttpMessage $result = null) : Response {
+     public function build(Request $request, HttpMessage $result) : Response {
          return new RedirectResponse($result->redirect_to());
      }
 }

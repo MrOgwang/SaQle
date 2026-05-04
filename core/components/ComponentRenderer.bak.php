@@ -43,13 +43,25 @@ class ComponentRenderer {
          return $page->render();
      }
 
-     public function render(ComponentNode $node, array $context = [], array $props = []): string {
+     public function render(ComponentNode $node, ?ComponentContext $parent_ctx = null, array $props = []): string {
          
          //1. activate node
          $node->active = true;
 
-         //2. assign context
-         $node->context = new ComponentContext($context);
+         //2. Execute controller
+         $http_message = ActionExecutor::execute($this->request, $node->def->controller, $node->def->method);
+         $data = $http_message->data ?? [];
+         
+         if($http_message->should_flash()){
+             $request->session->set('flash', (object)[
+                 'message' => $http_message->message,
+                 'context' => $http_message->data,
+                 'code'    => $http_message->code ,
+                 'type'    => 'response'
+             ], true);
+         }
+
+         $node->context = new ComponentContext($data, $parent_ctx);
 
          //3. Register component assets
          $css = $node->def->css();
@@ -90,7 +102,7 @@ class ComponentRenderer {
          }
 
          //Render the child using the parent context
-         $rendered = $this->render($child, $node->context->expose());
+         $rendered = $this->render($child, $node->context);
 
          //Replace the FIRST occurrence only
          return preg_replace($pattern, $rendered, $html, 1);
@@ -138,7 +150,7 @@ class ComponentRenderer {
                  $child = new ComponentNode($def);
                  $child->parent = $node;
 
-                 return $this->render($child, $node->context->expose(), $attrs);
+                 return $this->render($child, $node->context, $attrs);
              }
 
              if($type === 'form') {

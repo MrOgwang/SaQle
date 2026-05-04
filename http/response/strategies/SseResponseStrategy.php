@@ -3,9 +3,11 @@
 namespace SaQle\Http\Response\Strategies;
 
 use SaQle\Http\Request\Request;
-use SaQle\Http\Response\{Response, HttpMessage};
+use SaQle\Http\Response\{
+     Response, 
+     HttpMessage
+};
 use SaQle\Http\Response\Types\SseResponse;
-use SaQle\Http\Request\Execution\ActionExecutor;
 
 final class SseResponseStrategy implements ResponseStrategy {
 
@@ -13,11 +15,11 @@ final class SseResponseStrategy implements ResponseStrategy {
          return $request->expects_sse();
      }
 
-     public function build(Request $request, ?HttpMessage $result = null) : Response {
-         return new SseResponse(fn() => $this->stream($request));
+     public function build(Request $request, HttpMessage $result) : Response {
+         return new SseResponse(fn() => $this->stream($request, $result));
      }
 
-     private function stream(Request $request): void {
+     private function stream(Request $request, HttpMessage $result): void {
 
          $event_id = 0;
          $event = "message";
@@ -34,13 +36,11 @@ final class SseResponseStrategy implements ResponseStrategy {
                  break;
              }
 
-             $result = ActionExecutor::execute($request)->data;
-
              $event_id++;
 
              echo "id: {$event_id}\n";
              echo "event: {$event}\n";
-             echo "data: " . json_encode($result) . "\n\n";
+             echo "data: " . json_encode($result->data) . "\n\n";
 
              ob_flush();
              flush();

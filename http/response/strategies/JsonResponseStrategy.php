@@ -3,9 +3,11 @@
 namespace SaQle\Http\Response\Strategies;
 
 use SaQle\Http\Request\Request;
-use SaQle\Http\Response\{Response, HttpMessage};
+use SaQle\Http\Response\{
+     Response, 
+     HttpMessage
+};
 use SaQle\Http\Response\Types\JsonResponse;
-use SaQle\Http\Request\Execution\ActionExecutor;
 
 final class JsonResponseStrategy implements ResponseStrategy {
 
@@ -13,9 +15,7 @@ final class JsonResponseStrategy implements ResponseStrategy {
          return $request->expects_json();
      }
 
-     public function build(Request $request, ?HttpMessage $result = null) : Response {
-
-         $result = $result ?? ActionExecutor::execute($request);
+     public function build(Request $request, HttpMessage $result) : Response {
 
          return new JsonResponse(
              $result->data, 

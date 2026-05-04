@@ -354,7 +354,54 @@ final class Router {
          return $this;
      }
 
-     protected static function with_group(array $attributes, callable $routes): void {
+     /**
+      * Apply same attributes on a group of routes.
+      * 
+      * Attributes include:
+      * compose_with
+      * requires
+      * requires_any
+      * requires_all
+      * respond_with
+      * aggregate_with
+      * scope
+      * */
+     public static function group(string $attribute, mixed $value, callable $routes){
+
+         $attribute = strtolower($attribute);
+
+         switch($attribute){
+             case 'compose_with':
+                 self::with_layout($value, $routes);
+             break;
+
+             case 'requires':
+             case 'requires_all':
+                 self::with_guards($value, $routes, 'all');
+             break;
+
+             case 'requires_any':
+                 self::with_guards($value, $routes, 'any');
+             break;
+
+             case 'respond_with':
+                 self::with_response($value, $routes);
+             break;
+
+             case 'aggregate_with':
+             break;
+
+             case 'scope':
+                 self::with_scope($value, $routes);
+             break;
+             
+             default:
+                 throw new RuntimeException('Uknown attribute provided to route group!');
+             break;
+         }
+     }
+
+     private static function with_group(array $attributes, callable $routes): void {
          self::$group_stack[] = $attributes;
 
          $routes();
@@ -391,19 +438,19 @@ final class Router {
          }
      }
 
-     public static function with_layout(array $layouts, callable $routes): void {
+     private static function with_layout(array $layouts, callable $routes): void {
          self::with_group(['layouts' => $layouts], $routes);
      }
 
-     public static function with_guards(array $guards, callable $routes, string $mode = 'all'): void {
+     private static function with_guards(array $guards, callable $routes, string $mode = 'all'): void {
          self::with_group([$mode === 'all' ? 'guards_all' : 'guards_any' => $guards], $routes);
      }
 
-     public static function with_response(ResponseType $type, callable $routes): void {
+     private static function with_response(ResponseType $type, callable $routes): void {
          self::with_group(['restype' => $type], $routes);
      }
 
-     public static function with_scope(RequestScope $scope, callable $routes): void {
+     private static function with_scope(RequestScope $scope, callable $routes): void {
          self::with_group(['scope' => $scope], $routes);
      }
 

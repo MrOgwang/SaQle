@@ -84,8 +84,6 @@ final class Route {
      public private(set) array $compiled_target {
          set(array $value){
              $this->compiled_target = $value;
-
-             $this->trail = $this->construct_layout_trail();
          }
 
          get => $this->compiled_target;
@@ -120,8 +118,6 @@ final class Route {
      public ?array $layout = null {
          set(?array $value){
              $this->layout = $value;
-
-             $this->trail = $this->construct_layout_trail();
          }
 
          get => $this->layout;
@@ -147,19 +143,6 @@ final class Route {
 
      //customize the response from this route
      public ?ResponseType $restype = null;
-
-     /**
-      * The trail is an array of the components and actions
-      * that will be used to construct the final layout
-      *
-      * */
-     public ?array $trail = null {
-         set(?array $value){
-             $this->trail = $value;
-         }
-
-         get => $this->trail;
-     }
 
      /**
       * The model class name for 
@@ -227,33 +210,6 @@ final class Route {
          $this->layout = $layouts;
 
          return $this;
-     }
-
-     private function construct_layout_trail(){
-         
-         $page_compiled_target = ComponentRegistry::resolve_component('page', $this->method, 'layout');
-         $compiled_targets = [];
-         $trail_components = [];
-
-         if($this->layout){
-             
-             foreach($this->layout as $c) {
-                 $ct = ComponentRegistry::resolve_component($c, $this->method, 'layout');
-                 $trail_components[] = $ct[0];
-                 $compiled_targets[] = $ct;
-             }
-
-         }
-
-         //add the targets compiled target
-         $compiled_targets[] = $this->compiled_target;
-         $trail_components[] = $this->compiled_target[0];
-
-         //push in the page component
-         array_unshift($trail_components, $page_compiled_target[0]);
-         array_unshift($compiled_targets, $page_compiled_target);
-
-         return [implode('.', $trail_components) => $compiled_targets];
      }
 
      /**

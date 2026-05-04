@@ -44,9 +44,6 @@ final class MatchedRoute {
          //permissions, roles and attributes to enforce on route
          public ?array $guards = null,
 
-         //layout components
-         public ?array $trail = null,
-
          //the prefix the url came with
          public ?string $prefix = null,
 

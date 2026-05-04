@@ -13,6 +13,8 @@ use SaQle\Core\Support\{
      AppContext,
      AppStage
 };
+use SaQle\Http\Request\Execution\ActionExecutor;
+use SaQle\Core\Registries\ComponentRegistry;
 
 class Runtime {
 
@@ -20,16 +22,16 @@ class Runtime {
          return AppContext::get();
      }
 
-     private function bootstrap_request(Request $request) : HttpMessage {
+     private function bootstrap_request(Request $request) : ?HttpMessage {
          date_default_timezone_set(config('app.timezone'));
          return (new MiddlewareGroup())->handle_incoming($request, null);
      }
 
-     private function bootstrap_response(Request $request, Response $response) : HttpMessage {
+     private function bootstrap_response(Request $request, Response $response) : ?HttpMessage {
          return (new MiddlewareGroup())->handle_outgoing($request, $response);
      }
 
-     private function resolve_response(Request $request, ?HttpMessage $result = null) : Response {
+     private function resolve_response(Request $request, HttpMessage $result) : Response {
          return (new ResponseResolver())->resolve($request, $result);
      }
 
@@ -39,7 +41,7 @@ class Runtime {
          $e->get_http_message() : 
          new HttpMessage(HttpMessage::INTERNAL_SERVER_ERROR, $e->getTrace(), $e->getMessage());
 
-         /**
+         /** 
           * Log the exception to file
           * 
           * Only when error logging is set to true in error config or
@@ -95,10 +97,46 @@ class Runtime {
      }
 
      private function short_circuit_response($request, $http_message){
+
+         //mark request for redirect
          $response = $this->resolve_response($request, $http_message);
          $response->send();
 
          $this->app()->set_stage(AppStage::TERMINATED);
+     }
+
+     private function execute_controller($request) : HttpMessage {
+
+         /**
+          * If this is a post, put, patch or delete request,
+          * no aggregation should happen.
+          * 
+          * Execute the target component/controller and return an http_message
+          * at once
+          * */
+         if($request->is_unsafe()){
+             return ActionExecutor::execute($request);
+         }
+
+         /**
+          * For get requests, do aggregate
+          * only if required
+          * */
+         $aggregates = $request->route->layout ?? [];
+         $components = [];
+         foreach($aggregates as $name){
+             $components[] = ComponentRegistry::get_definition($name);
+         } 
+
+         $components[] = $request->route->compiled_target;
+         $aggregate_context = [];
+
+         foreach($components as $comp){
+             $http_message = ActionExecutor::execute($request, $comp->controller, $comp->method);
+             $aggregate_context = array_merge($aggregate_context, $http_message->data);
+         }
+
+         return ok($aggregate_context);
      }
 
      public function handle(Request $request){
@@ -118,7 +156,8 @@ class Runtime {
 
              //step 2: execute the controller action
              $this->app()->set_stage(AppStage::REQUEST_RESOLUTION);
-             $response = $this->resolve_response($request);
+             $http_message = $this->execute_controller($request);
+             $response = $this->resolve_response($request, $http_message);
 
              //step 3: run response middleware
              $this->app()->set_stage(AppStage::RESPONSE_BOOTSTRAP);
