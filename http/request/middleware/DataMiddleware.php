@@ -13,11 +13,11 @@ namespace SaQle\Http\Request\Middleware;
 
 use SaQle\Middleware\MiddlewareInterface;
 use SaQle\Core\Files\UploadedFile;
-use SaQle\Http\Response\HttpMessage;
+use SaQle\Http\Response\Message;
 
 class DataMiddleware implements MiddlewareInterface {
 
-     public function handle($request, $response = null) : ?HttpMessage {
+     public function handle($request, $response = null) : ?Message {
          $data = [];
 
          //1. Query parameters (GET)

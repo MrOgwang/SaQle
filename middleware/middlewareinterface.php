@@ -1,8 +1,8 @@
 <?php
 namespace SaQle\Middleware;
 
-use SaQle\Http\Response\HttpMessage;
+use SaQle\Http\Response\Message;
 
 interface MiddlewareInterface {
-	 public function handle($request, $response = null) : ?HttpMessage;
+	 public function handle($request, $response = null) : ?Message;
 }

@@ -7,7 +7,7 @@ use SaQle\Http\Response\ResponseResolver;
 use SaQle\Core\Exceptions\Abstracts\FrameworkException;
 use SaQle\Http\Response\{
      Response, 
-     HttpMessage
+     Message
 };
 use SaQle\Core\Support\{
      AppContext,
@@ -22,16 +22,16 @@ class Runtime {
          return AppContext::get();
      }
 
-     private function bootstrap_request(Request $request) : ?HttpMessage {
+     private function bootstrap_request(Request $request) : ?Message {
          date_default_timezone_set(config('app.timezone'));
          return (new MiddlewareGroup())->handle_incoming($request, null);
      }
 
-     private function bootstrap_response(Request $request, Response $response) : ?HttpMessage {
+     private function bootstrap_response(Request $request, Response $response) : ?Message {
          return (new MiddlewareGroup())->handle_outgoing($request, $response);
      }
 
-     private function resolve_response(Request $request, HttpMessage $result) : Response {
+     private function resolve_response(Request $request, Message $result) : Response {
          return (new ResponseResolver())->resolve($request, $result);
      }
 
@@ -39,7 +39,7 @@ class Runtime {
 
          $http_message = $e instanceof FrameworkException ? 
          $e->get_http_message() : 
-         new HttpMessage(HttpMessage::INTERNAL_SERVER_ERROR, $e->getTrace(), $e->getMessage());
+         new Message(Message::INTERNAL_SERVER_ERROR, $e->getTrace(), $e->getMessage());
 
          /** 
           * Log the exception to file
@@ -105,7 +105,7 @@ class Runtime {
          $this->app()->set_stage(AppStage::TERMINATED);
      }
 
-     private function execute_controller($request) : HttpMessage {
+     private function execute_controller($request) : Message {
 
          /**
           * If this is a post, put, patch or delete request,

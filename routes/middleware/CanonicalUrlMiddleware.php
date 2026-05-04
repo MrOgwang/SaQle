@@ -18,7 +18,7 @@ namespace SaQle\Routes\Middleware;
 
 use SaQle\Middleware\MiddlewareInterface;
 use SaQle\Routes\Canonical\CanonicalUrlPolicy;
-use SaQle\Http\Response\HttpMessage;
+use SaQle\Http\Response\Message;
 
 final class CanonicalUrlMiddleware implements MiddlewareInterface {
 
@@ -28,7 +28,7 @@ final class CanonicalUrlMiddleware implements MiddlewareInterface {
          $this->policy = resolve(CanonicalUrlPolicy::class);
      }
 
-     public function handle($request, $response = null) : ?HttpMessage {
+     public function handle($request, $response = null) : ?Message {
 
          if($request->is_unsafe()){
              return null;

@@ -10,7 +10,7 @@ use SaQle\Core\Forms\{
      FormRuntimeContext, 
      AutoForm
 };
-use SaQle\Http\Response\HttpMessage;
+use SaQle\Http\Response\Message;
 use SaQle\Http\Request\Execution\ActionExecutor;
 use SaQle\Http\Request\Request;
 use SaQle\Core\Ui\{

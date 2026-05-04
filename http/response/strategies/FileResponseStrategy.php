@@ -5,7 +5,7 @@ namespace SaQle\Http\Response\Strategies;
 use SaQle\Http\Request\Request;
 use SaQle\Http\Response\{
      Response, 
-     HttpMessage
+     Message
 };
 use SaQle\Http\Response\Types\FileResponse;
 
@@ -15,7 +15,7 @@ final class FileResponseStrategy implements ResponseStrategy {
          return $request->expects_file();
      }
 
-     public function build(Request $request, HttpMessage $result) : Response {
+     public function build(Request $request, Message $result) : Response {
 
          return new FileResponse($result->data, $result->code);
          

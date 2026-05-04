@@ -5,7 +5,7 @@ use SaQle\Middleware\MiddlewareInterface;
 use SaQle\Http\Request\Request;
 use SaQle\Http\Response\{
      Response, 
-     HttpMessage
+     Message
 };
 use SaQle\Routes\Middleware\RoutingMiddleware;
 use SaQle\Http\Request\Middleware\ResponseTypeMiddleware;
@@ -14,7 +14,7 @@ use SaQle\Auth\Middleware\AuthenticationMiddleware;
 
 class MiddlewareGroup {
 
-     public function handle_incoming(Request $request, ?Response $response = null): ?HttpMessage {
+     public function handle_incoming(Request $request, ?Response $response = null): ?Message {
          $pre_route = [
              AuthenticationMiddleware::class,
              RoutingMiddleware::class,
@@ -31,14 +31,14 @@ class MiddlewareGroup {
          return $this->run_middlewares($middleware, $request, $response);
      }
 
-     public function handle_outgoing(Request $request, ?Response $response = null): ?HttpMessage {
+     public function handle_outgoing(Request $request, ?Response $response = null): ?Message {
 
          $middleware = app()->middleware->get_response_middleware($request);
 
          return $this->run_middlewares($middleware, $request, $response);
      }
 
-     protected function run_middlewares(array $middlewares, Request $request, ?Response $response = null) : ?HttpMessage {
+     protected function run_middlewares(array $middlewares, Request $request, ?Response $response = null) : ?Message {
          if(!$middlewares){
              return null;
          }

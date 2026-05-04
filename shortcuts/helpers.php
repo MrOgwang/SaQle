@@ -1,7 +1,7 @@
 <?php
 
 use SaQle\Log\FileLogger;
-use SaQle\Http\Response\HttpMessage;
+use SaQle\Http\Response\Message;
 use SaQle\Http\Response\Types\RedirectResponse;
 use SaQle\Http\Request\Data\Session;
 use SaQle\Core\Config\ConfigRepository;
@@ -105,7 +105,7 @@ if(!function_exists('base_path')){
 }
 
 if(!function_exists('redirect')){
-     function redirect(?string $url = null, int $status = HttpMessage::FOUND, mixed $data = null, ?string $message = null){
+     function redirect(?string $url = null, int $status = Message::FOUND, mixed $data = null, ?string $message = null){
          return new RedirectResponse(url: $url, status: $status)->send();
      }
 }

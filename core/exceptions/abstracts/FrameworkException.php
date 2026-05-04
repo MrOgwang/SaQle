@@ -2,7 +2,7 @@
 
 namespace SaQle\Core\Exceptions\Abstracts;
 
-use SaQle\Http\Response\HttpMessage;
+use SaQle\Http\Response\Message;
 use SaQle\Core\Exceptions\ServerException;
 use Exception;
 use Throwable;
@@ -11,7 +11,7 @@ use Closure;
 abstract class FrameworkException extends Exception {
 
      //customize how to respond when this exception happens
-     protected ?HttpMessage $http_message = null;
+     protected ?Message $http_message = null;
 
      //array of key => value context data
      protected array $context = [];
@@ -29,7 +29,7 @@ abstract class FrameworkException extends Exception {
          
          $this->context = $context;
 
-         $this->http_message = new HttpMessage($this->getCode(), $this->get_context(), $this->getMessage());
+         $this->http_message = new Message($this->getCode(), $this->get_context(), $this->getMessage());
      }
 
      public function get_context() : array {
@@ -45,8 +45,8 @@ abstract class FrameworkException extends Exception {
          if($response){
              $this->http_message = $response($this->http_message);
 
-             if(!$this->http_message instanceof HttpMessage){
-                 throw new ServerException("The response callback to ".$this::class.":throw() does not return a HttpMessage instance!");
+             if(!$this->http_message instanceof Message){
+                 throw new ServerException("The response callback to ".$this::class.":throw() does not return a Message instance!");
              }
          }
 

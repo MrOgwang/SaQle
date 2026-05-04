@@ -17,12 +17,12 @@
 namespace SaQle\Http\Cors\Middlewares;
 
 use SaQle\Middleware\MiddlewareInterface;
-use SaQle\Http\Response\HttpMessage;
+use SaQle\Http\Response\Message;
 use SaQle\App;
 
 class CorsMiddleware implements MiddlewareInterface {
 
-      public function handle($request, $response = null) : ?HttpMessage {
+      public function handle($request, $response = null) : ?Message {
            $app         = app();
            $origins     = $app->cors->get_origins();
            $headers     = $app->cors->get_headers();

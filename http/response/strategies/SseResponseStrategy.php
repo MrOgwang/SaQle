@@ -5,7 +5,7 @@ namespace SaQle\Http\Response\Strategies;
 use SaQle\Http\Request\Request;
 use SaQle\Http\Response\{
      Response, 
-     HttpMessage
+     Message
 };
 use SaQle\Http\Response\Types\SseResponse;
 
@@ -15,11 +15,11 @@ final class SseResponseStrategy implements ResponseStrategy {
          return $request->expects_sse();
      }
 
-     public function build(Request $request, HttpMessage $result) : Response {
+     public function build(Request $request, Message $result) : Response {
          return new SseResponse(fn() => $this->stream($request, $result));
      }
 
-     private function stream(Request $request, HttpMessage $result): void {
+     private function stream(Request $request, Message $result): void {
 
          $event_id = 0;
          $event = "message";

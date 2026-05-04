@@ -5,12 +5,12 @@ namespace SaQle\Http\Request\Execution;
 use Throwable;
 use ReflectionMethod;
 use SaQle\Http\Request\Request;
-use SaQle\Http\Response\HttpMessage;
+use SaQle\Http\Response\Message;
 use SaQle\Core\Support\Allow;
 
 final class ActionExecutor {
 
-     public static function execute(Request $request, ?string $controller = null, ?string $method = null): HttpMessage {
+     public static function execute(Request $request, ?string $controller = null, ?string $method = null): Message {
 
          if(!$controller || !$method){
              $controller = $request->route->compiled_target->controller;
@@ -37,7 +37,7 @@ final class ActionExecutor {
 
              $result = $reflection_method->invokeArgs($instance, array_values($args));
 
-             return $result instanceof HttpMessage ? $result : ok($result);
+             return $result instanceof Message ? $result : ok($result);
 
          }catch(Throwable $e){
              throw $e;

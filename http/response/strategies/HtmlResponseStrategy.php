@@ -5,7 +5,7 @@ namespace SaQle\Http\Response\Strategies;
 use SaQle\Http\Request\Request;
 use SaQle\Http\Response\{
      Response, 
-     HttpMessage
+     Message
 };
 use SaQle\Http\Response\Types\{
      HtmlResponse
@@ -51,7 +51,7 @@ final class HtmlResponseStrategy implements ResponseStrategy {
          return $context;
      }
 
-     public function build(Request $request, HttpMessage $result) : Response {
+     public function build(Request $request, Message $result) : Response {
 
          $target_component = $request->route->compiled_target->name;
          $target_action = $request->route->compiled_target->method ?? null;

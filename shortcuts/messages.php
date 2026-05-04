@@ -1,7 +1,7 @@
 <?php
 
 use SaQle\Core\FeedBack\FeedBack;
-use SaQle\Http\Response\HttpMessage;
+use SaQle\Http\Response\Message;
 
 /**
  * The following are shortcuts to http message responses/feedback
@@ -9,7 +9,7 @@ use SaQle\Http\Response\HttpMessage;
 function create_feedback(int $code, mixed $data = null, string $message = '', string $action = ''){
      $fb = new FeedBack();
      $fb->set($code, $data, $message, $action);
-     return HttpMessage::from_feedback($fb);
+     return Message::from_feedback($fb);
 }
 
 if(!function_exists('processing')){

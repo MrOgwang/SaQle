@@ -14,7 +14,7 @@ use RuntimeException;
 
 final class ResponseResolver {
 
-     public function resolve(Request $request, HttpMessage $result) : Response {
+     public function resolve(Request $request, Message $result) : Response {
 
          $response_strategies = [
              new SseResponseStrategy(),

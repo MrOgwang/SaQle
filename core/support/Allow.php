@@ -12,7 +12,7 @@ namespace SaQle\Core\Support;
 
 use Attribute;
 use Exception;
-use SaQle\Http\Response\HttpMessage;
+use SaQle\Http\Response\Message;
 use SaQle\Auth\Exceptions\AuthorizationException;
 
 #[Attribute(Attribute::TARGET_METHOD)]

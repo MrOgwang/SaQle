@@ -2,11 +2,11 @@
 namespace SaQle\Session\Middleware;
 
 use SaQle\Middleware\MiddlewareInterface;
-use SaQle\Http\Response\HttpMessage;
+use SaQle\Http\Response\Message;
 
 class SessionMiddleware implements MiddlewareInterface {
 
-     public function handle($request, $response = null) : ?HttpMessage {
+     public function handle($request, $response = null) : ?Message {
          
          if($request->is_web_request()){
              if(session_status() === PHP_SESSION_NONE){

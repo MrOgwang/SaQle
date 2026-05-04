@@ -4,13 +4,13 @@ namespace SaQle\Auth\Middleware;
 use SaQle\Middleware\MiddlewareInterface;
 use SaQle\Auth\Guards\AuthorizationEvaluator;
 use SaQle\Auth\Exceptions\AuthorizationException;
-use SaQle\Http\Response\HttpMessage;
+use SaQle\Http\Response\Message;
 /**
 * This middleware checks that all permissions defined on a controller are met.
 */
 class AuthorizationMiddleware implements MiddlewareInterface {
      
-      public function handle($request, $response = null) : ?HttpMessage {
+      public function handle($request, $response = null) : ?Message {
 
          $result = AuthorizationEvaluator::authorize($request->route->guards ?? []);
 

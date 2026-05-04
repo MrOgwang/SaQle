@@ -20,7 +20,7 @@ namespace SaQle\Http\Response;
 
 use SaQle\Core\FeedBack\FeedBack;
 
-class HttpMessage extends FeedBack {
+class Message extends FeedBack {
 
 	 private ?string $_redirect_to = null;
      private bool    $_should_log = false;

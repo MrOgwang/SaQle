@@ -5,7 +5,7 @@ namespace SaQle\Http\Response\Strategies;
 use SaQle\Http\Request\Request;
 use SaQle\Http\Response\{
      Response, 
-     HttpMessage
+     Message
 };
 use SaQle\Http\Response\Types\JsonResponse;
 
@@ -15,7 +15,7 @@ final class JsonResponseStrategy implements ResponseStrategy {
          return $request->expects_json();
      }
 
-     public function build(Request $request, HttpMessage $result) : Response {
+     public function build(Request $request, Message $result) : Response {
 
          return new JsonResponse(
              $result->data, 

@@ -28,11 +28,11 @@ use SaQle\Core\Exceptions\Http\NotAcceptableException;
 use SaQle\Core\Components\ComponentDefinition;
 use SaQle\Http\Request\RequestScope;
 use SaQle\Http\Response\ResponseType;
-use SaQle\Http\Response\HttpMessage;
+use SaQle\Http\Response\Message;
 
 class RoutingMiddleware implements MiddlewareInterface {
      
-     public function handle($request, $response = null) : ?HttpMessage {
+     public function handle($request, $response = null) : ?Message {
          //find matching route
          $match = Router::find_matching_route($request->method(), $request->uri());
          

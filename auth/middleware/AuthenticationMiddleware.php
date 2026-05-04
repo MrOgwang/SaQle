@@ -16,7 +16,7 @@
  * */
 namespace SaQle\Auth\Middleware;
 
-use SaQle\Http\Response\HttpMessage;
+use SaQle\Http\Response\Message;
 use SaQle\Middleware\MiddlewareInterface;
 use SaQle\Auth\Services\AuthenticationService;
 use SaQle\Core\Services\IService;
@@ -30,7 +30,7 @@ class AuthenticationMiddleware implements MiddlewareInterface {
          $this->auth_service = resolve(AuthenticationService::class);
      }
 
-     public function handle($request, $response = null) : ?HttpMessage {
+     public function handle($request, $response = null) : ?Message {
          
          $user = $this->auth_service->resolve_user();
 

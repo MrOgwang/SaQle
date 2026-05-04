@@ -2,13 +2,13 @@
 namespace SaQle\Http\Request\Middleware;
 
 use SaQle\Middleware\MiddlewareInterface;
-use SaQle\Http\Response\HttpMessage;
+use SaQle\Http\Response\Message;
 
 class CsrfMiddleware implements MiddlewareInterface {
 
      private static string $token_key = 'csrf_token';
      
-     public function handle($request, $response = null) : ?HttpMessage {
+     public function handle($request, $response = null) : ?Message {
 
          //Generate CSRF token if not set
          $token_key = CsrfMiddleware::get_token_key();
