@@ -10,14 +10,13 @@ class ComponentTreeBuilder {
      * Builds a linear component tree where each component
      * is the parent of the one to its right.
      *
-     * @param string   $leaf_component
      * @param string[] $wrappers
      *
      * @return ComponentNode  Root (top-most) component node
      */
-     public function build(string $leaf_component, array $wrappers) : ComponentNode {
+     public function build(array $component_names) : ComponentNode {
          // 1. Normalize input into a single ordered list
-         $component_names = array_values(array_merge($wrappers, [$leaf_component]));
+         $component_names = array_values($component_names);
 
          if(empty($component_names)){
              throw new LogicException('Cannot build component tree from empty input.');

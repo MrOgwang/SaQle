@@ -16,7 +16,7 @@ final class ActionExecutor {
              $controller = $request->route->compiled_target->controller;
              $method = $request->route->compiled_target->method;
              if(!$controller || !$method){
-                 return ok();
+                 return Message::ok();
              }
          } 
          
@@ -37,7 +37,7 @@ final class ActionExecutor {
 
              $result = $reflection_method->invokeArgs($instance, array_values($args));
 
-             return $result instanceof Message ? $result : ok($result);
+             return $result instanceof Message ? $result : Message::ok($result);
 
          }catch(Throwable $e){
              throw $e;

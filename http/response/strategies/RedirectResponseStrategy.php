@@ -10,12 +10,8 @@ use SaQle\Http\Response\{
 use SaQle\Http\Response\Types\RedirectResponse;
 
 final class RedirectResponseStrategy implements ResponseStrategy {
-
-     public function supports(Request $request): bool {
-         return $request->expects_redirect();
-     }
-
+    
      public function build(Request $request, Message $result) : Response {
-         return new RedirectResponse($result->redirect_to());
+         return new RedirectResponse((string)$result->data);
      }
 }

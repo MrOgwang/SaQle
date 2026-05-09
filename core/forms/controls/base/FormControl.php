@@ -48,7 +48,7 @@ abstract class FormControl implements IFormControl{
          $ref  = new ReflectionObject($this);
 
          foreach ($ref->getProperties() as $prop) {
-             $prop->setAccessible(true);
+             //$prop->setAccessible(true);
              $name  = $prop->getName();
              $value = $prop->getValue($this);
 

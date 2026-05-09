@@ -205,7 +205,7 @@ class Field implements IField {
 	             continue;
 	         }
 
-	         $property->setAccessible(true);
+	         //$property->setAccessible(true);
 
 	         $attribute_instance = $attributes[0]->newInstance();
 

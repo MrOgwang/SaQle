@@ -10,7 +10,7 @@ class ApplyCorsHeadersMiddleware implements MiddlewareInterface {
 
      public function handle($request, $response = null): ?Message {
 
-         $cors_headers = $request->attributes->get('cors_headers');
+         $cors_headers = $request->attributes->get('cors_headers', []);
          $response->headers($cors_headers);
 
          return null;

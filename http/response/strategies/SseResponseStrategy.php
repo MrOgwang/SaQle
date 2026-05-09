@@ -10,11 +10,7 @@ use SaQle\Http\Response\{
 use SaQle\Http\Response\Types\SseResponse;
 
 final class SseResponseStrategy implements ResponseStrategy {
-
-     public function supports(Request $request): bool {
-         return $request->expects_sse();
-     }
-
+    
      public function build(Request $request, Message $result) : Response {
          return new SseResponse(fn() => $this->stream($request, $result));
      }

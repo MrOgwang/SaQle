@@ -39,6 +39,6 @@ final class CanonicalUrlMiddleware implements MiddlewareInterface {
              return null;
          }
 
-         return redirect($redirect->location, $redirect->status);
+         return Message::redirect($redirect->location)->permanently();
      }
 }

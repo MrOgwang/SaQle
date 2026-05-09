@@ -3,7 +3,6 @@
 use SaQle\Core\Exceptions\Http\{
      BadRequestException, 
      PaymentRequiredException, 
-     ForbiddenException, 
      MethodNotAllowedException, 
      NotAcceptableException, 
      RequestTimeoutException, 
@@ -51,12 +50,6 @@ if(!function_exists('authentication_exception')){
 if(!function_exists('payment_required_exception')){
      function payment_required_exception(string $message = '', mixed $data = null){
          return create_exception(PaymentRequiredException::class, $message, $data);
-     }
-}
-
-if(!function_exists('forbidden_exception')){
-     function forbidden_exception(string $message = '', mixed $data = null){
-         return create_exception(ForbiddenException::class, $message, $data);
      }
 }
 

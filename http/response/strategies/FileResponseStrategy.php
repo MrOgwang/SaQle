@@ -10,14 +10,10 @@ use SaQle\Http\Response\{
 use SaQle\Http\Response\Types\FileResponse;
 
 final class FileResponseStrategy implements ResponseStrategy {
-
-     public function supports(Request $request): bool {
-         return $request->expects_file();
-     }
-
+    
      public function build(Request $request, Message $result) : Response {
-
-         return new FileResponse($result->data, $result->code);
+        
+         return new FileResponse((array)$result->data ?? [], $result->code);
          
      }
 }

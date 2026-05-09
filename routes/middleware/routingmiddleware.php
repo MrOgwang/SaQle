@@ -81,6 +81,11 @@ class RoutingMiddleware implements MiddlewareInterface {
              $request->add_query_param($qk, $qv);
          }
 
+         //override negotiated response type
+         if($request->route->restype){
+             $request->responsetype = $request->route->restype;
+         }
+
          return null;
      }
 }

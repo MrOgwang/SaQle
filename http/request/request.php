@@ -232,14 +232,6 @@ class Request {
      public function expects_sse() : bool {
          return $this->responsetype === ResponseType::SSE;
      }
- 
-     public function expects_redirect() : bool {
-         return $this->responsetype === ResponseType::REDIRECT;
-     }
-
-     public function expects_file() : bool {
-         return $this->responsetype === ResponseType::FILE;
-     }
 
 
      public function session() : Session {

@@ -22,55 +22,60 @@ use SaQle\App;
 
 class CorsMiddleware implements MiddlewareInterface {
 
-      public function handle($request, $response = null) : ?Message {
-           $app         = app();
-           $origins     = $app->cors->get_origins();
-           $headers     = $app->cors->get_headers();
-           $methods     = $app->cors->get_methods();
-           $credentials = $app->cors->allows_credentials();
+     public function handle($request, $response = null) : ?Message {
+         $app         = app();
+         $origins     = $app->cors->get_origins();
+         $headers     = $app->cors->get_headers();
+         $methods     = $app->cors->get_methods();
+         $credentials = $app->cors->allows_credentials();
 
-           $origin = $request->header('Origin') ?? '*';
+         $origin = $request->header('Origin');
 
-           //Determine allowed origin
-           $allowed_origin = null;
+         if(!$origin){
+             return null;
+         }
 
-           if(in_array('*', $origins)){
-                $allowed_origin = '*';
-           }elseif(in_array($origin, $origins)){
-                $allowed_origin = $origin;
-           }
-           
-           if(!$allowed_origin){
-                return forbidden(message: 'CORS not allowed');
-           }
+         //Determine allowed origin
+         $allowed_origin = null;
 
-           //Build headers array
-           $cors_headers = [];
+         if(in_array('*', $origins)){
+             $allowed_origin = $credentials ? $origin : '*';
+         }elseif(in_array($origin, $origins)){
+             $allowed_origin = $origin;
+         }
+       
+         if(!$allowed_origin){
+             return null;
+         }
 
-           if($allowed_origin){
-                $cors_headers['Access-Control-Allow-Origin'] = $allowed_origin;
-           }
+         $cors_headers = [
+             'Access-Control-Allow-Origin'  => $allowed_origin,
+             'Access-Control-Allow-Methods' => implode(', ', $methods),
+             'Vary'                         => 'Origin',
+         ];
 
-           $cors_headers['Access-Control-Allow-Methods'] = implode(', ', $methods);
+         $req_headers = $request->header('Access-Control-Request-Headers');
 
-           if(in_array('*', $headers)){
-                $cors_headers['Access-Control-Allow-Headers'] = '*';
-           }else{
-                $cors_headers['Access-Control-Allow-Headers'] = implode(', ', $headers);
-           }
+         if(in_array('*', $headers) && $req_headers){
+             $cors_headers['Access-Control-Allow-Headers'] = $req_headers;
+         }else{
+             $cors_headers['Access-Control-Allow-Headers'] = implode(', ', $headers);
+         }
 
-           if($credentials){
-                $cors_headers['Access-Control-Allow-Credentials'] = 'true';
-           }
+         if($credentials){
+             $cors_headers['Access-Control-Allow-Credentials'] = 'true';
+         }
 
-           //short circuit for preflight
-           if($request->method() === 'OPTIONS'){
-                return no_content();
-           }
+         $cors_headers['Access-Control-Max-Age'] = '86400';
 
-           //For normal requests → attach headers later (response middleware phase)
-           $request->attributes->set('cors_headers', $cors_headers);
+         $request->attributes->set('cors_headers', $cors_headers);
 
-           return null;
-      }
+         if($request->method() === 'OPTIONS'){
+             return no_content();
+         }
+
+         //Headers will be attached to response later (response middleware phase)
+         
+         return null;
+     }
 }

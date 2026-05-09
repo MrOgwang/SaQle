@@ -7,7 +7,10 @@ use SaQle\Http\Response\ResponseResolver;
 use SaQle\Core\Exceptions\Abstracts\FrameworkException;
 use SaQle\Http\Response\{
      Response, 
-     Message
+     Message,
+     RedirectMessage,
+     FileMessage,
+     ResponseType
 };
 use SaQle\Core\Support\{
      AppContext,
@@ -32,6 +35,17 @@ class Runtime {
      }
 
      private function resolve_response(Request $request, Message $result) : Response {
+
+         /**
+          * Flash results to session:
+          * 
+          * Don't flash for requests that expect a json response
+          * or non redirect results
+          * */
+         if($request->expects_html() && $result instanceof RedirectMessage && $result->should_flash()){
+
+         }
+
          return (new ResponseResolver())->resolve($request, $result);
      }
 
@@ -49,7 +63,7 @@ class Runtime {
           * 
           * NOTE: In the future one flag must be able to override the other
           * */
-         if($http_message->should_log() || config('error.should_log')){
+         if(config('error.should_log')){
              log_to_file($e);
          }
 
@@ -59,7 +73,7 @@ class Runtime {
           * Only when flash was explicitly requested or 
           * request is unsafe: (PUT, POST, PATCH, DELETE)
           * */
-         if($http_message->should_flash() || $request->is_unsafe()){
+         if($request->is_unsafe()){
              $request->session->set('flash', (object)[
                  'message' => $http_message->message,
                  'context' => $http_message->data,
@@ -74,7 +88,7 @@ class Runtime {
           * reload same page after flashing
           * */
          if($request->is_unsafe()){
-             $http_message->with_reload();
+             
          } 
 
          /*$stage = $this->app()->get_stage();
@@ -97,15 +111,26 @@ class Runtime {
      }
 
      private function short_circuit_response($request, $http_message){
-
-         //mark request for redirect
          $response = $this->resolve_response($request, $http_message);
          $response->send();
-
-         $this->app()->set_stage(AppStage::TERMINATED);
      }
 
      private function execute_controller($request) : Message {
+
+         /**
+          * Two or more controllers can be executed in one request lifecycle,
+          * this is called aggregation. Aggregation works differently for API
+          * and WEB requests.
+          * 
+          * For web requests, aggregation combines view and context data from
+          * different components to form the final layout that will be sent back
+          * to client.
+          * 
+          * For APIs, aggregation can collect results from different controllers
+          * and return a combined result. 
+          * */
+
+         //execute the target controller first.
 
          /**
           * If this is a post, put, patch or delete request,
@@ -119,24 +144,27 @@ class Runtime {
          }
 
          /**
-          * For get requests, do aggregate
-          * only if required
+          * For get requests, do aggregates only if target
+          * result is not a redirect or file
           * */
-         $aggregates = $request->route->layout ?? [];
          $components = [];
-         foreach($aggregates as $name){
-             $components[] = ComponentRegistry::get_definition($name);
-         } 
-
+         foreach($request->route->layout ?? [] as $c){
+             $components[] = ComponentRegistry::get_definition($c);
+         }
          $components[] = $request->route->compiled_target;
-         $aggregate_context = [];
+         $components = array_reverse($components);
 
+         $aggregate_context = [];
          foreach($components as $comp){
              $http_message = ActionExecutor::execute($request, $comp->controller, $comp->method);
-             $aggregate_context = array_merge($aggregate_context, $http_message->data);
+             if($http_message instanceof FileMessage || $http_message instanceof RedirectMessage){
+                 return $http_message;
+             }
+
+             $aggregate_context = array_merge($aggregate_context, $http_message->data ?? []);
          }
 
-         return ok($aggregate_context);
+         return Message::ok($aggregate_context);
      }
 
      public function handle(Request $request){
@@ -145,18 +173,15 @@ class Runtime {
              //step 1: run request middleware
              $this->app()->set_stage(AppStage::REQUEST_BOOTSTRAP);
              $http_message = $this->bootstrap_request($request);
-             /**
-              * If request middleware returns an http_message,
-              * short circuit the request flow immediatly
-              * */
              if($http_message){
                  $this->short_circuit_response($request, $http_message);
                  return;
-             }
+             } 
 
              //step 2: execute the controller action
              $this->app()->set_stage(AppStage::REQUEST_RESOLUTION);
-             $http_message = $this->execute_controller($request);
+             //$http_message = $this->execute_controller($request);
+             $http_message = ActionExecutor::execute($request);
              $response = $this->resolve_response($request, $http_message);
 
              //step 3: run response middleware

@@ -173,7 +173,7 @@ class FeedBack {
 	        
 	         500 => 'Internal Server Error',
 	         501 => 'Method not implemented',
-	         502 => 'Bad gateway'
+	         502 => 'Bad gateway',
 	         503 => 'Service Unavailable',
 	         504 => 'Gateway timeout',
 	         505 => 'Unsupported http version',

@@ -44,35 +44,44 @@ class ComponentRenderer {
      }
 
      public function render(ComponentNode $node, array $context = [], array $props = []): string {
-         
+
          //1. activate node
          $node->active = true;
 
-         //2. assign context
-         $node->context = new ComponentContext($context);
+         /**
+          * 2. execute node controller to acquire context
+          * Assumption:(Must be relooked at later)
+          * 
+          * If node has children, its not the target node, therefore
+          * execute controller.
+          * */
+         if($node->children){
+             $http_message = ActionExecutor::execute($this->request, $node->def->controller, $node->def->method);
+             $context = array_merge($context, $http_message->data ?? []);
+         }
 
-         //3. Register component assets
+         //2. Register component assets
          $css = $node->def->css();
          $js = $node->def->js();
          
          AssetManager::add_css($css);
          AssetManager::add_js($js);
 
-         //4. Render compiled view
+         //3. Render compiled view
          $view = new View($node->def->template_path);
-         $view->set_context($node->context->expose());
+         $view->set_context($context);
          $html = $view->render();
 
-         //5. Resolve dynamic slot
-         $html = $this->inject_dynamic($html, $node);
+         //4. Resolve dynamic slot
+         $html = $this->inject_dynamic($html, $node, $context);
 
-         //6. Resolve inline components
-         $html = $this->inject_inline_components($html, $node);
+         //5. Resolve inline components
+         $html = $this->inject_inline_components($html, $node, $context);
 
          return $html;
      }
 
-     private function inject_dynamic(string $html, ComponentNode $node): string {
+     private function inject_dynamic(string $html, ComponentNode $node, array $context): string {
          // Match <component:slot />, allowing arbitrary whitespace
          $pattern = '/<component:slot\s*\/>/i';
 
@@ -90,7 +99,7 @@ class ComponentRenderer {
          }
 
          //Render the child using the parent context
-         $rendered = $this->render($child, $node->context->expose());
+         $rendered = $this->render($child, $context);
 
          //Replace the FIRST occurrence only
          return preg_replace($pattern, $rendered, $html, 1);
@@ -107,7 +116,7 @@ class ComponentRenderer {
          return $attrs;
      }
 
-     private function inject_inline_components(string $html, ComponentNode $node): string {
+     private function inject_inline_components(string $html, ComponentNode $node, array $context): string {
 
          $pattern = '/<component:(block|form)\s+([^\/]+)\s*\/>/i';
 
@@ -138,7 +147,7 @@ class ComponentRenderer {
                  $child = new ComponentNode($def);
                  $child->parent = $node;
 
-                 return $this->render($child, $node->context->expose(), $attrs);
+                 return $this->render($child, $context, $attrs);
              }
 
              if($type === 'form') {

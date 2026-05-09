@@ -7,6 +7,4 @@ enum ResponseType : string {
      case XML  = "xml";
      case TEXT = "text";
      case SSE  = "sse";
-     case FILE = "file";
-     case REDIRECT = "redirect";
 }

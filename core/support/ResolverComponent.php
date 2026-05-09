@@ -2,15 +2,17 @@
 
 namespace SaQle\Core\Support;
 
+use SaQle\Http\Response\Message;
+
 abstract class ResolverComponent {
 	
 	 abstract public function get_component() : string;
 
 	 public function get() {
-	 	 return ok();
+	 	 return Message::ok();
 	 }
 
 	 public function post(){
-	 	return ok();
+	 	return Message::ok();
 	 }
 }

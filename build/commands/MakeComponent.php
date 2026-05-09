@@ -54,9 +54,11 @@ final class MakeComponent {
 
 namespace {$namespace};
 
+use SaQle\Http\Response\Message;
+
 class {$class} {
      public function get() {
-        return ok([]);
+        return Message::ok();
      }
 }
 

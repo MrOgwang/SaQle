@@ -44,7 +44,6 @@ class SmtpTransport implements TransportInterface {
 
             return $this->mailer->send();
         }catch (Exception $e){
-            log_to_file($e->getMessage());
             //logger('mail')->error($e->getMessage());
             return false;
         }

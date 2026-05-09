@@ -16,10 +16,10 @@ class MiddlewareGroup {
 
      public function handle_incoming(Request $request, ?Response $response = null): ?Message {
          $pre_route = [
+             ResponseTypeMiddleware::class,
              AuthenticationMiddleware::class,
              RoutingMiddleware::class,
-             SessionMiddleware::class,
-             ResponseTypeMiddleware::class
+             SessionMiddleware::class
          ];
          
          $http_message = $this->run_middlewares($pre_route, $request, $response);

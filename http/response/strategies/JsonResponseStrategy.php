@@ -10,11 +10,7 @@ use SaQle\Http\Response\{
 use SaQle\Http\Response\Types\JsonResponse;
 
 final class JsonResponseStrategy implements ResponseStrategy {
-
-     public function supports(Request $request): bool {
-         return $request->expects_json();
-     }
-
+    
      public function build(Request $request, Message $result) : Response {
 
          return new JsonResponse(

@@ -26,7 +26,7 @@ class CsrfMiddleware implements MiddlewareInterface {
          $submitted_token = $request->data->get($token_key, $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '');
 
          if(!$submitted_token || $submitted_token !== $token){
-             authorization_exception('CSRF token validation failed')->throw();
+             throw authorization_exception('CSRF token validation failed');
          }
 
          return null;

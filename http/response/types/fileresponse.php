@@ -18,7 +18,7 @@ final class FileResponse extends Response {
      protected function send_content() : void {
 
          $path = $this->file_info['path'];
-
+         
          if(!is_file($path)){
              throw new RuntimeException('File not found.');
          }

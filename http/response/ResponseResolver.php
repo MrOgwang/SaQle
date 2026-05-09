@@ -10,26 +10,35 @@ use SaQle\Http\Response\Strategies\{
      FileResponseStrategy,
      RedirectResponseStrategy
 };
+use SaQle\Http\Response\{
+     RedirectMessage,
+     FileMessage,
+     ResponseType
+};
 use RuntimeException;
 
 final class ResponseResolver {
 
      public function resolve(Request $request, Message $result) : Response {
+        
+         $strategy = null;
 
-         $response_strategies = [
-             new SseResponseStrategy(),
-             new JsonResponseStrategy(),
-             new FileResponseStrategy(),
-             new HtmlResponseStrategy(),
-             new RedirectResponseStrategy()
-         ];
-
-         foreach($response_strategies as $strategy){
-             if($strategy->supports($request)){
-                 return $strategy->build($request, $result);
-             }
+         if($result instanceof RedirectMessage){
+             $strategy = new RedirectResponseStrategy();
+         }elseif($result instanceof FileMessage){
+             $strategy = new FileResponseStrategy();
+         }else{
+             $strategy = match($request->responsetype){
+                 ResponseType::JSON => new JsonResponseStrategy(),
+                 ResponseType::SSE  => new SseResponseStrategy(),
+                 ResponseType::HTML => new HtmlResponseStrategy()
+             };
          }
 
-         throw new RuntimeException('No response strategy matched');
+         if(!$strategy){
+             throw new RuntimeException('No response strategy matched the request!');
+         }
+
+         return $strategy->build($request, $result);
      }
 }

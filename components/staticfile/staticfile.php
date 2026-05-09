@@ -2,6 +2,7 @@
 namespace SaQle\Components\StaticFile;
 
 use SaQle\Core\Files\Storage\StorageFactory;
+use SaQle\Http\Response\Message;
 
 class StaticFile {
 
@@ -34,8 +35,8 @@ class StaticFile {
          if($path === false || !str_starts_with($path, $base_dir) || !is_file($path)){
              throw not_found_exception();
          }
-
-         return ok([
+         
+         return Message::file([
              'size' => filesize($path),
              'mime' => $allowed_types[$type],
              'inline' => false,

@@ -5,7 +5,8 @@ namespace SaQle\Http\Response\Strategies;
 use SaQle\Http\Request\Request;
 use SaQle\Http\Response\{
      Response, 
-     Message
+     Message,
+     SuccessMessage
 };
 use SaQle\Http\Response\Types\{
      HtmlResponse
@@ -18,13 +19,10 @@ use SaQle\Core\Ui\Template;
 use SaQle\Http\Request\Middleware\CsrfMiddleware;
 use SaQle\Auth\Models\GuestUser;
 use SaQle\Http\Request\Execution\ActionExecutor;
+use SaQle\Core\Support\AppStage;
 
 final class HtmlResponseStrategy implements ResponseStrategy {
-
-     public function supports(Request $request): bool {
-         return $request->expects_html();
-     }
-
+    
      private function prepare_context(Request $request) : array {
          $context = [];
 
@@ -51,20 +49,63 @@ final class HtmlResponseStrategy implements ResponseStrategy {
          return $context;
      }
 
+     private function get_layout(Request $request, Message $result) : array {
+
+         /**
+          * The happy path:
+          * 
+          * 1. We have a route
+          * 2. The app stage is AppStage::REQUEST_RESOLUTION
+          * 2. The result is a SuccessMessage
+          * */
+         if(app()->is_stage(AppStage::REQUEST_RESOLUTION) && $result instanceof SuccessMessage && $request->route){
+             $target_component = $request->route->compiled_target->name;
+             $target_action = $request->route->compiled_target->method ?? null;
+             $leaf_component = $target_action ? $target_component."@".$target_action : $target_component;
+             $layout = $request->route->layout ?? [];
+
+             return array_merge($layout, [$leaf_component]);
+         }
+
+         /**
+          * If request hasn't reached resolution stage,
+          * it means there was a short circuting at the request middleware
+          * stage.
+          * 
+          * Therefore the result will be treated as a error result
+          * no matter what it is.
+          * 
+          * NOTE: Redirects are handled in RedirectResponseStrategy
+          * 
+          * */
+         if(!app()->is_stage(AppStage::REQUEST_RESOLUTION)){
+             return [config('error.component')."@get"];
+         }
+
+         /**
+          * The request has reached resolution stage.
+          * 
+          * Assumptions
+          * 1. A route exists: unless the developer was crazy and nullified the matched route
+          *    in a middleware.
+          * 2. The result is a fail result. If it were a success result,
+          *    the happy path would have caught it
+          * 3. The fail came from executing the controller method.
+          * */
+         return array_merge($request->route->layout ?? [], [config('error.component')."@get"]);
+     }
+
      public function build(Request $request, Message $result) : Response {
 
-         $target_component = $request->route->compiled_target->name;
-         $target_action = $request->route->compiled_target->method ?? null;
-         $leaf_component = $target_action ? $target_component."@".$target_action : $target_component;
-         $layout = $request->route->layout ?? [];
-         
-         $tree = new ComponentTreeBuilder()->build($leaf_component, $layout);
+         $tree = new ComponentTreeBuilder()->build($this->get_layout($request, $result));
 
          $renderer = new ComponentRenderer($request);
-         $html = $renderer->render(
-             $tree, 
-             array_merge($this->prepare_context($request), $result->data)
-         );
+         $context = array_merge($this->prepare_context($request), $result->data ?? []);
+         if(!$result instanceof SuccessMessage){
+             $context['code'] = $result->code;
+             $context['message'] = $result->message;
+         }
+         $html = $renderer->render($tree, $context);
 
          $html = $renderer->wrap_root($html);
 
