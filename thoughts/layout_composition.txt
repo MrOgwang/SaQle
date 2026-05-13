@@ -1,0 +1,39 @@
+
+---------------------------------------------------------------------------------------------
+
+Components
+
+The framework has to be component based. A component is logical
+grouping of a php controller, an html template, and associated asset files(css, js, fonts and images)
+
+controller - provides the context data to be used with the template
+template   - provides the layout structure in html
+
+A component may have a controller, a template or both. But one has to exist.
+
+Component templates exist independently and do not know about the existance of other component templates
+either via extends or inherits tags. 
+
+A component template is made of blocks and slots. A slot is the child of a template, and only one can exist. Blocks
+are more of building parts of a template and many can exist.
+
+
+Question: So how does the layout get composed if templates don't know each other
+
+-------------------------------------------------------------------------------------------------
+
+Layout Composition
+
+The route knows the kind of layout it needs, so the layout will be defined on the route. 
+
+The route should only list a hierarchical parent -> child list of all components (fill in the slots from parent to child) to be combined to form the final layout. 
+
+The route must not worry about the blocks defined in the templates.
+
+Problem: In a normal request, only one controller should be executed. But having components that
+get their context from controllers means that a layout composed of many components will have many
+controllers being executed.
+
+Solution: The normal request flow must only execute the target components controller. Any other 
+components participating in the layout, even though their controllers will execute to provide their
+context, they must run in a different context as compared to the target component.

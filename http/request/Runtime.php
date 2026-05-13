@@ -55,6 +55,10 @@ class Runtime {
          $e->get_http_message() : 
          new Message(Message::INTERNAL_SERVER_ERROR, $e->getTrace(), $e->getMessage());
 
+         $request->attributes->set('error.code', $http_message->code);
+         $request->attributes->set('error.message', $http_message->message);
+         $request->attributes->set('error.context', $http_message->data);
+
          /** 
           * Log the exception to file
           * 
@@ -111,6 +115,11 @@ class Runtime {
      }
 
      private function short_circuit_response($request, $http_message){
+
+         $request->attributes->set('error.code', $http_message->code);
+         $request->attributes->set('error.message', $http_message->message);
+         $request->attributes->set('error.context', $http_message->data);
+
          $response = $this->resolve_response($request, $http_message);
          $response->send();
      }
@@ -208,6 +217,7 @@ class Runtime {
              $this->app()->set_stage(AppStage::TERMINATED);
 
          }catch(Throwable $e){
+             //print_r($e);
              $this->handle_exception($e, $request);
          }
      }

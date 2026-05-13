@@ -49,7 +49,7 @@ class ComponentDefinition {
          ];
      }
 
-     public function js(array &$loaded_components = []) : array {
+     private function get_assets(string $type, array &$loaded_components = []) : array {
          if(isset($loaded_components[$this->name])) {
              return [];
          }
@@ -59,24 +59,40 @@ class ComponentDefinition {
          $files = [];
 
          // 1. Resolve dependencies first
-         $deps = $this->get_dependencies()['js'];
+         $deps = $this->get_dependencies()[$type];
 
          foreach($deps as $dep){
-
+             /**
+              * Assets belonging to other components
+              * that are to be shared by this component
+              * */
              if(str_starts_with($dep, '@')){
                  $component_name = substr($dep, 1);
 
                  $component = ComponentRegistry::get_definition($component_name);
                  if($component){
-                     $files = array_merge($files, $component->js($loaded_components));
+                     $files = array_merge($files, $component->$type($loaded_components));
                  }
-             }else{
-                $files[] = path_join([config('base_path'), "public/static/js/", "{$dep}.js"]);
+             }
+             /**
+              * Assets living outside project.
+              * 
+              * Expects absolute urls
+              * */
+             elseif(str_starts_with($dep, '~')){
+                 $files[] = $dep;
+             }
+             /**
+              * Global assets living inside this
+              * project. 
+              * */
+             else{
+                 $files[] = path_join([config('base_path'), "public/static/{$type}/", "{$dep}.{$type}"]);
              }
          }
 
-         //2. Add this component's own JS
-         $file = "{$this->path}/{$this->name}.js";
+         //2. Add this component's own assets
+         $file = "{$this->path}/{$this->name}.{$type}";
 
          if(file_exists($file)){
              $files[] = $file;
@@ -85,40 +101,11 @@ class ComponentDefinition {
          return array_unique($files);
      }
 
+     public function js(array &$loaded_components = []) : array {
+         return $this->get_assets("js", $loaded_components);
+     }
+
      public function css(array &$loaded_components = []) : array {
-         if(isset($loaded_components[$this->name])){
-             return [];
-         }
-
-         $loaded_components[$this->name] = true;
-
-         $files = [];
-
-         //1. Resolve dependencies first
-         $deps = $this->get_dependencies()['css'];
-
-         foreach($deps as $dep){
-             //Component dependency
-             if(str_starts_with($dep, '@')){
-                 $component_name = substr($dep, 1);
-                 $component = ComponentRegistry::get_definition($component_name);
-                 if($component){
-                     $files = array_merge($files, $component->css($loaded_components));
-                 }
-             }
-             //Global asset
-             else{
-                 $files[] =  path_join([config('base_path'), "public/static/css/", "{$dep}.css"]);
-             }
-         }
-
-         //2. Add this component's own CSS
-         $file = "{$this->path}/{$this->name}.css";
-
-         if(file_exists($file)){
-             $files[] = $file;
-         }
-
-         return array_unique($files);
+         return $this->get_assets("css", $loaded_components);
      }
 }

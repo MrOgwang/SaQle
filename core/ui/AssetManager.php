@@ -52,7 +52,7 @@ class AssetManager {
          $assets = [];
 
          foreach($files as $file){
-             $hash = md5($file);
+             $hash = md5($file).time();
              $filename = pathinfo($file, PATHINFO_FILENAME);
              $output_filename = "{$filename}_{$hash}";
              $output_path = path_join([$path, $output_filename.".{$type}"]);

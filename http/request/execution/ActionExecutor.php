@@ -6,7 +6,11 @@ use Throwable;
 use ReflectionMethod;
 use SaQle\Http\Request\Request;
 use SaQle\Http\Response\Message;
-use SaQle\Core\Support\Allow;
+use SaQle\Core\Support\{
+     Allow,
+     ErrorComponent
+};
+use SaQle\Core\FeedBack\FeedBack;
 
 final class ActionExecutor {
 
@@ -21,9 +25,22 @@ final class ActionExecutor {
          } 
          
          try{
-             $instance = new $controller();
 
+             $instance = new $controller();
              $reflection_method = new ReflectionMethod($instance, $method);
+
+             if($instance instanceof ErrorComponent){
+                 
+                 $params = [
+                     $request->attributes->get('error.code', FeedBack::INTERNAL_SERVER_ERROR),
+                     $request->attributes->get('error.message', "Internal Server Error"),
+                     $request->attributes->get('error.context', null)
+                 ];
+
+                 $result = $reflection_method->invokeArgs($instance, $params);
+
+                 return $result instanceof Message ? $result : Message::ok($result);
+             }
 
              //extract allow guards
              $access_attr = $reflection_method->getAttributes(Allow::class);
@@ -33,7 +50,7 @@ final class ActionExecutor {
              }
 
              $resolver = new ParameterResolver($request);
-             $args = $resolver->resolve($instance, $method);
+             $args = $resolver->resolve($instance, $method); 
 
              $result = $reflection_method->invokeArgs($instance, array_values($args));
 

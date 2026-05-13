@@ -10,11 +10,11 @@ class ComponentTreeBuilder {
      * Builds a linear component tree where each component
      * is the parent of the one to its right.
      *
-     * @param string[] $wrappers
+     * @param string[] $component_names
      *
      * @return ComponentNode  Root (top-most) component node
      */
-     public function build(array $component_names) : ComponentNode {
+     public function build(array $component_names, array $target_context = []) : ComponentNode {
          // 1. Normalize input into a single ordered list
          $component_names = array_values($component_names);
 
@@ -24,15 +24,22 @@ class ComponentTreeBuilder {
 
          //2. Create all nodes first
          $nodes = [];
-
-         foreach ($component_names as $component_name){
+         
+         foreach ($component_names as $ci => $component_name){
              $definition = ComponentRegistry::get_definition($component_name);
 
              if(!$definition) {
                  throw new LogicException("Component definition not found for '{$component_name}'.");
              }
 
-             $nodes[] = new ComponentNode($definition);
+             $node = new ComponentNode($definition);
+
+             if($ci === count($component_names) - 1 && !str_starts_with($component_name, config('error.component'))){
+                 $node->execute_controller(false);
+                 $node->with_context($target_context);
+             }
+
+             $nodes[] = $node;
          }
 
          // 3. Link parent <-> child relationships

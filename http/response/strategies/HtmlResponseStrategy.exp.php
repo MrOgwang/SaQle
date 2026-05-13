@@ -15,7 +15,12 @@ use SaQle\Core\Components\{
      ComponentTreeBuilder, 
      ComponentRenderer
 };
-use SaQle\Core\Ui\Template;
+use SaQle\Core\Ui\{
+     Template,
+     Ui,
+     UiTargetInjector,
+     UiComponent
+};
 use SaQle\Http\Request\Middleware\CsrfMiddleware;
 use SaQle\Auth\Models\GuestUser;
 use SaQle\Http\Request\Execution\ActionExecutor;
@@ -93,22 +98,53 @@ final class HtmlResponseStrategy implements ResponseStrategy {
           * 3. The fail came from executing the controller method.
           * */
          return array_merge($request->route->layout ?? [], [config('error.component')."@get"]);
+     } 
+
+     private function inject_target(UiComponent $tree, UiComponent $target) : UiComponent {
+
+         if($tree->expects_target()){
+             $tree->slot($target);
+             $tree->target(false);
+             return $tree;
+         }
+
+         if($tree->get_slot()){
+             $this->inject_target($tree->get_slot(), $target);
+         }
+
+         return $tree;
+     } 
+
+     public function build(Request $request, Message $result) : Response {
+
+         if(app()->is_stage(AppStage::REQUEST_RESOLUTION) && $result instanceof SuccessMessage && $request->route){
+             
+             $layout_class = $request->route->layout_class;
+
+             /*$tree = new $layout_class()->compose($request, new Ui());
+             
+             $target_component = new UiComponent($request->route->compiled_target->name);
+             $tree = $this->inject_target($tree, $target_component);*/
+
+             print_r($layout_class);
+
+         }  
+
+         return new HtmlResponse("");
      }
 
      public function build(Request $request, Message $result) : Response {
 
-         $layout = $this->get_layout($request, $result);
-         
-         $context = $this->prepare_context($request);
+         if(app()->is_stage(AppStage::REQUEST_RESOLUTION) && $result instanceof SuccessMessage && $request->route){
+             
+             $layout_class = $request->route->layout_class;
+             $tree = new $layout_class()->compose($request, new Ui());
+             $injector = new UiTargetInjector();
 
-         $tree = new ComponentTreeBuilder()->build($layout, $result->data ?? []);
+             print_r($tree);
 
-         $renderer = new ComponentRenderer($request);
+         }
 
-         $html = $renderer->render($tree, $context);
-
-         $html = $renderer->wrap_root($html);
-
-         return new HtmlResponse($html);
+         return new HtmlResponse("");
      }
 }

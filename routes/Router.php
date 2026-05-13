@@ -372,27 +372,27 @@ final class Router {
 
          switch($attribute){
              case 'compose_with':
-                 self::with_layout($value, $routes);
+                 self::with_group(['layouts' => $value], $routes);
              break;
 
              case 'requires':
              case 'requires_all':
-                 self::with_guards($value, $routes, 'all');
+                 self::with_group(['guards_all' => $value], $routes);
              break;
 
              case 'requires_any':
-                 self::with_guards($value, $routes, 'any');
+                 self::with_group(['guards_any' => $value], $routes);
              break;
 
              case 'respond_with':
-                 self::with_response($value, $routes);
+                 self::with_group(['restype' => $value], $routes);
              break;
 
              case 'aggregate_with':
              break;
 
              case 'scope':
-                 self::with_scope($value, $routes);
+                 self::with_group(['scope' => $value], $routes);
              break;
              
              default:
@@ -436,22 +436,6 @@ final class Router {
                  $router->scope($group['scope']);
              }
          }
-     }
-
-     private static function with_layout(array $layouts, callable $routes): void {
-         self::with_group(['layouts' => $layouts], $routes);
-     }
-
-     private static function with_guards(array $guards, callable $routes, string $mode = 'all'): void {
-         self::with_group([$mode === 'all' ? 'guards_all' : 'guards_any' => $guards], $routes);
-     }
-
-     private static function with_response(ResponseType $type, callable $routes): void {
-         self::with_group(['restype' => $type], $routes);
-     }
-
-     private static function with_scope(RequestScope $scope, callable $routes): void {
-         self::with_group(['scope' => $scope], $routes);
      }
 
      public static function find_matching_route(string $method, string $uri): ?array{

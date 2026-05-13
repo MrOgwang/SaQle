@@ -11,7 +11,6 @@ use SaQle\Core\Forms\{
      AutoForm
 };
 use SaQle\Http\Response\Message;
-use SaQle\Http\Request\Execution\ActionExecutor;
 use SaQle\Http\Request\Request;
 use SaQle\Core\Ui\{
      View, 
@@ -48,35 +47,14 @@ class ComponentRenderer {
          //1. activate node
          $node->active = true;
 
-         /**
-          * 2. execute node controller to acquire context
-          * Assumption:(Must be relooked at later)
-          * 
-          * If node has children, its not the target node, therefore
-          * execute controller.
-          * */
-         if($node->children){
-             $http_message = ActionExecutor::execute($this->request, $node->def->controller, $node->def->method);
-             $context = array_merge($context, $http_message->data ?? []);
-         }
+         //2. get nodes html
+         $html = $node->render($this->request, $context);
 
-         //2. Register component assets
-         $css = $node->def->css();
-         $js = $node->def->js();
-         
-         AssetManager::add_css($css);
-         AssetManager::add_js($js);
+         //3. resolve dynamic slot
+         $html = $this->inject_dynamic($html, $node, $node->context->expose());
 
-         //3. Render compiled view
-         $view = new View($node->def->template_path);
-         $view->set_context($context);
-         $html = $view->render();
-
-         //4. Resolve dynamic slot
-         $html = $this->inject_dynamic($html, $node, $context);
-
-         //5. Resolve inline components
-         $html = $this->inject_inline_components($html, $node, $context);
+         //4. resolve inline components
+         $html = $this->inject_inline_components($html, $node, $node->context->expose());
 
          return $html;
      }
@@ -120,7 +98,7 @@ class ComponentRenderer {
 
          $pattern = '/<component:(block|form)\s+([^\/]+)\s*\/>/i';
 
-         return preg_replace_callback($pattern, function($matches) use ($node) {
+         return preg_replace_callback($pattern, function($matches) use ($node, $context) {
              
              $type = strtolower($matches[1]);  // 'block' or 'form'
 
@@ -150,7 +128,7 @@ class ComponentRenderer {
                  return $this->render($child, $context, $attrs);
              }
 
-             if($type === 'form') {
+             if($type === 'form'){
                  //Resolve AutoForm blueprint
                  try{
                     $blueprint = FormBlueprintRegistry::get($name);
@@ -164,7 +142,7 @@ class ComponentRenderer {
 
                  return $auto_form->render();
              }
-
+             
              return '';
 
          },  $html);

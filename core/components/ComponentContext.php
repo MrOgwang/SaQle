@@ -8,6 +8,10 @@ class ComponentContext {
          private ?ComponentContext $parent = null
      ) {}
 
+     public function parent_context(ComponentContext $parent){
+         $this->parent = $parent;
+     }
+
      public function get(string $key): mixed {
          return $this->local[$key] ?? $this->parent?->get($key);
      }

@@ -10,6 +10,7 @@ use SaQle\Core\Assert\Assert;
 use SaQle\Core\Registries\ComponentRegistry;
 use SaQle\Http\Request\RequestScope;
 use SaQle\Http\Response\ResponseType;
+use SaQle\Core\Ui\UiLayout;
 use InvalidArgumentException;
 use RuntimeException;
 

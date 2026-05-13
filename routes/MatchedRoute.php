@@ -40,7 +40,7 @@ final class MatchedRoute {
 
          //the layout wrappers
          public ?array $layout = null,
-
+         
          //permissions, roles and attributes to enforce on route
          public ?array $guards = null,
 
