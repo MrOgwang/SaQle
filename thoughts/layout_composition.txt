@@ -37,3 +37,5 @@ controllers being executed.
 Solution: The normal request flow must only execute the target components controller. Any other 
 components participating in the layout, even though their controllers will execute to provide their
 context, they must run in a different context as compared to the target component.
+
+Layout participating controllers therefore get exceuted in the node, outside the normal request execution. 
