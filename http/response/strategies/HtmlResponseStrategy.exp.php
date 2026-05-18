@@ -11,9 +11,9 @@ use SaQle\Http\Response\{
 use SaQle\Http\Response\Types\{
      HtmlResponse
 };
-use SaQle\Core\Components\{
-     ComponentTreeBuilder, 
-     ComponentRenderer
+use SaQle\Core\Ui\{
+     UiComponentTreeBuilder, 
+     UiComponentRenderer
 };
 use SaQle\Core\Ui\{
      Template,

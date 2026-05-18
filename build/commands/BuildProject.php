@@ -1,12 +1,20 @@
 <?php
 namespace SaQle\Build\Commands;
 
-use SaQle\Build\Utils\{Manifest, ClassMapper, RouteCompiler, EventCompiler,
- FormCompiler};
-use SaQle\Routes\Router;
+use SaQle\Build\Utils\{
+     Manifest, 
+     ClassMapper, 
+     RouteCompiler, 
+     EventCompiler,
+     FormCompiler
+};
+use SaQle\Core\Support\Route;
+use SaQle\Core\Registries\ComponentRegistry;
 use RecursiveIteratorIterator;
 use RecursiveDirectoryIterator;
 use FilesystemIterator;
+use ReflectionClass;
+use ReflectionMethod;
 
 class BuildProject{
 
@@ -93,10 +101,39 @@ class BuildProject{
          });
      }
 
-     private function load_files($files){
+     private function load_routes($files){
+         //load routes from files
          foreach ($files as $file){
              if(file_exists($file['path'])){
                  require_once $file['path'];
+             }
+         }
+
+         //load routes defined in components via Route attribute
+         $components = ComponentRegistry::all();
+
+         foreach($components as $component_name => $component_config){
+             if($component_config['controller'] && class_exists($component_config['controller'])){
+
+                 $class_name = $component_config['controller'];
+                 $reflection = new ReflectionClass($class_name);
+
+                 foreach($reflection->getMethods(ReflectionMethod::IS_PUBLIC) as $method){
+
+                     //skip inherited public methods
+                     if($method->getDeclaringClass()->getName() !== $class_name) {
+                         continue;
+                     }
+
+                     //get route attribute
+                     $route_attr = $method->getAttributes(Route::class)[0] ?? null;
+
+                     if($route_attr){
+                         $route = $route_attr->newInstance();
+                         $route->set_target($component_name."@".$method->getName());
+                         $route->initialize();
+                     }
+                 }
              }
          }
      }
@@ -119,7 +156,7 @@ class BuildProject{
                  $route_files = $this->filter_route_files($files);
 
                  //load route files
-                 $this->load_files($route_files);
+                 $this->load_routes($route_files);
 
                  //compile routes
                  RouteCompiler::compile();

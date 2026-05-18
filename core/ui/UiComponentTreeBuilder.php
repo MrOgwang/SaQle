@@ -1,20 +1,20 @@
 <?php
 
-namespace SaQle\Core\Components;
+namespace SaQle\Core\Ui;
 
 use SaQle\Core\Registries\ComponentRegistry;
 use LogicException;
 
-class ComponentTreeBuilder {
+class UiComponentTreeBuilder {
      /**
      * Builds a linear component tree where each component
      * is the parent of the one to its right.
      *
      * @param string[] $component_names
      *
-     * @return ComponentNode  Root (top-most) component node
+     * @return UiComponentNode  Root (top-most) component node
      */
-     public function build(array $component_names, array $target_context = []) : ComponentNode {
+     public function build(array $component_names, array $target_context = []) : UiComponentNode {
          // 1. Normalize input into a single ordered list
          $component_names = array_values($component_names);
 
@@ -32,7 +32,7 @@ class ComponentTreeBuilder {
                  throw new LogicException("Component definition not found for '{$component_name}'.");
              }
 
-             $node = new ComponentNode($definition);
+             $node = new UiComponentNode($definition);
 
              if($ci === count($component_names) - 1 && !str_starts_with($component_name, config('error.component'))){
                  $node->execute_controller(false);

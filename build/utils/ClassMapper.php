@@ -56,7 +56,7 @@ class ClassMapper{
                 $models[] = $class;
              }
          }
-
+ 
          return $models;
      }
 
@@ -95,20 +95,33 @@ class ClassMapper{
           * 
           * 1. Top level components in project root
           * 2. App level components inside app directories
-          * 2. Other components as listed in EXTRA_COMPONENTS_DIRS setting
+          * 3. Other components as listed in EXTRA_COMPONENTS_DIRS setting
+          * 
+          * Module component names will be prefixed by the name of the module
           * */
-         $components_dirs = [path_join([config('base_path'), 'components'])];
+         $components_dirs = [
+             [ 
+                 'path' => path_join([config('base_path'), 'components']),
+                 'prefix' => ''
+             ]
+         ];
 
          foreach(config('app.modules') as $f){
-             $components_dirs[] = path_join([config('base_path'), 'modules', $f, 'components']);
+             $components_dirs[] = [
+                 'path' => path_join([config('base_path'), 'modules', $f, 'components']),
+                 'prefix' => strtolower($f)
+             ];
          }
 
          foreach(config('app.extra_components_dirs') as $d){
-             $components_dirs[] = path_join([config('base_path'), $d]);
+             $components_dirs[] = [
+                 'path' => path_join([config('base_path'), $d]),
+                 'prefix' => ''
+             ];
          }
 
          foreach(config('saqle_components_dirs') as $d){
-             $components_dirs[] = $d;
+             $components_dirs[] = ['path' => $d, 'prefix' => ''];
          }
 
          /**
@@ -118,11 +131,15 @@ class ClassMapper{
          $components = [];
 
          foreach($components_dirs as $dir){
-             if(!is_dir($dir)){
-                continue;
+
+             $path = $dir['path'];
+             $prefix = $dir['prefix'];
+
+             if(!is_dir($path)){
+                 continue;
              }
              
-             $dir_iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir));
+             $dir_iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($path));
              foreach($dir_iterator as $file){
                  if($file->isFile()){
 
@@ -133,6 +150,7 @@ class ClassMapper{
 
                      $component_name = str_replace(".php", "", $file->getFilename());
                      $component_name = str_replace(".".config('app.component_template_ext'), "", $component_name);
+                     $component_name = $prefix ? $prefix.".".$component_name : $component_name;
 
                      $real_path      = $file->getRealPath();
                      [$compile_path, $owner] = $this->normalize_path($real_path);

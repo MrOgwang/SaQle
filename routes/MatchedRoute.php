@@ -7,7 +7,7 @@ declare(strict_types = 1);
 namespace SaQle\Routes;
 
 use SaQle\Core\Assert\Assert;
-use SaQle\Core\Components\ComponentDefinition;
+use SaQle\Core\Ui\UiComponentDefinition;
 use SaQle\Http\Request\RequestScope;
 use SaQle\Http\Response\ResponseType;
 use InvalidArgumentException;
@@ -24,7 +24,7 @@ final class MatchedRoute {
          public string $method,
 
          //the route handler
-         public ComponentDefinition $compiled_target,
+         public UiComponentDefinition $compiled_target,
 
          //the route name
          public string $name, 

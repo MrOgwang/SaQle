@@ -1,14 +1,14 @@
 <?php
 
-namespace SaQle\Core\Components;
+namespace SaQle\Core\Ui;
 
-class ComponentContext {
+class UiComponentContext {
      public function __construct(
          private array $local,
-         private ?ComponentContext $parent = null
+         private ?UiComponentContext $parent = null
      ) {}
 
-     public function parent_context(ComponentContext $parent){
+     public function parent_context(UiComponentContext $parent){
          $this->parent = $parent;
      }
 

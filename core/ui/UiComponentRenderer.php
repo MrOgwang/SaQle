@@ -1,6 +1,6 @@
 <?php
 
-namespace SaQle\Core\Components;
+namespace SaQle\Core\Ui;
 
 use SaQle\Core\Registries\{
      FormBlueprintRegistry, 
@@ -18,7 +18,7 @@ use SaQle\Core\Ui\{
 };
 use RuntimeException;
 
-class ComponentRenderer {
+class UiComponentRenderer {
      
      private $attributes = ['css' => [], 'js' => [], 'title' => '', 'meta' => ''];
 
@@ -42,7 +42,7 @@ class ComponentRenderer {
          return $page->render();
      }
 
-     public function render(ComponentNode $node, array $context = [], array $props = []): string {
+     public function render(UiComponentNode $node, array $context = [], array $props = []): string {
 
          //1. activate node
          $node->active = true;
@@ -59,7 +59,7 @@ class ComponentRenderer {
          return $html;
      }
 
-     private function inject_dynamic(string $html, ComponentNode $node, array $context): string {
+     private function inject_dynamic(string $html, UiComponentNode $node, array $context): string {
          // Match <component:slot />, allowing arbitrary whitespace
          $pattern = '/<component:slot\s*\/>/i';
 
@@ -94,7 +94,7 @@ class ComponentRenderer {
          return $attrs;
      }
 
-     private function inject_inline_components(string $html, ComponentNode $node, array $context): string {
+     private function inject_inline_components(string $html, UiComponentNode $node, array $context): string {
 
          $pattern = '/<component:(block|form)\s+([^\/]+)\s*\/>/i';
 
@@ -122,7 +122,7 @@ class ComponentRenderer {
                     return "<!-- Block '{$name}' not found -->";
                  }
 
-                 $child = new ComponentNode($def);
+                 $child = new UiComponentNode($def);
                  $child->parent = $node;
 
                  return $this->render($child, $context, $attrs);

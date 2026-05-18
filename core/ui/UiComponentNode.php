@@ -1,6 +1,6 @@
 <?php
 
-namespace SaQle\Core\Components;
+namespace SaQle\Core\Ui;
 
 use SaQle\Core\Ui\{
      View, 
@@ -13,15 +13,15 @@ use SaQle\Http\Request\Request;
 use SaQle\Http\Response\Message;
 use Throwable;
 
-class ComponentNode {
+class UiComponentNode {
      //whether to execute component controller or not
      private bool $execute = true;
 
      //component definition
-     public ComponentDefinition $def;
+     public UiComponentDefinition $def;
 
      //the parent component
-     public ?ComponentNode $parent = null;
+     public ?UiComponentNode $parent = null;
 
      //array of component nodes
      public array $children = [];
@@ -30,9 +30,9 @@ class ComponentNode {
      public bool $active = false;
 
      //component context data
-     public ?ComponentContext $context = null;
+     public ?UiComponentContext $context = null;
 
-     public function __construct(ComponentDefinition $def){
+     public function __construct(UiComponentDefinition $def){
          $this->def = $def;
      }
 
@@ -41,7 +41,7 @@ class ComponentNode {
      }
 
      public function with_context(array $context){
-         $this->context = new ComponentContext($context, new ComponentContext($context));
+         $this->context = new UiComponentContext($context, new UiComponentContext($context));
      }
 
      //let nodes self render
@@ -54,7 +54,7 @@ class ComponentNode {
                      $this->def->controller, 
                      $this->def->method
                  )->data ?? [];
-                 $this->context = new ComponentContext($this_context);
+                 $this->context = new UiComponentContext($this_context);
              }catch(Throwable $e){
                  $this->def = ComponentRegistry::get_definition(config('error.component'));
 
@@ -62,7 +62,7 @@ class ComponentNode {
                  $e->get_http_message() : 
                  new Message(Message::INTERNAL_SERVER_ERROR, $e->getTrace(), $e->getMessage());
 
-                 $this->context = new ComponentContext([
+                 $this->context = new UiComponentContext([
                      'code'    => $http_message->code,
                      'message' => $http_message->message,
                      'data'    => $http_message->data
@@ -71,10 +71,10 @@ class ComponentNode {
          }
 
          if(is_null($this->context)){
-             $this->context = new ComponentContext([]);
+             $this->context = new UiComponentContext([]);
          }
 
-         $this->context->parent_context(new ComponentContext($parent_context));
+         $this->context->parent_context(new UiComponentContext($parent_context));
 
          $css = $this->def->css();
          $js = $this->def->js();

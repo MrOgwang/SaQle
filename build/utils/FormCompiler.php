@@ -99,7 +99,7 @@ final class FormCompiler {
                  if(!method_exists($model_class, $form_name)){
                      throw new RuntimeException("The form: {$form_name} has not been defined in model: {$model_class}!");
                  }
-
+ 
                  $form_config = $model_instance->$form_name();
 
                  /**

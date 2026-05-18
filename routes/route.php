@@ -11,6 +11,7 @@ use SaQle\Core\Registries\ComponentRegistry;
 use SaQle\Http\Request\RequestScope;
 use SaQle\Http\Response\ResponseType;
 use SaQle\Core\Ui\UiLayout;
+use SaQle\Auth\Guards\GuardParser;
 use InvalidArgumentException;
 use RuntimeException;
 
@@ -125,22 +126,34 @@ final class Route {
      }
 
      /**
-      * These are roles, permissions and attributes as the developer will have defined
-      * in the AuthorizationProvider class that will determine whether the user 
-      * is authorized to access this route or not
-      * 
-      * each entry into the guards takes the structure below
-      * 
-      * [mode: 'all', guards: ['guard1', 'guard2']]
-      * 
-      * */
-     public ?array $guards = null{
-         set(?array $value){
-             $this->guards = $value;
+     * These are roles, permissions and attributes as the developer will have defined
+     * in the AuthorizationProvider class that will determine whether the user 
+     * is authorized to access this route or not
+     * 
+     * Examples:
+     *
+     *  authenticated
+     *
+     *  authenticated && admin
+     *
+     *  authenticated && (admin || manager)
+     *
+     *  authenticated && !banned
+     *
+     *  (admin || moderator) && verified
+     * 
+     * */
+     private string $guard = "" {
+         set(string $value){
+             $this->guard = $value;
+             $this->guards = new GuardParser()->parse($value);
          }
 
-         get => $this->guards;
+         get => $this->guard;
      }
+
+     //parsed guards
+     public array $guards = [];
 
      //customize the response from this route
      public ?ResponseType $restype = null;
@@ -218,25 +231,30 @@ final class Route {
       * in the AuthorizationProvider class that will determine whether the user 
       * is authorized to access this route or not
       * */
-
-     private function register_guards(array $guards, string $mode){
-         $current_guards = $this->guards ?? [];
-         $current_guards[] = ['mode' => $mode, 'guards' => $guards];
-         $this->guards = $current_guards;
-     }
-
      public function requires(string $guard){
-         $this->register_guards([$guard], 'all');
-         return $this;
-     }
 
-     public function requires_any(array $guards){
-         $this->register_guards($guards, 'any');
-         return $this;
-     }
+         $guard = trim($guard);
 
-     public function requires_all(array $guards){
-         $this->register_guards($guards, 'all');
+         if(!$guard){
+             throw new RuntimeException("Guard cannot be an empty!");
+         }
+
+         if(!str_starts_with($guard, "(")){
+             $guard = "(".$guard;
+         }
+
+         if(!str_ends_with($guard, ")")){
+             $guard = $guard.")";
+         }
+
+         $current_guard = $this->guard;
+         if(!$current_guard){
+             $this->guard = $guard;
+             return $this;
+         }
+
+         $this->guard = $current_guard." && ".$guard;
+
          return $this;
      }
 

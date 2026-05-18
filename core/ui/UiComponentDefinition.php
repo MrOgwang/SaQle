@@ -1,10 +1,10 @@
 <?php
 
-namespace SaQle\Core\Components;
+namespace SaQle\Core\Ui;
 
 use SaQle\Core\Registries\ComponentRegistry;
 
-class ComponentDefinition {
+class UiComponentDefinition {
      public function __construct(
      	 //the name of the component
          public string $name,
@@ -34,8 +34,16 @@ class ComponentDefinition {
          }*/
      }
 
+     private function get_name_from_ref(string $ref){
+         $name_array = explode(".", $ref);
+         return trim(end($name_array));
+     }
+
      private function get_dependencies() : array {
-         $json_file = "{$this->path}/{$this->name}.json";
+
+         $name = $this->get_name_from_ref($this->name);
+
+         $json_file = "{$this->path}/{$name}.json";
 
          if(!file_exists($json_file)){
              return ['css' => [], 'js' => []];
@@ -92,7 +100,8 @@ class ComponentDefinition {
          }
 
          //2. Add this component's own assets
-         $file = "{$this->path}/{$this->name}.{$type}";
+         $name = $this->get_name_from_ref($this->name);
+         $file = "{$this->path}/{$name}.{$type}";
 
          if(file_exists($file)){
              $files[] = $file;

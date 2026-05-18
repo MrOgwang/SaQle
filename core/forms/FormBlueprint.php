@@ -13,7 +13,7 @@ final class FormBlueprint{
      ) {}
 
      public function get(){
-         return [
+         return [  
             'name' => $this->name,
             'model_class' => $this->model_class,
             'mode' => $this->mode,

@@ -11,9 +11,9 @@ use SaQle\Http\Response\{
 use SaQle\Http\Response\Types\{
      HtmlResponse
 };
-use SaQle\Core\Components\{
-     ComponentTreeBuilder, 
-     ComponentRenderer
+use SaQle\Core\Ui\{
+     UiComponentTreeBuilder, 
+     UiComponentRenderer
 };
 use SaQle\Core\Ui\Template;
 use SaQle\Http\Request\Middleware\CsrfMiddleware;
@@ -101,9 +101,9 @@ final class HtmlResponseStrategy implements ResponseStrategy {
          
          $context = $this->prepare_context($request);
 
-         $tree = new ComponentTreeBuilder()->build($layout, $result->data ?? []);
+         $tree = new UiComponentTreeBuilder()->build($layout, $result->data ?? []);
 
-         $renderer = new ComponentRenderer($request);
+         $renderer = new UiComponentRenderer($request);
 
          $html = $renderer->render($tree, $context);
 

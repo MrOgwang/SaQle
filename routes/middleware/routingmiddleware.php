@@ -25,7 +25,7 @@ use SaQle\Routes\{
 };
 use SaQle\Core\Exceptions\Route\RouteNotFoundException;
 use SaQle\Core\Exceptions\Http\NotAcceptableException;
-use SaQle\Core\Components\ComponentDefinition;
+use SaQle\Core\Ui\UiComponentDefinition;
 use SaQle\Http\Request\RequestScope;
 use SaQle\Http\Response\ResponseType;
 use SaQle\Http\Response\Message;
@@ -51,7 +51,7 @@ class RoutingMiddleware implements MiddlewareInterface {
              $match['route']['url'],
              $match['path'], 
              $match['method'], 
-             new ComponentDefinition(
+             new UiComponentDefinition(
                  name: $resolved_target[0], 
                  path: dirname($resolved_target[3] ?? ""),
                  template_path: $resolved_target[3] ?? null, 

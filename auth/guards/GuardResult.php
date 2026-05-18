@@ -4,7 +4,7 @@ namespace SaQle\Auth\Guards;
 
 use Closure;
 
-class AuthorizationResult {
+class GuardResult {
      public function __construct(
          public bool $passed,
          public ?string $failed_guard = null,

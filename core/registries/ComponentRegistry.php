@@ -4,7 +4,7 @@ namespace SaQle\Core\Registries;
 
 use SaQle\Core\Assert\Assert;
 use SaQle\Core\Support\{HttpMethod, Index};
-use SaQle\Core\Components\ComponentDefinition;
+use SaQle\Core\Ui\UiComponentDefinition;
 use InvalidArgumentException;
 use ReflectionClass;
 use ReflectionMethod;
@@ -35,9 +35,9 @@ final class ComponentRegistry {
          return $components[$name];
      }
 
-     public static function get_definition(string $name): ComponentDefinition {
+     public static function get_definition(string $name): UiComponentDefinition {
          $resolved_component = self::resolve_component($name, 'GET', 'layout');
-         return new ComponentDefinition(
+         return new UiComponentDefinition(
              name: $resolved_component[0], 
              path: dirname($resolved_component[3]),
              template_path: $resolved_component[3], 

@@ -238,8 +238,6 @@ final class Router {
                  match($deco){
                      'compose_with' => $r->compose_with(...$params),
                      'requires'     => $r->requires(...$params),
-                     'requires_any' => $r->requires_any(...$params),
-                     'requires_all' => $r->requires_all(...$params),
                      'respond_with' => $r->respond_with(...$params),
                      'sse'          => $r->sse(...$params),
                      'scope'        => $r->scope(...$params)
@@ -309,16 +307,6 @@ final class Router {
          return $this;
      }
 
-     public function requires_any(array $guards){
-         $this->apply_decoration('requires_any', ...['guards' => $guards]);
-         return $this;
-     }
-
-     public function requires_all(array $guards){
-         $this->apply_decoration('requires_all', ...['guards' => $guards]);
-         return $this;
-     }
-
      /**
       * Add url aliases for this route
       * */
@@ -360,8 +348,6 @@ final class Router {
       * Attributes include:
       * compose_with
       * requires
-      * requires_any
-      * requires_all
       * respond_with
       * aggregate_with
       * scope
@@ -376,12 +362,7 @@ final class Router {
              break;
 
              case 'requires':
-             case 'requires_all':
-                 self::with_group(['guards_all' => $value], $routes);
-             break;
-
-             case 'requires_any':
-                 self::with_group(['guards_any' => $value], $routes);
+                 self::with_group(['guards' => $value], $routes);
              break;
 
              case 'respond_with':
@@ -416,12 +397,8 @@ final class Router {
 
          //Apply group attributes
          foreach (self::$group_stack as $group){
-             if(!empty($group['guards_all'])) {
-                 $router->requires_all($group['guards_all']);
-             }
-
-             if (!empty($group['guards_any'])) {
-                 $router->requires_any($group['guards_any']);
+             if(!empty($group['guards'])) {
+                 $router->requires($group['guards']);
              }
 
              if (!empty($group['restype'])) {

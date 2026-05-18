@@ -1,0 +1,59 @@
+Auto Forms
+
+This frameworks philosophy is rapid prototyping. This cannot be done
+without automatic/automated forms.
+
+Most simple applications are CRUD, and if one can have this automated,
+fast prototyping can be achieved.
+
+What are auto forms:
+
+Given only a model definition, auto forms allow the developer to automatically
+generate CRUD operations backed with form views wihtout writing any further code,
+and only write further code for customization or extension. At least this is the vision.
+
+Auto forms will also form the base infrastructure for a framework provided administrator panel.
+
+
+Example: Given a model called User
+
+Model: User
+table: users(from the database schema definition)
+
+CREATE
+add new user [POST: /users] - shows a add form
+add multiple users [POST: /users] - show bulk add form
+
+READ
+view users [GET: /users] - shows a table panel by default
+view one user [GET: /users/:user_id] - shows a view panel
+
+UPDATE
+update one user [PUT/PATCH: /users/:user_id] - show an edit form
+update many users [PUT/PATCH: /users] - show an edit form
+
+DELETE
+delete one user [DELETE: /users/:user_id] - this should be done from the view panel
+delete many users [DELETE: /users] - this should be done from the table panel
+
+
+<component type='block'/>
+<component type='slot'/>
+<component />
+
+route methods: 
+
+compose_with(array $layouts)
+requires(string $guard)
+requires_any(array $guards)
+requires_all(array $guard)
+respond_with($restype)
+
+
+
+
+
+
+
+
+
