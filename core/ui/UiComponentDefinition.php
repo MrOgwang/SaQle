@@ -10,10 +10,13 @@ class UiComponentDefinition {
          public string $name,
 
          //base bath
-         public string $path,
+         public string $path = "",
 
-         //the components template path
+         //the components source template path
          public ?string $template_path = null,
+
+         //the components compiled template path
+         public ?string $compiled_template_path = null,
 
          //the controller class name
          public ?string $controller = null,
@@ -22,9 +25,14 @@ class UiComponentDefinition {
          public ?string $method = null,
 
          //whether its a proxy
-         public bool $proxy = false
-     ){
+         public bool $proxy = false,
 
+         //whether component has multiple template variations
+         public bool $has_many_templates = false,
+
+         //the component template variations
+         public array $template_variations = []
+     ){
          /**
           * Resolve decoy components here. A decoy component
           * is used to return a particular component based on a condition
@@ -32,6 +40,28 @@ class UiComponentDefinition {
          /*if($this->controller && is_a($this->controller, $parentClassName, true);){
              'SaQle\\Components\\StaticFile\\StaticFile'
          }*/
+     }
+
+     public function to_array(){
+         return [
+             'name' => $this->name,
+             'path' => $this->path,
+             'template_path' => $this->template_path,
+             'compiled_template_path' => $this->compiled_template_path,
+             'controller' => $this->controller,
+             'method' => $this->method,
+             'proxy' => $this->proxy,
+             'has_many_templates' => $this->has_many_templates,
+             'template_variations' => $this->template_variations
+         ];
+     }
+
+     public static function from_array(array $def){
+         return new static(...$def);
+     }
+
+     public function get_target(){
+         return $this->method ? $this->name."@".$this->method : $this->name;
      }
 
      private function get_name_from_ref(string $ref){

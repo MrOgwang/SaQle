@@ -1,0 +1,19 @@
+
+@if(in_array($field->type, ['textarea', 'radio', 'checkbox', 'switch', 'file']) || $field->type ==='select' && $field->multiple)
+<div class="form-group full">
+@else
+<div class="form-group">
+@endif
+     <label>{{ $field->label }}
+         @if($field->required)
+         <span class="required">*</span>
+         @endif
+     </label>
+     @if($field->helper_text)
+     <div class="help-text">
+         { $field->helper_text }}
+     </div>
+     @endif
+     
+     <component:block name="saqle.formcontrol" :field="$field"/>
+ </div>

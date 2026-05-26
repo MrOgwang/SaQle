@@ -13,8 +13,6 @@
  * - to add context values that are shared across views
  * - to define named layouts
  * 
- * This class is used together with the TemplateContextProvider and the TemplateLayoutProvider.
- * 
  * @pacakge SaQle
  * @author  Wycliffe Omondi Otieno <wycliffomondiotieno@gmail.com><+254741142038>
  * */
@@ -24,6 +22,17 @@ class Template {
 	 private static $instance;
 	 private array $shared = [];
      private array $components = [];
+
+     /**
+      * Sometimes a component may have many template
+      * variations. 
+      * 
+      * The resolvers decide which template to show.
+      * 
+      * This is a key => value array where key is the component name
+      * and the value is a callback to resolve the template.
+      * */
+     private array $resolvers = [];
 
 	 private function __construct(){
 
@@ -46,12 +55,29 @@ class Template {
          $template->set($name, $value, 'layout');
      }
 
+     public static function resolver(string $name, callable $value){
+         $template = self::init();
+         $template->set($name, $value, 'resolver');
+     }
+
      public function set(string $name, mixed $value, string $type = 'context'){
-         if($type === 'context'){
-             $this->shared[$name] = $value;
-         }else{
-             $this->components[$name] = $value;
+         switch($type){
+             case "context":
+                 $this->shared[$name] = $value;
+             break;
+             case "layout":
+                 $this->components[$name] = $value;
+             break;
+             case "resolver":
+                 $this->resolvers[$name] = $value;
+             break;
          }
+     }
+
+     public static function get_resolver(string $name){
+         $template = self::init();
+         $resolvers = $template->get_resolvers();
+         return $resolvers[$name] ?? null;
      }
 
      public static function get_context() : array {
@@ -70,6 +96,10 @@ class Template {
 
      public function get_components(){
          return $this->components;
+     }
+
+     public function get_resolvers(){
+         return $this->resolvers;
      }
 
      public static function has(string $key, string $type = 'context'){

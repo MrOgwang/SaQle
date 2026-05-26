@@ -1,5 +1,4 @@
 <?php
-
 namespace SaQle\Orm\Entities\Field\Types;
 
 use SaQle\Core\Support\CropMode;

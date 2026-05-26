@@ -3,7 +3,10 @@
 namespace SaQle\Orm\Entities\Field\Types;
 
 use SaQle\Core\Support\CropMode;
-use SaQle\Orm\Entities\Field\Attributes\{FieldDefinition, ShouldValidate};
+use SaQle\Orm\Entities\Field\Attributes\{
+	 FieldDefinition, 
+	 ShouldValidate
+};
 
 class VideoField extends MediaField {
 

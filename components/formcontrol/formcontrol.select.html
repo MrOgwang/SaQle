@@ -1,0 +1,10 @@
+@if($field->multiple)
+<select multiple style="height:140px;padding:12px;" name='{{ $field->name }}' id='{{ $field->id }}'>
+@else
+<select name='{{ $field->name }}' id='{{ $field->id }}'>
+@endif
+	 <option value=''>--Select--</option>
+	 @foreach($field->choices as $key => $value)
+	 <option value='{{ $key }}'>{{ $value }}</option>
+	 @endforeach
+</select>

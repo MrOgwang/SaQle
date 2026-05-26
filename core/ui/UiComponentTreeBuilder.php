@@ -25,10 +25,10 @@ class UiComponentTreeBuilder {
          //2. Create all nodes first
          $nodes = [];
          
-         foreach ($component_names as $ci => $component_name){
+         foreach($component_names as $ci => $component_name){
              $definition = ComponentRegistry::get_definition($component_name);
 
-             if(!$definition) {
+             if(!$definition){
                  throw new LogicException("Component definition not found for '{$component_name}'.");
              }
 

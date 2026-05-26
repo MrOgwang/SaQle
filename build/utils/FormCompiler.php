@@ -4,7 +4,7 @@ namespace SaQle\Build\Utils;
 
 use SaQle\Core\Assert\Assert;
 use SaQle\Orm\Entities\Model\Schema\Model;
-use SaQle\Core\Forms\FormBlueprint;
+use SaQle\Core\Ui\Forms\FormBlueprint;
 use SaQle\Orm\Entities\Field\Types\{OneToOne, OneToMany, ManyToMany, VirtualField, Pk};
 use RuntimeException;
 
@@ -57,7 +57,6 @@ final class FormCompiler {
         return trim($label);
      }
 
-
      private static function skip_field(object $field): bool{
          return $field instanceof OneToOne || $field instanceof OneToMany || $field instanceof ManyToMany || $field instanceof VirtualField || $field instanceof Pk;
      }
@@ -85,7 +84,7 @@ final class FormCompiler {
              /**
               * forms is an array of form names. The form names are public methods defined on the model
               * 
-              * Make sure forms in non empty string array
+                * Make sure forms in non empty string array
               * */
              Assert::allStringNotEmpty($forms, "Invalid auto forms configuration!");
 

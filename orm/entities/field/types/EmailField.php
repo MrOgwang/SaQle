@@ -2,7 +2,11 @@
 
 namespace SaQle\Orm\Entities\Field\Types;
 
-use SaQle\Orm\Entities\Field\Attributes\{FieldDefinition, ShouldValidate};
+use SaQle\Orm\Entities\Field\Attributes\{
+	 FieldDefinition, 
+	 ShouldValidate,
+	 FormControl
+};
 
 class EmailField extends CharField {
 
@@ -46,5 +50,13 @@ class EmailField extends CharField {
 	 public function get_dnscheck(){
 	 	 return $this->dnscheck;
 	 }
+
+	 protected function initialize_defaults(){
+	 	 if(!$this->control_type){
+	 	 	 $this->control_type = "email";
+	 	 }
+
+		 parent::initialize_defaults();
+     }
 }
 

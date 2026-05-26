@@ -69,6 +69,10 @@ return [
  	 //system administrator settings
  	 'system_admin_email' => '',
      
- 	 'system_admin_name'  => ''
+ 	 'system_admin_name'  => '',
+
+     'protected_file_component' => 'saqle.protectedfile',
+
+     'static_file_component' => 'saqle.staticfile'
  ]
 ?>

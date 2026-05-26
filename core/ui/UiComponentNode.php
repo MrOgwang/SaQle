@@ -11,9 +11,16 @@ use SaQle\Core\Registries\ComponentRegistry;
 use SaQle\Core\Exceptions\Abstracts\FrameworkException;
 use SaQle\Http\Request\Request;
 use SaQle\Http\Response\Message;
+use SaQle\Core\Ui\Template;
 use Throwable;
 
 class UiComponentNode {
+
+     public string $slot = '';
+
+     //component attributes passed via <component/> tag in html
+     public array $props = [];
+
      //whether to execute component controller or not
      private bool $execute = true;
 
@@ -42,7 +49,7 @@ class UiComponentNode {
 
      public function with_context(array $context){
          $this->context = new UiComponentContext($context, new UiComponentContext($context));
-     }
+     } 
 
      //let nodes self render
      public function render(Request $request, array $parent_context) : string {
@@ -52,7 +59,8 @@ class UiComponentNode {
                 $this_context = ActionExecutor::execute(
                      $request, 
                      $this->def->controller, 
-                     $this->def->method
+                     $this->def->method,
+                     $this->props
                  )->data ?? [];
                  $this->context = new UiComponentContext($this_context);
              }catch(Throwable $e){
@@ -81,9 +89,32 @@ class UiComponentNode {
          AssetManager::add_css($css);
          AssetManager::add_js($js);
 
-         $view = new View($this->def->template_path);
-         $view->set_context($this->context->expose());
+         $compiled_template_path = $this->def->compiled_template_path;
+         if($this->def->has_many_templates){
+             $resolver = Template::get_resolver($this->def->name);
+             if($resolver){
+                 $template_key = $resolver($this->props);
+                 $compiled_template_path = $this->def->template_variations[$template_key]['compiled_template_path'] ?? $compiled_template_path;
+             }
+         }
 
+         $view = new View($compiled_template_path);
+
+         $renderer = null;
+         if(isset($parent_context['__renderer'])){
+             $renderer = $parent_context['__renderer'];
+         } 
+         $view->set_context(array_merge(
+             $this->context->expose(),
+             [
+                 '__props' => $this->props,
+                 '__slot'  => $this->slot,
+                 '__renderer' => $renderer,
+                 '__context' => $parent_context
+             ],
+             $this->props
+         ));
+         
          return $view->render();
      }
 }

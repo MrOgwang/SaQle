@@ -2,7 +2,11 @@
 
 namespace SaQle\Orm\Entities\Field\Types;
 
-use SaQle\Orm\Entities\Field\Attributes\{FieldDefinition, ShouldValidate};
+use SaQle\Orm\Entities\Field\Attributes\{
+	 FieldDefinition, 
+	 ShouldValidate,
+	 FormControl
+};
 
 class UrlField extends CharField {
 
@@ -19,6 +23,15 @@ class UrlField extends CharField {
 	 //Require top-level domain
 	 #[ShouldValidate()]
 	 protected bool $require_tld = false;
+
+	 protected function initialize_defaults(){
+
+	 	 if(!$this->control_type){
+	 	 	 $this->control_type = "url";
+	 	 }
+
+		 parent::initialize_defaults();
+     }
 	 
 }
 

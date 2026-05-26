@@ -18,7 +18,6 @@ use SaQle\Core\Ui\{
 use SaQle\Core\Ui\Template;
 use SaQle\Http\Request\Middleware\CsrfMiddleware;
 use SaQle\Auth\Models\GuestUser;
-use SaQle\Http\Request\Execution\ActionExecutor;
 use SaQle\Core\Support\AppStage;
 
 final class HtmlResponseStrategy implements ResponseStrategy {
@@ -104,6 +103,8 @@ final class HtmlResponseStrategy implements ResponseStrategy {
          $tree = new UiComponentTreeBuilder()->build($layout, $result->data ?? []);
 
          $renderer = new UiComponentRenderer($request);
+
+         $context['__renderer'] = $renderer;
 
          $html = $renderer->render($tree, $context);
 

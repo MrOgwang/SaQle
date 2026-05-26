@@ -101,11 +101,13 @@ final class Route {
          set(string $value){
 
              if($value){
+                
+                 ComponentRegistry::reload(true);
                  $compiled_target = ComponentRegistry::resolve_component($value, $this->method, 'target');
 
-                 $this->compiled_target = $compiled_target;
+                 $this->compiled_target = $compiled_target->to_array();
 
-                $this->target = !is_null($compiled_target[2]) ? $compiled_target[0]."@".$compiled_target[2] : $compiled_target[0];
+                 $this->target = $compiled_target->get_target();
              }
          }
 

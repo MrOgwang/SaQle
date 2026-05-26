@@ -14,7 +14,17 @@ use SaQle\Core\FeedBack\FeedBack;
 
 final class ActionExecutor {
 
-     public static function execute(Request $request, ?string $controller = null, ?string $method = null): Message {
+     public static function execute(
+         Request $request, 
+         ?string $controller = null, 
+         ?string $method = null,
+         /**
+          * Props come from html component attributes.
+          * Am not sure this is the right place for this, but for now,
+          * we do it this way
+          * */
+         array $props = []
+     ) : Message {
 
          if(!$controller || !$method){
              $controller = $request->route->compiled_target->controller;
@@ -47,12 +57,11 @@ final class ActionExecutor {
              $access_control = $access_attr ? $access_attr[0]->newInstance() : null;
              if($access_control){
                  $access_control->enforce();
-             }
+             } 
 
              $resolver = new ParameterResolver($request);
-             $args = $resolver->resolve($instance, $method); 
-
-             $result = $reflection_method->invokeArgs($instance, array_values($args));
+             $args = array_values($resolver->resolve($instance, $method, $props));
+             $result = $reflection_method->invokeArgs($instance, $args);
 
              return $result instanceof Message ? $result : Message::ok($result);
 

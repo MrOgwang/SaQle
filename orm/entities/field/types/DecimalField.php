@@ -1,20 +1,25 @@
 <?php
-
 namespace SaQle\Orm\Entities\Field\Types;
 
 use SaQle\Orm\Database\ColumnType;
-use SaQle\Orm\Entities\Field\Attributes\{FieldDefinition, ShouldValidate};
+use SaQle\Orm\Entities\Field\Attributes\{
+     FieldDefinition, 
+     ShouldValidate,
+     FormControl
+};
 
 class DecimalField extends FloatField {
      
      //the total number of digits
      #[FieldDefinition()]
      #[ShouldValidate()]
+     #[FormControl()]
      protected ?int $precision = null;
 
      //digits after decimal point
      #[FieldDefinition()]
      #[ShouldValidate()]
+     #[FormControl]
      protected ?int $scale = null;
 
      public function precision(int $precision){

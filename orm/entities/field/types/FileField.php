@@ -7,7 +7,8 @@ use SaQle\Orm\Database\ColumnType;
 use Closure;
 use SaQle\Orm\Entities\Field\Attributes\{
 	 FieldDefinition, 
-	 ShouldValidate
+	 ShouldValidate,
+	 FormControl
 };
 use SaQle\Core\Files\Commits\{
 	 FileCommitter,
@@ -63,6 +64,7 @@ class FileField extends Field {
 	 protected mixed $min_size = null;
 
 	 //whether to upload multiple files or not
+	 #[FormControl()]
 	 protected bool $multiple = false;
 
 	 /**
@@ -71,6 +73,7 @@ class FileField extends Field {
 	  * example: ['jpg', 'png', 'pdf']
 	  * */
 	 #[ShouldValidate()]
+	 #[FormControl('accept')]
 	 protected ?array $extensions = null;
 
 	 /**
@@ -79,6 +82,7 @@ class FileField extends Field {
 	  * example: ['image/jpeg', 'image/png', 'application/pdf', 'image/*']
 	  * */
 	 #[ShouldValidate()]
+	 #[FormControl('accept')]
 	 protected ?array $mime_types = null;
 
 	 /**
@@ -191,6 +195,10 @@ class FileField extends Field {
 
          $this->native_type = "file";
          $this->type = ColumnType::TEXT;
+
+         if(!$this->control_type){
+         	 $this->control_type = "file";
+         }
 
          parent::initialize_defaults();
 

@@ -3,24 +3,32 @@
 namespace SaQle\Orm\Entities\Field\Types\Base;
 
 use SaQle\Core\Support\CharSet;
-use SaQle\Orm\Entities\Field\Attributes\{FieldDefinition, ShouldValidate};
+use SaQle\Orm\Entities\Field\Attributes\{
+	 FieldDefinition, 
+	 ShouldValidate,
+	 FormControl
+};
 
 class TextualField extends Field {
 	 //the minimum length allowed
 	 #[ShouldValidate()]
+	 #[FormControl("minlength")]
 	 protected ?int $min_length = null;
 
 	 //the maximum length allowed
 	 #[ShouldValidate()]
 	 #[FieldDefinition()]
+	 #[FormControl("maxlength")]
 	 protected ?int $max_length = null;
 
 	 //the exact length allowed
 	 #[ShouldValidate()]
+	 #[FormControl("maxlength")]
 	 protected ?int $length = null;
 
 	 //the regex pattern to match
 	 #[ShouldValidate()]
+	 #[FormControl()]
 	 protected ?string $pattern = null;
 
 	 //the field character set
@@ -118,6 +126,10 @@ class TextualField extends Field {
 
 	 	 if($this->required === true){
 	 	 	 $this->blank = false;
+	 	 }
+
+	 	 if(!$this->control_type){
+	 	 	 $this->control_type = "text";
 	 	 }
 
 	 	 parent::initialize_defaults();

@@ -17,5 +17,6 @@ class CharField extends TextualField {
 
 		 parent::initialize_defaults();
      }
+     
 }
 

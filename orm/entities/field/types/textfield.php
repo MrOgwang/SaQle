@@ -16,6 +16,13 @@ class TextField extends TextualField {
 
          $this->type = ColumnType::TEXT;
 
+         if(!$this->control_type){
+         	 $this->control_type = match($this->size){
+         	 	 'regular', 'small', 'tiny' => 'text',
+         	 	 'big', 'medium' => 'textarea'
+         	 };
+         }
+
          parent::initialize_defaults();
 
      }
@@ -24,5 +31,6 @@ class TextField extends TextualField {
      	 $this->size = $size;
      	 return $this;
      }
+
 }
 

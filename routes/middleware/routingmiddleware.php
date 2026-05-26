@@ -45,20 +45,11 @@ class RoutingMiddleware implements MiddlewareInterface {
          }
 
          //set request route
-         $resolved_target = $match['route']['compiled_target'];
-
          $matched_route = new MatchedRoute(
              $match['route']['url'],
              $match['path'], 
              $match['method'], 
-             new UiComponentDefinition(
-                 name: $resolved_target[0], 
-                 path: dirname($resolved_target[3] ?? ""),
-                 template_path: $resolved_target[3] ?? null, 
-                 controller: $resolved_target[1], 
-                 method: $resolved_target[2],
-                 proxy: $resolved_target[4]
-             ),
+             UiComponentDefinition::from_array($match['route']['compiled_target']),
              $match['route']['name'],
              RequestScope::from($match['route']['scope']),
              ResponseType::tryFrom($match['route']['restype'] ?? ""),

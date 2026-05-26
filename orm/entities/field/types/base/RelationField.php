@@ -3,7 +3,11 @@
 namespace SaQle\Orm\Entities\Field\Types\Base;
 
 use SaQle\Orm\Entities\Field\Attributes\FieldDefinition;
-use SaQle\Orm\Entities\Field\Types\{OneToOne, OneToMany, ManyToMany};
+use SaQle\Orm\Entities\Field\Types\{
+	 OneToOne, 
+	 OneToMany, 
+	 ManyToMany
+};
 use SaQle\Orm\Database\ColumnType;
 
 class RelationField extends Field {

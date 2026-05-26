@@ -16,13 +16,10 @@ class View {
      }
 
      public function render(){
-         $compiler = new TemplateCompiler();
-         $compiled = $compiler->compile($this->template_path);
-
          extract($this->data, EXTR_SKIP);
 
          ob_start();
-         include $compiled;
+         include $this->template_path;
          return ob_get_clean();
      }
 }

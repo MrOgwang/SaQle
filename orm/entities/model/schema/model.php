@@ -13,6 +13,7 @@ use SaQle\Build\Utils\MigrationUtils;
 use SaQle\Core\Files\{TempFileRef, UploadedFile, StoredFile, StoredFileCollection};
 use SaQle\Core\Files\Storage\TempStorage;
 use SaQle\Core\Assert\Assert;
+use SaQle\Core\Ui\Forms\Form;
 use Exception;
 use JsonSerializable;
 use InvalidArgumentException;
@@ -894,4 +895,18 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
 	 	 return $update_columns;
 	 }
 
+     public function create_form(Form $form) : Form {
+         $form->mode = "create";
+         $form->auto_wire = true;
+         //$form->fillable = [];
+         //$form->fields['first_name']->label = "First Name";
+         return $form;
+     }
+
+     public function update_form(Form $form) : Form {
+         $form->mode = "update";
+         $form->auto_wire = true;
+         //form->fillable = [];
+         return $form;
+     }
 }

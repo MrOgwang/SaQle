@@ -1,0 +1,9 @@
+<div class="choice-group">
+	 @foreach($field->choices as $key => $value)
+	 <div class="choice checkbox">
+		 <input type='checkbox' name='{{ $field->name }}[]' id='{{ $field->id }}_{{ $key }}' value='{{ $key }}'/>
+		 <label for="{{ $field->id }}_{{ $key }}">{{ $value }}</label>
+	 </div>
+     @endforeach
+</div>
+

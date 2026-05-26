@@ -1,5 +1,4 @@
 <?php
-
 namespace SaQle\Orm\Entities\Field\Types;
 
 use SaQle\Orm\Entities\Field\Interfaces\IField;

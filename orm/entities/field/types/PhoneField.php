@@ -2,7 +2,11 @@
 
 namespace SaQle\Orm\Entities\Field\Types;
 
-use SaQle\Orm\Entities\Field\Attributes\{FieldDefinition, ShouldValidate};
+use SaQle\Orm\Entities\Field\Attributes\{
+	 FieldDefinition, 
+	 ShouldValidate,
+	 FormControl
+};
 
 class PhoneField extends CharField {
 	 
@@ -47,5 +51,13 @@ class PhoneField extends CharField {
 	 public function is_international(){
 	 	 return $this->international;
 	 }
+
+	 protected function initialize_defaults(){
+	 	 if(!$this->control_type){
+	 	 	 $this->control_type = "tel";
+	 	 }
+
+		 parent::initialize_defaults();
+     }
 }
 

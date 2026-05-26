@@ -4,14 +4,20 @@ namespace SaQle\Orm\Entities\Field\Types;
 
 use SaQle\Orm\Entities\Field\Types\Base\TemporalField;
 use SaQle\Orm\Database\ColumnType;
-use SaQle\Orm\Entities\Field\Attributes\{FieldDefinition, ShouldValidate};
+use SaQle\Orm\Entities\Field\Attributes\{
+     FieldDefinition, 
+     ShouldValidate,
+     FormControl
+ };
 
 class DateTimeField extends TemporalField {
 
      #[ShouldValidate()]
+     #[FormControl("min")]
 	 protected mixed $min_datetime = null;
 
      #[ShouldValidate()]
+     #[FormControl("max")]
 	 protected mixed $max_datetime = null;
 
      /**
@@ -69,6 +75,10 @@ class DateTimeField extends TemporalField {
 
          if($this->storage === 'unix'){
              $this->native_type = "integer";
+         }
+
+         if(!$this->control_type){
+             $this->control_type = "datetime-local";
          }
 
          $this->type = ColumnType::DATETIME;

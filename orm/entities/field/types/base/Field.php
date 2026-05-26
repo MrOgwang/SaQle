@@ -8,7 +8,11 @@ use SaQle\Orm\Entities\Field\Interfaces\IField;
 use SaQle\Orm\Entities\Field\Types\Base\RelationField;
 use SaQle\Orm\Entities\Field\Types\VirtualField;
 use SaQle\Orm\Database\ColumnType;
-use SaQle\Orm\Entities\Field\Attributes\{FieldDefinition, ShouldValidate};
+use SaQle\Orm\Entities\Field\Attributes\{
+	 FieldDefinition, 
+	 ShouldValidate,
+	 FormControl
+};
 use ReflectionClass;
 
 class Field implements IField {
@@ -27,6 +31,7 @@ class Field implements IField {
 	 protected ?string $model_pk = null;
 
 	 //the logical field name on the model
+	 #[FormControl()]
 	 protected ?string $name = null;
 
 	 //the database column name - defaults to name
@@ -44,6 +49,10 @@ class Field implements IField {
 	 #[ShouldValidate('type')]
 	 protected ?string $native_type = null;
 
+	 //the primitive type of the field
+	 #[FormControl('type')]
+	 protected ?string $control_type = null;
+
 	 //the default value or callable
 	 #[FieldDefinition()]
 	 protected mixed $default = null;
@@ -51,6 +60,7 @@ class Field implements IField {
 	 //whether field is required
 	 #[FieldDefinition()]
 	 #[ShouldValidate()]
+	 #[FormControl()]
 	 protected bool $required = false;
 
 	 //whether to allow null values
@@ -225,6 +235,15 @@ class Field implements IField {
 	     }
 
 	     return (object)$this->get_properties_with_attribute(FieldDefinition::class);
+	 }
+
+	 public function get_form_field_attrs() : array {
+	 	 $is_field = $this instanceof VirtualField || ($this instanceof RelationField && $this->navigation) ? false : true;
+	     if (!$is_field) {
+	         return [];
+	     }
+
+	     return $this->get_properties_with_attribute(FormControl::class);
 	 }
 
 	 protected function validate_field_state(){

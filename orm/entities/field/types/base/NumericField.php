@@ -2,16 +2,22 @@
 
 namespace SaQle\Orm\Entities\Field\Types\Base;
 
-use SaQle\Orm\Entities\Field\Attributes\{FieldDefinition, ShouldValidate};
+use SaQle\Orm\Entities\Field\Attributes\{
+	 FieldDefinition, 
+	 ShouldValidate,
+	 FormControl
+};
 
 class NumericField extends Field {
 
 	 //the minimum value allowed
 	 #[ShouldValidate()]
+	 #[FormControl()]
 	 protected mixed $min = null;
 
-     #[ShouldValidate()]
 	 //the maximum value allowed
+	 #[ShouldValidate()]
+     #[FormControl()]
 	 protected mixed $max = null;
 
 	 //disallow negative numbers
@@ -19,6 +25,7 @@ class NumericField extends Field {
 	 protected bool $unsigned = false;
 
 	 //increment step
+	 #[FormControl()]
 	 protected mixed $step = null;
 	 
 	 //display format
@@ -94,5 +101,13 @@ class NumericField extends Field {
 
      	 parent::validate_field_state();
 	 }
+
+	 protected function initialize_defaults(){
+	 	 if(!$this->control_type){
+	 	 	 $this->control_type = "number";
+	 	 }
+
+		 parent::initialize_defaults();
+     }
 }
 

@@ -3,7 +3,11 @@
 namespace SaQle\Orm\Entities\Field\Types;
 
 use SaQle\Orm\Entities\Field\Types\CharField;
-use SaQle\Orm\Entities\Field\Attributes\{FieldDefinition, ShouldValidate};
+use SaQle\Orm\Entities\Field\Attributes\{
+	 FieldDefinition, 
+	 ShouldValidate,
+	 FormControl
+};
 
 class PasswordField extends CharField {
 	 //the miminum strength
@@ -30,5 +34,13 @@ class PasswordField extends CharField {
 	 public function get_hash(){
 	 	 return $this->hash;
 	 }
+
+	 protected function initialize_defaults(){
+	 	 if(!$this->control_type){
+	 	 	 $this->control_type = "password";
+	 	 }
+
+		 parent::initialize_defaults();
+     }
 }
 

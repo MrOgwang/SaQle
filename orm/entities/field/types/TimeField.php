@@ -4,14 +4,20 @@ namespace SaQle\Orm\Entities\Field\Types;
 
 use SaQle\Orm\Entities\Field\Types\Base\TemporalField;
 use SaQle\Orm\Database\ColumnType;
-use SaQle\Orm\Entities\Field\Attributes\{FieldDefinition, ShouldValidate};
+use SaQle\Orm\Entities\Field\Attributes\{
+     FieldDefinition, 
+     ShouldValidate,
+     FormControl
+};
 
 class TimeField extends TemporalField {
 
      #[ShouldValidate()]
+     #[FormControl("min")]
 	 protected mixed $min_time = null;
 
      #[ShouldValidate()]
+     #[FormControl("max")]
 	 protected mixed $max_time = null;
 
 	 public function min_time(mixed $min_time){
@@ -43,6 +49,10 @@ class TimeField extends TemporalField {
      protected function initialize_defaults(){
 
          $this->type = ColumnType::TIME;
+
+         if(!$this->control_type){
+             $this->control_type = "time";
+         }
 
          parent::initialize_defaults();
 

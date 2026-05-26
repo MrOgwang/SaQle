@@ -3,10 +3,12 @@ namespace SaQle\Build\Commands;
 
 use SaQle\Build\Utils\{
      Manifest, 
-     ClassMapper, 
+     ComponentCompiler,
      RouteCompiler, 
      EventCompiler,
-     FormCompiler
+     FormCompiler,
+     TemplateCompiler,
+     ModelCompiler
 };
 use SaQle\Core\Support\Route;
 use SaQle\Core\Registries\ComponentRegistry;
@@ -19,8 +21,6 @@ use ReflectionMethod;
 class BuildProject{
 
      protected Manifest $manifest;
-
-     protected ClassMapper $classmapper;
 
      protected array $watch_dirs = [
            'routes',
@@ -145,9 +145,14 @@ class BuildProject{
              case "all":
                  echo "Building everything!";
 
-                 //map components
-                 $this->classmapper = new ClassMapper();
-                 $this->classmapper->map();
+                 //compile components
+                 ComponentCompiler::compile();
+
+                 //compile templates
+                 TemplateCompiler::compile();
+
+                 //compile models
+                 ModelCompiler::compile();
 
                  //get modified files
                  $files = $this->get_all_files();

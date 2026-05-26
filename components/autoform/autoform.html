@@ -1,0 +1,27 @@
+<form class="autoform">
+
+     <h2>{{ ucwords($form->mode." ".$form->model_name) }}</h2>
+     <div class="autoform-description">
+         Professional automatic form styling for your framework.
+     </div>
+
+     <div class="form-grid">
+     	 @foreach($form->fields as $field)
+	     <component:block name="saqle.formfield" :field="$field"/>
+	     @endforeach 
+     </div>
+
+     <div class="form-actions">
+         <button type="submit" class="btn-primary">
+             {{ ucwords($form->mode) }}
+         </button>
+
+         <button type="button" class="btn-secondary">
+            Cancel
+         </button>
+
+         <!--<button type="button" class="btn-danger">
+            Delete
+         </button>-->
+     </div>
+</form>

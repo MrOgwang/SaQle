@@ -16,7 +16,8 @@ use SaQle\Core\Services\Providers\{
      AuthenticationProvider,
      ValidationServiceProvider,
      StorageServiceProvider,
-     MiddlewareProvider
+     MiddlewareProvider,
+     TemplateServiceProvider
 };
 use SaQle\Http\Cors\CorsConfig;
 use SaQle\Core\Support\{
@@ -104,7 +105,8 @@ final class App {
              SessionProvider::class,
              ValidationServiceProvider::class,
              StorageServiceProvider::class,
-             MiddlewareProvider::class
+             MiddlewareProvider::class,
+             TemplateServiceProvider::class
          ];
 
          foreach(array_merge($framework_providers, $this->setup->providers) as $provider){

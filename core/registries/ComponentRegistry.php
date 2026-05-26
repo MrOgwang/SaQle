@@ -11,10 +11,18 @@ use ReflectionMethod;
 use RuntimeException;
 
 final class ComponentRegistry {
+
+     private static bool $_reload = false;
+
      private static ?array $components = null;
 
-     public static function all(): array{
-         if (self::$components === null) {
+     public static function reload(bool $reload = true){
+         self::$_reload = $reload;
+     }
+
+     public static function all(bool $reload = false): array {
+
+         if(self::$components === null || $reload === true || self::$_reload === true){
              self::$components = require path_join([config('base_path'), config('class_mappings_dir'), 'components.php']);
          }
 
@@ -23,6 +31,18 @@ final class ComponentRegistry {
 
      public static function exists(string $name): bool {
          return array_key_exists($name, self::all());
+     }
+
+     public static function real_template_path(string $template_path, string $owner){
+         if(!trim($template_path)){
+             return "";
+         }
+         
+         return path_join(
+             $owner === 'project' ? 
+             [config('base_path'), $template_path] : 
+             [config('framework_path'), $template_path]
+         );
      }
 
      public static function get(string $name): array {
@@ -35,16 +55,8 @@ final class ComponentRegistry {
          return $components[$name];
      }
 
-     public static function get_definition(string $name): UiComponentDefinition {
-         $resolved_component = self::resolve_component($name, 'GET', 'layout');
-         return new UiComponentDefinition(
-             name: $resolved_component[0], 
-             path: dirname($resolved_component[3]),
-             template_path: $resolved_component[3], 
-             controller: $resolved_component[1], 
-             method: $resolved_component[2],
-             proxy: $resolved_component[4]
-         );
+     public static function get_definition(string $name) : UiComponentDefinition {
+         return self::resolve_component($name, 'GET', 'layout');
      }
 
      public static function assert_components_exist(array $components){
@@ -55,16 +67,11 @@ final class ComponentRegistry {
          }
      }
 
-     public static function resolve_component(string $reference, string $http_verb, string $type = 'target'){
-         $resolved_component = [
-             null, //component name
-             null, //controller class name
-             null, //controller method
-             null, //template path
-             false //proxy
-         ]; 
-
-         //target must be a non empty string, otherwise complain loudly
+     public static function resolve_component(
+         string $reference, string $http_verb, string $type = 'target'
+     ) : UiComponentDefinition
+     {
+         //reference must be a non empty string, otherwise complain loudly
          Assert::stringNotEmpty($reference, 'A component must be a non empty string!');
 
          $reference_array = explode("@", $reference);
@@ -73,22 +80,24 @@ final class ComponentRegistry {
          //assert component exists
          self::assert_components_exist([$component_name]);
 
-         $resolved_component[0] = $component_name;
+         $component_def = new UiComponentDefinition(name: $component_name);
 
          /**
           * a component can have at least a template or a controller(purely api components),
           * otherwise it can have both a template and a controller.
           * */
          $component = self::get($component_name);
-         $resolved_component[4] = $component['proxy'];
+         $component_def->proxy = $component['proxy'];
+         $component_def->has_many_templates = $component['has_many_templates'];
+         $component_def->template_variations = $component['template_variations'];
 
          $controller = $component['controller'];
          $template_path = $component['template_path'];
+         $compiled_template_path = $component['compiled_template_path'];
 
-         $real_template_path = path_join(
-             $component['owner'] === 'project' ? 
-             [config('base_path'), $template_path] : 
-             [config('framework_path'), $template_path]
+         $real_template_path = self::real_template_path(
+             $component['template_path'],
+             $component['owner']
          );
 
          if(!$controller && !$template_path){
@@ -101,7 +110,7 @@ final class ComponentRegistry {
                  throw new InvalidArgumentException("The controller {$controller} does not exist for the component {$component_name}!");
              }
 
-             $resolved_component[1] = $controller;
+             $component_def->controller = $controller;
 
              $action = $reference_array[1] ?? '';
 
@@ -115,16 +124,16 @@ final class ComponentRegistry {
                  $action = $type === 'target' ? self::resolve_target_action($controller, $http_verb) : self::resolve_layout_action($controller, 'GET');
              }
 
-             $resolved_component[2] = $action;
+             $component_def->method = $action;
          }
 
          //if there is a template_path, ensure the file exists
-         if($template_path){
-             if(!file_exists($real_template_path)){
+         if($real_template_path && $compiled_template_path){
+             if(!file_exists($real_template_path) || !file_exists($compiled_template_path)){
                  throw new InvalidArgumentException('The template file: '.$template_path.' does not exist!');
              }
 
-             $extension = pathinfo($template_path, PATHINFO_EXTENSION);
+             $extension = pathinfo($real_template_path, PATHINFO_EXTENSION);
 
              $template_ext = config('app.component_template_ext');
 
@@ -132,10 +141,12 @@ final class ComponentRegistry {
                  throw new InvalidArgumentException("Invalid template file type! Expected an .".$template_ext." file.");
              }
 
-             $resolved_component[3] = $real_template_path;
+             $component_def->path = dirname($real_template_path);
+             $component_def->template_path = $real_template_path;
+             $component_def->compiled_template_path = $compiled_template_path;
          }
 
-         return $resolved_component;
+         return $component_def;
      }
 
      private static function http_method_rule(): callable {

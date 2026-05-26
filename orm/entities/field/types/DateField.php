@@ -4,14 +4,20 @@ namespace SaQle\Orm\Entities\Field\Types;
 
 use SaQle\Orm\Entities\Field\Types\Base\TemporalField;
 use SaQle\Orm\Database\ColumnType;
-use SaQle\Orm\Entities\Field\Attributes\{FieldDefinition, ShouldValidate};
+use SaQle\Orm\Entities\Field\Attributes\{
+     FieldDefinition, 
+     ShouldValidate,
+     FormControl
+};
 
 class DateField extends TemporalField {
 
      #[ShouldValidate()]
+     #[FormControl("min")]
 	 protected mixed $min_date = null;
 
      #[ShouldValidate()]
+     #[FormControl("max")]
 	 protected mixed $max_date = null;
 
 	 public function min_date(mixed $min_date){
@@ -42,6 +48,10 @@ class DateField extends TemporalField {
 
      protected function initialize_defaults(){
          $this->type = ColumnType::DATE;
+
+         if(!$this->control_type){
+             $this->control_type = "date";
+         }
 
          parent::initialize_defaults();
      }

@@ -2,7 +2,10 @@
 
 namespace SaQle\Orm\Entities\Field\Types\Base;
 
-use SaQle\Orm\Entities\Field\Attributes\{FieldDefinition, ShouldValidate};
+use SaQle\Orm\Entities\Field\Attributes\{
+	 FieldDefinition, 
+	 ShouldValidate
+};
 
 class TemporalField extends Field {
 	 //the format 

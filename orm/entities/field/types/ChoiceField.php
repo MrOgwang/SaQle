@@ -4,11 +4,16 @@ namespace SaQle\Orm\Entities\Field\Types;
 
 use SaQle\Orm\Database\ColumnType;
 use RuntimeException;
-use SaQle\Orm\Entities\Field\Attributes\{FieldDefinition, ShouldValidate};
+use SaQle\Orm\Entities\Field\Attributes\{
+	 FieldDefinition, 
+	 ShouldValidate,
+	 FormControl
+};
 
 class ChoiceField extends CharField {
 
-	 private ?array $raw_choices = null;
+     #[FormControl('choices')]
+	 protected ?array $raw_choices = null;
 
 	 //the choices to pick from
 	 #[ShouldValidate()]
@@ -34,6 +39,7 @@ class ChoiceField extends CharField {
 	 }
 
 	 //whether to pick multiple choices
+	 #[FormControl()]
 	 protected bool $multiple = false;
 
 	 //the human readable label for particular choice
@@ -75,5 +81,18 @@ class ChoiceField extends CharField {
 	 	 
 	 	 return $this;
 	 }
+
+	 protected function initialize_defaults(){
+	 	 if(!$this->control_type){
+	 	 	 
+	 	 	 if($this->multiple){
+	 	 	 	 $this->control_type = "checkbox";
+	 	 	 }else{
+	 	 	 	 $this->control_type = count($this->choices) > 5 ? "select" : "radio";
+	 	 	 }
+	 	 }
+
+		 parent::initialize_defaults();
+     }
 }
 
