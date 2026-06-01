@@ -199,4 +199,8 @@ abstract class ModelCollection extends TypedCollection implements IModel, JsonSe
      public function pages($window = 2){
          return $this->paginator ? $this->paginator->pages() : [1];
      }
+
+     public function records_to_show() : array {
+         return $this->paginator ? $this->paginator->records_to_show : [];
+     }
 }

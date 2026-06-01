@@ -15,8 +15,7 @@ final class FileResponse extends Response {
          parent::__construct($status, $headers);
      }
 
-     protected function send_content() : void {
-
+     protected function prepare_response() : void {
          $path = $this->file_info['path'];
          
          if(!is_file($path)){
@@ -55,24 +54,17 @@ final class FileResponse extends Response {
 
                  foreach ($client_etags as $client_etag){
                      $client_etag = trim($client_etag, " W/\"");
-
-                     if($client_etag === $etag) {
+                     if($client_etag === $etag){
                          $this->set_status(304);
-                         $this->send_headers();
-                         exit;
                      }
                  }
              }
          }else{
              $this->header('Cache-Control', 'no-store, no-cache, must-revalidate');
          }
+     }
 
-         $this->send_headers();
-
-         if(ob_get_level()){
-             ob_end_clean();
-         }
-
-         readfile($path);
+     protected function send_content() : void {
+         readfile($this->file_info['path']);
      }
 }

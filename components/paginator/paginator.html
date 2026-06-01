@@ -1,0 +1,39 @@
+ <div class="flex v_center pagination">
+ 	 <div class="flex v_center pagination-label">
+ 	 	 <p>Showing 1 - 10 of {{ $paginator->total_records() }}</p>
+ 	 </div>
+ 	 <div class="flex center pagination-records">
+ 	 	 <component:block 
+ 	 	     name='saqle.picker' 
+ 	 	     label='Per page' 
+ 	 	     :options="[
+ 	 	         '5' => 5,
+ 	 	         '10' => 10,
+ 	 	         '20' => 20,
+ 	 	         '50' => 50,
+ 	 	         '100' => 100,
+ 	 	         '200' => 200,
+ 	 	         '500' => 500,
+ 	 	         'all' => 'All'
+ 	 	     ]"
+ 	 	 />
+ 	 </div>
+ 	 <div class="flex v_center row_reverse pagination-pages">
+ 	 	 <div class='flex v_center pagesarea'>
+			 @if($paginator->has_prev())
+			 <a href="{{ request()->uri() }}?page={{ $paginator->page() - 1 }}&records={{ $paginator->per_page_count() }}" class="flex center btn"><span>«</span></a>
+			 @endif
+
+			 @foreach($paginator->pages() as $p)
+			 <a href="{{ request()->uri() }}?page={{ $p }}&records={{ $paginator->per_page_count() }}"
+			   class="flex center btn {{ $p == $paginator->page() ? 'active' : '' }}">
+			   <span>{{ $p }}</span>
+			 </a>
+			 @endforeach
+
+			 @if($paginator->has_next())
+			 <a href="{{ request()->uri() }}?page={{ $paginator->page() + 1 }}&records={{ $paginator->per_page_count() }}" class="flex center btn"><span>»</span></a>
+			 @endif
+		 </div>
+	 </div>
+ </div>

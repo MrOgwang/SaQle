@@ -55,7 +55,7 @@ return [
 
      /**
        * This is the extension of component temnplate files:
-       * 
+       *  
        * Defaults to html
        * */
      'component_template_ext' => 'html',
@@ -69,10 +69,6 @@ return [
  	 //system administrator settings
  	 'system_admin_email' => '',
      
- 	 'system_admin_name'  => '',
-
-     'protected_file_component' => 'saqle.protectedfile',
-
-     'static_file_component' => 'saqle.staticfile'
+ 	 'system_admin_name'  => ''
  ]
 ?>

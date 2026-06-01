@@ -2,7 +2,6 @@
 
 namespace SaQle\Core\Ui;
 
-use SaQle\Core\Ui\Utils\ComponentPropsParser;
 use SaQle\Core\Registries\ComponentRegistry;
 use SaQle\Http\Response\Message;
 use SaQle\Http\Request\Request;
@@ -28,7 +27,7 @@ class UiComponentRenderer {
      //runtime component rendering API
      public function component(string $name, array $props = [], array $context = [], string $slot = '') : string {
 
-         $definition = ComponentRegistry::get_definition($name);
+         $definition = ComponentRegistry::get_definition($name, $props);
 
          if(!$definition){
              return "<!-- component '{$name}' not found -->";

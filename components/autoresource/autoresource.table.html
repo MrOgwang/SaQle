@@ -1,0 +1,19 @@
+
+<div class='resourcelist'>
+     <div class='resourcelist-header'>
+         <div class='breadcramb'>
+             {{ $current_resource->plural_label }} > List
+         </div>
+         <div class='title'>
+             <div class='titleh'>
+                 <h2>{{ $current_resource->plural_label }}</h2>
+             </div>
+             <div class='titleo'>
+                 <a href='#'>Create {{ ucwords($current_resource->singular_label) }}</a>
+             </div>
+         </div>
+     </div>
+     <div class='resourcelist-body'>
+         <component:block name='saqle.datapanel' :panel='$panel'/>
+     </div>
+</div>

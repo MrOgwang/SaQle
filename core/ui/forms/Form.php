@@ -97,9 +97,12 @@ final class Form {
          get => $this->fillable;
      }
 
-     public static function make(string $form_name) : static {
-         [$model_name, $model_class, $method] = FormModelResolver::resolve($form_name);
-
+     public static function make_from_model(
+         string $model_class, 
+         string $method, 
+         ?string $model_name = null,
+         ?string $form_name = null
+     ) : static {
          $form = new static();
 
          $form->form_name = $form_name;
@@ -119,41 +122,12 @@ final class Form {
          return $form;
      }
 
-     public function bind(FormRuntimeContext $context): void {
-         $this->context = $context;
+     public static function make_from_name(string $form_name) : static {
+         [$model_name, $model_class, $method] = FormModelResolver::resolve($form_name);
+         return self::make_from_model($model_class, $method, $model_name, $form_name);
      }
 
-
-
-
-
-
-     public function render(): string {
-         $html = '<form method="'.$this->context->method.'" action="'.$this->context->action.'">';
-
-         $context = ['session_user' => request()->user ?? new GuestUser()];
-
-         foreach($this->blueprint->fields as $field_def){
-
-             $control_attrs = $field_def['control_attrs'];
-
-             if (isset($this->context->input[$field_def['name']])) {
-                 $control_attrs['value'] = $this->context->input[$field_def['name']];
-             }
-
-             $field = new FormField(
-                 control_attributes: $control_attrs,
-                 field_attributes: array_merge($context, $field_def['field_attrs']),
-                 state: request()->method() === 'GET' ? 'default' : ($this->context->errors ? 'invalid' : 'valid')
-             );
-
-             $html .= $field->render([
-                 'error' => $this->context->errors[$field_def['name']] ?? null
-             ]);
-         }
-
-         $html .= '</form>';
-
-         return $html;
+     public function bind(FormRuntimeContext $context): void {
+         $this->context = $context;
      }
 }

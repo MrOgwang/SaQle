@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace SaQle\Orm\Entities\Model\Collection;
 
-class Paginator {
+class Paginator { 
      public int $page;
      public int $per_page;
      public int $total_records;

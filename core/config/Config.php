@@ -100,7 +100,11 @@ final class Config {
 
              'saqle_routes_dirs' => [realpath(__DIR__.'/../../routes')],
 
-             'static_assets_route' => '/private-asset'
+             'static_assets_route' => '/private-asset',
+
+             'protected_file_component' => 'saqle.protectedfile',
+
+             'static_assets_component' => 'saqle.staticfile'
          ];
      }
 }

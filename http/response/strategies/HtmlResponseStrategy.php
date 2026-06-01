@@ -93,7 +93,7 @@ final class HtmlResponseStrategy implements ResponseStrategy {
           * */
          return array_merge($request->route->layout ?? [], [config('error.component')."@get"]);
      }
-
+ 
      public function build(Request $request, Message $result) : Response {
 
          $layout = $this->get_layout($request, $result);
@@ -109,7 +109,7 @@ final class HtmlResponseStrategy implements ResponseStrategy {
          $html = $renderer->render($tree, $context);
 
          $html = $renderer->wrap_root($html);
-
+ 
          return new HtmlResponse($html);
      }
 }

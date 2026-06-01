@@ -63,7 +63,7 @@ final class Router {
              $route->set_name($name);
              self::$route_names[] = $name;
          }else{
-            throw new RuntimeException("No name defined for the route - {$r->method} : {$r->url}");
+            throw new RuntimeException("No name defined for the route - {$route->method} : {$route->url} or the name {$name} is already taken by another route!");
          }
      }
      

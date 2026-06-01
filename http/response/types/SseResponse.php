@@ -7,7 +7,9 @@ use Closure;
 final class SseResponse extends Response {
      public function __construct(private Closure $callback) {
          parent::__construct(200);
+     }
 
+     protected function prepare_response() : void {
          $this->headers([
              'Content-Type' => 'text/event-stream',
              'Cache-Control' => 'no-cache',
@@ -19,10 +21,6 @@ final class SseResponse extends Response {
      protected function send_content() : void {
          @ini_set('output_buffering', 'off');
          @ini_set('zlib.output_compression', '0');
-
-         while (ob_get_level() > 0){
-             ob_end_flush();
-         }
 
          ($this->callback)();
      }

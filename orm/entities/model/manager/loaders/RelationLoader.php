@@ -185,8 +185,6 @@ final class RelationLoader {
 
          $finalsql = "WITH {$query_table_name} AS ({$cte_manager_query['sql']}) {$outer_manager_query['sql']}";
 
-         //echo "$finalsql\n";
-
          $finalmanager = $foreign_model::using($connection)->get()->sqlndata($finalsql, $testfilters->data ? $testfilters->data : null);
          $this->attach_nested($with, $finalmanager);
 

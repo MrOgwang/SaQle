@@ -10,15 +10,10 @@ use SaQle\Build\Utils\{
      TemplateCompiler,
      ModelCompiler
 };
-use SaQle\Core\Support\Route;
-use SaQle\Core\Registries\ComponentRegistry;
 use RecursiveIteratorIterator;
 use RecursiveDirectoryIterator;
-use FilesystemIterator;
-use ReflectionClass;
-use ReflectionMethod;
 
-class BuildProject{
+class BuildProject {
 
      protected Manifest $manifest;
 
@@ -94,50 +89,6 @@ class BuildProject{
            }
      }
 
-     private function filter_route_files($files){
-         return array_filter($files, function($file){
-             $filename = basename($file['path']);
-             return $file['dir'] === 'routes' && $file['type'] === 'modified' && ($filename === 'routes.php' || $filename === 'resources.php');
-         });
-     }
-
-     private function load_routes($files){
-         //load routes from files
-         foreach ($files as $file){
-             if(file_exists($file['path'])){
-                 require_once $file['path'];
-             }
-         }
-
-         //load routes defined in components via Route attribute
-         $components = ComponentRegistry::all();
-
-         foreach($components as $component_name => $component_config){
-             if($component_config['controller'] && class_exists($component_config['controller'])){
-
-                 $class_name = $component_config['controller'];
-                 $reflection = new ReflectionClass($class_name);
-
-                 foreach($reflection->getMethods(ReflectionMethod::IS_PUBLIC) as $method){
-
-                     //skip inherited public methods
-                     if($method->getDeclaringClass()->getName() !== $class_name) {
-                         continue;
-                     }
-
-                     //get route attribute
-                     $route_attr = $method->getAttributes(Route::class)[0] ?? null;
-
-                     if($route_attr){
-                         $route = $route_attr->newInstance();
-                         $route->set_target($component_name."@".$method->getName());
-                         $route->initialize();
-                     }
-                 }
-             }
-         }
-     }
-
      public function execute(string $type = 'all'){
          $this->manifest = new Manifest();
 
@@ -155,16 +106,10 @@ class BuildProject{
                  ModelCompiler::compile();
 
                  //get modified files
-                 $files = $this->get_all_files();
-
-                 //filter route files
-                 $route_files = $this->filter_route_files($files);
-
-                 //load route files
-                 $this->load_routes($route_files);
+                 $modified_files = $this->get_all_files();
 
                  //compile routes
-                 RouteCompiler::compile();
+                 RouteCompiler::compile($modified_files);
                  
                  //compile events
                  EventCompiler::compile();
@@ -175,7 +120,7 @@ class BuildProject{
                  //save the updated build manifest
                  $this->manifest->save();
 
-                 echo "Build complete. Changed files: ".count($files).PHP_EOL;
+                 echo "Build complete. Changed files: ".count($modified_files).PHP_EOL;
              break;
              case "resources":
                 echo "Building resources!";

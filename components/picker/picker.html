@@ -1,0 +1,22 @@
+<div class="picker" tabindex="0" data-value="newest">
+     <div class="flex v_center picker-label">
+         {{ $label }}
+     </div>
+     <button type="button" class="picker-trigger">
+         <span class="picker-value">
+             {{ array_values($options)[0] }}
+         </span>
+         <span class="picker-chevron">
+             ▼
+         </span>
+     </button>
+     <div class="picker-menu">
+         @foreach($options as $key => $value)
+         <block name='picker-option'>
+             <div class="picker-option active" data-value="{{ $key }}">
+                 {{ $value }}
+             </div>
+         </block>
+         @endforeach
+     </div>
+</div>

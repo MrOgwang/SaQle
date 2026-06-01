@@ -26,7 +26,7 @@ class FileLogger implements ReadWriteModes{
 			     fwrite($file_handle, $file_contents);
 			     fclose($file_handle);
 		     }catch(Exception $ex){
-			     echo $ex;
+			     //echo $ex;
 		     }
 		 }
 	 }
@@ -52,7 +52,7 @@ class FileLogger implements ReadWriteModes{
 				 }
 			     fclose($file_handle);
 		     }catch(Exception $ex){
-			     echo $ex;
+			     //echo $ex;
 		     }
 		 }
 		 return $file_contents;

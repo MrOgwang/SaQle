@@ -120,7 +120,7 @@ final class Resource {
 
      /* ================== Helpers ================== */
 
-     private function resolve_model(Request $request): string{
+     private function resolve_model(Request $request): string {
          if (!isset($request->route->model_class)){
              throw new RuntimeException("Resource route missing model_class");
          }

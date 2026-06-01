@@ -10,7 +10,10 @@ final class RedirectResponse extends Response {
          array $headers = []
      ){
          parent::__construct($status, $headers);
-         $this->header('Location', $url);
+     }
+
+     protected function prepare_response() : void {
+         $this->header('Location', $this->url);
      }
 
      protected function send_content(): void {

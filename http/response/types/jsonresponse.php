@@ -13,6 +13,9 @@ final class JsonResponse extends Response {
          array $headers = []
      ){
          parent::__construct($status, $headers);
+     }
+
+     protected function prepare_response() : void {
          $this->header('Content-Type', 'application/json; charset=UTF-8');
      }
 

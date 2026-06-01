@@ -164,21 +164,28 @@ class TemplateCompiler {
 
      private static function compile_component_tags(string $template) : string {
 
-         //$pattern = '/<component:(block|form)\s+(.*?)\/>/isx';
          $pattern = '/
             <component:(block|form)
-            \s+
+            \s*
             (
                 (?:
-                    [^"\'>]
+                    [^<"\'>]
                     |
-                    ".*?"
+                    "(?:\\\\.|[^"\\\\])*"
                     |
-                    \'.*?\'
+                    \'(?:\\\\.|[^\'\\\\])*\'
                 )*
             )
-            \/>
-            /isx';
+            (?:
+                \/>
+
+                |
+
+                >
+                (.*?)
+                <\/component:\1>
+            )
+         /isx';
 
          return preg_replace_callback(
              $pattern,
@@ -200,12 +207,10 @@ class TemplateCompiler {
              return '<!-- component missing name -->';
          }
 
-         //unset($attributes['name']);
-
          $compiled_props = self::compile_props($attributes);
 
          if($type === 'form'){
-             $name = 'saqle.autoform';
+             $name = 'saqle.autoresource';
          }
 
          return "<?php echo \$__renderer->component('".$name."', ".$compiled_props.", \$__context); ?>";

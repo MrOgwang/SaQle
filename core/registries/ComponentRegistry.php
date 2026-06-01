@@ -55,8 +55,8 @@ final class ComponentRegistry {
          return $components[$name];
      }
 
-     public static function get_definition(string $name) : UiComponentDefinition {
-         return self::resolve_component($name, 'GET', 'layout');
+     public static function get_definition(string $name, array $props = []) : UiComponentDefinition {
+         return self::resolve_component($name, 'GET', 'layout', $props);
      }
 
      public static function assert_components_exist(array $components){
@@ -67,8 +67,18 @@ final class ComponentRegistry {
          }
      }
 
+     private static function get_autoform_action(array $props){
+         $mode = $props['mode'] ?? null;
+
+         if(!$mode || $mode === "create"){
+             return "show_create_form";
+         }
+
+         return "show_edit_form";
+     }
+
      public static function resolve_component(
-         string $reference, string $http_verb, string $type = 'target'
+         string $reference, string $http_verb, string $type = 'target', array $props = []
      ) : UiComponentDefinition
      {
          //reference must be a non empty string, otherwise complain loudly
@@ -113,6 +123,9 @@ final class ComponentRegistry {
              $component_def->controller = $controller;
 
              $action = $reference_array[1] ?? '';
+             if(!$action && $component_name === "saqle.autoresource"){
+                 $action = self::get_autoform_action($props);
+             }
 
              //if the action has been provided at this point, ensure the method exists in class
              if($action && !method_exists($controller, $action)){

@@ -84,19 +84,24 @@ class UiComponentNode {
 
          $this->context->parent_context(new UiComponentContext($parent_context));
 
-         $css = $this->def->css();
-         $js = $this->def->js();
-         AssetManager::add_css($css);
-         AssetManager::add_js($js);
-
          $compiled_template_path = $this->def->compiled_template_path;
+         $template_path = $this->def->template_path;
+         
          if($this->def->has_many_templates){
              $resolver = Template::get_resolver($this->def->name);
              if($resolver){
-                 $template_key = $resolver($this->props);
+                 $template_key = $resolver($request, $this->props);
                  $compiled_template_path = $this->def->template_variations[$template_key]['compiled_template_path'] ?? $compiled_template_path;
+                 $template_path = $this->def->template_variations[$template_key]['template_path'] ?? $template_path;
              }
          }
+
+         $css_loaded_components = [];
+         $js_loaded_components = [];
+         $css = $this->def->css($css_loaded_components, $template_path);
+         $js = $this->def->js($js_loaded_components , $template_path);
+         AssetManager::add_css($css);
+         AssetManager::add_js($js);
 
          $view = new View($compiled_template_path);
 

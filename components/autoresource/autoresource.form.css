@@ -25,6 +25,7 @@
 
     --input-height:40px;
     --transition:.2s ease;
+    --warning:#f59e0b;
 }
 
 /* =========================
@@ -318,11 +319,11 @@ input[type="week"]{
 
 button{
     border:none;
-    height:48px;
-    padding:0 22px;
+    height:40px;
+    padding:0 16px;
     border-radius:14px;
-    font-size:15px;
-    font-weight:600;
+    font-size:13px;
+    font-weight:500;
     cursor:pointer;
     transition:
         transform var(--transition),

@@ -17,9 +17,9 @@ class View {
 
      public function render(){
          extract($this->data, EXTR_SKIP);
-
          ob_start();
          include $this->template_path;
-         return ob_get_clean();
+         $content = ob_get_clean();
+         return $content === false ? '' : $content;
      }
 }

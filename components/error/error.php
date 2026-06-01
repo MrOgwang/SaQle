@@ -20,4 +20,3 @@ class Error implements ErrorComponent {
 	 }
 
 }
-?>

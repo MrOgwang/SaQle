@@ -1,19 +1,30 @@
 <?php
-class XmlResponse{
-     protected $data;
-     protected $status;
+namespace SaQle\Http\Response\Types;
 
-     public function __construct($data, $status = 200){
-         $this->data = $data;
-         $this->status = $status;
+use SaQle\Http\Response\Response;
+
+final class XmlResponse extends Response {
+
+     public function __construct(protected string $xml, int $status = 200, array $headers = []) {
+         parent::__construct($status, $headers);
      }
 
-     public function send(){
-         http_response_code($this->status);
-         header('Content-Type: application/xml; charset=UTF-8');
-        
+     protected function prepare_response() : void {
+         $this->header('Content-Type', 'application/xml; charset=UTF-8');
+     }
+
+     public function set_body(string $xml): static {
+         $this->xml = $xml;
+         return $this;
+     }
+
+     public function get_body(): string {
+         return $this->xml;
+     }
+
+     protected function send_content(): void {
          $xml = new SimpleXMLElement('<response/>');
-         array_walk_recursive($this->data, array ($xml, 'addChild'));
+         array_walk_recursive($this->xml, array ($xml, 'addChild'));
          echo $xml->asXML();
      }
 }

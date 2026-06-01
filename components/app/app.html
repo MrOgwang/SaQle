@@ -1,0 +1,40 @@
+<div class="app">
+     <div class='appleft'>
+         <div class='flex v_center navheader'>
+             <div>
+                 <h2>{{ config('app.name') }}</h2>
+                 <p>Admin Panel</p>
+             </div>
+         </div>
+         <div class='navbody'>
+             <a href='#' class="flex v_center">
+                 <span class="flex center icon material-symbols-outlined"></span>
+                 <span class='flex v_center label'>Dashboard</span>
+             </a>
+             @foreach($resources as $r)
+             <a href='{{ $r->url }}' class="flex v_center">
+                 <span class="flex center icon material-symbols-outlined"></span>
+                 <span class='flex v_center label'>{{ $r->plural_label }}</span>
+             </a>
+             @endforeach
+         </div>
+     </div>
+     <div class='appright'>
+         <div class='flex v_center row_reverse appheader'>
+             <div class='flex v_center avatarribbon'>
+                 <div class='flex v_center'>
+                      <div class='flex center admininitials'>
+                         <span>{{ strtoupper($session_user->first_name[0].$session_user->last_name[0]) }}</span>
+                      </div>
+                      <div>
+                          <h5 class='poppins-semibold'>{{ $session_user->first_name }}&nbsp;{{ $session_user->last_name }}</h5>
+                          <p>Admin</p>
+                      </div>
+                 </div>
+             </div>
+         </div>
+         <div class='appbody'>
+             <component:slot/>
+         </div>
+     </div>
+</div>

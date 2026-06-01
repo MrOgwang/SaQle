@@ -124,58 +124,6 @@ class Runtime {
          $response->send();
      }
 
-     private function execute_controller($request) : Message {
-
-         /**
-          * Two or more controllers can be executed in one request lifecycle,
-          * this is called aggregation. Aggregation works differently for API
-          * and WEB requests.
-          * 
-          * For web requests, aggregation combines view and context data from
-          * different components to form the final layout that will be sent back
-          * to client.
-          * 
-          * For APIs, aggregation can collect results from different controllers
-          * and return a combined result. 
-          * */
-
-         //execute the target controller first.
-
-         /**
-          * If this is a post, put, patch or delete request,
-          * no aggregation should happen.
-          * 
-          * Execute the target component/controller and return an http_message
-          * at once
-          * */
-         if($request->is_unsafe()){
-             return ActionExecutor::execute($request);
-         }
-
-         /**
-          * For get requests, do aggregates only if target
-          * result is not a redirect or file
-          * */
-         $components = [];
-         foreach($request->route->layout ?? [] as $c){
-             $components[] = ComponentRegistry::get_definition($c);
-         }
-         $components[] = $request->route->compiled_target;
-         $components = array_reverse($components);
-
-         $aggregate_context = [];
-         foreach($components as $comp){
-             $http_message = ActionExecutor::execute($request, $comp->controller, $comp->method);
-             if($http_message instanceof FileMessage || $http_message instanceof RedirectMessage){
-                 return $http_message;
-             }
-
-             $aggregate_context = array_merge($aggregate_context, $http_message->data ?? []);
-         }
-
-         return Message::ok($aggregate_context);
-     }
-
      public function handle(Request $request){
          try{
 
@@ -189,13 +137,13 @@ class Runtime {
 
              //step 2: execute the controller action
              $this->app()->set_stage(AppStage::REQUEST_RESOLUTION);
-             //$http_message = $this->execute_controller($request);
              $http_message = ActionExecutor::execute($request);
              $response = $this->resolve_response($request, $http_message);
 
              //step 3: run response middleware
              $this->app()->set_stage(AppStage::RESPONSE_BOOTSTRAP);
              $http_message = $this->bootstrap_response($request, $response);
+
              /**
               * If response middleware returns an http_message, 
               * override the response from controller execution.
@@ -217,7 +165,6 @@ class Runtime {
              $this->app()->set_stage(AppStage::TERMINATED);
 
          }catch(Throwable $e){
-             //print_r($e);
              $this->handle_exception($e, $request);
          }
      }

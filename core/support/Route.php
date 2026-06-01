@@ -48,13 +48,16 @@ class Route {
 
      private ?ResponseType $response;
 
+     private ?string $model = null;
+
      public function __construct(
      	 string $name,
      	 string $method,
      	 string $url,
      	 string $guards = "",
      	 array $layout = [],
-     	 ?ResponseType $response = null
+     	 ?ResponseType $response = null,
+         ?string $model = null
      ){
      	 $this->name = $name;
      	 $this->method = $method;
@@ -62,6 +65,7 @@ class Route {
      	 $this->guards = trim($guards);
      	 $this->layout = $layout;
      	 $this->response = $response;
+         $this->model = $model;
      }
 
      private function validate_property(string $prop, string $value) : string {
@@ -81,7 +85,7 @@ class Route {
      public function initialize(){
 
      	 $method = $this->method;
-     	 $router = Router::$method($this->url, $this->target)->name($this->name);
+     	 $router = Router::$method($this->url, $this->target, $this->model)->name($this->name);
 
      	 if($this->guards){
      	 	 $router->requires($this->guards);

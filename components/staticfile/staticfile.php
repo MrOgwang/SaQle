@@ -17,8 +17,8 @@ class StaticFile {
          }
 
          //strict filename validation (VERY IMPORTANT)
-         //allows only letters, numbers, dash, underscore
-         if(!preg_match('/^[a-zA-Z0-9_-]+$/', $file)){
+         //allows only letters, numbers, dash, underscore and dots
+         if(!preg_match('/^[a-zA-Z0-9_.-]+$/', $file)){
              throw bad_request_exception();
          }
 
@@ -34,15 +34,17 @@ class StaticFile {
          //ensure file exists AND is inside base directory
          if($path === false || !str_starts_with($path, $base_dir) || !is_file($path)){
              throw not_found_exception();
-         }
+         } 
          
-         return Message::file([
+         $file = [
              'size' => filesize($path),
              'mime' => $allowed_types[$type],
              'inline' => false,
              'name' => "asset",
              'path' => $path,
              'cache' => true
-         ]);
+         ];
+
+         return Message::file($file);
      }
 }

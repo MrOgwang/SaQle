@@ -314,7 +314,6 @@ class MySqlDriver extends DbDriver {
              $data = null;
              return $this->execute($sql, $data)['response'];
          }catch(\Exception $e){
-            echo "Sql: $sql\n";
             throw $e;
          }
      }
@@ -488,7 +487,6 @@ class MySqlDriver extends DbDriver {
                  ]);
              }
          }catch(\Exception $e){
-             echo "Sql: $sql\n";
              throw $e;
          }
 

@@ -15,14 +15,19 @@ abstract class Schema {
 	 //all the models regsieted in schema
 	 protected array $models = [];
 
-	 public function get_models() : array {
+	 public function get_developer_models() : array {
 	 	 $resolved = [];
          foreach($this->models as $key => $model_class){
              $table = is_numeric($key) ? $this->infer_table_name($model_class) : $key;
              $resolved[$table] = $model_class;
          }
+
+         return $resolved;
+	 }
+
+	 public function get_models() : array {
          return array_merge(
-         	 $resolved, 
+         	 $this->get_developer_models(),
          	 ['model_temp_ids' => TempId::class], 
          	 $this->get_framework_models()
          );
@@ -33,6 +38,18 @@ abstract class Schema {
 	 	 foreach($this->get_models() as $tablename => $modelclass){
 	 	 	 $interfaces = class_implements($modelclass);
 	 	 	 if(!in_array(ITempModel::class, $interfaces)){
+	 	 	     $models[$tablename] = $modelclass;
+	 	     }
+	 	 }
+
+	 	 return $models;
+	 }
+
+	 public function get_temporary_models() : array {
+	 	 $models = [];
+	 	 foreach($this->get_models() as $tablename => $modelclass){
+	 	 	 $interfaces = class_implements($modelclass);
+	 	 	 if(in_array(ITempModel::class, $interfaces)){
 	 	 	     $models[$tablename] = $modelclass;
 	 	     }
 	 	 }

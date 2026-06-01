@@ -87,7 +87,7 @@ class UiComponentDefinition {
          ];
      }
 
-     private function get_assets(string $type, array &$loaded_components = []) : array {
+     private function get_assets(string $type, array &$loaded_components = [], string $template_path = "") : array {
          if(isset($loaded_components[$this->name])) {
              return [];
          }
@@ -95,6 +95,9 @@ class UiComponentDefinition {
          $loaded_components[$this->name] = true;
 
          $files = [];
+
+         // 0. get the name of template selected
+         $template_name = $template_path ? pathinfo($template_path, PATHINFO_FILENAME) : "";
 
          // 1. Resolve dependencies first
          $deps = $this->get_dependencies()[$type];
@@ -128,7 +131,7 @@ class UiComponentDefinition {
                  $files[] = path_join([config('base_path'), "public/static/{$type}/", "{$dep}.{$type}"]);
              }
          }
-
+ 
          //2. Add this component's own assets
          $name = $this->get_name_from_ref($this->name);
          $file = "{$this->path}/{$name}.{$type}";
@@ -136,15 +139,23 @@ class UiComponentDefinition {
          if(file_exists($file)){
              $files[] = $file;
          }
+  
+         //if a template other than the default one was selected
+         if($file !== $template_name){
+             $file2 = "{$this->path}/{$template_name}.{$type}";
+             if(file_exists($file2)){
+                 $files[] = $file2;
+             }
+         }
 
          return array_unique($files);
      }
 
-     public function js(array &$loaded_components = []) : array {
-         return $this->get_assets("js", $loaded_components);
+     public function js(array &$loaded_components = [], string $template_path = "") : array {
+         return $this->get_assets("js", $loaded_components, $template_path);
      }
 
-     public function css(array &$loaded_components = []) : array {
-         return $this->get_assets("css", $loaded_components);
+     public function css(array &$loaded_components = [], string $template_path = "") : array {
+         return $this->get_assets("css", $loaded_components, $template_path);
      }
 }

@@ -127,10 +127,6 @@ abstract class Response {
      }
 
      protected function send_headers(): void {
-         if(headers_sent()){
-             throw new RuntimeException('Headers already sent.');
-         }
-
          http_response_code($this->status);
 
          foreach($this->headers as $name => $values){
@@ -156,23 +152,32 @@ abstract class Response {
      }
 
      protected function prepare_for_output(): void {
+         if(headers_sent($file, $line)) {
+             throw new RuntimeException("Headers already sent before buffer handling in $file:$line");
+         }
+
          while(ob_get_level() > 0){
              ob_end_flush();
          }
+     }
+
+     protected function prepare_response() : void {
      }
 
      protected function normalize_header_name(string $name): string {
          return implode('-', array_map('ucfirst', explode('-', strtolower(trim($name)))));
      }
 
-     final public function send(): void {
+     final public function send() : void {
          if($this->sent){
              return;
          }
-
+         
+         $this->prepare_response();
          $this->send_headers();
          $this->prepare_for_output();
          $this->send_content();
+
          $this->sent = true;
      }
 

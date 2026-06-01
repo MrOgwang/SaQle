@@ -1,0 +1,87 @@
+.picker{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    position:relative;
+    font-family:sans-serif;
+    border:1px solid var(--steel_gray_100);
+    height:32px;
+    border-radius: 10px;
+}
+
+.picker-label{
+    white-space:nowrap;
+    padding-left:1em;
+    padding-right:1em;
+    border-right:1px solid var(--steel_gray_100);
+    height:32px;
+    color:var(--steel_gray_300);
+}
+
+.picker-trigger{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    height:30px;
+    border:0;
+    background:#fff;
+    cursor:pointer;
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+}
+
+.picker-chevron{
+    transition:transform .2s;
+}
+
+.picker.open .picker-chevron{
+    transform:rotate(180deg);
+}
+
+.picker-menu{
+    position:absolute;
+
+    left:0;
+    top:calc(100% + 6px);
+
+    min-width:100%;
+
+    background:#fff;
+
+    border:1px solid #d8d8d8;
+    border-radius:8px;
+
+    box-shadow:
+        0 4px 12px rgba(0,0,0,.08);
+
+    max-height:250px;
+    overflow-y:auto;
+
+    display:none;
+
+    z-index:1000;
+}
+
+.picker.open .picker-menu{
+    display:block;
+}
+
+.picker.open.up .picker-menu{
+    top:auto;
+    bottom:calc(100% + 6px);
+}
+
+.picker-option{
+    padding:10px 14px;
+    cursor:pointer;
+}
+
+.picker-option:hover,
+.picker-option.focused{
+    background:#f5f5f5;
+}
+
+.picker-option.active{
+    font-weight:600;
+}
