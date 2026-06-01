@@ -40,7 +40,7 @@ class UiComponentRenderer {
          $node->slot = $slot;
 
          return $this->render($node, $context);
-     }
+     } 
 
      //recursive tree rendering
      public function render(UiComponentNode $node, array $context = []) : string {
