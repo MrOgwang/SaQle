@@ -41,6 +41,8 @@ final class ReadManager extends IReadManager {
 	 	 	 $paginator->per_page = $records;
 	 	 	 $paginator->total_records = $total;
 	 	 	 $paginator->total_pages = ceil($total / $records);
+	 	 	 $paginator->upper_limit = $total > $records ? $records * $page : $total;
+	 	 	 $paginator->lower_limit = (($page - 1) * $records) + 1;
 
 	 	 	 $collection->set_paginator($paginator);
 	 	 }

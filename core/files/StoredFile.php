@@ -36,7 +36,8 @@ class StoredFile implements JsonSerializable{
      /**
      * Create StoredFile from JSON stored in DB
      */
-     public static function from_json(?string $json): ? self {
+     public static function from_json(?string $json = null): ? self {
+
          if(!$json){
              return null;
          }
@@ -46,7 +47,7 @@ class StoredFile implements JsonSerializable{
          if(!$meta || !isset($meta['name'])){
              return null;
          }
-
+         
          return new self($meta);
      }
 
@@ -68,7 +69,7 @@ class StoredFile implements JsonSerializable{
          if(!$this->meta){
             return $this->default_url;
          }
-
+         
          return $this->get_storage()->url($this->meta);
      }
 

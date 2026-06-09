@@ -2,42 +2,85 @@
 	 <div class='datapanel-header'>
 	 	 <div class='flex v_center datapanel-header-left'>
 	 	 	 <div class='flex v_center search-line'>
-	 	 	 	 <input placeholder='Search members...' type='search'>
-	 	 	 	 <button type='button'><i class="fa-solid fa-search"></i></button>
+	 	 	 	 <span class="flex center icon">
+					 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+					    <circle cx="11" cy="11" r="7"/>
+					    <line x1="16.65" y1="16.65" x2="21" y2="21"/>
+					 </svg>
+                 </span>
+	 	 	 	 <input autocomplete='off' id='searchInput' placeholder='Search members...' type='search'>
 	 	 	 </div>
-	 	 	 <button class='flex center panel_cancel_but' type='button'>
-	 	 	 	 <span class='flex center'><i class="fa fa-filter fa-fw"></i></span>
-		 	 	 <span class='flex center'>Filter</span>
-	 	 	 </button>
-	 	 	 <button class='flex center panel_cancel_but' type='button'>
-	 	 	 	 <span class='flex center'><i class="fa fa-sort fa-fw"></i></span>
-		 	 	 <span class='flex center'>Sort</span>
-	 	 	 </button>
-	 	 	 <button class='flex center panel_cancel_but' type='button'>
-	 	 	 	 <span class='flex center'><i class="fa fa-print fa-fw"></i></span>
-		 	 	 <span class='flex center'>Print</span>
-	 	 	 </button>
 	 	 </div>
 	 	 <div class='flex v_center row_reverse datapanel-header-right'>
-	 	 	 <button id='importUserButton' class='flex center panel_action_but' type='button'>
-	 	 	 	 <span class='flex center'><i class="fa fa-upload fa-fw"></i></span>
-		 	 	 <span class='flex center'>Bulk import</span>
-	 	 	 </button>
-	 	 	 <button id='addUserButton' class='flex center panel_action_but' type='button'>
-	 	 	 	 <span class='flex center'><i class="fa-solid fa-plus"></i></span>
-		 	 	 <span class='flex center'>Add member</span>
-	 	 	 </button>
+	 	 	 <div class='flex v_center button-group'>
+	 	 	 	 <button title='Table View' class='flex center' type='button'>
+				    <span class="flex center icon">
+				         <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+						    <rect x="3" y="4" width="18" height="16"/>
+						    <line x1="9" y1="4" x2="9" y2="20"/>
+						    <line x1="15" y1="4" x2="15" y2="20"/>
+						 </svg>
+				    </span>
+				 </button>
+				 <button title='Grid View' class='flex center' type='button'>
+				    <span class="flex center icon">
+				         <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+						    <rect x="3" y="3" width="7" height="7"/>
+						    <rect x="14" y="3" width="7" height="7"/>
+						    <rect x="3" y="14" width="7" height="7"/>
+						    <rect x="14" y="14" width="7" height="7"/>
+						 </svg>
+				    </span>
+				 </button>
+	 	 	 </div>
+	 	 	 <div class='flex v_cenyter button-group'>
+	 	 	 	 <button title='Fliter' class='flex center' type='button'>
+				    <span class="flex center icon">
+				         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+						    <polygon points="3,4 21,4 14,12 14,19 10,21 10,12"/>
+						 </svg>
+				    </span>
+				 </button>
+	 	 	 	 <button title='Print' class='flex center' type='button'>
+				    <span class="flex center icon">
+				         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+						    <rect x="6" y="3" width="12" height="6"/>
+						    <rect x="6" y="14" width="12" height="7"/>
+						    <rect x="3" y="9" width="18" height="7" rx="2"/>
+						 </svg>
+				    </span>
+				 </button>
+	 	 	 </div>
 	 	 </div>
 	 </div>
 	 <div class='datapanel-body'>
 	 	 <!-------------->
-	 	  <table>
+	 	  <table id='table-{{ str_replace(" ", "_", $current_resource->singular_label) }}'>
  	 	 	 <thead>
  	 	 	 	<tr>
  	 	 	 		 <th><span class='flex center'><i class="fa-solid fa-grip-vertical"></i></span></th>
  	 	 	 		 @foreach($panel->columns as $column_name => $column)
- 	 	 	 		 <th>{!! $column->label !!}</th>
+ 	 	 	 		 <th>
+ 	 	 	 		 	 <div class='flex v_center'>
+	 	 	 	 		 	 <span class='flex v_center'>{!! $column->label !!}</span>
+	 	 	 	 		 	 <span title='Sort By {!! $column->label !!}' 
+	 	 	 	 		 	 	data-column="{!! $column->index !!}" 
+	 	 	 	 		 	 	data-order="asc" 
+	 	 	 	 		 	 	data-table='table-{{ str_replace(" ", "_", $current_resource->singular_label) }}'
+	 	 	 	 		 	 	class="sort-but flex center icon">
+						         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 20 20">
+								    <line x1="8" y1="4" x2="8" y2="20"/>
+								    <polyline points="5,17 8,20 11,17"/>
+								    <line x1="16" y1="20" x2="16" y2="4"/>
+								    <polyline points="13,7 16,4 19,7"/>
+								 </svg>
+						     </span>
+						 </div>
+ 	 	 	 		 </th>
  	 	 	 		 @endforeach
+ 	 	 	 		 <th>&nbsp;</th>
+ 	 	 	 		 <th>&nbsp;</th>
+ 	 	 	 		 <th>&nbsp;</th>
  	 	 	 	 </tr>
  	 	 	 </thead>
  	 	 	 <tbody>
@@ -46,8 +89,42 @@
  	 	 	 	 <tr>
  	 	 	 	 	 <td><span class='flex center'><i class="fa-solid fa-grip-vertical"></i></span></td>
  	 	 	 	     @foreach($panel->columns as $column_name => $column)
- 	 	 	 	     <td>{{ $row->$column_name ?? "" }}</td>
+ 	 	 	 	     @if($panel->columns[$column_name]->type === 'image')
+ 	 	 	 	     <td><img class='dp-image' src="{!! $row->$column_name !!}"/></td>
+ 	 	 	 	     @else
+ 	 	 	 	     <td>{{ ucwords($row->$column_name ?? "") }}</td>
+ 	 	 	 	     @endif
  	 	 	 	     @endforeach
+ 	 	 	 	     <td title='View'>
+ 	 	 	 	     	<a href="{{ route(strtolower($current_resource->plural_label).'.view', ['id' => $row->{$current_resource->pk_column}]) }}" class='dp-action'>
+ 	 	 	 	     		<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+							    <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/>
+							    <circle cx="12" cy="12" r="3"/>
+							 </svg>
+ 	 	 	 	     	</a>
+ 	 	 	 	     </td>
+ 	 	 	 	     <td title='Edit'>
+ 	 	 	 	     	 <a href="{{ route(strtolower($current_resource->plural_label).'.edit.form', ['id' => $row->{$current_resource->pk_column}]) }}" class='dp-action'>
+ 	 	 	 	     		 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+							    <path d="M12 20h9"/>
+							    <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/>
+							 </svg>
+ 	 	 	 	     	 </a>
+ 	 	 	 	     </td>
+ 	 	 	 	     <td title='Delete'>
+ 	 	 	 	     	<form method='POST' action="{{ route(strtolower($current_resource->plural_label).'.delete', ['id' => $row->{$current_resource->pk_column}]) }}">
+ 	 	 	 	     		 <input type='hidden' name='_method' value='DELETE'/>
+	 	 	 	 	     	 <button type='submit' class='dp-action'>
+	 	 	 	 	     		 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+								    <polyline points="3 6 5 6 21 6"/>
+								    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+								    <path d="M10 11v6"/>
+								    <path d="M14 11v6"/>
+								    <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+								 </svg>
+	 	 	 	 	     	 </button>
+ 	 	 	 	         </form>
+ 	 	 	 	     </td>
  	 	 	 	 </tr>
  	 	 	 	 @endforeach
  	 	 	 	 <!--the table rows end here-->
@@ -57,7 +134,7 @@
 	 </div>
 	 @if($panel->paginator)
 	 <div class='datapanel-footer'>
-	 	 <component:block name='saqle.paginator' :paginator='$panel->data'/>
+	 	 <ui:component name='saqle.paginator' :paginator='$panel->data'/>
 	 </div>
 	 @endif
  </div>

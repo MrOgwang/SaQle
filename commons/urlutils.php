@@ -1,6 +1,7 @@
 <?php
 namespace SaQle\Commons;
-trait UrlUtils{
+
+trait UrlUtils {
 	 public static function add_url_parameter($url, $param_name, $param_value){
          $param_name = is_array($param_name) ? $param_name : [$param_name];
 		 $param_value = is_array($param_value) ? $param_value : [$param_value];

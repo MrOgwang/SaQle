@@ -56,7 +56,7 @@ class FileCommitter implements FileCommitInterface {
          $storage = StorageFactory::make($this->field->get_storage());
 
          foreach($commits as $commit){
-             $storage->delete($commit['relative_path']);
+             $storage->delete($commit['path']);
          }
      }
 

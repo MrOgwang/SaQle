@@ -7,6 +7,7 @@ use SaQle\Orm\Entities\Field\Attributes\{
 	 FieldDefinition,
 	 FormControl
 };
+use RuntimeException;
 
 class BooleanField extends IntegerField {
 
@@ -28,5 +29,20 @@ class BooleanField extends IntegerField {
 
 		 parent::initialize_defaults();
      }
+
+     public function default(mixed $default){
+     	 if(!is_bool($default) && !is_int($default)){
+     	 	 throw new RuntimeException('Invalid boolean value. Please provide an integer or a bool!');
+     	 }
+
+     	 if(is_bool($default)){
+     	 	 $default_value = $default === true ? 1 : 0;
+     	 }elseif(is_int($default)){
+     	 	 $default_value = $default > 0 ? 1 : 0;
+     	 }
+
+	 	 $this->default = $default_value;
+	 	 return $this;
+	}
 }
 

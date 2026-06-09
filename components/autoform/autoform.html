@@ -1,0 +1,14 @@
+<div class="flex h_center autoform">
+     <div>
+         @if($form->get_description())
+         <div class="autoform-description">
+             {{ $form->get_description() }}
+         </div>
+         @endif
+         <div class="form-body">
+         	 @foreach($form->get_fields() as $field)
+    	     <ui:component name="saqle.formfield" :field="$field"/>
+    	     @endforeach 
+         </div>
+     </div>
+</div>

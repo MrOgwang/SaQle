@@ -8,6 +8,8 @@ class Paginator {
      public int $per_page;
      public int $total_records;
      public int $total_pages;
+     public int $upper_limit;
+     public int $lower_limit;
 
      public function has_next(): bool{
          return $this->page < $this->total_pages;

@@ -10,7 +10,7 @@ class BaseUser extends Model implements UserInterface {
 	 protected function table_schema(Table $table) : void {
 
 	 	 $avatar_field = Table::image_field()
-	 	 ->max_size(2)
+	 	 ->max_size(10)
 	 	 ->upload_to(function(mixed $user){
 	 	 	 return saqle_dir()->path('users.avatars', $user->get_data());
 	 	 }) 
@@ -27,17 +27,19 @@ class BaseUser extends Model implements UserInterface {
 		 $table->fields([ 
 		     'first_name'   => Table::char_field()->required(),
 		     'last_name'    => Table::char_field()->required(),
-		     'gender'       => Table::choice_field()->choices([
+		     'gender'       => Table::choice_field([
 			 	 'male' => 'Male', 
 			 	 'female' => 'Female',
 			 	 'none' => 'Prefer not to say'
-			 ])->use_keys()->default('male'),
+			 ], true)->default('male'),
 		     'username'     => Table::char_field()->required(),
 		     'password'     => Table::password_field()->required(),
-		     'is_superuser' => Table::boolean_field()->required(),
+		     'is_superuser' => Table::boolean_field()->required()->render(function($value, $model){
+			 	 return $value ? 'Yes' : 'No';
+			 })->default(false),
 		     'avatar'       => $avatar_field
 		 ]);
-	 }
+	 } 
 
      //check if a user passes a guard
 	 public function check(string $action, ...$args) : bool {

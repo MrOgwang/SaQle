@@ -8,6 +8,7 @@ final class ValidationResult {
          public readonly bool $isvalid,
          public readonly ?string $message = null,
          public readonly mixed $normalized = null,
+         public readonly ?ValidationAction $action = null
      ) {}
 
      public static function pass(mixed $normalized = null): self {

@@ -31,7 +31,6 @@ class MiddlewareRegistry {
      }
 
      private function filter_middleware(array $stack, Request $request){
-        
          $shortlisted = [];
 
          foreach($stack as $key => $routes){
@@ -40,7 +39,7 @@ class MiddlewareRegistry {
              $middleware_name = $has_routes ? $key : $routes;
              $record = $this->stack[$middleware_name];
 
-             if(!$record['scope'] || ($record['scope'] === $request->route->scope)){
+             if(!$record['scope'] || ($record['scope'] === $request->route->scope->value)){
                  if(!$has_routes){
                      $shortlisted[] = $record['middleware'];
                      continue;
@@ -53,7 +52,7 @@ class MiddlewareRegistry {
                  }
              }
          }
-
+         
          return $shortlisted;
      }
 

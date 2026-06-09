@@ -33,15 +33,19 @@ class AutoResource {
 
 	 public function list_resources(
 	 	 int $page = 1,
-	 	 int $records = 100
+	 	 int $records = 100,
+	 	 string $search = ""
 	 ) : Message {
 
 	 	 $panel = new TablePanel(
 	 	 	 request()->route->model_class,
-	 	 	 ['pagination' => [
-	 	 	 	 'page' => $page,
-	 	 	 	 'records' => $records
-	 	 	 ]]
+	 	 	 [
+	 	 	 	 'pagination' => [
+	 	 	 	     'page' => $page,
+	 	 	 	     'records' => $records
+	 	 	     ],
+	 	 	     'search' => $search
+	 	 	 ]
 	 	 );
 
 		 return Message::ok([
@@ -63,6 +67,19 @@ class AutoResource {
 	 }
 
 	 public function create_resource() : Message {
+	 	 
+	 	 $form = $this->create_auto_form([]);
+	 	 $incoming = request()->data->get_all();
+	 	 $data = array_intersect_key(
+             $incoming,
+             array_flip(array_keys($form->get_fields()))
+         );
+
+	 	 $model_parts = explode("@", request()->route->model_class);
+         $model_class = $model_parts[0] ?? "";
+	 	 
+	 	 $saved = $model_class::create($data)->now();
+
 		 return Message::ok();
 	 }
 
@@ -70,15 +87,22 @@ class AutoResource {
 		 return Message::ok();
 	 }
 
-	 public function show_edit_form(array $__props) : Message {
+	 public function show_edit_form(string $id, array $__props) : Message {
+	 
+	 	 $model_parts = explode("@", request()->route->model_class);
+         $model_class = $model_parts[0] ?? "";
+
 		 $form = $this->create_auto_form($__props);
 
 	 	 if(!$form){
 	 	 	 throw new RuntimeException("Unknown resource form requested!");
 	 	 }
 
+	 	 $object = $model_class::get()->where($model_class::get_pk_name()."__eq", $id)->first_or_fail();
+
 		 return Message::ok([
-		 	 'form' => $form
+		 	 'form' => $form,
+		 	 'object' => $object
 		 ]);
 	 }
 

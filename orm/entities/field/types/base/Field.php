@@ -239,7 +239,7 @@ class Field implements IField {
 
 	 public function get_form_field_attrs() : array {
 	 	 $is_field = $this instanceof VirtualField || ($this instanceof RelationField && $this->navigation) ? false : true;
-	     if (!$is_field) {
+	     if (!$is_field){
 	         return [];
 	     }
 

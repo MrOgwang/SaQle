@@ -1,1 +1,5 @@
-<input type='number' placeholder='{{ $field->placeholder }}' name='{{ $field->name }}' id='{{ $field->id }}'>
+@if($field->errors)
+<input class='input_error' value='{{ $field->value }}' type='number' placeholder='{{ $field->placeholder }}' name='{{ $field->name }}' id='{{ $field->id }}'/>
+@else
+<input value='{{ $field->value }}' type='number' placeholder='{{ $field->placeholder }}' name='{{ $field->name }}' id='{{ $field->id }}'/>
+@endif

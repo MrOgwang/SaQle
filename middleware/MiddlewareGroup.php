@@ -34,6 +34,7 @@ class MiddlewareGroup {
      public function handle_outgoing(Request $request, ?Response $response = null): ?Message {
 
          $middleware = app()->middleware->get_response_middleware($request);
+         $middleware[] = SessionMiddleware::class;
 
          return $this->run_middlewares($middleware, $request, $response);
      }

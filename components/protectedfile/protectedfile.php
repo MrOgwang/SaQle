@@ -22,7 +22,7 @@ class ProtectedFile {
      public function serve(
          string $storage_key,
          string $file
-     ) {
+     ){
 
          $file = trim($file);
          if(!$file){
@@ -67,12 +67,14 @@ class ProtectedFile {
          $mime = mime_content_type($path) ?: 'application/octet-stream';
          $is_inline = str_starts_with($mime, 'image/') || str_starts_with($mime, 'video/') || $mime === 'application/pdf';
 
-         return Message::file([
+         $file = [
              'mime' => $mime,
              'inline' => $is_inline,
              'name' => $name,
              'path' => $path,
              'cache' => true
-         ]);
+         ];
+         
+         return Message::file($file);
      }
 }

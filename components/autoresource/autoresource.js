@@ -1,160 +1,123 @@
-document.querySelectorAll('input, textarea, select')
-.forEach(field => {
+(() => {
+     document.querySelectorAll('.file-upload').forEach(initFileUpload);
+     function initFileUpload(root) {
+         const input = root.querySelector('.file-upload-input');
+         const dropzone = root.querySelector('.file-upload-dropzone');
+         const fileList = root.querySelector('.file-upload-files');
+         const button = root.querySelector('.file-upload-button');
 
-    const toggle = () => {
-        if(field.value){
-            field.classList.add('filled');
-        }else{
-            field.classList.remove('filled');
-        }
-    };
+         let filesState = [];
 
-    field.addEventListener('input', toggle);
+         /*upload button click*/
+         button.addEventListener('click', (e) => {
+             e.preventDefault();
+             e.stopPropagation();
+             input.click();
+         });
 
-    toggle();
-});
+         /*drag states*/
+         ['dragenter', 'dragover'].forEach(eventName => {
+             dropzone.addEventListener(eventName, e => {
+                e.preventDefault();
+                dropzone.classList.add('dragging');
+             });
+         });
 
-const input = document.getElementById('file-upload-input');
-const dropzone = document.getElementById('dropzone');
-const fileList = document.getElementById('fileList');
+         ['dragleave', 'drop'].forEach(eventName => {
+             dropzone.addEventListener(eventName, e => {
+                 e.preventDefault();
+                 dropzone.classList.remove('dragging');
+             });
+         });
 
-/* =========================
-   DRAG STATES
-========================= */
+         /*drop files*/
+         dropzone.addEventListener('drop', e => {
+             e.preventDefault();
+             const droppedFiles = Array.from(e.dataTransfer.files);
+             updateFiles([...filesState, ...droppedFiles]);
+         });
 
-['dragenter', 'dragover'].forEach(eventName => {
+         /*input change*/
+         input.addEventListener('change', () => {
+             const selectedFiles = Array.from(input.files);
+             updateFiles(selectedFiles);
+         });
 
-    dropzone.addEventListener(eventName, e => {
+         /*remove file*/
+         fileList.addEventListener('click', e => {
+             const btn = e.target.closest('.file-upload-remove');
+             if (!btn) return;
 
-        e.preventDefault();
-        dropzone.classList.add('dragging');
+             const index = Number(btn.dataset.index);
+             filesState.splice(index, 1);
 
-    });
+             syncInput();
+             renderFiles();
+         });
 
-});
+         /*update state*/
+         function updateFiles(newFiles){
+             filesState = newFiles;
+             syncInput();
+             renderFiles();
+         }
 
-['dragleave', 'drop'].forEach(eventName => {
+         function syncInput(){
+             const dt = new DataTransfer();
+             filesState.forEach(file => dt.items.add(file));
+             input.files = dt.files;
+         }
 
-    dropzone.addEventListener(eventName, e => {
+         /*render files*/
+         function renderFiles(){
+             fileList.innerHTML = '';
 
-        e.preventDefault();
-        dropzone.classList.remove('dragging');
+             filesState.forEach((file, index) => {
+                 const item = document.createElement('div');
+                 item.className = 'file-upload-file';
+                 item.innerHTML = `
+                     <div class="file-upload-file-left">
+                         <div class="file-upload-file-icon">
+                            📄
+                         </div>
+                         <div>
+                             <div class="file-upload-file-name">
+                                 ${file.name}
+                             </div>
+                             <div class="file-upload-file-size">
+                                 ${formatBytes(file.size)}
+                             </div>
+                         </div>
+                     </div>
+                     <button type="button"class="file-upload-remove" data-index="${index}">✕</button>
+                 `;
+                 fileList.appendChild(item);
+             });
+         }
 
-    });
+         /*file size format*/
+         function formatBytes(bytes) {
+             if (bytes === 0) return '0 Bytes';
 
-});
+             const k = 1024;
+             const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+             const i = Math.floor(Math.log(bytes) / Math.log(k));
+             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+         }
+     }
 
-/* =========================
-   DROP FILES
-========================= */
+     document.querySelectorAll('input, textarea, select').forEach(field => {
+         const toggle = () => {
+             if(field.value){
+                 field.classList.add('filled');
+             }else{
+                 field.classList.remove('filled');
+             }
+         };
 
-dropzone.addEventListener('drop', e => {
+         field.addEventListener('input', toggle);
 
-    input.files = e.dataTransfer.files;
+         toggle();
+     });
 
-    renderFiles(input.files);
-
-});
-
-/* =========================
-   INPUT CHANGE
-========================= */
-
-input.addEventListener('change', () => {
-
-    renderFiles(input.files);
-
-});
-
-/* =========================
-   RENDER FILES
-========================= */
-
-function renderFiles(files){
-
-    fileList.innerHTML = '';
-
-    [...files].forEach((file, index) => {
-
-        const item = document.createElement('div');
-
-        item.className = 'file-upload-file';
-
-        item.innerHTML = `
-        
-            <div class="file-upload-file-left">
-
-                <div class="file-upload-file-icon">
-
-                    <svg
-                        width="20"
-                        height="20"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        viewBox="0 0 24 24"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            d="M7 7V3h10v4m-5 8v6m0-6l-3 3m3-3l3 3"
-                        />
-                    </svg>
-
-                </div>
-
-                <div>
-
-                    <div class="file-upload-file-name">
-                        ${file.name}
-                    </div>
-
-                    <div class="file-upload-file-size">
-                        ${formatBytes(file.size)}
-                    </div>
-
-                </div>
-
-            </div>
-
-            <button
-                class="file-upload-remove"
-                data-index="${index}"
-            >
-                ✕
-            </button>
-        
-        `;
-
-        fileList.appendChild(item);
-
-    });
-
-}
-
-/* =========================
-   FILE SIZE FORMAT
-========================= */
-
-function formatBytes(bytes){
-
-    if(bytes === 0) return '0 Bytes';
-
-    const k = 1024;
-
-    const sizes = [
-        'Bytes',
-        'KB',
-        'MB',
-        'GB'
-    ];
-
-    const i = Math.floor(
-        Math.log(bytes) / Math.log(k)
-    );
-
-    return parseFloat(
-        (bytes / Math.pow(k, i)).toFixed(2)
-    ) + ' ' + sizes[i];
-
-}
+})();

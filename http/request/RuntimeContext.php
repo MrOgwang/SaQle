@@ -22,8 +22,7 @@ abstract class RuntimeContext {
              [
                  'input'  => $this->input,
                  'errors' => $this->errors
-             ],
-             true
+             ]
          );
      }
 

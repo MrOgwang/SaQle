@@ -6,7 +6,6 @@ use SaQle\Build\Utils\{
      ComponentCompiler,
      RouteCompiler, 
      EventCompiler,
-     FormCompiler,
      TemplateCompiler,
      ModelCompiler
 };
@@ -113,9 +112,6 @@ class BuildProject {
                  
                  //compile events
                  EventCompiler::compile();
-
-                 //compile auto forms
-                 FormCompiler::compile();
 
                  //save the updated build manifest
                  $this->manifest->save();

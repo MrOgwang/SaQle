@@ -25,7 +25,7 @@ abstract class IValidator {
      protected mixed  $threshold;
 
      public function __construct(string $field, mixed $threshold){
-         $this->field = $field;
+         $this->field = $this->derive_label($field);
          $this->threshold = $this->coerce_threshold($threshold);
      }
 
@@ -89,15 +89,39 @@ abstract class IValidator {
      }
 
 	 abstract public function validate(mixed $value, array $context = []): ValidationResult;
-     
-     public function stop_on_fail() : bool {
-     	 return false;
-     }
 
      public function message() : string {
          return "";
      }
 
      abstract protected function threshold_type() : string;
+
+     private function derive_label(string $name): string {
+        // Replace snake_case underscores with spaces
+        $label = str_replace('_', ' ', $name);
+
+        // Split camelCase & PascalCase
+        // - FooBar → Foo Bar
+        // - fooBar → foo Bar
+        // - APIResponse → API Response
+        $label = preg_replace(
+            '/(?<=\p{Ll})(?=\p{Lu})|(?<=\p{Lu})(?=\p{Lu}\p{Ll})/u',
+            ' ',
+            $label
+        );
+
+        // Normalize spacing
+        $label = preg_replace('/\s+/', ' ', $label);
+
+        // Title case while preserving acronyms
+        $label = ucwords(strtolower($label));
+
+        // Restore common acronyms
+        $label = preg_replace_callback('/\b(Id|Api|Url|Uuid|Ip)\b/', function ($m) {
+            return strtoupper($m[0]);
+        }, $label);
+
+        return trim($label);
+     }
 
 }

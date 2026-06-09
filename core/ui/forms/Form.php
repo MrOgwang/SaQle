@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace SaQle\Core\Ui\Forms;
 
-use SaQle\Core\Ui\Forms\Fields\FormField;
 use SaQle\Auth\Models\GuestUser;
 use SaQle\Orm\Entities\Model\Schema\Model;
 use SaQle\Core\Registries\FormBlueprintRegistry;
@@ -11,111 +10,59 @@ use SaQle\Core\Assert\Assert;
 
 final class Form {
 
-     private FormRuntimeContext $context;
+     //form mode: create or update
+     private ?string $mode = null;
 
-     public string $form_name {
-         set(string $value){
-             $this->form_name = $value;
-         }
+     //the runtime context for form
+     private ?FormRuntimeContext $context = null;
 
-         get => $this->form_name;
-     }
+     //form description
+     private string $_description = "";
 
-     public string $mode {
-         set(string $value){
-             $this->mode = $value;
-         }
+     //the name of the form as used in the ui:form tag
+     private string $_name = "";
 
-         get => $this->mode;
-     }
+     //the name of the model associated with form.
+     private ?string $model_name = null;
 
-     public string $model_name {
-         set(string $value){
-             $this->model_name = $value;
-         }
+     //the class of the model associated with form
+     private ?string $model_class = null;
 
-         get => $this->model_name;
-     }
+     //whether to process form submission automatically
+     private bool $wire = false;
 
-     public string $model_class {
-         set(string $value){
-             $this->model_class = $value;
-         }
+     //all form fields. This to be used internally
+     private array $all_fields = [];
 
-         get => $this->model_class;
-     }
-
-     public string $method {
-         set(string $value){
-             $this->method = $value;
-         }
-
-         get => $this->method;
-     }
-
-     public bool $auto_wire = false {
-         set(bool $value){
-             $this->auto_wire = $value;
-         }
-
-         get => $this->auto_wire;
-     }
-
-     public array $fields = [];
-
-     public private(set) array $all_fields {
-         set(array $value){
-             $this->all_fields = $value;
-         }
-
-         get => $this->all_fields;
-     }
-
+     //final fields to be shown on form
+     private array $fields = [];
+     
      /**
-      * FILLABLE
-      * 
-      * A list of field names whose controls
-      * will be created on the form.
-      *
+      * The name of the method on the model class
+      * that will be called to customize this form
       * */
-     public array $fillable = [] {
-         set(array $value){
-             Assert::isNonEmptyList($value, 'Please provide a list of field names to fill!');
-             
-             $this->fillable = $value;
+     private ?string $_customizer = null;
 
-             if($this->fillable){
-                 $fillable_fields = [];
-                 foreach($this->fillable as $field_name){
-                     $fillable_fields[$field_name] = $this->all_fields[$field_name];
-                 }
 
-                 $this->fields = $fillable_fields;
-             }
-         }
-
-         get => $this->fillable;
+     public function __construct(string $model_class, ?string $model_name = null){
+         $this->model($model_name, $model_class);
+         $this->bind(FormRuntimeContext::from_session());
+         $this->all_fields = FormFieldsCompiler::compile($this->model_class, $this->context);
+         $this->fill_all();
      }
 
+     //create new form apis
      public static function make_from_model(
          string $model_class, 
          string $method, 
          ?string $model_name = null,
          ?string $form_name = null
      ) : static {
-         $form = new static();
 
-         $form->form_name = $form_name;
-         $form->model_name = $model_name;
-         $form->model_class = $model_class;
-         $form->method = $method;
-         $form->all_fields = FormFieldsCompiler::compile($form->model_class);
-         $form->fields = $form->all_fields;
-
-         /**
-          * Call the model form method to
-          * customize some things
-          * */
+         $form = new static($model_class, $model_name);
+         $form->name($form_name);
+         $form->customizer($method);
+        
          $model_instance = $model_class::make();
          $form = $model_instance->$method($form);
 
@@ -127,7 +74,150 @@ final class Form {
          return self::make_from_model($model_class, $method, $model_name, $form_name);
      }
 
-     public function bind(FormRuntimeContext $context): void {
-         $this->context = $context;
+     //custom form modes
+     public function for_create(){
+         $this->mode = 'create';
+
+         return $this;
      }
+
+     public function for_update(){
+         $this->mode = 'update';
+
+         return $this;
+     }
+
+     public function is_for_create(){
+         return $this->mode === 'create';
+     }
+
+     public function is_for_update(){
+         return $this->mode === 'update';
+     }
+
+     public function get_mode(){
+         return $this->mode;
+     }
+
+     //runtime context api
+     public function bind(FormRuntimeContext $context) {
+         $this->context = $context;
+
+         return $this;
+     }
+
+     public function get_context(){
+         return $this->context;
+     }
+
+     //form description
+     public function description(string $desc){
+         $this->_description = $desc;
+
+         return $this;
+     }
+
+     public function get_description() : string {
+         return $this->_description;
+     }
+
+     //form name
+     public function name(string $name){
+         $this->_name = $name;
+
+         return $this;
+     }
+
+     public function get_name() : string {
+         return $this->_name;
+     }
+
+     //form model
+     public function model(string $name, string $class){
+         $this->model_name = $name;
+         $this->model_class = $class;
+
+         return $this;
+     }
+
+     public function get_model_name() : string {
+         return $this->model_name;
+     }
+
+     public function get_model_class() : string {
+         return $this->model_class;
+     }
+
+     //form auto wiring
+     public function auto_wire(){
+         $this->wire = true;
+
+         return $this;
+     }
+
+     public function should_auto_wire(){
+         return $this->wire;
+     }
+
+     //fields to be filled
+     public function get_fields(){
+         return $this->fields;
+     }
+
+     public function fill_all(){
+         $this->fields = [];
+
+         foreach($this->all_fields as $field_name => $field){
+             $this->fields[$field_name] = $field;
+         }
+
+         return $this;
+     }
+
+     public function fill(array $fields){
+
+         $fillable_fields = [];
+
+         foreach($fields as $field_name){
+             if(isset($this->all_fields[$field_name])){
+                 $fillable_fields[$field_name] = $this->all_fields[$field_name];
+             }
+         }
+
+         $this->fields = $fillable_fields;
+
+         return $this;
+     }
+
+     public function exclude(array $fields){
+
+         $fillable_fields = [];
+
+         foreach($this->all_fields as $field_name => $field){
+             if(!in_array($field_name, $fields)){
+                 $fillable_fields[$field_name] = $field;
+             }
+         }
+
+         $this->fields = $fillable_fields;
+
+         return $this;
+     }
+
+     //the method name that customizes the form
+     public function customizer(string $customizer){
+         $this->_customizer = $customizer;
+
+         return $this;
+     }
+
+     public function get_customizer() : string {
+         return $this->_customizer;
+     }
+
+     //customize form fields
+     public function field(string $name){
+         return $this->fields[$name];
+     }
+
 }

@@ -19,8 +19,11 @@
 namespace SaQle\Http\Response;
 
 use SaQle\Core\FeedBack\FeedBack;
+use SaQle\Http\Request\Data\Data;
 
 class Message extends FeedBack {
+
+     private ?Data $_flash = null;
 
 	 /**
 	 * Http response code description
@@ -63,6 +66,19 @@ class Message extends FeedBack {
 	 public static function from_feedback(FeedBack $fb){
 		 return new self($fb->code, $fb->data, $fb->message);
 	 }
+
+     //session flashing
+     public function flash(string $key, mixed $data = null){
+         if(!$this->_flash){
+             $this->_flash = new Data();
+         }
+
+         $this->_flash->set($key, $data);
+     } 
+
+     public function should_flash() : bool {
+         return !is_null($this->_flash);
+     }
 
 	 //http message helpers
 

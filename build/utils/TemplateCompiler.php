@@ -2,18 +2,9 @@
 namespace SaQle\Build\Utils;
 
 use SaQle\Core\Registries\ComponentRegistry;
+use RuntimeException;
 
 class TemplateCompiler {
-
-     private static function cache_path(){
-         $path = path_join([config('base_path'), config('templates_cache_dir')]);
-
-         if(!is_dir($path)){
-             mkdir($path, 0777, true);
-         }
-
-         return $path;
-     }
 
      public static function compile(){
          $components = ComponentRegistry::all();
@@ -45,37 +36,74 @@ class TemplateCompiler {
          ComponentCompiler::cache_components($updated_components);
      }
 
-     private static function compile_template(string $template_path) : string {
-         
-         $hash = md5($template_path);
-         $filename = pathinfo($template_path, PATHINFO_FILENAME);
-         $compiled = self::cache_path()."/{$filename}_{$hash}.php";
+     private static function cache_path(){
+         $path = path_join([config('base_path'), config('templates_cache_dir')]);
 
-         //if(!file_exists($compiled) || filemtime($compiled) < filemtime($template_path)){
+         if(!is_dir($path)){
+             mkdir($path, 0777, true);
+         }
 
-             $content = file_get_contents($template_path);
+         return $path;
+     }
 
-             //raw echo
-             $content = preg_replace('/{!!\s*(.*?)\s*!!}/s', '<?php echo $1; ?>', $content);
+     private static function compile_template(
+         string $template_path = "", 
+         string $content = "", 
+         string $type = ""
+     ) : string {
 
-             //escaped echo
-             $content = preg_replace(
-                 '/{{\s*(.*?)\s*}}/s',
-                 "<?php echo htmlspecialchars($1, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8'); ?>",
-                 $content
-             );
+         $template_path = trim($template_path);
+         $content = trim($content);
 
-             //directives
-             $content = self::compile_directives($content);
+         if(!$template_path && !$content){
+             return "";
+         }
 
+         if($template_path && !file_exists($template_path)){
+             throw new RuntimeException("The template file: {$template_path} doesn't exist!");
+         }
+
+         if($template_path){
+             $hash = md5($template_path);
+             $filename = pathinfo($template_path, PATHINFO_FILENAME);
+         }else{
+             $hash = md5($content);
+             $filename = "block";
+         }
+
+         $compiled_path = self::cache_path()."/{$filename}_{$hash}.php";
+
+         if($template_path && file_exists($compiled_path) && filemtime($compiled_path) > filemtime($template_path)){
+             //return $compiled_path;
+         }
+
+         $content = $content ? $content : $content = file_get_contents($template_path);
+
+         //raw echo
+         $content = preg_replace('/{!!\s*(.*?)\s*!!}/s', '<?php echo $1; ?>', $content);
+
+         //escaped echo
+         $content = preg_replace(
+             '/{{\s*(.*?)\s*}}/s',
+             "<?php echo htmlspecialchars($1, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8'); ?>",
+             $content
+         );
+
+         //directives
+         $content = self::compile_directives($content);
+
+         if(!$type){
              //component tags
              $content = self::compile_component_tags($content);
 
-             file_put_contents($compiled, $content);
-         //}
+             //component blocks
+             $content = self::compile_component_blocks($content);
+         }
 
-         return $compiled;
-     }
+         file_put_contents($compiled_path, $content);
+
+         return $compiled_path;
+     } 
 
      private static function parse_parentheses($text, $start_pos){
          $depth = 0;
@@ -165,7 +193,7 @@ class TemplateCompiler {
      private static function compile_component_tags(string $template) : string {
 
          $pattern = '/
-            <component:(block|form)
+            <ui:(component|form)
             \s*
             (
                 (?:
@@ -183,7 +211,7 @@ class TemplateCompiler {
 
                 >
                 (.*?)
-                <\/component:\1>
+                <\/ui:\1>
             )
          /isx';
 
@@ -198,6 +226,7 @@ class TemplateCompiler {
 
          $type = strtolower(trim($matches[1]));
          $attribute_string = trim($matches[2]);
+         $body = trim($matches[3] ?? '');
 
          $attributes = self::parse_attributes($attribute_string);
 
@@ -213,7 +242,73 @@ class TemplateCompiler {
              $name = 'saqle.autoresource';
          }
 
-         return "<?php echo \$__renderer->component('".$name."', ".$compiled_props.", \$__context); ?>";
+         $blocks = [];
+         if($body){
+             $blocks = self::extract_blocks($body);
+         }
+
+         $compiled_blocks = self::compile_override_blocks($blocks);
+
+         return "<?php echo \$__renderer->component('".$name."', ".$compiled_props.", ".$compiled_blocks.", \$__context); ?>";
+     }
+
+     private static function extract_blocks(string &$content) : array {
+         $blocks = [];
+
+         $pattern = '/<block\s+name=([\'"])(.*?)\1\s*>(.*?)<\/block>/isx';
+
+         $content = preg_replace_callback(
+             $pattern,
+             function($matches) use (&$blocks){
+                 $blocks[trim($matches[2])] = trim($matches[3]);
+                 return '';
+             },
+             $content
+         );
+
+         return $blocks;
+     }
+
+     private static function compile_override_blocks(array $blocks) : string {
+         $compiled = [];
+
+         foreach($blocks as $name => $content){
+             $path = self::compile_template(
+                 template_path: "", 
+                 content: $content,
+                 type: "override_block"
+             );
+             $compiled[] = var_export($name, true).' => '.var_export($path, true);
+         }
+
+         return '['.implode(',', $compiled).']';
+     }
+
+     private static function compile_component_blocks(string $template) : string {
+
+         $pattern = '/<block\s+name=([\'"])(.*?)\1\s*>(.*?)<\/block>/isx';
+
+         return preg_replace_callback(
+             $pattern,
+             function($matches){
+                 $name = trim($matches[2]);
+                 $content = trim($matches[3]);
+
+                 $path = self::compile_template(
+                     template_path: "", 
+                     content: $content, 
+                     type: 'component_block'
+                 );
+
+                 return "<?php echo \$__renderer->block(
+                     ".var_export($name, true).",
+                     ".var_export($path, true).",
+                    get_defined_vars()
+                 ); ?>";
+             }, 
+            
+             $template
+         );
      }
 
      private static function parse_attributes(string $attribute_string) : array {

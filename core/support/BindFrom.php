@@ -7,13 +7,18 @@ namespace SaQle\Core\Support;
  * During controller method execution, parameters are automatically injected into the method.
  * 
  * The BindFrom attribute tells the Runtime where to extract the parameter from. Options include:
+ * 
  * session - extract parameter from session
- * cookie - extract parameter from cookie
- * header - extract parameter from header
- * input - extract paramater from input data
- * path - extract parameter from route path
- * query - extract parameter from route queries
- * db - fetch parameter from the database
+ * cookie  - extract parameter from cookie
+ * header  - extract parameter from header
+ * input   - extract paramater from input data
+ * path    - extract parameter from route path
+ * query   - extract parameter from route queries
+ * db      - fetch parameter from the database
+ * di, container - the DI container
+ * props   - parameters are extracted from component attributes
+ *           passed to the component tag
+ * 
  * */
 
 use Attribute;
@@ -32,6 +37,9 @@ class BindFrom {
       * query - extract parameter from route queries
       * db - fetch parameter from the database
       * di, container - the DI container
+      * props - parameters are extracted from component attributes
+      *           passed to the component tag
+      * 
 	  * */
 	 public string $from {
 	 	 set(string $value){

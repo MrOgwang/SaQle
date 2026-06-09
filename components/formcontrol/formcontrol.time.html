@@ -1,1 +1,5 @@
-<input type='time' name='{{ $field->name }}' id='{{ $field->id }}'>
+@if($field->errors)
+<input class="input_error" type='time' name='{{ $field->name }}' id='{{ $field->id }}' value='{{ $field->value }}'/>
+@else
+<input type='time' name='{{ $field->name }}' id='{{ $field->id }}' value='{{ $field->value }}'/>
+@endif

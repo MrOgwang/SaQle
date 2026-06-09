@@ -1,6 +1,6 @@
 <?php
 
-namespace SaQle\Orm\Entities\Field\Types;
+namespace SaQle\Orm\Entities\Field\Types\Traits;
 
 use SaQle\Orm\Database\ColumnType;
 use RuntimeException;
@@ -10,26 +10,17 @@ use SaQle\Orm\Entities\Field\Attributes\{
 	 FormControl
 };
 
-class ChoiceField extends CharField {
+trait HasChoices {
 
      #[FormControl('choices')]
 	 protected ?array $raw_choices = null;
 
-	 //the choices to pick from
 	 #[ShouldValidate()]
 	 protected ?array $choices = null {
 	 	 set(?array $value){
 
-	 	 	 //assert choices
-		 	 if(!isset($value) || !is_array($value) || empty($value)){
+		 	 if(!$value){
 		 	 	 throw new RuntimeException('Choices must be provided for a choice field!');
-		 	 }
-
-	         //if choices is a list
-		 	 if(array_keys($value) === range(0, count($value) - 1)){
-		 	 	 $this->type = ColumnType::INTEGER;
-		 	 }else{ //if choices is a map
-		 	 	 $this->type = ColumnType::CHAR;
 		 	 }
 
 	 	 	 $this->choices = $value;
@@ -48,12 +39,14 @@ class ChoiceField extends CharField {
 	 	 	return $this->raw_choices[$this->value] ?? $this->value;
 	 	 }
 	 }
-
-	 protected bool $_use_keys = false;
-
+	 
 	 public function choices(array $choices){
-	 	 $this->raw_choices = $choices;
 	 	 $this->choices = $choices;
+	 	 return $this;
+	 }
+
+	 public function raw_choices(array $choices){
+	 	 $this->raw_choices = $choices;
 	 	 return $this;
 	 }
 
@@ -70,18 +63,6 @@ class ChoiceField extends CharField {
 	 	 return $this->multiple;
 	 }
 
-	 public function use_keys(bool $use_keys = true){
-	 	 if(!$this->choices){
-	 	 	 throw new RuntimeException("Use keys cannot be called before specifying choices!");
-	 	 }
-
-	 	 $this->choices = array_keys($this->choices);
-
-	 	 $this->_use_keys = $use_keys;
-	 	 
-	 	 return $this;
-	 }
-
 	 protected function initialize_defaults(){
 	 	 if(!$this->control_type){
 	 	 	 
@@ -90,6 +71,7 @@ class ChoiceField extends CharField {
 	 	 	 }else{
 	 	 	 	 $this->control_type = count($this->choices) > 5 ? "select" : "radio";
 	 	 	 }
+
 	 	 }
 
 		 parent::initialize_defaults();

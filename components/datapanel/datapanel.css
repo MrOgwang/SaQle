@@ -1,30 +1,13 @@
-:root{
-    --bg:#f5f7fb;
-    --surface:#ffffff;
-    --border:#d9e1ec;
-    --border-hover:#b8c4d6;
-    --primary:#2563eb;
-    --primary-soft:#dbeafe;
-    --text:#0f172a;
-    --muted:#64748b;
-    --danger:#dc2626;
-    --success:#16a34a;
-    --radius:14px;
-    --shadow:
-        0 1px 2px rgba(0,0,0,.04),
-        0 8px 24px rgba(15,23,42,.06);
-
-    --input-height:40px;
-    --transition:.2s ease;
-    --warning:#f59e0b;
-}
-
-
 .datapanel{
 	 display:grid;
 	 grid-template-columns: 1fr;
 	 grid-template-rows:auto 1fr auto;
-	 height:calc(100vh - 120px);
+	 height:100%;
+}
+.datapanel .icon{
+     width: 30px;
+     height: 30px;
+     color: #555;
 }
 .datapanel-header{
 	display:grid;
@@ -33,48 +16,54 @@
 	padding-left:2em;
 	padding-right:2em;
 }
-.search-line{
+.search-line,
+.datapanel-header button{
 	border:1px solid var(--steel_gray_100);
-	border-radius:5px;
-	height:35px;
+	border-radius:10px;
+	height:32px;
+	box-shadow: 0px 0px 2px var(--steel_gray_100);
 }
 .search-line input{
 	border:0;
 	flex:1;
 	padding:5px;
-	height:32px;
+	height:30px;
+	border-top-right-radius: 10px;
+	border-bottom-right-radius: 10px;
+	font-size: 12px;
 }
-.search-line button{
-	height:35px;
-	width:35px;
-	background-color:var(--steel_gray_100);
-	border:0;
-	border-radius: 5px;
-	color:var(--theme_bluish_color);
-	border-top-left-radius: 0;
-	border-bottom-left-radius: 0;
-	font-size: 17px;
-	font-weight: 600;
+.datapanel-header .button-group{
+	 margin-left: 1em;
 }
-.panel_action_but{
-	text-decoration: none;
-	background-color:var(--theme_bluish_color);
-	color:#fff;
-	border:1px solid var(--theme_bluish_color);
-	border-radius:5px;
-	margin-left:1em;
-}
-.panel_cancel_but{
-	text-decoration: none;
-	background-color:var(--steel_gray_60);
-	color:var(--steel_gray_400);
-	border:1px solid var(--steel_gray_100);
-	border-radius:5px;
+.datapanel-header button{
+	width:32px;
+	font-weight: 400;
+	font-size: 12px;
 	margin-left:5px;
+	background-color:#fff;
+}
+.datapanel-header button:hover{
+	background-color: var(--steel_gray_80);
 }
 .datapanel-body{
 	overflow-y: auto;
 }
+.datapanel-body .icon{
+	width:25px;
+	height:25px;
+	border-radius: 5px;
+	margin-left:5px;
+	cursor: pointer;
+}
+.datapanel-body .icon:hover{
+	background-color: var(--steel_gray_100);
+}
 .datapanel-footer{
 	 
+}
+.dp-image{
+	width:35px;
+	height:35px;
+	border-radius: 5px;
+	object-fit: cover;
 }

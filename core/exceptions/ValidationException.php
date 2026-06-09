@@ -43,6 +43,10 @@ class ValidationException extends FrameworkException {
         return $this->get_context()['errors'] ?? [];
      }
 
+     public function input(): array {
+        return $this->get_context()['input'] ?? [];
+     }
+
      private function format_errors($errors) : string {
          $output = $this->safe_message.": \n\n";
 

@@ -172,6 +172,14 @@ abstract class ModelCollection extends TypedCollection implements IModel, JsonSe
 
      //pagination helper methods
 
+     public function page_upper_limit(){
+         return $this->paginator ? $this->paginator->upper_limit : 1;
+     }
+
+     public function page_lower_limit(){
+         return $this->paginator ? $this->paginator->lower_limit : 0;
+     }
+
      public function page(){
          return $this->paginator ? $this->paginator->page : 1;
      }

@@ -31,6 +31,7 @@ abstract class RequestContract {
      protected function perform_validation(): void {
 
          $errors = [];
+         $data = [];
 
          $reflection = new ReflectionClass($this);
 
@@ -65,6 +66,8 @@ abstract class RequestContract {
                  }else{
                      $errors[$property_name] = $result->errors;
                  }
+
+                 $data[$property_name] = $value;
              }else{
                  $this->validated_data[$property_name] = $value;
              }
@@ -72,7 +75,8 @@ abstract class RequestContract {
 
          if(!empty($errors)){
              throw new ValidationException(context: [
-                 'errors' => $errors
+                 'errors' => $errors,
+                 'input' => $data
              ]);
          }
      }

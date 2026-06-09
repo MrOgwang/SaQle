@@ -1,1 +1,9 @@
-<textarea name='{{ $field->name }}' id='{{ $field->id }}' placeholder='{{ $field->placeholder }}></textarea>
+@if($field->errors)
+<textarea class='input_error' name='{{ $field->name }}' id='{{ $field->id }}' placeholder='{{ $field->placeholder }}'>{{ $field->value }}</textarea>
+@else
+<textarea name='{{ $field->name }}' id='{{ $field->id }}' placeholder='{{ $field->placeholder }}'>{{ $field->value }}</textarea>
+@endif
+
+
+
+

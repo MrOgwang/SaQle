@@ -60,10 +60,15 @@ final class TablePanel {
          $fields = FormFieldsCompiler::compile($this->model_class);
          $columns = [];
 
+         $column_index = 0;
          foreach($fields as $field_name => $field){
              $columns[$field_name] = (Object)[
-                 'label' => ucwords(str_replace(" ", "&nbsp;", $field->label))
+                 'label' => ucwords(str_replace(" ", "&nbsp;", $field->label)),
+                 'index' => $column_index,
+                 'name' => $field_name,
+                 'type' => $field->ui_type
              ];
+             $column_index++;
          }
 
          $this->columns = $columns;
@@ -75,8 +80,21 @@ final class TablePanel {
 
          $page = $this->props['pagination']['page'] ?? 1;
          $records = $this->props['pagination']['records'] ?? 100;
+         $search = trim($this->props['search'] ?? "");
+
+         $manager = $model::get()->paginate(page: $page, count: $records);
+         if($search){
+             $columns = array_values($this->columns);
+             foreach($columns as $index => $col){
+                 if($index === 0){
+                     $manager->where($col->name."__contains", $search);
+                 }else{
+                     $manager->or_where($col->name."__contains", $search);
+                 }
+             }
+         }
          
-         $this->data = $model::get()->paginate(page: $page, count: $records)->all();
+         $this->data = $manager->all();
          $this->paginator = $this->data->paginator;
      }
 }

@@ -12,24 +12,43 @@ interface ReadWriteModes{
 	 const INSTANCE_READ_WRITE = "x+";
 }
 
-class FileLogger implements ReadWriteModes{
+class FileLogger implements ReadWriteModes {
+
 	 private $file_path;
+
 	 private $file_mode;
+
 	 public function __construct($file_path, $file_mode = null){
 		 $this->file_path = $file_path;
 		 $this->file_mode = $file_mode ?? self::APPEND_READ_WRITE;
 	 }
+
 	 public function log_to_file($file_contents){
-		 if($this->file_mode !== self::START_READ_ONLY){
-			 try{
-			     $file_handle = fopen($this->file_path, $this->file_mode);
-			     fwrite($file_handle, $file_contents);
-			     fclose($file_handle);
-		     }catch(Exception $ex){
-			     //echo $ex;
-		     }
-		 }
+
+	 	 if($this->file_mode === self::START_READ_ONLY){
+             return false;
+         }
+
+         $file_handle = fopen($this->file_path, $this->file_mode);
+
+	     if(!$file_handle){
+	         return false;
+	     }
+	     
+	     try{
+	         if(flock($file_handle, LOCK_EX)){
+	         	 $entry = sprintf("[%s] %s%s", date('Y-m-d H:i:s'), $file_contents, PHP_EOL);
+	             fwrite($file_handle, $entry);
+	             fflush($file_handle);
+	             flock($file_handle, LOCK_UN);
+	         }
+	     }finally{
+	         fclose($file_handle);
+	     }
+
+	     return true;
 	 }
+
 	 public function read_from_file($read_by_line = true){
 		 $file_read_modes = [
 		     self::START_READ_ONLY, 

@@ -53,3 +53,7 @@
 .btn:active {
   transform: scale(0.95);
 }
+.picker-option a{
+     text-decoration: none;
+     color:var(--steel_gray_500);
+}

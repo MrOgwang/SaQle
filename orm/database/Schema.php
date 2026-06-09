@@ -74,12 +74,30 @@ abstract class Schema {
          return str_plural(snake_case($basename));
      }
 
-     public function get_table_for_model(){
+     public function get_table_for_model(string $model_class) : string {
+         
+         $models = $this->get_models();
+         $model_classes = array_values($models);
+         $index = array_search($model_class, $model_classes, true);
+         
+         if($index === false){
+             throw new RuntimeException($model_class. ": Not registered in '{".static::class."}' schema.");
+         }
 
+         return array_keys($models)[$index];
      }
 
-     public function get_model_for_table(){
-     	
+     public function get_model_for_table(string $table_name) : string {
+         
+         $models = $this->get_models();
+     	 $table_names = array_keys($models);
+         $index = array_search($table_name, $table_names, true);
+         
+         if($index === false){
+             throw new RuntimeException($table_name. ": Not registered in '{".static::class."}' schema.");
+         }
+
+         return array_values($models)[$index];
      }
 
      /**

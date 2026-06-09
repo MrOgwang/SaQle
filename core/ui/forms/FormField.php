@@ -5,13 +5,7 @@ use RuntimeException;
 
 class FormField {
 
-     public private(set) array $attributes = [] {
-         set(array $value){
-             $this->attributes = $value;
-         }
-
-         get => $this->attributes;
-     }
+     private array $attributes = [];
 
      public private(set) string $state = "default" {
          set(string $value){
@@ -21,9 +15,22 @@ class FormField {
          get => $this->state;
      }
 
-     public function __construct(array $attrs, string $state = 'default'){
+     public private(set) string $ui_type = "normal" {
+         set(string $value){
+             $this->ui_type = $value;
+         }
+
+         get => $this->ui_type;
+     }
+
+     public function __construct(
+         array  $attrs, 
+         string $ui_type = 'normal', 
+         string $state = 'default'
+     ){
          $this->attributes = $attrs;
          $this->state = $state;
+         $this->ui_type = $ui_type;
      }
 
      public function __get($key){
@@ -36,14 +43,25 @@ class FormField {
          return $this->attributes[$key];
      }
 
-     public function __set($key, $value){
-
-         if(!array_key_exists($key, $this->attributes)){
-             //throw new RuntimeException("Invalid form field attribute!");
-             return;
+     public function __call($method, $args) {
+         //fluent setter
+         if(count($args) === 1){
+             $this->attributes[$method] = $args[0];
+             
+             return $this;
          }
 
-         $this->attributes = array_merge($this->attributes, [$key => $value]);
+         //boolean flags
+         if(count($args) === 0){
+             $this->attributes[$method] = true;
+
+             return $this;
+         }
+
+         return $this;
      }
 
+     public function get_attributes(){
+         return $this->attributes;
+     }
 }

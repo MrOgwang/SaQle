@@ -9,7 +9,6 @@ use SaQle\Core\Assert\Assert;
 use SaQle\Orm\Entities\Model\Manager\Utils\{EventUtils, ImageUtils};
 use SaQle\Core\Events\ModelEventPhase;
 use SaQle\Orm\Entities\Model\Schema\Model;
-use SaQle\Core\Files\FileCommitter;
 use SaQle\Orm\Entities\Model\Collection\ModelCollection;
 use SaQle\Orm\Entities\Model\Interfaces\IModel;
 use SaQle\Core\Files\Commits\FileCommitCoordinator;
@@ -166,17 +165,32 @@ class CreateManager extends QueryManager{
 
      	 }catch(Exception $ex){
      	 	 $file_commiter->rollback();
-     	 	 throw new Exception("An error occurred while attempting to create!");
+     	 	 throw $ex;
      	 }
 	 }
 
 	 private function update_files($created_row, $saved_files){
 	 	 if($saved_files){
-	 	 	 $model_class = $this->get_model_class();
-	 	     $pk_name = $this->get_primary_key_column();
-	 	     $pk_value = $created_row->$pk_name;
+	 	 	 
+             $set_parts = [];
+             $params = [];
 
-	 	     return $model_class::update($saved_files)->where($pk_name, $pk_value)->now()[0] ?? null;
+			 foreach($saved_files as $column => $value){
+			     $set_parts[] = "{$column} = ?";
+			     $params[] = $value;
+			 }
+
+             $model_class = $this->get_model_class();
+             $table_name = $this->table_name();
+             $pk_name = $this->get_primary_key_column();
+             $pk_value = $created_row->$pk_name;
+
+             $sql = "UPDATE {$table_name} SET ".implode(', ', $set_parts). " WHERE {$pk_name} = ?";
+
+             $params[] = $pk_value;
+             $updated = $model_class::run($sql, 'update', $params)->now();
+
+             return $model_class::get()->where($pk_name, $pk_value)->first_or_null();
 	 	 }
 
 	 	 return $created_row;

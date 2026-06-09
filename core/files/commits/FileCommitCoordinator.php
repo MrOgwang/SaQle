@@ -12,9 +12,7 @@ final class FileCommitCoordinator {
          foreach($files as $field_name => $refs){
 
              $field = $model->table->get_clean_fields()[$field_name];
-
-             $multiple = $field->get_multiple();
-
+             
              if(!method_exists($field, 'get_committer')){
                  continue;
              }
@@ -27,7 +25,7 @@ final class FileCommitCoordinator {
 
              $this->committed[$field_name] = [
                  'committer' => $committer, 
-                 'commits' => $multiple ? $commits : $commits[0]
+                 'commits' => $commits
              ];
          }
 

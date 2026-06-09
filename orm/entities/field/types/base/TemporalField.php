@@ -20,10 +20,6 @@ class TemporalField extends Field {
 	 #[FieldDefinition()]
 	 protected bool $auto_now_add = false;
 
-	 //Whether to store with timezone
-	 #[ShouldValidate()]
-	 protected bool $timezone = false;
-
 	 public function format(string $format){
 	 	 $this->format = $format;
 	 	 return $this;
@@ -39,11 +35,6 @@ class TemporalField extends Field {
 	 	 return $this;
 	 }
 
-	 public function timezone(bool $timezone = true){
-	 	 $this->timezone = $timezone;
-	 	 return $this;
-	 }
-
 
 	 public function get_format(){
 	 	 return $this->format;
@@ -55,10 +46,6 @@ class TemporalField extends Field {
 
 	 public function get_auto_now_add(){
 	 	 return $this->auto_now_add;
-	 }
-
-	 public function get_timezone(){
-	 	 return $this->timezone;
 	 }
 
 	 protected function initialize_defaults(){

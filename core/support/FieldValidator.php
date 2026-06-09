@@ -1,7 +1,11 @@
 <?php
 namespace SaQle\Core\Support;
 
-use SaQle\Security\Validation\Types\{FieldValidationResult, ValidationMode};
+use SaQle\Security\Validation\Types\{
+     FieldValidationResult, 
+     ValidationMode,
+     ValidationAction
+};
 use SaQle\Security\Validation\Utils\ArrayItemValidator;
 use RuntimeException;
 
@@ -14,7 +18,6 @@ class FieldValidator {
      ){}
 
 	 public function validate(string $field, mixed $value) : FieldValidationResult {
-
          $errors = [];
 
          if($this->array){
@@ -27,12 +30,19 @@ class FieldValidator {
 
          $app = app();
 
+         if(isset($this->rules['required'])){
+             $required = ['required' => $this->rules['required']];
+             unset($this->rules['required']);
+
+             $this->rules = $required + $this->rules;
+         }
+
          foreach($this->rules as $rule => $threshold){
 
              //Check if rule exists in registry
              if(!$app->rules->has($rule)){
                  throw new RuntimeException("Validator for rule '{$rule}' is not registered in the app.");
-             }
+             } 
 
              $validator_class = app()->rules->get($rule);
              $validator = new $validator_class($field, $threshold);
@@ -41,9 +51,13 @@ class FieldValidator {
              if(!$result->isvalid){
                  $errors[] = $result->message;
 
-                 if($this->mode === ValidationMode::FAIL_FAST || $validator->stop_on_fail()){
+                 if($this->mode === ValidationMode::FAIL_FAST) {
                      break;
                  }
+             }
+
+             if($result->action && $result->action === ValidationAction::STOP){
+                 break;
              }
          }
 

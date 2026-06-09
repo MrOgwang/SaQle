@@ -10,7 +10,7 @@ use SaQle\Orm\Entities\Model\Interfaces\{IModel, ITableSchema};
 use SaQle\Orm\Entities\Model\Collection\GenericModelCollection;
 use SaQle\Core\Exceptions\Model\{UndefinedFieldException, MissingRequiredFieldsException};
 use SaQle\Build\Utils\MigrationUtils;
-use SaQle\Core\Files\{TempFileRef, UploadedFile, StoredFile, StoredFileCollection};
+use SaQle\Core\Files\{TempFileRef, UploadedFile, StoredFileFactory};
 use SaQle\Core\Files\Storage\TempStorage;
 use SaQle\Core\Assert\Assert;
 use SaQle\Core\Ui\Forms\Form;
@@ -142,6 +142,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
          $table->add_audit_fields();
          $table->clean_model_fields();
          $table->set_unique_constraints();
+         $table->set_fk_constraints();
      }
 
      public function set_table_and_connection(?string $connection = null){
@@ -248,16 +249,10 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
 	 	 	 throw new Exception("Please provide a valid database connection name!");
 	 	 }
 
-         $schema = $schema = config('db.schemas')[$connection];
-         $schema_instance = new $schema();
-         $models = $schema_instance->get_models();
-         $model_classes = array_values($models);
-         $index = array_search(static::class, $model_classes, true);
-         if($index === false){
-             throw new Exception(static::class . ": Not registered in '{$connection}' schema.");
-         }
+         $schema = config('db.schemas')[$connection];
+         $table_name = new $schema()->get_table_for_model(static::class);
 
-         return [$connection, array_keys($models)[$index]];
+         return [$connection, $table_name];
 	 }
 
 	 protected function save_model_files(array &$kwargs){
@@ -368,24 +363,19 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
 
      private function render_field(string $name){
      	 $value = $this->data[$name] ?? "";
-
+         
      	 if(array_key_exists($name, $this->table->get_clean_fields())){ 
      	 	 $field = $this->table->get_clean_fields()[$name];
-     	 	 if($field instanceof FileField || is_subclass_of($field::class, FileField::class)){
+     	 	 
+             if($field instanceof FileField || is_subclass_of($field::class, FileField::class)){
+                 $value = trim($value);
 
-     	 	 	 $default_url = $field->get_default_url();
-     	 	 	 if(is_callable($default_url)){
-     	 	 	 	 $default_url = $default_url($this);
-     	 	 	 }
+                 $default_url = $field->get_default_url();
+                 if(is_callable($default_url)){
+                     $default_url = $default_url($this);
+                 }
 
-     	 	 	 if($field->get_multiple()){
-     	 	 	 	$value = StoredFileCollection::from_json($value, $default_url);
-     	 	 	 }else{
-     	 	 	 	 $value = StoredFile::from_json($value);
-     	 	 	 	 if(!$value && $default_url){
-     	 	 	 	 	 $value = StoredFile::default($default_url);
-     	 	 	 	 }
-     	 	 	 }
+                 $value = StoredFileFactory::make($value ? $value : null,  $default_url, $field->get_multiple());
      	 	 }
 
      	 	 $field->value($value);
@@ -465,6 +455,34 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
 	 	 	 $formatted_data[$key] = $this->$key;
 	 	 }
          return $formatted_data;
+     }
+
+     public function __toString() : string {
+         
+         $class_name = static::class;
+
+         $name_property = $class_name::get_name_property() ?? [];
+         if($name_property){
+             $name_property = is_array($name_property) ? $name_property : [$name_property];
+         }
+
+         $values = [];
+
+         foreach($name_property as $field){
+             $value = $this->$field ?? null;
+
+             if($value === null){
+                 continue;
+             }
+
+             $value = trim((string)$value);
+
+             if($value !== ''){
+                 $values[] = $value;
+             }
+         }
+
+         return implode(" ", $values);
      }
 
      /**
@@ -602,16 +620,17 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
      	 	 
      	 	 $validator = $field->validator();
 
-     	 	 /*$result = $validator->validate($field_name, $field_value);
+     	 	 $result = $validator->validate($field_name, $field_value);
 
      	 	 if(!$result->isvalid){
      	 	 	 $errors[$field_name] = $result->errors;
-             }*/
+             }
      	 }
 
      	 if(!empty($errors)){
              throw new ValidationException(context: [
-                 'errors' => $errors
+                 'errors' => $errors,
+                 'input'  => $data
              ]);
          }
 	 }
@@ -811,7 +830,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
 
      //get model name property
      public static function get_name_property(){
-     	 return self::get_model_setup()->name_property;
+     	 return self::get_model_setup()->get_name_property();
      }
 
      //get all the column names
@@ -864,6 +883,14 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
 	 	 return self::get_model_setup()->get_unique_constraints();
 	 }
 
+     public static function get_fk_constraints(){
+         return self::get_model_setup()->get_fk_constraints();
+     }
+
+     public static function get_fk_field_names(){
+         return self::get_model_setup()->get_fk_field_names();
+     }
+
 	 public function get_connection_name(){
 	 	 return $this->table->get_connection_name();
 	 }
@@ -896,17 +923,14 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
 	 }
 
      public function create_form(Form $form) : Form {
-         $form->mode = "create";
-         $form->auto_wire = true;
-         //$form->fillable = [];
-         //$form->fields['first_name']->label = "First Name";
+         $form->for_create();
+         $form->auto_wire();
          return $form;
      }
 
      public function update_form(Form $form) : Form {
-         $form->mode = "update";
-         $form->auto_wire = true;
-         //form->fillable = [];
+         $form->for_update();
+         $form->auto_wire();
          return $form;
      }
 }

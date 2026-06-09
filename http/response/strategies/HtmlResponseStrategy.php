@@ -40,7 +40,7 @@ final class HtmlResponseStrategy implements ResponseStrategy {
          //inject csrf token input here
          $token_key = CsrfMiddleware::get_token_key();
          $token     = CsrfMiddleware::get_token();
-
+         
          $context[$token_key] = "<input type='hidden' id='".$token_key."' name='".$token_key."' value='".$token."'>";
 
          $context['session_user'] = $request->user ?? new GuestUser();

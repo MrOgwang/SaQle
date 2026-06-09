@@ -3,7 +3,17 @@ namespace SaQle\Http\Request\Data\Sources\Managers;
 
 use SaQle\Http\Request\Data\Sources\Managers\Interfaces\IHttpDataSourceManager;
 use SaQle\Core\Support\BindFrom;
-use SaQle\Http\Request\Data\Sources\Managers\Types\{CookieDataSourceManager, DbDataSourceManager, InputDataSourceManager, HeaderDataSourceManager, PathDataSourceManager, QueryDataSourceManager, SessionDataSourceManager, DiDataSourceManager};
+use SaQle\Http\Request\Data\Sources\Managers\Types\{
+	 CookieDataSourceManager, 
+	 DbDataSourceManager, 
+	 InputDataSourceManager, 
+	 HeaderDataSourceManager, 
+	 PathDataSourceManager, 
+	 QueryDataSourceManager, 
+	 SessionDataSourceManager, 
+	 DiDataSourceManager,
+	 PropsDataSourceManager
+};
 
 class HttpDataSourceManager implements IHttpDataSourceManager {
 
@@ -18,7 +28,8 @@ class HttpDataSourceManager implements IHttpDataSourceManager {
 	 	 	 'path'            => new PathDataSourceManager($from, ...$kwargs),
 	 	 	 'query'           => new QueryDataSourceManager($from, ...$kwargs),
 	 	 	 'session'         => new SessionDataSourceManager($from, ...$kwargs),
-	 	 	 'di', 'container' => new DiDataSourceManager($from, ...$kwargs)
+	 	 	 'di', 'container' => new DiDataSourceManager($from, ...$kwargs),
+	 	 	 'props'           => new PropsDataSourceManager($from, ...$kwargs)
 	 	 };
 	 }
 

@@ -13,6 +13,8 @@ use RuntimeException;
 
 class UiComponentRenderer {
      
+     private ?UiComponentNode $current_node = null;
+
      private array $attributes = [
          'css'   => [], 
          'js'    => [], 
@@ -24,9 +26,23 @@ class UiComponentRenderer {
          private Request $request
      ){}
 
-     //runtime component rendering API
-     public function component(string $name, array $props = [], array $context = [], string $slot = '') : string {
+     //runtime block rendering api
+     public function block(string $name, string $default_template, array $scope) : string {
+         $template = $this->current_node?->blocks[$name] ?? $default_template;
+         extract($scope);
+         ob_start();
+         include $template;
+         return ob_get_clean();
+     }
 
+     //runtime component rendering API
+     public function component(
+         string $name, 
+         array $props = [],  
+         array $blocks = [],
+         array $context = []
+     ) : string {
+ 
          $definition = ComponentRegistry::get_definition($name, $props);
 
          if(!$definition){
@@ -37,17 +53,25 @@ class UiComponentRenderer {
 
          $node->props = $props;
 
-         $node->slot = $slot;
+         $node->blocks = $blocks;
 
          return $this->render($node, $context);
-     } 
+     }
 
      //recursive tree rendering
      public function render(UiComponentNode $node, array $context = []) : string {
 
          $node->active = true;
 
+         //$html = $node->render($this->request, $context);
+
+         $previous = $this->current_node;
+
+         $this->current_node = $node;
+
          $html = $node->render($this->request, $context);
+
+         $this->current_node = $previous;
 
          $html = $this->inject_dynamic($html, $node, $node->context->expose());
 
@@ -56,8 +80,8 @@ class UiComponentRenderer {
 
      //inject dynamic
      private function inject_dynamic(string $html, UiComponentNode $node, array $context) : string {
-         // Match <component:slot />, allowing arbitrary whitespace
-         $pattern = '/<component:slot\s*\/>/i';
+         // Match <ui:slot />, allowing arbitrary whitespace
+         $pattern = '/<ui:slot\s*\/>/i';
 
          //If no dynamic slot exists, return early
          if(!preg_match($pattern, $html)) {

@@ -8,7 +8,7 @@ use SaQle\Orm\Entities\Field\Types\{
      TimeField, TextField, SlugField, PhoneField, PasswordField, JsonField,
      IpAddressField, IntegerField, FloatField, FileField, EmailField,
      DecimalField, DateTimeField, DateField, ChoiceField, CharField, 
-     BooleanField, OneToOne, ManyRelation
+     BooleanField, OneToOne, ManyRelation, CharChoiceField, IntegerChoiceField
 };
 use SaQle\Orm\Entities\Field\Types\Base\RelationField;
 use RuntimeException;
@@ -25,7 +25,7 @@ final class Table {
      private string $pk_type = '';
 
      //the value of this property will represent the entire model
-     private string $_name_property = "";
+     private mixed $_name_property = null;
 
      //the class name of the model
      private string $model_class = ""; 
@@ -190,6 +190,8 @@ final class Table {
 
      private array $unique_constraints = [];
 
+     private array $fk_constraints = [];
+
      //add or remove creator and modifier fields depending on with_user_audit setting
      private function get_user_audit_fields(bool $switch = true) : array {
          if($this->_with_user_audit){
@@ -308,6 +310,10 @@ final class Table {
          return $this->unique_constraints;
      }
 
+     public function get_fk_constraints(){
+         return $this->fk_constraints;
+     }
+
      public function set_unique_constraints(){
          $constraints = [];
          $model_name = strtolower(array_slice(explode('\\', $this->model_class), -1)[0]);
@@ -327,6 +333,28 @@ final class Table {
          }
 
          $this->unique_constraints = $constraints;
+     }
+
+     public function set_fk_constraints(){
+
+         $fk_constraints = [];
+
+         foreach($this->fk_field_names as $name){
+             $field = $this->clean_fields[$name]; 
+             $column_name = $field->get_column();
+             $related_model = $field->get_related_model();
+
+             $fk_constraints[$column_name] = [
+                 'ref_model'     => $related_model,
+                 'ref_table'     => '',
+                 'ref_col'       => $field->get_foreign_key(),
+                 'local_field'   => $field->get_name(),
+                 'delete_action' => $field->get_delete_action()->value,
+                 'update_action' => $field->get_update_action()->value
+             ];
+         }
+
+         $this->fk_constraints = $fk_constraints;
      }
 
      public function set_table_and_connection(string $table_name, string $connection_name){
@@ -360,7 +388,7 @@ final class Table {
          return $this->_name_property;
      }
 
-     public function name_property(string $name_property){
+     public function name_property(array|string $name_property){
          $this->_name_property = $name_property;
      }
 
@@ -507,8 +535,26 @@ final class Table {
          return new CharField(...$kwargs);
      }
 
-     public static function choice_field(...$kwargs): IField {
+     /*public static function choice_field(...$kwargs): IField {
          return new ChoiceField(...$kwargs);
+     }*/
+
+     public static function choice_field(array $choices, bool $use_keys = false): IField {
+         
+         $choice_type = "integer";
+         $items = $use_keys ? array_keys($choices) : array_values($choices);
+
+         foreach($items as $item){
+             if(!is_int($item) && !(is_string($item) && ctype_digit($item))){
+                 $choice_type = "string";
+                 break;
+             }
+         }
+
+         return match($choice_type){
+             'integer' => new IntegerChoiceField()->choices($items)->raw_choices($choices),
+             'string'  => new CharChoiceField()->choices($items)->raw_choices($choices)
+         };
      }
 
      public static function date_field(...$kwargs): IField {
@@ -628,5 +674,4 @@ final class Table {
      public static function is_removed_field() : IField {
          return self::boolean_field()->column(config('model.is_removed_column'));
      }
-
 }

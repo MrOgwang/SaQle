@@ -44,7 +44,7 @@ class StaticFile {
              'path' => $path,
              'cache' => true
          ];
-
+         
          return Message::file($file);
      }
 }

@@ -5,7 +5,7 @@ use SaQle\Core\Services\Providers\ServiceProvider;
 use SaQle\Security\Validation\Validators\{
      MinLengthValidator, MaxLengthValidator, LengthValidator, RegexPatternValidator,
      CharacterSetValidator, BlankValidator, TemporalFormatValidator, FormatValidator,
-     TimezoneValidator, MinValidator, MaxValidator, UnsignedValidator, NativeTypeValidator, 
+     MinValidator, MaxValidator, UnsignedValidator, NativeTypeValidator, 
      RequiredValidator, DurationValidator, MaxDurationValidator, MinDurationValidator,
      SchemesValidator, RequireTldValidator, MinTimeValidator, MaxTimeValidator, SlugValidator,
      InternationalPhoneValidator, MinStrengthValidator, MaxWidthValidator, MinWidthValidator,
@@ -69,7 +69,6 @@ class ValidationServiceProvider extends ServiceProvider {
          $this->app->rules->add('min_date', MinDateValidator::class);
          $this->app->rules->add('max_date', MaxDateValidator::class);
          $this->app->rules->add('format', FormatValidator::class);
-         $this->app->rules->add('timezone', TimezoneValidator::class);
      }
 }
 

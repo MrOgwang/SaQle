@@ -1,11 +1,9 @@
  <div class="flex v_center pagination">
  	 <div class="flex v_center pagination-label">
- 	 	 <p>Showing 1 - 10 of {{ $paginator->total_records() }}</p>
+ 	 	 <p>Showing {{ $paginator->page_lower_limit() }} - {{ $paginator->page_upper_limit() }} of {{ $paginator->total_records() }}</p>
  	 </div>
  	 <div class="flex center pagination-records">
- 	 	 <component:block 
- 	 	     name='saqle.picker' 
- 	 	     label='Per page' 
+ 	 	 <ui:component name='saqle.picker' label='Per page' 
  	 	     :options="[
  	 	         '5' => 5,
  	 	         '10' => 10,
@@ -14,25 +12,33 @@
  	 	         '100' => 100,
  	 	         '200' => 200,
  	 	         '500' => 500,
- 	 	         'all' => 'All'
+ 	 	         '10000000' => 'All'
  	 	     ]"
- 	 	 />
+ 	 	 >
+ 	 	     <block name='picker-option'>
+ 	 	     	 <div class="picker-option" data-value="{{ $key }}">
+ 	 	     	 	 <a class='flex v_center' href='{{ route($current_resource->route_name) }}?page=1&records={{ $key }}'>
+ 	 	     	 	 	 {{ $value }}
+ 	 	     	     </a>
+                 </div>
+ 	 	     </block>
+ 	 	 </ui:component>
  	 </div>
  	 <div class="flex v_center row_reverse pagination-pages">
  	 	 <div class='flex v_center pagesarea'>
 			 @if($paginator->has_prev())
-			 <a href="{{ request()->uri() }}?page={{ $paginator->page() - 1 }}&records={{ $paginator->per_page_count() }}" class="flex center btn"><span>«</span></a>
+			 <a href="{{ route($current_resource->route_name) }}?page={{ $paginator->page() - 1 }}&records={{ $paginator->per_page_count() }}" class="flex center btn"><span>«</span></a>
 			 @endif
 
 			 @foreach($paginator->pages() as $p)
-			 <a href="{{ request()->uri() }}?page={{ $p }}&records={{ $paginator->per_page_count() }}"
+			 <a href="{{ route($current_resource->route_name) }}?page={{ $p }}&records={{ $paginator->per_page_count() }}"
 			   class="flex center btn {{ $p == $paginator->page() ? 'active' : '' }}">
 			   <span>{{ $p }}</span>
 			 </a>
 			 @endforeach
 
 			 @if($paginator->has_next())
-			 <a href="{{ request()->uri() }}?page={{ $paginator->page() + 1 }}&records={{ $paginator->per_page_count() }}" class="flex center btn"><span>»</span></a>
+			 <a href="{{ route($current_resource->route_name) }}?page={{ $paginator->page() + 1 }}&records={{ $paginator->per_page_count() }}" class="flex center btn"><span>»</span></a>
 			 @endif
 		 </div>
 	 </div>

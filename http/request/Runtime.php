@@ -14,10 +14,20 @@ use SaQle\Http\Response\{
 };
 use SaQle\Core\Support\{
      AppContext,
-     AppStage
+     AppStage,
+     Session
 };
 use SaQle\Http\Request\Execution\ActionExecutor;
 use SaQle\Core\Registries\ComponentRegistry;
+use SaQle\Core\Exceptions\ValidationException;
+
+class ErrorContext {
+     public bool  $should_redirect = false;
+     public bool  $should_flash_input = false;
+     public bool  $should_flash_errors = false;
+     public mixed $errors_payload;
+     public mixed $input_payload;
+}
 
 class Runtime {
 
@@ -35,30 +45,10 @@ class Runtime {
      }
 
      private function resolve_response(Request $request, Message $result) : Response {
-
-         /**
-          * Flash results to session:
-          * 
-          * Don't flash for requests that expect a json response
-          * or non redirect results
-          * */
-         if($request->expects_html() && $result instanceof RedirectMessage && $result->should_flash()){
-
-         }
-
          return (new ResponseResolver())->resolve($request, $result);
      }
 
-     private function handle_exception(Throwable $e, Request $request) : void {
-
-         $http_message = $e instanceof FrameworkException ? 
-         $e->get_http_message() : 
-         new Message(Message::INTERNAL_SERVER_ERROR, $e->getTrace(), $e->getMessage());
-
-         $request->attributes->set('error.code', $http_message->code);
-         $request->attributes->set('error.message', $http_message->message);
-         $request->attributes->set('error.context', $http_message->data);
-
+     private function log_exception(Throwable $e){
          /** 
           * Log the exception to file
           * 
@@ -70,55 +60,84 @@ class Runtime {
          if(config('error.should_log')){
              log_to_file($e);
          }
+     }
 
-         /**
-          * Flash to session:
-          * 
-          * Only when flash was explicitly requested or 
-          * request is unsafe: (PUT, POST, PATCH, DELETE)
-          * */
-         if($request->is_unsafe()){
-             $request->session->set('flash', (object)[
-                 'message' => $http_message->message,
-                 'context' => $http_message->data,
-                 'code'    => $http_message->code,
-                 'type'    => 'error'
-             ], true);
+     private function build_error_context(Throwable $e, Request $request): ErrorContext {
+         $ctx = new ErrorContext();
+
+         $ctx->should_redirect = $request->is_unsafe() && $request->expects_html();
+
+         if($e instanceof ValidationException){
+             $ctx->should_flash_input = true;
+             $ctx->should_flash_errors = true;
+             $ctx->input_payload = $e->input();
+             $ctx->errors_payload = $e->errors();
+             return $ctx;
          }
+
+         $ctx->should_flash_input = $ctx->should_redirect;
+         $ctx->errors_payload = $e->getMessage();
+         $ctx->input_payload = null;
+
+         return $ctx;
+     }
+
+     private function build_http_message(Throwable $e, ErrorContext $ctx, Request $request) {
+         if($ctx->should_redirect){
+             //return new RedirectMessage($request->uri());
+         }
+
+         if($e instanceof FrameworkException){
+             return $e->get_http_message();
+         }
+
+         return new Message(Message::INTERNAL_SERVER_ERROR, $e->getTrace(), $e->getMessage());
+     }
+
+     private function apply_flash(Request $request, Message $msg, ?ErrorContext $ctx = null) : void { 
          
+         $should_flash_input = $ctx && $ctx->should_flash_input ? true : $msg->should_flash();
+         $should_flash_errors = $ctx && $ctx->should_flash_errors ? true : $msg->should_flash();
+         $errors_payload = $ctx ? $ctx->errors_payload : $msg->message;
+         $input_payload = $ctx ? $ctx->input_payload : $msg->data;
 
-         /**
-          * For unsafe requests: (PUT, POST, PATCH, DELETE), 
-          * reload same page after flashing
-          * */
-         if($request->is_unsafe()){
-             
-         } 
-
-         /*$stage = $this->app()->get_stage();
-
-         if($stage === AppStage::REQUEST_BOOTSTRAP){
-             log_to_file('Inside middleware!');
+         $flash = [];
+         if($should_flash_input){
+             Session::flash('__old', $input_payload);
          }
 
-         if($stage === AppStage::REQUEST_RESOLUTION){
-             // Controller / route failure
+         if($should_flash_errors){
+             Session::flash('__errors', $errors_payload);
          }
+     }
 
-         if($stage === AppStage::RESPONSE_BOOTSTRAP){
-             // Response transformation failure
-         }*/
+     private function apply_request_attributes(Request $request, Message $msg){
+         if($request->is_safe()){
+             $request->attributes->set('error.code', $msg->code);
+             $request->attributes->set('error.message', $msg->message);
+             $request->attributes->set('error.context', $msg->data);
+         }
+     }
 
-         $response = $this->resolve_response($request, $http_message);
+     private function handle_exception(Throwable $e, Request $request): void {
+         $this->log_exception($e);
+
+         $context = $this->build_error_context($e, $request);
+
+         $message = $this->build_http_message($e, $context, $request);
+
+         $this->apply_flash($request, $message, $context);
+
+         $this->apply_request_attributes($request, $message);
+
+         $response = $this->resolve_response($request, $message);
 
          $response->send();
      }
 
      private function short_circuit_response($request, $http_message){
 
-         $request->attributes->set('error.code', $http_message->code);
-         $request->attributes->set('error.message', $http_message->message);
-         $request->attributes->set('error.context', $http_message->data);
+         $this->apply_request_attributes($request, $http_message);
 
          $response = $this->resolve_response($request, $http_message);
          $response->send();
@@ -129,20 +148,21 @@ class Runtime {
 
              //step 1: run request middleware
              $this->app()->set_stage(AppStage::REQUEST_BOOTSTRAP);
-             $http_message = $this->bootstrap_request($request);
-             if($http_message){
-                 $this->short_circuit_response($request, $http_message);
+             $req_bootstrap_msg = $this->bootstrap_request($request);
+             if($req_bootstrap_msg){
+                 $this->apply_flash($request, $req_bootstrap_msg);
+                 $this->short_circuit_response($request, $req_bootstrap_msg);
                  return;
              } 
 
              //step 2: execute the controller action
              $this->app()->set_stage(AppStage::REQUEST_RESOLUTION);
-             $http_message = ActionExecutor::execute($request);
-             $response = $this->resolve_response($request, $http_message);
+             $act_exec_msg = ActionExecutor::execute($request);
+             $response = $this->resolve_response($request, $act_exec_msg);
 
              //step 3: run response middleware
              $this->app()->set_stage(AppStage::RESPONSE_BOOTSTRAP);
-             $http_message = $this->bootstrap_response($request, $response);
+             $res_bootstrap_msg = $this->bootstrap_response($request, $response);
 
              /**
               * If response middleware returns an http_message, 
@@ -154,12 +174,14 @@ class Runtime {
               * so this might be disallowed in future once the benefits are 
               * properly weighed!
               * */
-             if($http_message){
-                 $this->short_circuit_response($request, $http_message);
+             if($res_bootstrap_msg){
+                 $this->apply_flash($request, $res_bootstrap_msg);
+                 $this->short_circuit_response($request, $res_bootstrap_msg);
                  return;
              }
 
              //step 4: send the response from normal flow
+             $this->apply_flash($request, $act_exec_msg);
              $response->send(); 
 
              $this->app()->set_stage(AppStage::TERMINATED);

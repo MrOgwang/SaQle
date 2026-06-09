@@ -4,7 +4,7 @@ namespace SaQle\Http\Response;
 
 class RedirectMessage extends Message {
 
-     private bool $_keep_method = false;
+      private bool $_keep_method = false;
 
 	 public function __construct(string $url){
 	 	 parent::__construct(self::FOUND, $url);
@@ -27,14 +27,6 @@ class RedirectMessage extends Message {
 
 	 public function as_get(){
 	 	 $this->code = self::SEE_OTHER;
-	 }
-
-	 public function flash(string $key, mixed $data = null){
-
-	 }
-
-	 public function should_flash() : bool {
-	 	return true;
 	 }
 
 }

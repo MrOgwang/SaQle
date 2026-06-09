@@ -19,3 +19,6 @@ media/
 # ignore other folders
 utils/communication/Mail
 utils/communication/Messaging/AT
+
+# ignore postman files
+postman/

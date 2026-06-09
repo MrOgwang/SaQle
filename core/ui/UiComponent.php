@@ -9,7 +9,7 @@ class UiComponent {
      /**
       * Component placeholder name in template
       * 
-      * <component:block/slot name='whatever'/>
+      * <ui:component/form name='whatever'/>
       * */
      protected string $name;
 

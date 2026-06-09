@@ -2,7 +2,10 @@
 
 namespace SaQle\Orm\Entities\Field\Types\Base;
 
-use SaQle\Orm\Entities\Field\Attributes\FieldDefinition;
+use SaQle\Orm\Entities\Field\Attributes\{
+	 FieldDefinition,
+	 ForeignKeyAction
+};
 use SaQle\Orm\Entities\Field\Types\{
 	 OneToOne, 
 	 OneToMany, 
@@ -11,6 +14,12 @@ use SaQle\Orm\Entities\Field\Types\{
 use SaQle\Orm\Database\ColumnType;
 
 class RelationField extends Field {
+
+	 //foreign key action on delete
+     protected ForeignKeyAction $on_delete_action = ForeignKeyAction::RESTRICT;
+
+     //foreign key action on delete
+     protected ForeignKeyAction $on_update_action = ForeignKeyAction::CASCADE;
 
 	 //the class name of the foreign key model
 	 protected ?string $related_model = null;
@@ -128,8 +137,6 @@ class RelationField extends Field {
 	 	 if($this instanceof OneToOne){
 	 	 	 if(!$this->column){
 	 	 	 	 $this->column = $this->name."_id";
-
-	 	 	 	 //$this->column = $this->name;
 	 	 	 }
 
              //the local key defaults to the column name
@@ -156,5 +163,23 @@ class RelationField extends Field {
      protected function infer_foreign_key(){
 	 	 return $this->related_model::get_pk_name();
 	 }
+
+	 public function on_delete(ForeignKeyAction $action){
+	 	 $this->on_delete_action = $action;
+	 	 return $this;
+	 }
+
+	 public function on_update(ForeignKeyAction $action){
+	 	 $this->on_update_action = $action;
+	 	 return $this;
+	 }
+
+	 public function get_delete_action(){
+	 	 return $this->on_delete_action;
+	 }
+
+	 public function get_update_action(){
+	 	 return $this->on_update_action;
+	 } 
 }
 

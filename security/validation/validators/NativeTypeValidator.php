@@ -22,14 +22,16 @@ class NativeTypeValidator extends IValidator {
          if(!is_string($this->threshold) || !in_array($this->threshold, self::SUPPORTED_TYPES, true)){
              return new ValidationResult(false, "Invalid type for {$this->field}.");
          }
-
-         return match($this->threshold){
+         
+         $result = match($this->threshold){
              'integer' => $this->validate_integer($value, $context),
              'string'  => $this->validate_string($value, $context),
              'float'   => $this->validate_float($value, $context),
              'file'    => $this->validate_file($value, $context),
              default   => new ValidationResult(false, "Unsupported native type.")
          };
+
+         return $result;
      }
 
      private function validate_integer(mixed $value, array $context): ValidationResult {

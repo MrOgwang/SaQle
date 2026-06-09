@@ -150,6 +150,35 @@ abstract class DbDriver {
         return $unique_sqls;
     }
 
+     private function get_fk_action(string $pointer) : string {
+         return match($pointer){
+             'cascade'     => 'CASCADE',
+             'set_null'    => 'SET NULL',
+             'set_default' => 'SET DEFAULT',
+             'restrict'    => 'RESTRICT',
+             'no_action'   => 'NO ACTION'
+         };
+     }
+
+     public function get_fk_constraint_sqls(array $fk_snapshot){
+
+         $fk_sqls = [];
+         
+         foreach($fk_snapshot as $col_name => $fk_settings){
+
+             $delete_action = $this->get_fk_action($fk_settings['delete_action']);
+             $update_action = $this->get_fk_action($fk_settings['update_action']);
+
+             $fk_sqls[] = "CONSTRAINT ".$fk_settings['constraint_name']."
+                         FOREIGN KEY (".$col_name.")
+                         REFERENCES ".$fk_settings['ref_table']."(".$fk_settings['ref_col'].")
+                         ON DELETE ".$delete_action."
+                         ON UPDATE ".$update_action;
+         }
+
+         return $fk_sqls;
+     }
+
     // ------------------------------------------------------------------
     // Abstract schema + DDL operations
     // ------------------------------------------------------------------
@@ -172,6 +201,7 @@ abstract class DbDriver {
         string $table,
         array $column_sqls,
         array $unique_sqls = [],
+        array $fk_sqls = [],
         bool $temporary = false
     );
     abstract public function create_table_from_model(

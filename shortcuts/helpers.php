@@ -32,11 +32,8 @@ if(!function_exists('request')){
 
 if(!function_exists('log_to_file')){
      function log_to_file(string $log){
-         $timezone = date_default_timezone_get();
-         $logger = new FileLogger( path_join([config('base_path'), 'logs', 'errors.txt']) );
-         $timestamp = time();
-         $time = date("g:i A", $timestamp);
-         $logger->log_to_file("Timezone: {$timezone} : {$time} -- {$log}\n\n");
+         $logger = new FileLogger(path_join([config('base_path'), 'logs', 'errors.txt']));
+         $logger->log_to_file($log);
      }
 }
 

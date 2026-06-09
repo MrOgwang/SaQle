@@ -5,4 +5,5 @@ abstract class DbSnapshot{
     abstract public function get_models();
     abstract public function get_model_fields();
     abstract public function get_unique_constraints();
+    abstract public function get_fk_constraints();
 }

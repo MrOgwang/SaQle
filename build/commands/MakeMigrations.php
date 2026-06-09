@@ -185,7 +185,33 @@ class MakeMigrations {
          return $unique_constraints;
      }
 
-     private function write_schema_snapshot($snapshot_class_name, $models, $unique_constraints, $dbdriver){
+     private function extract_fk_constraints($models, $schema_class){
+
+         $schema_instance = new $schema_class();
+         $fk_constraints = [];
+
+         foreach($models as $n => $m){
+             $mi = $m::make();
+             $constraints = $mi::get_fk_constraints();
+             $updated_constraints = [];
+             foreach($constraints as $col_name => $cons_items){
+                 $updated_constraints[$col_name] = [
+                     'ref_table'       => $schema_instance->get_table_for_model($cons_items['ref_model']),
+                     'ref_col'         => $cons_items['ref_col'],
+                     'delete_action'   => $cons_items['delete_action'],
+                     'update_action'   => $cons_items['update_action'],
+                     'local_field'     => $cons_items['local_field'],
+                     'constraint_name' => "fk_{$n}_{$cons_items['local_field']}"
+                 ];
+             }
+
+             $fk_constraints[$n] = $updated_constraints;
+         }
+
+         return $fk_constraints;
+     }
+
+     private function write_schema_snapshot($snapshot_class_name, $models, $unique_constraints, $fks_constraints, $dbdriver){
          $file_name = $this->snapshots_folder."/".$snapshot_class_name.".php";
          $models_template = "";
          $fields_template = "";
@@ -231,6 +257,19 @@ class MakeMigrations {
              $uniques_template .= "\t\t\t],\n";
          }
 
+         $fks_template = "";
+         foreach($fks_constraints as $n => $fk_constraints){
+             $fks_template .= "\t\t\t'".$n."' => [\n";
+             foreach($fk_constraints as $col_name => $con_items){
+                 $fks_template .= "\t\t\t\t'".$col_name."' => [\n";
+                 foreach($con_items as $item => $item_value){
+                     $fks_template .= "\t\t\t\t\t'".$item."' => '".$item_value."',\n"; 
+                 }
+                 $fks_template .= "\t\t\t\t],\n";
+             }
+             $fks_template .= "\t\t\t],\n";
+         }
+
          $template = "<?php\n";
          $template .= "/**\n";
          $template .= "* This is an auto generated file.\n"; 
@@ -271,6 +310,13 @@ class MakeMigrations {
          $template .= "\t\t];\n";
          $template .= "\t}\n\n";
 
+          //get fk fields.
+         $template .= "\tpublic function get_fk_constraints(){\n";
+         $template .= "\t\treturn [\n";
+         $template .= $fks_template;
+         $template .= "\t\t];\n";
+         $template .= "\t}\n\n";
+
          $template .= "}\n";
 
          //create snapshot folder
@@ -299,6 +345,7 @@ class MakeMigrations {
          $raw_models = $instance->get_models();
          $raw_fields = $instance->get_model_fields();
          $unique_constraints = $instance->get_unique_constraints();
+         $fk_constraints = $instance->get_fk_constraints();
 
          $clean_models = [];
          $clean_fields = [];
@@ -313,7 +360,7 @@ class MakeMigrations {
              }
          }
 
-         return [$clean_models, $clean_fields, $unique_constraints];
+         return [$clean_models, $clean_fields, $unique_constraints, $fk_constraints];
      }
 
      private function get_schema_snapshot($schema_name, $timestamp, $migration_name, $tracker){
@@ -327,6 +374,9 @@ class MakeMigrations {
          $snapshot_records = [];
 
          foreach($schemas as $s_name => $s_class){
+
+             cli_log("Using connection: {$s_name}");
+
              $dbdriver = Db::using($s_name)->driver();
              
              /**
@@ -350,13 +400,23 @@ class MakeMigrations {
              $unique_constraints = $this->extract_unique_constraints($models);
              $last_unique_constraints = [];
 
+             //acquire fk constraints
+             $fk_constraints = $this->extract_fk_constraints($models, $s_class);
+             $last_fk_constraints = [];
+
              $connection_params = config('db.connections')[$s_name];
              $connection_params['database'] = ''; //we are connecting without a database, therefore set the database name to empty string
 
              $connection = resolve(Connection::class, $connection_params);
 
              $snapshot_class_name = "{$schema_class}_{$timestamp}_{$migration_name}";
-             $snapshot_path = $this->write_schema_snapshot($snapshot_class_name, $models, $unique_constraints, $dbdriver);
+             $snapshot_path = $this->write_schema_snapshot(
+                 $snapshot_class_name, 
+                 $models, 
+                 $unique_constraints, 
+                 $fk_constraints, 
+                 $dbdriver
+             );
              $snapshot_records[$s_name] = [$snapshot_path, $snapshot_class_name];
 
              $added_models = $models;
@@ -381,7 +441,7 @@ class MakeMigrations {
 
                      if($last_migration){
 
-                         [$last_models, $last_model_fields, $last_unique_constraints] = $this->get_snapshot(
+                         [$last_models, $last_model_fields, $last_unique_constraints, $last_fk_constraints] = $this->get_snapshot(
                             $last_migration->migration_name, 
                             $last_migration->migration_timestamp, 
                             $schema_class
@@ -431,6 +491,7 @@ class MakeMigrations {
              $schema_snapshot[$s_name]['tables'] = [$added_models, $removed_models, $maintained_models];
              $schema_snapshot[$s_name]['columns'] = [$added_columns, $removed_columns];
              $schema_snapshot[$s_name]['unique'] = [$unique_constraints, $last_unique_constraints];
+             $schema_snapshot[$s_name]['fk'] = [$fk_constraints, $last_fk_constraints];
          }
 
          return [$schema_snapshot, $snapshot_records];
@@ -451,12 +512,12 @@ class MakeMigrations {
          $current_migration_files = $tracker->get_migration_files();
          if($current_migration_files && $current_migration_files[ count($current_migration_files) - 1 ]->is_migrated === false){
              /*$fn = $current_migration_files[ count($current_migration_files) - 1 ]->file;
-             echo "You have a pending migration file [$fn] that should be migrated first!\n";
-             echo "Run command: php manage.php migrate\n";
+             cli_log("You have a pending migration file [$fn] that should be migrated first!\n");
+             cli_log("Run command: php manage.php migrate\n");
              return;*/
          }
 
-         echo "Making {$migration_name} migrations now!\n";
+         cli_log("Making {$migration_name} migrations now!\n");
          [$snapshot, $snapshot_records] = $this->get_schema_snapshot($schema_name, $timestamp, $migration_name, $tracker);
 
          [$up_models, $down_models, $touched_snapshots] = $this->get_model_operations($snapshot, $snapshot_records);
@@ -503,7 +564,7 @@ class MakeMigrations {
          }
 
          if(file_put_contents($migration_filename, $template) !== false){
-             echo "Migration created: {$migration_filename}\n";
+             cli_log("Migration created: {$migration_filename}\n");
 
              $tracker->add_migration((Object)['file' => $class_name.".php", 'is_migrated' => false]);
              $this->serialize_to_file($migration_tracker_filename, $tracker);

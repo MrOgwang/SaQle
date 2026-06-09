@@ -1,7 +1,11 @@
-<div class="choice-group">
+ <div class="choice-group">
 	 @foreach($field->choices as $key => $value)
 	 <div class="choice checkbox">
+	 	 @if($field->value === $key)
+		 <input checked='checked' type='checkbox' name='{{ $field->name }}[]' id='{{ $field->id }}_{{ $key }}' value='{{ $key }}'/>
+		 @else
 		 <input type='checkbox' name='{{ $field->name }}[]' id='{{ $field->id }}_{{ $key }}' value='{{ $key }}'/>
+		 @endif
 		 <label for="{{ $field->id }}_{{ $key }}">{{ $value }}</label>
 	 </div>
      @endforeach

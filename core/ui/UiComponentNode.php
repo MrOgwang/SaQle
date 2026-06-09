@@ -16,9 +16,10 @@ use Throwable;
 
 class UiComponentNode {
 
-     public string $slot = '';
+     //overridable regions in the component
+     public array $blocks = [];
 
-     //component attributes passed via <component/> tag in html
+     //component attributes passed via <ui:component/> or <ui:form/> tags in html
      public array $props = [];
 
      //whether to execute component controller or not
@@ -64,6 +65,9 @@ class UiComponentNode {
                  )->data ?? [];
                  $this->context = new UiComponentContext($this_context);
              }catch(Throwable $e){
+                
+                 log_to_file($e);
+
                  $this->def = ComponentRegistry::get_definition(config('error.component'));
 
                  $http_message = $e instanceof FrameworkException ? 
@@ -109,13 +113,14 @@ class UiComponentNode {
          if(isset($parent_context['__renderer'])){
              $renderer = $parent_context['__renderer'];
          } 
+         
          $view->set_context(array_merge(
              $this->context->expose(),
              [
-                 '__props' => $this->props,
-                 '__slot'  => $this->slot,
+                 '__props'    => $this->props,
                  '__renderer' => $renderer,
-                 '__context' => $parent_context
+                 '__context'  => $parent_context
+                 //'__blocks'   => $this->blocks,
              ],
              $this->props
          ));

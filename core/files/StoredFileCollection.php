@@ -7,7 +7,7 @@ use JsonSerializable;
 
 class StoredFileCollection extends TypedCollection implements JsonSerializable {
 
-     protected string $default_url = null;
+     protected ?string $default_url = null;
 
      public function __construct(array $elements = [], ?string $default_url = null){
          $this->default_url = $default_url;

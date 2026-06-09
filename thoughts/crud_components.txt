@@ -37,10 +37,6 @@ delete one user [DELETE: /users/:user_id] - this should be done from the view pa
 delete many users [DELETE: /users] - this should be done from the table panel
 
 
-<component type='block'/>
-<component type='slot'/>
-<component />
-
 route methods: 
 
 compose_with(array $layouts)

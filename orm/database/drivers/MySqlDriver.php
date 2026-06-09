@@ -467,15 +467,29 @@ class MySqlDriver extends DbDriver {
  	 	 return implode(" ", $sql);
      }
 
-     private function create_table(string $table, string $fields, bool $temporary = false, string $constraints = ""){
+     private function create_table(
+         string $table, 
+         string $fields, 
+         bool $temporary = false, 
+         string $unique_constraints = "",
+         string $fk_constraints = ""
+     ){
          try{
-             $sql = $temporary ? "CREATE TEMPORARY TABLE IF NOT EXISTS {$table} ({$fields})" : "CREATE TABLE IF NOT EXISTS {$table} ({$fields})";
-             if($constraints){
-                 $constraints = ", ".$constraints;
-                 $sql = $temporary ? 
-                 "CREATE TEMPORARY TABLE IF NOT EXISTS {$table} ({$fields}{$constraints})" : 
-                 "CREATE TABLE IF NOT EXISTS {$table} ({$fields}{$constraints})";
+             $sql = $temporary ? 
+             "CREATE TEMPORARY TABLE IF NOT EXISTS {$table} ({$fields}" : 
+             "CREATE TABLE IF NOT EXISTS {$table} ({$fields}";
+
+             if($unique_constraints){
+                 $unique_constraints = ", ".$unique_constraints;
+                 $sql = $sql.$unique_constraints;
              }
+
+             if($fk_constraints){
+                 $fk_constraints = ", ".$fk_constraints;
+                 $sql = $sql.$fk_constraints;
+             }
+
+             $sql = $sql.")";
 
              [$statement, $response] = array_values($this->execute($sql));
              $error_code = $statement->errorCode();
@@ -494,12 +508,19 @@ class MySqlDriver extends DbDriver {
      }
 
      //Create a database table from migration
-     public function create_table_from_migration(string $table, array $column_sqls, array $unique_sqls = [], bool $temporary = false){
+     public function create_table_from_migration(
+         string $table, 
+         array $column_sqls, 
+         array $unique_sqls = [], 
+         array $fk_sqls = [], 
+         bool $temporary = false
+     ){
          return $this->create_table(
              $table,
              implode(", ", $column_sqls),
              $temporary, 
-             implode(", ", $unique_sqls)
+             implode(", ", $unique_sqls),
+             implode(", ", $fk_sqls)
          );
      }
 

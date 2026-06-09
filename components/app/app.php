@@ -7,7 +7,6 @@ use SaQle\Core\Registries\ModelRegistry;
 
 class App {
      private function get_resource_links(){
-
          $links = [];
 
          //get developer defined db schemas
@@ -19,9 +18,11 @@ class App {
              foreach($models as $model_label => $model_class){
 
                  $links[$model_class] = (Object)[
-                     'url' => '/_auto/'.$model_label, 
+                     'url' => '/_auto/'.$model_label,
                      'plural_label' => ucwords($model_label),
-                     'singular_label' => ModelRegistry::get_model_name($model_class)
+                     'singular_label' => ModelRegistry::get_model_name($model_class),
+                     'route_name' => $model_label.'.list',
+                     'pk_column' => $model_class::get_pk_name()
                  ];
              }
          }
@@ -31,10 +32,12 @@ class App {
 
      public function get(){
          $resources = $this->get_resource_links();
+         $model_parts = explode("@", request()->route->model_class);
+         $model_class = $model_parts[0] ?? "";
 
          return Message::ok([
              'resources' => $resources,
-             'current_resource' => $resources[request()->route->model_class] ?? null
+             'current_resource' => $resources[$model_class] ?? null
          ]);
      }
 }

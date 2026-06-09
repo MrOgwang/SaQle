@@ -98,10 +98,10 @@ final class RouteCompiler {
                  $create_resource_route = new RouteAttribute(
                      name: $model_label.'.create',
                      method: 'post', 
-                     url: '/_auto/'.$model_label, 
+                     url: '/_auto/'.$model_label.'/create',
                      guards: 'authenticated',
                      layout: ['saqle.app'],
-                     model: $model_class
+                     model: $model_class."@create_form"
                  );
                  $create_resource_route->set_target("saqle.autoresource@create_resource");
                  $create_resource_route->initialize();
@@ -134,10 +134,10 @@ final class RouteCompiler {
                  $edit_resource_route = new RouteAttribute(
                      name: $model_label.'.edit',
                      method: 'patch', 
-                     url: '/_auto/'.$model_label.'/:id', 
+                     url: '/_auto/'.$model_label.'/:id/edit', 
                      guards: 'authenticated',
                      layout: ['saqle.app'],
-                     model: $model_class
+                     model: $model_class."@update_form"
                  );
                  $edit_resource_route->set_target("saqle.autoresource@edit_resource");
                  $edit_resource_route->initialize();

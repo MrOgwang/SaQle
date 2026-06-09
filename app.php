@@ -89,6 +89,7 @@ final class App {
          require_once __DIR__.'/shortcuts/dates.php';
          require_once __DIR__.'/shortcuts/arrays.php';
          require_once __DIR__.'/shortcuts/exceptions.php';
+         require_once __DIR__.'/shortcuts/session.php';
          $this->load_environment();
      }
 

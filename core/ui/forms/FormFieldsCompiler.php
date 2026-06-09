@@ -10,7 +10,8 @@ use SaQle\Orm\Entities\Field\Types\{
      OneToMany, 
      ManyToMany, 
      VirtualField, 
-     Pk
+     Pk,
+     ImageField
 };
 use RuntimeException;
 
@@ -44,11 +45,15 @@ final class FormFieldsCompiler {
         return trim($label);
      }
 
-     private static function skip_field(object $field): bool{
+     /*private static function skip_field(object $field): bool{
          return $field instanceof OneToOne || $field instanceof OneToMany || $field instanceof ManyToMany || $field instanceof VirtualField || $field instanceof Pk;
+     }*/
+
+     private static function skip_field(object $field): bool{
+         return $field instanceof VirtualField || $field instanceof Pk || $field instanceof ManyToMany || $field instanceof OneToMany;
      }
 
-     public static function compile(string $model_class) : array {
+     public static function compile(string $model_class, ?FormRuntimeContext $context = null) : array {
 
          $model_instance = $model_class::make();
          $model_fields = $model_instance->get_fields();
@@ -66,11 +71,39 @@ final class FormFieldsCompiler {
              }
 
              $field_attrs = array_filter($field->get_form_field_attrs(), fn($v) => $v !== null);
+
              $field_attrs['id'] = $field_attrs['name'];
              $field_attrs['label'] = self::derive_label($field_attrs['name']);
              $field_attrs['helper_text'] = $field_attrs['description'] ?? '';
+             $field_attrs['value'] = $context?->input[$name] ?? '';
+             $field_attrs['errors'] = $context?->errors[$name] ?? [];
 
-             $fields[$name] = new FormField($field_attrs);
+             if($field instanceof OneToOne){
+                 $related_model = $field->get_related_model();
+                 $name_property = $related_model::get_name_property() ?? [];
+                 if($name_property){
+                     $name_property = is_array($name_property) ? $name_property : [$name_property];
+                 }
+                 $pk_name = $related_model::get_pk_name();
+
+                 $select_columns = [$pk_name];
+                 if($name_property){
+                     $select_columns = array_merge($select_columns, $name_property);
+                 }
+
+                 $data = $related_model::get()->select($select_columns)->all();
+                 $choices = [];
+
+                 foreach($data as $d){
+                     $choices[$d->$pk_name] = $name_property ? (string)$d : $d->$pk_name;
+                 }
+
+                 $field_attrs['choices'] = $choices;
+                 $field_attrs['type'] = "select";
+             }
+
+             $ui_type = $field instanceof ImageField ? 'image' : 'normal';
+             $fields[$name] = new FormField($field_attrs, $ui_type);
          }
 
          return $fields;
