@@ -2,6 +2,7 @@
 namespace SaQle\Build\Commands;
 
 use Exception;
+use SaQle\Core\Support\Cli;
 
 final class MakeComponent {
      public static function execute(string $name, ?string $module = null, bool $proxy = false){
@@ -20,7 +21,7 @@ final class MakeComponent {
          $component_path = $base_path."/".$name_slug;
 
          if(is_dir($component_path)){
-             cli_log("Component already exists.\n");
+             Cli::print("Component already exists.\n");
              return;
          }
 
@@ -34,7 +35,7 @@ final class MakeComponent {
              self::create_json($component_path, $name_slug);
          }
 
-         cli_log("Component {$name} created successfully.\n");
+         Cli::print("Component {$name} created successfully.\n");
      }
 
      private static function slug($name, string $type = "Component"){

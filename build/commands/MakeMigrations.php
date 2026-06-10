@@ -7,6 +7,7 @@ use SaQle\Core\Migration\Models\Migration;
 use SaQle\Build\Utils\MigrationUtils;
 use SaQle\Orm\Connection\Connection;
 use SaQle\Core\Support\Db;
+use SaQle\Core\Support\Cli;
 use ReflectionClass;
 use Exception;
 
@@ -375,7 +376,7 @@ class MakeMigrations {
 
          foreach($schemas as $s_name => $s_class){
 
-             cli_log("Using connection: {$s_name}");
+             Cli::print("Using connection: {$s_name}");
 
              $dbdriver = Db::using($s_name)->driver();
              
@@ -512,12 +513,12 @@ class MakeMigrations {
          $current_migration_files = $tracker->get_migration_files();
          if($current_migration_files && $current_migration_files[ count($current_migration_files) - 1 ]->is_migrated === false){
              /*$fn = $current_migration_files[ count($current_migration_files) - 1 ]->file;
-             cli_log("You have a pending migration file [$fn] that should be migrated first!\n");
-             cli_log("Run command: php manage.php migrate\n");
+             Cli::print("You have a pending migration file [$fn] that should be migrated first!\n");
+             Cli::print("Run command: php manage.php migrate\n");
              return;*/
          }
 
-         cli_log("Making {$migration_name} migrations now!\n");
+         Cli::print("Making {$migration_name} migrations now!\n");
          [$snapshot, $snapshot_records] = $this->get_schema_snapshot($schema_name, $timestamp, $migration_name, $tracker);
 
          [$up_models, $down_models, $touched_snapshots] = $this->get_model_operations($snapshot, $snapshot_records);
@@ -564,7 +565,7 @@ class MakeMigrations {
          }
 
          if(file_put_contents($migration_filename, $template) !== false){
-             cli_log("Migration created: {$migration_filename}\n");
+             Cli::print("Migration created: {$migration_filename}\n");
 
              $tracker->add_migration((Object)['file' => $class_name.".php", 'is_migrated' => false]);
              $this->serialize_to_file($migration_tracker_filename, $tracker);

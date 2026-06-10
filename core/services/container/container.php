@@ -99,5 +99,15 @@ class Container {
 
          return $reflectionMethod->invokeArgs($object, $dependencies);
      }
+
+     //check whether an explicit binding exists
+     public function has(string $abstract) : bool {
+         return isset($this->bindings[$abstract]) || isset($this->instances[$abstract]);
+     }
+
+     //check whether an abstract/class can be resolved
+     public function canResolve(string $abstract): bool {
+         return $this->has($abstract) || class_exists($abstract);
+     }
 }
 

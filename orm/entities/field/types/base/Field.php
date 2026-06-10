@@ -186,6 +186,10 @@ class Field implements IField {
 	 	 return $this->primary;
 	 }
 
+	 public function get_native_type(){
+	 	 return $this->native_type;
+	 }
+
 	 public function render(callable $callback){
 	 	 $this->render_callback = $callback;
 	 	 return $this;

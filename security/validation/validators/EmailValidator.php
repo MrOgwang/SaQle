@@ -25,7 +25,7 @@ class EmailValidator extends IValidator {
 
          //Validate email
          if(!filter_var($value, FILTER_VALIDATE_EMAIL)){
-             return new ValidationResult(false, "{$field} must be a valid email address.");
+             return new ValidationResult(false, "{$this->field} must be a valid email address.");
          }
 
          //Passed

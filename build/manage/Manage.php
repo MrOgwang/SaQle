@@ -24,7 +24,7 @@ class Manage {
 	 	 	'make:collections' => $this->extract_makemodels_args($args),
 	 	 	'make:models'      => $this->extract_makemodels_args($args),
 	 	 	'make:throughs'    => $this->extract_makemodels_args($args),
-	 	 	'make:superuser'   => $this->extract_makesuperuser_args($args),
+	 	 	'make:superuser'   => [],
 	 	 	'db:seed'          => [],
 	 	 	'db:reset'         => [],
 	 	 	'start:project'    => $this->extract_startproject_args($args),
@@ -75,12 +75,6 @@ class Manage {
 	 private function extract_makemodels_args(array $args){
 	 	 $expected_short = ['-c', '-a'];
 	 	 $expected_long  = ['--context', '--app'];
-	 	 return $this->extract_args($expected_short, $expected_long, $args);
-	 }
-
-	 private function extract_makesuperuser_args(array $args){
-	 	 $expected_short = ['-e', '-p'];
-	 	 $expected_long  = ['--email', '--password'];
 	 	 return $this->extract_args($expected_short, $expected_long, $args);
 	 }
 
@@ -156,9 +150,7 @@ class Manage {
 			     resolve(MakeThroughs::class)->execute();
 			 break;
 			 case 'make:superuser':
-			     $email      = $this->arguments['email']    ?? null;
-	             $password   = $this->arguments['password'] ?? null;
-			     resolve(MakeSuperuser::class)->execute($this->project_root, $email, $password);
+			     resolve(MakeSuperuser::class)->execute();
 			 break;
 			 case 'db:seed':
 			     resolve(SeedDatabase::class)->execute();

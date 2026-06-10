@@ -54,6 +54,10 @@ trait HasChoices {
 	 	 return $this->choices;
 	 }
 
+	 public function get_raw_choices(){
+	 	 return $this->raw_choices;
+	 }
+
 	 public function multiple(bool $multiple = true){
 	 	 $this->multiple = true;
 	 	 return $this;

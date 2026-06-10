@@ -6,6 +6,7 @@ use SaQle\Commons\FileUtils;
 use SaQle\Core\Migration\Models\Migration;
 use SaQle\Core\Migration\Tracker\MigrationTracker;
 use SaQle\Build\Utils\MigrationUtils;
+use SaQle\Core\Support\Cli;
 
 class Migrate{
      use FileUtils;
@@ -26,18 +27,18 @@ class Migrate{
              return;
          }
 
-         cli_log("Scanning file {$file_name} for changes!\n");
+         Cli::print("Scanning file {$file_name} for changes!\n");
          require_once $file_path;
 
          $class_instance = new $file_name();
-         cli_log("Getting affected database contexts!\n");
+         Cli::print("Getting affected database contexts!\n");
          $touched_snapshots = $class_instance->snapshots();
          if(!$touched_snapshots){
-             cli_log("No database context was affected by this migration! Exiting scan.\n");
+             Cli::print("No database context was affected by this migration! Exiting scan.\n");
              return;
          }
 
-         cli_log("Affected contexts found!\n");
+         Cli::print("Affected contexts found!\n");
          $up_operations = $class_instance->up();
 
          $migration_name = $class_instance->get_migration_name();
@@ -59,69 +60,69 @@ class Migrate{
          $table_name = $op['params']['name'];
          $model_class = $op['params']['model'];
 
-         cli_log("Attempting to create table: {$table_name}!\n");
+         Cli::print("Attempting to create table: {$table_name}!\n");
          $migration_field_defs = $this->extract_snapshot_field_definitions($snapshot->get_model_fields(), $table_name);
          $unique_constraint_defs = $dbdriver->get_unique_constraint_sqls($snapshot->get_unique_constraints()[$table_name] ?? []);
          $fk_constraint_defs = $dbdriver->get_fk_constraint_sqls($snapshot->get_fk_constraints()[$table_name] ?? []);
          $tblcreated = $dbdriver->create_table_from_migration($table_name, $migration_field_defs, $unique_constraint_defs, $fk_constraint_defs);
 
          if(!$tblcreated){
-             cli_log("Table {$table_name} creation failed!\n");
+             Cli::print("Table {$table_name} creation failed!\n");
              return;
          }
 
-         cli_log("Table {$table_name} created!\n");
+         Cli::print("Table {$table_name} created!\n");
          return;
      }
 
      private function drop_table($op, $dbdriver){
          $table_name = $op['params']['name'];
-         cli_log("Attempting to drop table: {$table_name}!\n");
+         Cli::print("Attempting to drop table: {$table_name}!\n");
          $tbldropped = $dbdriver->drop_table($table_name);
 
          if(!$tbldropped){
-             cli_log("Table {$table_name} deletion failed!\n");
+             Cli::print("Table {$table_name} deletion failed!\n");
              return;
          }
 
-         cli_log("Table {$table_name} deleted!\n");
+         Cli::print("Table {$table_name} deleted!\n");
          return;
      }
 
      private function add_columns($op, $dbdriver){
          $table_name = $op['params']['name'];
          
-         cli_log("Attempting to add new columns table: {$table_name}!\n");
+         Cli::print("Attempting to add new columns table: {$table_name}!\n");
          $colsadded = $dbdriver->add_columns($table_name, $op['params']['columns']);
 
          if(!$colsadded){
-             cli_log("Columns addition to table {$table_name} failed!\n");
+             Cli::print("Columns addition to table {$table_name} failed!\n");
              return;
          }
 
-         cli_log("New columns added to table {$table_name}!\n");
+         Cli::print("New columns added to table {$table_name}!\n");
          return;
      }
 
      private function drop_columns($op, $dbdriver){
          $table_name = $op['params']['name'];
          
-         cli_log("Attempting to delete columns from table: {$table_name}!\n");
+         Cli::print("Attempting to delete columns from table: {$table_name}!\n");
          $colsdropped = $dbdriver->drop_columns($table_name, $op['params']['columns']);
 
          if(!$colsdropped){
-             cli_log("Column deletion from table {$table_name} failed!\n");
+             Cli::print("Column deletion from table {$table_name} failed!\n");
              return;
          }
 
-         cli_log("Columns dropped from table {$table_name}!\n");
+         Cli::print("Columns dropped from table {$table_name}!\n");
          return;
      }
 
      private function update_unique($op, $dbdriver){
          $table_name = $op['params']['name'];
 
-         cli_log("Attempting to update unique constraints on table: {$table_name}!\n");
+         Cli::print("Attempting to update unique constraints on table: {$table_name}!\n");
          $dbdriver->add_unique_constraints($table_name, $op['unique'], $op['prev_unique']);
 
          return;
@@ -149,11 +150,11 @@ class Migrate{
          $snapshot_path = $snapshot_location['path'];
          $snapshot_class = $snapshot_location['name'];
 
-         cli_log("Confirming connection: {$snapshot_name} is defined!\n");
+         Cli::print("Confirming connection: {$snapshot_name} is defined!\n");
 
          $defined_context = config('db.connections')[$snapshot_name] ?? null;
          if(!$defined_context){
-             cli_log("Connection: {$snapshot_name} not defined! Exiting!.\n");
+             Cli::print("Connection: {$snapshot_name} not defined! Exiting!.\n");
              return;
          }
 
@@ -161,23 +162,23 @@ class Migrate{
          $snapshot = new $snapshot_class();
         
          $databasename = config('db.connections')[$snapshot_name]['database'];
-         cli_log("Connection: {$snapshot_name} found! Pinging database: {$databasename} for existance!\n");
+         Cli::print("Connection: {$snapshot_name} found! Pinging database: {$databasename} for existance!\n");
 
          $dbdriver = Db::using($snapshot_name)->driver();
          $isdbnew = false;
          if(!$dbdriver->check_database_exists()){
-             cli_log("Database {$databasename} not found. Attempting to create database {$databasename}\n");
+             Cli::print("Database {$databasename} not found. Attempting to create database {$databasename}\n");
              if(!$dbdriver->create_database()){
-                 cli_log("Database {$databasename} could not be created! Exiting!\n");
+                 Cli::print("Database {$databasename} could not be created! Exiting!\n");
                  return; 
              }
              $isdbnew = true;
          }
 
          $dbdriver->connect_with_database();
-         cli_log("We have connected!\n");
+         Cli::print("We have connected!\n");
 
-         cli_log("Creating migrations table!\n");
+         Cli::print("Creating migrations table!\n");
          $migration_field_defs = $this->extract_snapshot_field_definitions($snapshot->get_model_fields(), 'migrations');
          $unique_constraint_defs = $dbdriver->get_unique_constraint_sqls($snapshot->get_unique_constraints()['migrations'] ?? []);
          $dbdriver->create_table_from_migration('migrations', $migration_field_defs, $unique_constraint_defs, []);
@@ -255,7 +256,7 @@ class Migrate{
              $migration_file_names = array_values($files);
          }
 
-         cli_log("Starting migrations!\n");
+         Cli::print("Starting migrations!\n");
          foreach($migration_file_names as $migration_file){
              $this->process_migration_file($migration_file);
          }
