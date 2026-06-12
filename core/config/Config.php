@@ -39,9 +39,11 @@ final class Config {
              //Get file name without extension as namespace
              $namespace = pathinfo($file->getFilename(), PATHINFO_FILENAME);
 
+             $config[$namespace] = [];
+
              //Flatten keys with namespace
              foreach($file_config as $key => $value){
-                 $config["{$namespace}.{$key}"] = $value;
+                 $config[$namespace][$key] = $value;
              }
          }
 

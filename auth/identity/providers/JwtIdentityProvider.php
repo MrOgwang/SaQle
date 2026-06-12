@@ -3,10 +3,10 @@ namespace SaQle\Auth\Identity\Providers;
 
 use SaQle\Auth\Interfaces\{
      UserInterface,
-     IdentityProviderInterface
+     UserIDProviderInterface
 };
 
-class JwtIdentityProvider implements IdentityProviderInterface {
+class JwtIdentityProvider implements UserIDProviderInterface {
      public function create(UserInterface $user): string{
          $issuer     = config('auth.jwt_iss') ?? config('app.root_domain'); //the domain issuing the token
          $issued_at  = time();                          //the time issued in secends

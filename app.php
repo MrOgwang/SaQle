@@ -96,6 +96,8 @@ final class App {
      private function expose_configs(array $config){
          $repo = $this->container->resolve(ConfigRepository::class);
          $repo->merge($config);
+         $repo->resolve_closures();
+         $repo->resolve_references();
      }
 
      private function boot(): void {

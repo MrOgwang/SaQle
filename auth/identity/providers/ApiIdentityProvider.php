@@ -3,10 +3,10 @@ namespace SaQle\Auth\Identity\Providers;
 
 use SaQle\Auth\Interfaces\{
      UserInterface,
-     IdentityProviderInterface
+     UserIDProviderInterface
 };
 
-class ApiIdentityProvider implements IdentityProviderInterface {
+class ApiIdentityProvider implements UserIDProviderInterface {
      public function create(UserInterface $user): string {
         // In API key systems, session is not created dynamically.
         // Instead, project would issue & store API keys separately.

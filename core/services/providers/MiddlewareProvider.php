@@ -8,7 +8,10 @@ use SaQle\Http\Request\Middleware\{
      DataMiddleware, 
      CsrfMiddleware
 };
-use SaQle\Auth\Middleware\AuthorizationMiddleware;
+use SaQle\Auth\Middleware\{
+      AuthorizationMiddleware,
+      TenantContextMiddleware
+};
 use SaQle\Http\Cors\Middlewares\{
      CorsMiddleware,
      ApplyCorsHeadersMiddleware
@@ -25,15 +28,22 @@ class MiddlewareProvider extends ServiceProvider {
          $this->app->middleware->add('csrf', CsrfMiddleware::class, RequestScope::WEB);
          $this->app->middleware->add('authorization', AuthorizationMiddleware::class);
          $this->app->middleware->add('applycors', ApplyCorsHeadersMiddleware::class);
+         $this->app->middleware->add('tenantcontext', TenantContextMiddleware::class);
 
          //assign request middlware: middleware is executed top to bottom
-         $this->app->middleware->request([
+         $request_middlewares = [
              'canonicalurl',
              'cors',
              'data',
              'csrf',
              'authorization'
-         ]);
+         ];
+
+         if(config('tenancy.enabled')){
+             $request_middlewares[] = 'tenantcontext';
+         }
+
+         $this->app->middleware->request($request_middlewares);
 
          //assign response middlware: middleware is executed top to bottom
          $this->app->middleware->response([

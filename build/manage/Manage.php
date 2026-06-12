@@ -61,8 +61,8 @@ class Manage {
 	 }
 
 	 private function extract_makemigrations_args(array $args){
-	 	 $expected_short = ['-n', '-s'];
-	 	 $expected_long  = ['--name', '--schema'];
+	 	 $expected_short = ['-n'];
+	 	 $expected_long  = ['--name'];
 	 	 return $this->extract_args($expected_short, $expected_long, $args);
 	 }
 
@@ -118,17 +118,12 @@ class Manage {
 			 break;
 		     case 'make:migrations':
 	             $migration_name = $this->arguments['name'] ?? null;
-	             $schema_name = $this->arguments['schema'] ?? null;
 
 	             if(!$migration_name){
 	             	 throw new Exception("Please provide a migration name!");
 	             }
 
-	             if($schema_name && !MigrationUtils::is_schema_defined($schema_name)){
-	             	 throw new Exception("The database schema [{$schema_name}] provided does not exist or is not defined correctly!");
-	             }
-
-	             resolve(MakeMigrations::class)->execute($migration_name, $schema_name);
+	             resolve(MakeMigrations::class)->execute($migration_name);
 			 break;
 			 case 'migrate':
 			     resolve(Migrate::class)->execute();

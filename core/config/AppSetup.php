@@ -17,7 +17,12 @@ final class AppSetup {
      ){}
 
      public function get_framework_configs(){
-         return Config::get_framework_configs($this->environment, $this->base_path, $this->framework_path, $this->document_root);
+         return Config::get_framework_configs(
+             $this->environment, 
+             $this->base_path, 
+             $this->framework_path, 
+             $this->document_root
+         );
      }
 
      public function get_project_configs(){

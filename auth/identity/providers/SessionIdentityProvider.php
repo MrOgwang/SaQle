@@ -2,9 +2,9 @@
 namespace SaQle\Auth\Identity\Providers;
 
 use SaQle\Auth\Interfaces\UserInterface;
-use SaQle\Auth\Interfaces\IdentityProviderInterface;
+use SaQle\Auth\Interfaces\UserIDProviderInterface;
 
-class SessionIdentityProvider implements IdentityProviderInterface {
+class SessionIdentityProvider implements UserIDProviderInterface {
      public function __construct(){
          if(session_status() === PHP_SESSION_NONE){
              session_start();

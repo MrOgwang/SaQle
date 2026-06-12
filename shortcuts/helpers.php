@@ -38,8 +38,14 @@ if(!function_exists('log_to_file')){
 }
 
 if(!function_exists('config')){
-     function config(string $key, mixed $default = null): mixed {
-         return app()->container->resolve(ConfigRepository::class)->get($key, $default);
+     function config(?string $key = null, mixed $default = null): mixed {
+         $repo = app()->container->resolve(ConfigRepository::class);
+
+         if($key === null){
+             return $repo;
+         }
+
+         return $repo->get($key, $default);
      }
 }
 

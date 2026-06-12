@@ -2,5 +2,5 @@
 namespace SaQle\Auth\Interfaces;
 
 interface IdentityProviderResolverInterface {
-     public function resolve(): IdentityProviderInterface;
+     public function resolve(): UserIDProviderInterface;
 }

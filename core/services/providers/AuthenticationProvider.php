@@ -21,10 +21,12 @@ namespace SaQle\Core\Services\Providers;
 use SaQle\Auth\Interfaces\{
      StrategyRegistryInterface,
      UserProviderInterface,
+     TenantProviderInterface,
      IdentityProviderResolverInterface
 };
 use SaQle\Auth\Identity\Providers\{
-     DefaultUserProvider
+     DefaultUserProvider,
+     DefaultTenantProvider
 };
 use SaQle\Auth\Identity\Resolvers\{
      DefaultIdentityProviderResolver
@@ -51,6 +53,16 @@ class AuthenticationProvider extends ServiceProvider {
              fn() => new DefaultUserProvider(config('auth.model_class'))
          );
 
+         /**
+          * Register a tenant provider. This provides the tenant object 
+          * to be injected into the request. This allows you the chance
+          * to define how the session tenant is fetched and the kind of properties you 
+          * want in the tenant object
+          * */
+         $this->app->container->singleton(
+             TenantProviderInterface::class,
+             fn() => new DefaultTenantProvider(config('tenancy.model_class'))
+         );
 
          /**
           * Register identity provider resolver. This is a callback that determines

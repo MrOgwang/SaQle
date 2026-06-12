@@ -1,9 +1,7 @@
 <?php
 namespace SaQle\Auth\Interfaces;
 
-use SaQle\Auth\Interfaces\UserInterface;
-
-interface IdentityProviderInterface {
+interface UserIDProviderInterface {
      /**
      * Called after successful login.
      * Should persist the user's identity (session ID, token, cookie, etc.).

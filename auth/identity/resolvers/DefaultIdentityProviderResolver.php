@@ -2,7 +2,7 @@
 namespace SaQle\Auth\Identity\Resolvers;
 
 use SaQle\Auth\Interfaces\{
-     IdentityProviderInterface,
+     UserIDProviderInterface,
      IdentityProviderResolverInterface
 };
 use SaQle\Auth\Identity\Providers\{
@@ -13,7 +13,7 @@ use SaQle\Auth\Identity\Providers\{
 
 class DefaultIdentityProviderResolver implements IdentityProviderResolverInterface {
 
-     public function resolve(): IdentityProviderInterface {
+     public function resolve(): UserIDProviderInterface {
          $headers = function_exists('getallheaders') ? getallheaders() : [];
 
          // --- Explicit mode ---
