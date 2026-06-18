@@ -2,8 +2,9 @@
 namespace SaQle\Session\Models;
 
 use SaQle\Orm\Entities\Model\Schema\{Model, Table};
+use SaQle\Orm\Entities\Model\Interfaces\ISystemModel;
 
-class Session extends Model {
+class Session extends Model implements ISystemModel {
 
 	 protected function table_schema(Table $table) : void {
 	 	 

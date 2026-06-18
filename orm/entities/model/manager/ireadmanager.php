@@ -137,10 +137,11 @@ class IReadManager extends QueryManager {
 	 */
 	 public function register_joining_model(string $table, ?string $tblref = null, ?string $as = null){
 	 	 $model = $this->model_from_table($table);
+	 	 $connection_key = $this->model->table->get_connection_name();
 		 $this->register_to_context_tracker(
 		 	 table_name:    $table,
 		 	 table_aliase:  !is_null($as) ? $as : "",
-		 	 database_name: config('db.connections')[$this->model->table->get_connection_name()]['database'],
+		 	 database_name: explode('.', $connection_key, 2)[1] ?? '',
 		 	 field_list:    $model->table->get_table_column_names(),
 		 	 ff_settings:   $model->table->get_file_required_fields(),
 		 	 table_ref:     $tblref

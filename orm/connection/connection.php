@@ -1,7 +1,6 @@
 <?php
 namespace SaQle\Orm\Connection;
 
-use SaQle\Orm\Database\Config\ConnectionConfig;
 use Exception;
 use PDO;
 

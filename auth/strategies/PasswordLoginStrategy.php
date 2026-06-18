@@ -2,7 +2,7 @@
 namespace SaQle\Auth\Strategies;
 
 use SaQle\Auth\Interfaces\LoginStrategyInterface;
-use SaQle\Auth\Interfaces\UserInterface;
+use SaQle\Auth\Identity\User\Interfaces\UserInterface;
 
 class PasswordLoginStrategy implements LoginStrategyInterface {
      public function authenticate(array $credentials): ?UserInterface {

@@ -4,13 +4,14 @@ namespace SaQle\Components\App;
 
 use SaQle\Http\Response\Message;
 use SaQle\Core\Registries\ModelRegistry;
+use SaQle\Core\Support\Db;
 
 class App {
      private function get_resource_links(){
          $links = [];
 
          //get developer defined db schemas
-         $db_schemas = config('db.schemas');
+         $db_schemas = Db::get_developer_schemas();
 
          foreach($db_schemas as $schema_name => $schema_class){
              $models = new $schema_class()->get_developer_models();

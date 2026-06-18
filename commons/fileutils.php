@@ -96,30 +96,30 @@ trait FileUtils{
 
 	 public static function scandir(string $path, ?array $exts = []): array {
 
-	    /* Fail if the directory can't be opened */
-	    if (!(is_dir($path) && $dir = opendir($path))) {
-	        return [];
-	    }
+	     //fail if the directory can't be opened
+	     if(!(is_dir($path) && $dir = opendir($path))){
+	         return [];
+	     }
 
-	    /* An array to hold the results */
-	    $files = [];
+	     //hold the files here
+	     $files = [];
 
-	    while (($file = readdir($dir)) !== false) {
-	        /* Skip anything that's not a regular file */
-	        if (filetype($path . '/' . $file) !== 'file') {
-	            continue;
-	        }
-	        /* If extensions were provided and this file doesn't match, skip it */
-	        if (!empty($exts) && !in_array(pathinfo($path . '/' . $file,
-	                                PATHINFO_EXTENSION), $exts)) {
-	            continue;
-	        }
-	        /* Add this file to the array */
-	        $files[] = $file;
-	    }
-	    closedir($dir);
+	     while(($file = readdir($dir)) !== false){
+	         //skip anything that is not a regular file
+	         if(filetype($path.'/'.$file) !== 'file'){
+	             continue;
+	         }
+	         //if extensions were provided and this file doesn't match, skip it
+	         if(!empty($exts) && !in_array(pathinfo($path.'/'. $file, PATHINFO_EXTENSION), $exts)){
+	             continue;
+	         }
+	         //add this file to the array
+	         $files[] = $file;
+	     }
+
+	     closedir($dir);
 	    
-	    return $files;
+	     return $files;
 	 }
 
 	 /**

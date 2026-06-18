@@ -1,8 +1,10 @@
 <?php
 namespace SaQle\Orm\Database\Drivers;
 
-use SaQle\Orm\Database\Config\ConnectionConfig;
-use SaQle\Orm\Connection\ConnectionManager;
+use SaQle\Orm\Connection\{
+     ConnectionManager,
+     ConnectionConfig
+};
 use SaQle\Orm\Database\ColumnType;
 use SaQle\Orm\Entities\Model\Manager\QueryManager;
 use SaQle\Core\Exceptions\Model\TableDropOperationFailedException;

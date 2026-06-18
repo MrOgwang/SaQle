@@ -144,7 +144,8 @@ trait JoinManager{
       * */
      private function get_table_n_database(string $model){
      	 [$db_class, $table_name] = $model::get_table_and_connection();
-	 	 $database_name = config('db.connections')[$this->model->table->get_connection_name()]['database'];
+     	 $connection_key = $this->model->table->get_connection_name();
+	 	 $database_name = explode('.', $connection_key, 2)[1] ?? '';
 	 	 return [$table_name, $database_name];
      }
 

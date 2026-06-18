@@ -1,25 +1,18 @@
 <?php
 namespace SaQle\Build\Utils;
 
-use SaQle\Orm\Database\Schema;
 use SaQle\Orm\Entities\Model\Schema\Model;
+use SaQle\Core\Support\Db;
 use RuntimeException;
 
 class MigrationUtils {
 
-     public static function is_schema_defined(string $schema_name){
+     public static function check_system_database() : bool {
 
-         $schema = config('db.schemas', [])[$schema_name] ?? null;
+         $system_db = Db::get_system_db();
+         $system_db_driver = Db::using($system_db[0].".".$system_db[1])->driver(with_database: false);
 
-         if(!$schema){
-             return false;
-         }
-
-         if(!class_exists($schema) || !is_subclass_of($schema, Schema::class)){
-             return false;
-         }
-         
-         return true;
+         return $system_db_driver->check_database_exists();
      }
 
      public static function is_model_defined(string $model_class){
@@ -86,5 +79,4 @@ class MigrationUtils {
 
          return new $snapshot_class();
      }
-
 }

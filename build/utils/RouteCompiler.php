@@ -10,8 +10,10 @@ use SaQle\Routes\{
 use SaQle\Core\Support\Route as RouteAttribute;
 use SaQle\Core\Registries\RouteRegistry;
 use SaQle\Core\Registries\ComponentRegistry;
+use SaQle\Core\Support\Db;
 use ReflectionClass;
 use ReflectionMethod;
+use SaQle\Orm\Database\SystemSchema;
 
 final class RouteCompiler {
 
@@ -61,100 +63,115 @@ final class RouteCompiler {
 
      }
 
+     private static function register_resource_routes($type, $model_label, $model_class){
+         $route_prifix = $type === 'system' ? 'saqle' : 'admin';
+         $permissions = $type === 'system' ? 'authenticated && super-user' : 'authenticated && super-admin';
+         $permissions = '';
+         
+         //list resources route
+         $list_resource_route = new RouteAttribute( 
+             name: $model_label.'.list',
+             method: 'get', 
+             url: '/'.$route_prifix.'/_auto/'.$model_label, 
+             guards: $permissions,
+             layout: ['saqle.app'],
+             model: $model_class
+         );
+         $list_resource_route->set_target("saqle.autoresource@list_resources");
+         $list_resource_route->initialize();
+
+         //create form route
+         $create_form_route = new RouteAttribute(
+             name: $model_label.'.create.form',
+             method: 'get', 
+             url: '/'.$route_prifix.'/_auto/'.$model_label.'/create', 
+             guards: $permissions,
+             layout: ['saqle.app'],
+             model: $model_class."@create_form"
+         );
+         $create_form_route->set_target("saqle.autoresource@show_create_form");
+         $create_form_route->initialize();
+
+         //submit create resource route
+         $create_resource_route = new RouteAttribute(
+             name: $model_label.'.create',
+             method: 'post', 
+             url: '/'.$route_prifix.'/_auto/'.$model_label.'/create',
+             guards: $permissions,
+             layout: ['saqle.app'],
+             model: $model_class."@create_form"
+         );
+         $create_resource_route->set_target("saqle.autoresource@create_resource");
+         $create_resource_route->initialize();
+
+         //show a single resource route
+         $show_resource_route = new RouteAttribute(
+             name: $model_label.'.view',
+             method: 'get', 
+             url: '/'.$route_prifix.'/_auto/'.$model_label.'/:id', 
+             guards: $permissions,
+             layout: ['saqle.app'],
+             model: $model_class
+         );
+         $show_resource_route->set_target("saqle.autoresource@show_resource");
+         $show_resource_route->initialize();
+
+         //show edit resource form
+         $edit_form_route = new RouteAttribute(
+             name: $model_label.'.edit.form',
+             method: 'get', 
+             url: '/'.$route_prifix.'/_auto/'.$model_label.'/:id/edit', 
+             guards: $permissions,
+             layout: ['saqle.app'],
+             model: $model_class."@update_form"
+         );
+         $edit_form_route->set_target("saqle.autoresource@show_edit_form");
+         $edit_form_route->initialize();
+
+         //edit resource route
+         $edit_resource_route = new RouteAttribute(
+             name: $model_label.'.edit',
+             method: 'patch', 
+             url: '/'.$route_prifix.'/_auto/'.$model_label.'/:id/edit', 
+             guards: $permissions,
+             layout: ['saqle.app'],
+             model: $model_class."@update_form"
+         );
+         $edit_resource_route->set_target("saqle.autoresource@edit_resource");
+         $edit_resource_route->initialize();
+
+         //delete resource route
+         $del_resource_route = new RouteAttribute(
+             name: $model_label.'.delete',
+             method: 'delete', 
+             url: '/'.$route_prifix.'/_auto/'.$model_label.'/:id', 
+             guards: $permissions,
+             layout: ['saqle.app'],
+             model: $model_class
+         );
+         $del_resource_route->set_target("saqle.autoresource@delete_resource");
+         $del_resource_route->initialize();
+     }
+
      private static function load_resource_routes(){
-         //get developer defined db schemas
-         $db_schemas = config('db.schemas');
+         
+         $system_schema = new SystemSchema();
+         $system_models = $system_schema->get_developer_models();
+
+         foreach($system_models as $model_label => $model_class){
+             self::register_resource_routes('system', $model_label, $model_class);
+         }
+
+         /*/get developer defined db schemas
+         $db_schemas = Db::get_developer_schemas();
 
          foreach($db_schemas as $schema_name => $schema_class){
              $models = new $schema_class()->get_developer_models();
 
              foreach($models as $model_label => $model_class){
-
-                 //list resources route
-                 $list_resource_route = new RouteAttribute( 
-                     name: $model_label.'.list',
-                     method: 'get', 
-                     url: '/_auto/'.$model_label, 
-                     guards: 'authenticated',
-                     layout: ['saqle.app'],
-                     model: $model_class
-                 );
-                 $list_resource_route->set_target("saqle.autoresource@list_resources");
-                 $list_resource_route->initialize();
-
-                 //create form route
-                 $create_form_route = new RouteAttribute(
-                     name: $model_label.'.create.form',
-                     method: 'get', 
-                     url: '/_auto/'.$model_label.'/create', 
-                     guards: 'authenticated',
-                     layout: ['saqle.app'],
-                     model: $model_class."@create_form"
-                 );
-                 $create_form_route->set_target("saqle.autoresource@show_create_form");
-                 $create_form_route->initialize();
-
-                 //submit create resource route
-                 $create_resource_route = new RouteAttribute(
-                     name: $model_label.'.create',
-                     method: 'post', 
-                     url: '/_auto/'.$model_label.'/create',
-                     guards: 'authenticated',
-                     layout: ['saqle.app'],
-                     model: $model_class."@create_form"
-                 );
-                 $create_resource_route->set_target("saqle.autoresource@create_resource");
-                 $create_resource_route->initialize();
-
-                 //show a single resource route
-                 $show_resource_route = new RouteAttribute(
-                     name: $model_label.'.view',
-                     method: 'get', 
-                     url: '/_auto/'.$model_label.'/:id', 
-                     guards: 'authenticated',
-                     layout: ['saqle.app'],
-                     model: $model_class
-                 );
-                 $show_resource_route->set_target("saqle.autoresource@show_resource");
-                 $show_resource_route->initialize();
-
-                 //show edit resource form
-                 $edit_form_route = new RouteAttribute(
-                     name: $model_label.'.edit.form',
-                     method: 'get', 
-                     url: '/_auto/'.$model_label.'/:id/edit', 
-                     guards: 'authenticated',
-                     layout: ['saqle.app'],
-                     model: $model_class."@update_form"
-                 );
-                 $edit_form_route->set_target("saqle.autoresource@show_edit_form");
-                 $edit_form_route->initialize();
-
-                 //edit resource route
-                 $edit_resource_route = new RouteAttribute(
-                     name: $model_label.'.edit',
-                     method: 'patch', 
-                     url: '/_auto/'.$model_label.'/:id/edit', 
-                     guards: 'authenticated',
-                     layout: ['saqle.app'],
-                     model: $model_class."@update_form"
-                 );
-                 $edit_resource_route->set_target("saqle.autoresource@edit_resource");
-                 $edit_resource_route->initialize();
-
-                 //delete resource route
-                 $del_resource_route = new RouteAttribute(
-                     name: $model_label.'.delete',
-                     method: 'delete', 
-                     url: '/_auto/'.$model_label.'/:id', 
-                     guards: 'authenticated',
-                     layout: ['saqle.app'],
-                     model: $model_class
-                 );
-                 $del_resource_route->set_target("saqle.autoresource@delete_resource");
-                 $del_resource_route->initialize();
+                 self::register_resource_routes($model_label, $model_class);
              }
-         }
+         }*/
      }
 
      private static function load_routes($files){

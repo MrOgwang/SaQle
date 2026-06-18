@@ -3,8 +3,11 @@ declare(strict_types=1);
 
 namespace SaQle\Orm\Database\Transaction;
 
-use SaQle\Orm\Connection\{Connection, ConnectionManager};
-use SaQle\Orm\Database\Config\ConnectionConfig;
+use SaQle\Orm\Connection\{
+     Connection, 
+     ConnectionManager,
+     ConnectionConfig
+};
 use Throwable;
 
 final class TransactionManager {

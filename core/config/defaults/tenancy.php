@@ -6,6 +6,7 @@
  * */
 
 use SaQle\Auth\Models\BaseTenant;
+use SaQle\Auth\Identity\Tenant\Providers\DefaultTenantProvider;
 
 return [
 
@@ -14,7 +15,7 @@ return [
       * 
       * Turn this on/off before any migrations are run
       * */
-     'enabled' => false,
+     'enabled' => true,
 
      /**
       * Preffered tenant ID source for your project.
@@ -33,6 +34,21 @@ return [
       * path : the tenant id will be acquired from a url path parameter
       * */
      'id_provider' => 'user',
+
+     /**
+      * --------------------------------------------------
+      * TENANT PROVIDER
+      * -------------------------------------------------
+      * 
+      * The tenant provider takes in a Tenant ID and returns
+      * an instance of a tenant object to be injected into
+      * your request as the session tenant.
+      * 
+      * This allows you to define how the session tenant is
+      * to be represented in your application
+      * 
+      * */
+      'tenant_provider' => DefaultTenantProvider::class,
 
      /**
       * The model class representing a tenant.

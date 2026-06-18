@@ -22,7 +22,8 @@ use SaQle\Core\Services\Providers\{
 use SaQle\Http\Cors\CorsConfig;
 use SaQle\Core\Support\{
      AppContext,
-     AppStage
+     AppStage,
+     Db
 };
 use SaQle\Core\Config\{
      ConfigRepository, 
@@ -115,6 +116,8 @@ final class App {
          foreach(array_merge($framework_providers, $this->setup->providers) as $provider){
              (new $provider($this))->register();
          }
+
+         Db::register_system_db();
      }
 
      private function load_environment(): void {

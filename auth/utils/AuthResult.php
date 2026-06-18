@@ -1,7 +1,7 @@
 <?php
 namespace SaQle\Auth\utils;
 
-use SaQle\Auth\Interfaces\UserInterface;
+use SaQle\Auth\Identity\User\Interfaces\UserInterface;
 
 class AuthResult {
      public function __construct(

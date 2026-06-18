@@ -1,7 +1,7 @@
 <?php
 
 use SaQle\Core\Support\Session;
-use SaQle\Auth\interfaces\TenantInterface;
+use SaQle\Auth\Identity\Tenant\Interfaces\TenantInterface;
 
 if(!function_exists('flash_to_session')){
      function flash_to_session(string $key, mixed $value) {

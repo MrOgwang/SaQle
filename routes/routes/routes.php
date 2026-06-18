@@ -16,4 +16,6 @@ Router::get(
 	 config('static_assets_component')
 )->name('app.static.asset');
 
+Router::match(['GET', 'POST'], "/saqle/signin/", 'saqle.saqlesignin')->name(['saqle.login.form', 'saqle.login.submit']);
+
 ?>

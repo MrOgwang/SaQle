@@ -5,9 +5,10 @@ use SaQle\Core\Migration\Tracker\MigrationTracker;
 use SaQle\Commons\FileUtils;
 use SaQle\Core\Migration\Models\Migration;
 use SaQle\Build\Utils\MigrationUtils;
-use SaQle\Orm\Connection\Connection;
-use SaQle\Core\Support\Db;
-use SaQle\Core\Support\Cli;
+use SaQle\Core\Support\{
+     Db, 
+     Cli
+};
 use ReflectionClass;
 use Exception;
 
@@ -151,7 +152,7 @@ class MakeMigrations {
              $touched .= "\t\t\t'".$sn."' => [\n";
              $touched .= "\t\t\t\t'path' => '".$s_attrs[0]."',\n";
              $touched .= "\t\t\t\t'name' => '".$s_attrs[1]."',\n";
-             $touched .= "\t\t\t]\n";
+             $touched .= "\t\t\t],\n";
          }
 
          return [$up, $down, $touched];
@@ -212,8 +213,12 @@ class MakeMigrations {
          return $fk_constraints;
      }
 
-     private function write_schema_snapshot($snapshot_class_name, $models, $unique_constraints, $fks_constraints, $dbdriver){
-         $file_name = $this->snapshots_folder."/".$snapshot_class_name.".php";
+     private function write_schema_snapshot($snapshot_class_name, $models, $unique_constraints, $fks_constraints, $dbdriver, $type){
+
+         $destination_folder = path_join([$this->snapshots_folder, $type]);
+         Cli::print($destination_folder);
+         $file_name = path_join([$destination_folder, $snapshot_class_name.".php"]);
+
          $models_template = "";
          $fields_template = "";
          foreach($models as $n => $m){
@@ -321,8 +326,8 @@ class MakeMigrations {
          $template .= "}\n";
 
          //create snapshot folder
-         if(!file_exists($this->snapshots_folder)){
-             mkdir($this->snapshots_folder);
+         if(!is_dir($destination_folder)){
+             saqle_dir()->create($destination_folder);
          }
 
          file_put_contents($file_name, $template);
@@ -330,15 +335,10 @@ class MakeMigrations {
          return $file_name;
      }
 
-     private function execute_pdo($pdo, $sql, $data = null){
-         $statement = $pdo->prepare($sql);
-         $response  = $statement->execute($data);
-         return ['statement' => $statement, 'response' => $response];
-     }
-
-     private function get_snapshot($migration_name, $timestamp, $schema_class){
+     private function get_snapshot($migration_name, $timestamp, $schema_class, $type){
          $class_name = "{$schema_class}_{$timestamp}_{$migration_name}";
-         $file_name = $this->snapshots_folder."/".$class_name.".php";
+         
+         $file_name = path_join([$this->snapshots_folder, $type, $class_name.".php"]);
          
          require_once $file_name;
 
@@ -364,162 +364,137 @@ class MakeMigrations {
          return [$clean_models, $clean_fields, $unique_constraints, $fk_constraints];
      }
 
-     private function get_schema_snapshot($schema_name, $timestamp, $migration_name, $tracker){
-
-         $schemas = config('db.schemas', []);
-         if($schema_name){
-             $schemas = [$schema_name => $schemas[$schema_name]];
-         }
+     private function get_schema_snapshot($connections, $timestamp, $migration_name, $type){
 
          $schema_snapshot = [];
          $snapshot_records = [];
 
-         foreach($schemas as $s_name => $s_class){
+         foreach($connections as $connection_name => $connection_config){
 
-             Cli::print("Using connection: {$s_name}");
+             Cli::print("Using connection: {$connection_name}");
 
-             $dbdriver = Db::using($s_name)->driver();
-             
-             /**
-              * If a specific schema name was provided, it has been vallidated by the time
-              * it reaches here, if not, must validate
-              * */
-             if(!$schema_name && !MigrationUtils::is_schema_defined($s_name)){
-                 throw new Exception("The database schema [{$s_name}] provided does not exist or is not defined correctly!");
-             }
+             $connection_databases = $connection_config['databases'];
 
-             $schema_snapshot[$s_name] = [];
-             $schema_class = MigrationUtils::get_class_name($s_class);
+             foreach($connection_databases as $db_name => $db_schema){
 
-             //Acquire models registered with db context
-             $models = new $s_class()->get_permanent_models();
+                 $connection_key = $connection_name.".".$db_name;
 
-             //Acquire model fields for models registered with db context.
-             $model_fields = $this->extract_model_fields($models, $dbdriver);
+                 $dbdriver = Db::using($connection_key)->driver();
 
-             //acquire unique fields
-             $unique_constraints = $this->extract_unique_constraints($models);
-             $last_unique_constraints = [];
-
-             //acquire fk constraints
-             $fk_constraints = $this->extract_fk_constraints($models, $s_class);
-             $last_fk_constraints = [];
-
-             $connection_params = config('db.connections')[$s_name];
-             $connection_params['database'] = ''; //we are connecting without a database, therefore set the database name to empty string
-
-             $connection = resolve(Connection::class, $connection_params);
-
-             $snapshot_class_name = "{$schema_class}_{$timestamp}_{$migration_name}";
-             $snapshot_path = $this->write_schema_snapshot(
-                 $snapshot_class_name, 
-                 $models, 
-                 $unique_constraints, 
-                 $fk_constraints, 
-                 $dbdriver
-             );
-             $snapshot_records[$s_name] = [$snapshot_path, $snapshot_class_name];
-
-             $added_models = $models;
-             $removed_models = [];
-             $maintained_models = [];
-
-             $added_columns = [];
-             $removed_columns = [];
-
-             try{
-                 $sql = "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?";
-                 $data = [config('db.connections')[$s_name]['database']];
-                 $statement = $this->execute_pdo($connection, $sql, $data)['statement'];
-                 $object = $statement->fetchObject(); 
-
-                 if($object){
-                     //Database exists, acquire the timestamp for the last snapshot.
-                     $last_migration = Migration::get()
-                     ->order(fields: ['migration_timestamp'], direction: 'DESC')
-                     ->limit(1)
-                     ->first_or_null();
-
-                     if($last_migration){
-
-                         [$last_models, $last_model_fields, $last_unique_constraints, $last_fk_constraints] = $this->get_snapshot(
-                            $last_migration->migration_name, 
-                            $last_migration->migration_timestamp, 
-                            $schema_class
-                         );
-
-                         //Which new models have been added.
-                         $added_models = array_diff($models, $last_models);
-
-                         //Which models have been removed
-                         $removed_models = array_diff($last_models, $models);
-                
-                         //Which models have been maintained.
-                         $maintained_models = array_intersect($models, $last_models);
-                         
-                         $all_model_fields = $model_fields;
-                         $all_last_model_fields = $last_model_fields;
-
-                         foreach($maintained_models as $table_name => $model_name){
-                             $current_column_keys  = array_keys($all_model_fields[$table_name]);
-                             $previous_column_keys = array_keys($all_last_model_fields[$table_name]);
-
-                             $added_column_keys = array_diff($current_column_keys, $previous_column_keys);
-                             $removed_column_keys = array_diff($previous_column_keys, $current_column_keys);
-
-                             if($added_column_keys){
-                                 $added_settings = ['name' => $table_name, 'model' => $model_name, 'columns' => []];
-                                 foreach($added_column_keys as $ack){
-                                     $added_settings['columns'][$ack] = $all_model_fields[$table_name][$ack]['def'];
-                                 }
-                                 $added_columns[] = $added_settings;
-                             }
-                             if($removed_column_keys){
-                                 $removed_settings = ['name' => $table_name, 'model' => $model_name, 'columns' => []];
-                                 foreach($removed_column_keys as $rck){
-                                     $removed_settings['columns'][$rck] = $all_last_model_fields[$table_name][$rck]['def'];
-                                 }
-                                 $removed_columns[] = $removed_settings;
-                             }
-                         }
-
-                     }
-                 }
-             }catch(Exception $ignore){
+                 $schema_snapshot[$connection_key] = [];
                  
+                 $schema_class = MigrationUtils::get_class_name($db_schema);
+
+                 //Acquire models registered in this schema
+                 $models = new $db_schema()->get_permanent_models();
+
+                 //Acquire model fields for models registered with db context.
+                 $model_fields = $this->extract_model_fields($models, $dbdriver);
+
+                 //acquire unique fields
+                 $unique_constraints = $this->extract_unique_constraints($models);
+                 $last_unique_constraints = [];
+
+                 //acquire fk constraints
+                 $fk_constraints = $this->extract_fk_constraints($models, $db_schema);
+                 $last_fk_constraints = [];
+
+                 $snapshot_class_name = "{$schema_class}_{$timestamp}_{$migration_name}";
+                 $snapshot_path = $this->write_schema_snapshot(
+                     $snapshot_class_name, 
+                     $models, 
+                     $unique_constraints, 
+                     $fk_constraints, 
+                     $dbdriver,
+                     $type
+                 );
+                 $snapshot_records[$connection_key] = [$snapshot_path, $snapshot_class_name];
+
+                 $added_models = $models;
+                 $removed_models = [];
+                 $maintained_models = [];
+
+                 $added_columns = [];
+                 $removed_columns = [];
+
+                 try{
+                     if(MigrationUtils::check_system_database()){
+                         //Database exists, acquire the timestamp for the last snapshot.
+                         $last_migration = Migration::get()
+                         ->order(fields: ['migration_timestamp'], direction: 'DESC')
+                         ->limit(1)
+                         ->first_or_null();
+
+                         if($last_migration){
+
+                             [$last_models, $last_model_fields, $last_unique_constraints, $last_fk_constraints] = $this->get_snapshot(
+                                $last_migration->migration_name, 
+                                $last_migration->migration_timestamp, 
+                                $schema_class,
+                                $type
+                             );
+
+                             //Which new models have been added.
+                             $added_models = array_diff($models, $last_models);
+
+                             //Which models have been removed
+                             $removed_models = array_diff($last_models, $models);
+                    
+                             //Which models have been maintained.
+                             $maintained_models = array_intersect($models, $last_models);
+                             
+                             $all_model_fields = $model_fields;
+                             $all_last_model_fields = $last_model_fields;
+
+                             foreach($maintained_models as $table_name => $model_name){
+                                 $current_column_keys  = array_keys($all_model_fields[$table_name]);
+                                 $previous_column_keys = array_keys($all_last_model_fields[$table_name]);
+
+                                 $added_column_keys = array_diff($current_column_keys, $previous_column_keys);
+                                 $removed_column_keys = array_diff($previous_column_keys, $current_column_keys);
+
+                                 if($added_column_keys){
+                                     $added_settings = ['name' => $table_name, 'model' => $model_name, 'columns' => []];
+                                     foreach($added_column_keys as $ack){
+                                         $added_settings['columns'][$ack] = $all_model_fields[$table_name][$ack]['def'];
+                                     }
+                                     $added_columns[] = $added_settings;
+                                 }
+                                 if($removed_column_keys){
+                                     $removed_settings = ['name' => $table_name, 'model' => $model_name, 'columns' => []];
+                                     foreach($removed_column_keys as $rck){
+                                         $removed_settings['columns'][$rck] = $all_last_model_fields[$table_name][$rck]['def'];
+                                     }
+                                     $removed_columns[] = $removed_settings;
+                                 }
+                             }
+
+                         }
+                     }
+                 }catch(Exception $ignore){
+                     
+                 }
+
+                 $schema_snapshot[$connection_key]['tables'] = [$added_models, $removed_models, $maintained_models];
+                 $schema_snapshot[$connection_key]['columns'] = [$added_columns, $removed_columns];
+                 $schema_snapshot[$connection_key]['unique'] = [$unique_constraints, $last_unique_constraints];
+                 $schema_snapshot[$connection_key]['fk'] = [$fk_constraints, $last_fk_constraints];
              }
 
-             $schema_snapshot[$s_name]['tables'] = [$added_models, $removed_models, $maintained_models];
-             $schema_snapshot[$s_name]['columns'] = [$added_columns, $removed_columns];
-             $schema_snapshot[$s_name]['unique'] = [$unique_constraints, $last_unique_constraints];
-             $schema_snapshot[$s_name]['fk'] = [$fk_constraints, $last_fk_constraints];
          }
 
          return [$schema_snapshot, $snapshot_records];
      }
 
-     public function execute($migration_name, $schema_name = null){
-         $timestamp  = date('YmdHis');
-         $class_name = 'Migration_' . $timestamp . '_' . $migration_name;
-         $migration_filename = $this->migrations_folder."/".$class_name.".php";
-         $migration_tracker_filename = config('base_path')."/databases/migrationstracker.bin";
-
-         $tracker = $this->unserialize_from_file($migration_tracker_filename);
-         if(!$tracker){
-             $tracker = new MigrationTracker();
-         }
-
-         //check that the latest migration file has been migrated
-         $current_migration_files = $tracker->get_migration_files();
-         if($current_migration_files && $current_migration_files[ count($current_migration_files) - 1 ]->is_migrated === false){
-             /*$fn = $current_migration_files[ count($current_migration_files) - 1 ]->file;
-             Cli::print("You have a pending migration file [$fn] that should be migrated first!\n");
-             Cli::print("Run command: php manage.php migrate\n");
-             return;*/
-         }
+     private function make_migrations($type, $timestamp, $migration_name, $connections){
+         
+         $class_name = ucfirst($type).'_Migration_'.$timestamp.'_'.$migration_name;
+         
+         $destination_folder = path_join([$this->migrations_folder, $type]);
+         $migration_filename = path_join([$destination_folder, $class_name.".php"]);
 
          Cli::print("Making {$migration_name} migrations now!\n");
-         [$snapshot, $snapshot_records] = $this->get_schema_snapshot($schema_name, $timestamp, $migration_name, $tracker);
+         [$snapshot, $snapshot_records] = $this->get_schema_snapshot($connections, $timestamp, $migration_name, $type);
 
          [$up_models, $down_models, $touched_snapshots] = $this->get_model_operations($snapshot, $snapshot_records);
          
@@ -560,15 +535,28 @@ class MakeMigrations {
          $template .= "}\n";
 
          //create migrations folder
-         if(!file_exists($this->migrations_folder)){
-             mkdir($this->migrations_folder);
+         if(!is_dir($destination_folder)){
+             saqle_dir()->create($destination_folder);
          }
 
          if(file_put_contents($migration_filename, $template) !== false){
-             Cli::print("Migration created: {$migration_filename}\n");
-
-             $tracker->add_migration((Object)['file' => $class_name.".php", 'is_migrated' => false]);
-             $this->serialize_to_file($migration_tracker_filename, $tracker);
+             Cli::print("Migration file created at: {$migration_filename}\n");
          }
+     }
+
+     public function execute($migration_name){
+
+         $timestamp  = date('YmdHis');
+
+         $connections = config('db.connections');
+
+         $system_connection_names = [config('framework_connection')];
+
+         $system_connections = array_intersect_key($connections, array_flip($system_connection_names));
+
+         $tenant_connections = array_diff_key($connections, array_flip($system_connection_names));
+
+         $this->make_migrations('system', $timestamp, $migration_name, $system_connections);
+         $this->make_migrations('tenant', $timestamp, $migration_name, $tenant_connections);
      }
 }

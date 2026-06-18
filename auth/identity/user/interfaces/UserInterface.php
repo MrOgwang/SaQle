@@ -1,5 +1,5 @@
 <?php 
-namespace SaQle\Auth\interfaces;
+namespace SaQle\Auth\Identity\User\Interfaces;
 
 interface UserInterface {
 	 //check if a user can perform an action

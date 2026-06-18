@@ -3,7 +3,7 @@ namespace SaQle\Auth\Models;
 
 use SaQle\Orm\Entities\Model\Schema\{Model, Table};
 use SaQle\Auth\Guards\Guard;
-use SaQle\Auth\interfaces\UserInterface;
+use SaQle\Auth\Identity\User\Interfaces\UserInterface;
 
 class BaseUser extends Model implements UserInterface {
 
@@ -25,6 +25,7 @@ class BaseUser extends Model implements UserInterface {
 	 	 $table->primary_key('user_id');
 
 		 $table->fields([ 
+		 	 'tenant_id'    => Table::char_field()->nullable(),
 		     'first_name'   => Table::char_field()->required(),
 		     'last_name'    => Table::char_field()->required(),
 		     'gender'       => Table::choice_field([
@@ -34,7 +35,7 @@ class BaseUser extends Model implements UserInterface {
 			 ], true)->default('male'),
 		     'username'     => Table::char_field()->required(),
 		     'password'     => Table::password_field()->required(),
-		     'is_superuser' => Table::boolean_field()->required()->render(function($value, $model){
+		     'is_super_admin' => Table::boolean_field()->required()->render(function($value, $model){
 			 	 return $value ? 'Yes' : 'No';
 			 })->default(false),
 		     'avatar'       => $avatar_field

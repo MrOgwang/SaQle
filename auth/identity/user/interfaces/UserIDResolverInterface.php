@@ -1,7 +1,7 @@
 <?php
-namespace SaQle\Auth\Interfaces;
+namespace SaQle\Auth\Identity\User\Interfaces;
 
-interface UserIDProviderInterface {
+interface UserIDResolverInterface {
      /**
      * Called after successful login.
      * Should persist the user's identity (session ID, token, cookie, etc.).
@@ -14,7 +14,7 @@ interface UserIDProviderInterface {
      * Extracts the user’s ID from the request (cookie, header, etc.).
      * Returns the user ID if found, or null if not authenticated.
      */
-     public function user_id() : ? string;
+     public function resolve() : ?string;
 
      /**
       * Regenerate identity id

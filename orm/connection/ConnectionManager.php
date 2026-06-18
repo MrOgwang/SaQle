@@ -2,7 +2,6 @@
 
 namespace SaQle\Orm\Connection;
 
-use SaQle\Orm\Database\Config\ConnectionConfig;
 use SaQle\Orm\Database\Transaction\TransactionContext;
 
 final class ConnectionManager {

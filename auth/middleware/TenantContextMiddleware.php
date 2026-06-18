@@ -17,8 +17,8 @@
 namespace SaQle\Auth\Middleware;
 
 use SaQle\Middleware\MiddlewareInterface;
-use SaQle\Auth\Identity\Factories\TenantIDProviderFactory;
-use SaQle\Auth\interfaces\TenantProviderInterface;
+use SaQle\Auth\Identity\Factories\Tenant\TenantIDResolverFactory;
+use SaQle\Auth\Identity\Tenant\Interfaces\TenantProviderInterface;
 use SaQle\Http\Response\Message;
 use RuntimeException;
 
@@ -33,11 +33,11 @@ class TenantContextMiddleware implements MiddlewareInterface {
              return null;
          }
          
-         $id_provider = TenantIDProviderFactory::make();
-         $tenant_id = $id_provider->tenant_id();
+         $id_resolver = TenantIDResolverFactory::make();
+         $tenant_id = $id_resolver->resolve();
 
          if(!$tenant_id){
-             throw new RuntimeException("Tenant not found!");
+             return null;
          }
 
          $tenant_provider = resolve(TenantProviderInterface::class);
@@ -45,7 +45,7 @@ class TenantContextMiddleware implements MiddlewareInterface {
          $tenant = $tenant_provider->find($identifier);
 
          if(!$tenant){
-             throw new RuntimeException("Tenant not found!");
+             return null;
          }
 
          $request->session->set('__tenant', $tenant, true);

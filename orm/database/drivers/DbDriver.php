@@ -1,11 +1,17 @@
 <?php
 namespace SaQle\Orm\Database\Drivers;
 
-use SaQle\Orm\Database\Config\ConnectionConfig;
 use SaQle\Orm\Database\ColumnType;
-use SaQle\Orm\Connection\ConnectionManager;
+use SaQle\Orm\Connection\{
+     ConnectionManager,
+     ConnectionConfig
+};
 use SaQle\Orm\Database\Features\DatabaseFeatures;
 use SaQle\Orm\Database\Features\FeatureDetector;
+use SaQle\Core\Support\{
+     Cli, 
+     ActorContext
+};
 
 abstract class DbDriver {
 
@@ -132,9 +138,14 @@ abstract class DbDriver {
     // ------------------------------------------------------------------
 
     public function execute($sql, $data = null){
-        $statement = $this->connection->prepare($sql);
-        $response  = $statement->execute($data);
-        return ['statement' => $statement, 'response' => $response];
+         if(ActorContext::is_system()){
+             Cli::print("Now executing:\n");
+             Cli::print("SQL: $sql\n");
+             Cli::print("DATA: ".json_encode($data)."\n");
+         }
+         $statement = $this->connection->prepare($sql);
+         $response  = $statement->execute($data);
+         return ['statement' => $statement, 'response' => $response];
     }
 
     // ------------------------------------------------------------------

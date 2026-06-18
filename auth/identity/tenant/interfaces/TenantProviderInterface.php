@@ -1,8 +1,5 @@
 <?php
-
-namespace SaQle\Auth\interfaces;
-
-use SaQle\Auth\Interfaces\TenantInterface;
+namespace SaQle\Auth\Identity\Tenant\Interfaces;
 
 interface TenantProviderInterface {
       public function find(string|int $id): ?TenantInterface;

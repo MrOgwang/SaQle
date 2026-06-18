@@ -106,7 +106,13 @@ final class Config {
 
              'protected_file_component' => 'saqle.protectedfile',
 
-             'static_assets_component' => 'saqle.staticfile'
+             'static_assets_component' => 'saqle.staticfile',
+
+             //Default frame work connection.
+             'framework_connection' => 'framework',
+
+             //Default framework database
+             'framework_database' => '${app.name}_system'
          ];
      }
 }

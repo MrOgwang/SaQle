@@ -1,9 +1,10 @@
 <?php
+namespace SaQle\Auth\Identity\User\Providers;
 
-namespace SaQle\Auth\Identity\Providers;
-
-use SaQle\Auth\Interfaces\UserProviderInterface;
-use SaQle\Auth\Interfaces\UserInterface;
+use SaQle\Auth\Identity\User\Interfaces\{
+     UserProviderInterface,
+     UserInterface
+};
 
 class DefaultUserProvider implements UserProviderInterface {
      public function __construct(

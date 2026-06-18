@@ -3,7 +3,7 @@ namespace SaQle\Auth\Events;
 
 use SaQle\Core\Events\Event;
 use SaQle\Core\Events\EventContext;
-use SaQle\Auth\Interfaces\UserInterface;
+use SaQle\Auth\Identity\User\Interfaces\UserInterface;
 
 final class Logout extends Event {
 

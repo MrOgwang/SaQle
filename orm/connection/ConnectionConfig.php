@@ -1,7 +1,7 @@
 <?php
 declare(strict_types = 0);
 
-namespace SaQle\Orm\Database\Config;
+namespace SaQle\Orm\Connection;
 
 class ConnectionConfig {
 	public function __construct(
@@ -57,11 +57,13 @@ class ConnectionConfig {
 		return $this->options;
 	}
 
-	public static function from_connection(string $connection){
-		$db_config = config('db.connections')[$connection];
-		return new static(
+	 public static function from_connection(string $connection_key, bool $with_database = true){
+		 $conn_parts = explode(".", $connection_key);
+		 $db_config = config('db.connections')[$conn_parts[0]];
+
+		 return new static(
 			 driver: $db_config['driver'], 
-		     database: $db_config['database'], 
+		     database: $with_database ? $conn_parts[1] : '', 
 		     port: $db_config['port'], 
 		     username: $db_config['username'], 
 		     password: $db_config['password'], 
@@ -70,8 +72,8 @@ class ConnectionConfig {
 		     charset: $db_config['charset'] ?? 'utf8', 
 		     collation: $db_config['collation'] ?? 'utf8_general_ci',
 	         options: $db_config['options'] ?? []
-		);
-	}
+		 );
+	 }
 
 	public function to_array(){
 		 return [

@@ -2,8 +2,9 @@
 namespace SaQle\Core\Queue\Models;
 
 use SaQle\Orm\Entities\Model\Schema\{Model, Table};
+use SaQle\Orm\Entities\Model\Interfaces\ISystemModel;
 
-class Job extends Model {
+class Job extends Model implements ISystemModel {
 
 	 protected function table_schema(Table $table) : void {
 	 	 

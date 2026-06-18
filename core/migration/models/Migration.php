@@ -2,8 +2,9 @@
 namespace SaQle\Core\Migration\Models;
 
 use SaQle\Orm\Entities\Model\Schema\{Model, Table};
+use SaQle\Orm\Entities\Model\Interfaces\ISystemModel;
 
-class Migration extends Model {
+class Migration extends Model implements ISystemModel {
 
 	protected function table_schema(Table $table) : void {
 		
@@ -14,7 +15,8 @@ class Migration extends Model {
 		     'migration_timestamp' => Table::integer_field()->size('big')->required()->unsigned(),
 		     'prev_migration_name' => Table::text_field(),
 		     'prev_migration_timestamp' => Table::integer_field()->size('big')->unsigned(),
-		     'is_migrated' => Table::boolean_field()->required()
+		     'is_migrated' => Table::boolean_field()->required(),
+		     'type' => Table::text_field()->required(),
 		 ]);
 
 		 $table->with_user_audit(false);
@@ -22,5 +24,4 @@ class Migration extends Model {
 		 $table->with_soft_delete(false);
 		 
 	 }
-
 }

@@ -1,9 +1,9 @@
 <?php
-namespace SaQle\Auth\Identity\Providers;
+namespace SaQle\Auth\Identity\Tenant\Resolvers;
 
 use SaQle\Auth\interfaces\TenantIDProviderInterface;
 
-class PathTenantIDProvider implements TenantIDProviderInterface {
+class PathTenantIDResolver implements TenantIDProviderInterface {
 	 public function tenant_id() : null|int|string {
 
 	 	 $segment =config('tenancy.path_segment', 1);

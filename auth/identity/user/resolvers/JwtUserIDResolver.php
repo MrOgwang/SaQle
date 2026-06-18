@@ -1,12 +1,12 @@
 <?php
-namespace SaQle\Auth\Identity\Providers;
+namespace SaQle\Auth\Identity\User\Resolvers;
 
-use SaQle\Auth\Interfaces\{
+use SaQle\Auth\Identity\User\Interfaces\{
      UserInterface,
-     UserIDProviderInterface
+     UserIDResolverInterface
 };
 
-class JwtIdentityProvider implements UserIDProviderInterface {
+class JwtUserIDResolver implements UserIDResolverInterface {
      public function create(UserInterface $user): string{
          $issuer     = config('auth.jwt_iss') ?? config('app.root_domain'); //the domain issuing the token
          $issued_at  = time();                          //the time issued in secends
@@ -31,7 +31,7 @@ class JwtIdentityProvider implements UserIDProviderInterface {
     
      }
 
-     public function user_id(): ?string{
+     public function resolve(): ?string{
          $auth_header = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
 
          if(!$auth_header)

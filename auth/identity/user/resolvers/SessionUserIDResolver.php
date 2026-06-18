@@ -1,10 +1,12 @@
 <?php
-namespace SaQle\Auth\Identity\Providers;
+namespace SaQle\Auth\Identity\User\Resolvers;
 
-use SaQle\Auth\Interfaces\UserInterface;
-use SaQle\Auth\Interfaces\UserIDProviderInterface;
+use SaQle\Auth\Identity\User\Interfaces\{
+     UserInterface,
+     UserIDResolverInterface
+};
 
-class SessionIdentityProvider implements UserIDProviderInterface {
+class SessionUserIDResolver implements UserIDResolverInterface {
      public function __construct(){
          if(session_status() === PHP_SESSION_NONE){
              session_start();
@@ -21,7 +23,7 @@ class SessionIdentityProvider implements UserIDProviderInterface {
     
      }
 
-     public function user_id(): ?string{
+     public function resolve(): ?string{
          return $_SESSION['user_id'] ?? null;
      }
 

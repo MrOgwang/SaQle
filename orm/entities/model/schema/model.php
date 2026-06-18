@@ -6,7 +6,7 @@ use SaQle\Orm\Entities\Field\Types\{Pk, TextField, OneToOne, OneToMany, FloatFie
 use SaQle\Core\Exceptions\ValidationException;
 use SaQle\Commons\StringUtils;
 use SaQle\Orm\Entities\Model\Manager\{CreateManager, UpdateManager, DeleteManager, TruncateManager, ReadManager, RunManager};
-use SaQle\Orm\Entities\Model\Interfaces\{IModel, ITableSchema};
+use SaQle\Orm\Entities\Model\Interfaces\{IModel, ITableSchema, ISystemModel};
 use SaQle\Orm\Entities\Model\Collection\GenericModelCollection;
 use SaQle\Core\Exceptions\Model\{UndefinedFieldException, MissingRequiredFieldsException};
 use SaQle\Build\Utils\MigrationUtils;
@@ -14,6 +14,7 @@ use SaQle\Core\Files\{TempFileRef, UploadedFile, StoredFileFactory};
 use SaQle\Core\Files\Storage\TempStorage;
 use SaQle\Core\Assert\Assert;
 use SaQle\Core\Ui\Forms\Form;
+use SaQle\Core\Support\Db;
 use Exception;
 use JsonSerializable;
 use InvalidArgumentException;
@@ -147,7 +148,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
 
      public function set_table_and_connection(?string $connection = null){
      	 [$connection_name, $table_name] = self::get_table_and_connection($connection);
-     	 $this->table->set_table_and_connection($table_name, $connection_name);
+         $this->table->set_table_and_connection($table_name, $connection_name);
      }
 
      //method to ensure shared meta per class
@@ -242,14 +243,19 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
  	 	 return $collection;
      }
 
+     public static function is_system_model(){
+         $interfaces = class_implements(static::class);
+         if(in_array(ISystemModel::class, $interfaces)){
+             return true;
+         }
+
+         return false;
+     }
+
 	 public static function get_table_and_connection(?string $connection = null){
-	 	 $connection = ($connection ?? config('db.default_connection')) ?? array_keys(config('db.connections'), [])[0] ?? '';
 
-	 	 if(!$connection || !MigrationUtils::is_schema_defined($connection)){
-	 	 	 throw new Exception("Please provide a valid database connection name!");
-	 	 }
+         [$connection, $schema] = Db::get_connection_schema($connection, self::is_system_model());
 
-         $schema = config('db.schemas')[$connection];
          $table_name = new $schema()->get_table_for_model(static::class);
 
          return [$connection, $table_name];
@@ -806,7 +812,6 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
       * I am adding this so that I dont expose internal properties
       * to the outside for easy maintainance
       * */
-
      private static function get_model_setup(){
      	 $model = get_called_class();
      	 $model_instance = $model::make();
@@ -901,7 +906,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
 
      //get all the models that belong to the same schema as this one
 	 public function get_sibling_models(){
-	 	 $schema = config('db.schemas')[$this->table->get_connection_name()];
+         [$con, $schema] = Db::get_connection_schema($this->table->get_connection_name());
 	 	 return new $schema()->get_models();
 	 }
 

@@ -1,9 +1,9 @@
 <?php
-namespace SaQle\Auth\Identity\Providers;
+namespace SaQle\Auth\Identity\Tenant\Resolvers;
 
 use SaQle\Auth\interfaces\TenantIDProviderInterface;
 
-class SubdomainTenantIDProvider implements TenantIDProviderInterface {
+class SubdomainTenantIDResolver implements TenantIDProviderInterface {
 	 public function tenant_id() : null|int|string {
 	 	 
 	 	 $host = request()->host();

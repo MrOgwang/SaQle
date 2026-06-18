@@ -191,7 +191,7 @@ final class RelationLoader {
          $related_data = $finalmanager->eager_load();
 
          //drop the temporary table
-         TempId::drop_table();
+         TempId::drop_table($connection);
 
          return $related_data;
      }

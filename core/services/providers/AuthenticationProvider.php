@@ -18,70 +18,46 @@
  * */
 namespace SaQle\Core\Services\Providers;
 
-use SaQle\Auth\Interfaces\{
-     StrategyRegistryInterface,
-     UserProviderInterface,
-     TenantProviderInterface,
-     IdentityProviderResolverInterface
+use SaQle\Auth\Interfaces\StrategyRegistryInterface;
+use SaQle\Auth\Identity\Tenant\Interfaces\TenantProviderInterface;
+use SaQle\Auth\Identity\User\Interfaces\UserProviderInterface;
+use SaQle\Auth\Strategies\{
+     PasswordLoginStrategy,
+     MagicLinkLoginStrategy,
+     GoogleLoginStrategy
 };
-use SaQle\Auth\Identity\Providers\{
-     DefaultUserProvider,
-     DefaultTenantProvider
-};
-use SaQle\Auth\Identity\Resolvers\{
-     DefaultIdentityProviderResolver
-};
-use SaQle\Core\Registries\LoginStrategyRegistry;
-use SaQle\Auth\Strategies\PasswordLoginStrategy;
 use SaQle\Core\Services\Providers\ServiceProvider;
 
 class AuthenticationProvider extends ServiceProvider {
      public function register(): void {
-         $this->app->container->singleton(
-             StrategyRegistryInterface::class,
-             LoginStrategyRegistry::class
-         );
+         
+         //register user provider
+         $this->app->container->singleton(UserProviderInterface::class, function(){
+             $provider = config('auth.user_provider');
+             return new $provider();
+         });
 
-         /**
-          * Register the user provider. This provides the user object 
-          * to be injected into the request. This allows you the chance
-          * to define how the session user is fetched and the kind of properties you 
-          * want in the user object
-          * */
-         $this->app->container->singleton(
-             UserProviderInterface::class,
-             fn() => new DefaultUserProvider(config('auth.model_class'))
-         );
+         //register tenant provider
+         $this->app->container->singleton(TenantProviderInterface::class, function(){
+             $provider = config('tenancy.tenant_provider');
+             return new $provider();
+         });
 
-         /**
-          * Register a tenant provider. This provides the tenant object 
-          * to be injected into the request. This allows you the chance
-          * to define how the session tenant is fetched and the kind of properties you 
-          * want in the tenant object
-          * */
-         $this->app->container->singleton(
-             TenantProviderInterface::class,
-             fn() => new DefaultTenantProvider(config('tenancy.model_class'))
-         );
-
-         /**
-          * Register identity provider resolver. This is a callback that determines
-          * whether the request uses php sessions or jwt tokens to store and track 
-          * session.
-          * */
-         $this->app->container->singleton(
-             IdentityProviderResolverInterface::class,
-             DefaultIdentityProviderResolver::class
-         );
-
-         /**
-          * Register available login strategies. Login strategies are the several ways you
-          * want to login users into the application. You will choose the strategy to use 
-          * depending on your specific needs and circumstances
-          * */
+         //register log in strategies
          $registry = $this->app->container->resolve(StrategyRegistryInterface::class);
 
-         $registry->add('password', $this->app->container->resolve(PasswordLoginStrategy::class));
+         $strategies = config('auth.strategies.all', ['password']);
+
+         foreach($strategies as $s){
+
+             $strategy_class = match($s){
+                 'password' => PasswordLoginStrategy::class,
+                 'google'   => GoogleLoginStrategy::class,
+                 'link'     => MagicLinkLoginStrategy::class
+             };
+
+             $registry->add($s, $this->app->container->resolve($strategy_class));
+         }
      }
 }
 

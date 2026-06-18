@@ -1,9 +1,11 @@
 <?php
 
-namespace SaQle\Auth\Identity\Providers;
+namespace SaQle\Auth\Identity\Tenant\Providers;
 
-use SaQle\Auth\Interfaces\TenantProviderInterface;
-use SaQle\Auth\Interfaces\TenantInterface;
+use SaQle\Auth\Identity\Tenant\Interfaces\{
+     TenantProviderInterface,
+     TenantInterface
+}
 
 class DefaultTenantProvider implements TenantProviderInterface {
      public function __construct(

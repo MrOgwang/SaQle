@@ -1,7 +1,7 @@
 <?php
 namespace SaQle\Auth\Interfaces;
 
-use SaQle\Auth\Interfaces\UserInterface;
+use SaQle\Auth\Identity\User\Interfaces\UserInterface;
 
 interface LoginStrategyInterface {
      /**

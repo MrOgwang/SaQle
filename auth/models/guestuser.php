@@ -1,7 +1,7 @@
 <?php
 namespace SaQle\Auth\Models;
 
-use SaQle\Auth\interfaces\UserInterface;
+use SaQle\Auth\Identity\User\Interfaces\UserInterface;
 
 class GuestUser implements UserInterface {
      //check if a user can perform an action

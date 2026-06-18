@@ -12,7 +12,7 @@ use RuntimeException;
 
 abstract class Schema {
 
-	 //all the models regsieted in schema
+	 //all the models registered in schema
 	 protected array $models = [];
 
 	 public function get_developer_models() : array {
@@ -28,8 +28,7 @@ abstract class Schema {
 	 public function get_models() : array {
          return array_merge(
          	 $this->get_developer_models(),
-         	 ['model_temp_ids' => TempId::class], 
-         	 $this->get_framework_models()
+         	 ['model_temp_ids' => TempId::class]
          );
 	 }
 
@@ -42,7 +41,7 @@ abstract class Schema {
 	 	     }
 	 	 }
 
-	 	 return $models;
+	 	 return $models; 
 	 }
 
 	 public function get_temporary_models() : array {
@@ -61,7 +60,7 @@ abstract class Schema {
 	 	 $models = [];
 	 	 foreach($this->get_models() as $tablename => $modelclass){
 	 	 	 $interfaces = class_implements($modelclass);
-	 	 	 if(in_array(IThroughModel::class, $interfaces)){
+ 	 	 	 if(in_array(IThroughModel::class, $interfaces)){
 	 	 	     $models[$tablename] = $modelclass;
 	 	     }
 	 	 }
@@ -98,41 +97,5 @@ abstract class Schema {
          }
 
          return array_values($models)[$index];
-     }
-
-     /**
-      * Get all the models used internally by the framework. This will only return
-      * something if the framework_connection setting points to this schema.
-      * */
-     private function get_framework_models(){
-     	 //is framework connection set?
-     	 $connection = config('db.framework_connection');
-
-     	 //if not, use the default connection
-     	 if(!$connection){
-     	 	 $connection = config('db.default_connection');
-     	 }
-
-     	 //if default connection is not set, use the first connection
-     	 $connection = array_keys(config('db.connections'))[0] ?? '';
-
-     	 //if there is still no connection, fail loudly!
-     	 if(!$connection){
-     	 	 throw new RuntimeException('Please define at least one database connection for this project!');
-     	 }
-
-     	 $schema_class = config('db.schemas')[$connection];
-
-     	 if($schema_class === get_class($this)){
-     	 	 return [
-     	 	 	 'migrations' => Migration::class,
-	 	 	     'sessions' => Session::class,
-	 	 	     'framework_queue_failed_jobs' => FailedJob::class,
-	 	 	     'framework_queue_jobs' => Job::class,
-	 	 	     'framework_queue_job_batches' => JobBatch::class
-     	 	 ];
-     	 }
-
-     	 return [];
      }
 }

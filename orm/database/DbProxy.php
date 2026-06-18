@@ -13,7 +13,7 @@ final class DbProxy {
          return $this->db->run_transaction($callback);
      }
 
-     public function driver() : DbDriver {
-         return $this->db->resolve_driver();
+     public function driver(bool $with_database = true) : DbDriver {
+         return $this->db->resolve_driver($with_database);
      }
 }
