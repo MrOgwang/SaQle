@@ -62,7 +62,7 @@ abstract class RequestContract {
                  $result = $validator->validate($property_name, $value);
 
                  if($result->isvalid){
-                     $this->validated_data[$property_name] = $value;
+                     $this->validated_data[$property_name] = $result->normalized;
                  }else{
                      $errors[$property_name] = $result->errors;
                  }

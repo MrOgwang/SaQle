@@ -4,11 +4,14 @@ namespace SaQle\Core\Registries;
 class RuleHandlerRegistry {
      protected array $handlers = [];
 
-     public function add(string $rule, string $class): void {
-         $this->handlers[$rule] = $class;
+     public function add(string $rule, string $class, int $priority = 1000): void {
+         $this->handlers[$rule] = [
+             'validator' => $class,
+             'priority'  => $priority
+         ];
      }
 
-     public function get(string $rule): ?string {
+     public function get(string $rule): ?array {
          return $this->handlers[$rule] ?? null;
      }
 
@@ -18,5 +21,9 @@ class RuleHandlerRegistry {
 
      public function all(): array {
          return $this->handlers;
+     }
+
+     public function priority(string $name): int {
+         return $this->handlers[$name]['priority'] ?? 1000;
      }
 }

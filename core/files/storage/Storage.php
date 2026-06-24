@@ -29,7 +29,9 @@ class Storage {
 
          $token = $encoder->encode($file_meta);
 
-         $route_name = "app.".$file_meta['storage'].".media";
+         $route_name = auth_context() === 'saqle' ? 
+         "saqle.".$file_meta['storage'].".media" : 
+         "app.".$file_meta['storage'].".media";
 
          return route($route_name, [
              'file' => rawurlencode($token),

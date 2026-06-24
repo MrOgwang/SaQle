@@ -15,9 +15,15 @@ use SaQle\Core\Events\EventBus;
 use SaQle\Routes\Canonical\CanonicalUrlPolicy;
 use SaQle\Routes\Canonical\TrailingSlashPolicy;
 use SaQle\Auth\Interfaces\StrategyRegistryInterface;
+use SaQle\Auth\Identity\User\Interfaces\UserIDResolverInterface;
+use SaQle\Auth\Identity\User\Factories\UserIDResolverFactory;
 
 class FrameworkDIProvider extends ServiceProvider {
      public function register(): void {
+
+         $this->app->container->singleton(UserIDResolverInterface::class, function($c){
+             return UserIDResolverFactory::make();
+         });
 
          $this->app->container->singleton(Request::class, function($c){
              return Request::init();

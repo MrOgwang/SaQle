@@ -3,42 +3,29 @@
 namespace SaQle\Components\App;
 
 use SaQle\Http\Response\Message;
-use SaQle\Core\Registries\ModelRegistry;
-use SaQle\Core\Support\Db;
+use SaQle\Routes\Resources\ResourceRouteUtils;
 
 class App {
-     private function get_resource_links(){
-         $links = [];
 
-         //get developer defined db schemas
-         $db_schemas = Db::get_developer_schemas();
-
-         foreach($db_schemas as $schema_name => $schema_class){
-             $models = new $schema_class()->get_developer_models();
-
-             foreach($models as $model_label => $model_class){
-
-                 $links[$model_class] = (Object)[
-                     'url' => '/_auto/'.$model_label,
-                     'plural_label' => ucwords($model_label),
-                     'singular_label' => ModelRegistry::get_model_name($model_class),
-                     'route_name' => $model_label.'.list',
-                     'pk_column' => $model_class::get_pk_name()
-                 ];
-             }
-         }
-
-         return $links;
-     }
+     use ResourceRouteUtils;
 
      public function get(){
+
          $resources = $this->get_resource_links();
-         $model_parts = explode("@", request()->route->model_class);
-         $model_class = $model_parts[0] ?? "";
+
+         $route_model = request()->route->model_class;
+         $model_class = "";
+
+         if($route_model){
+             $model_parts = explode("@", $route_model);
+             $model_class = $model_parts[0] ?? "";
+         }
+
+         $current_resource = $resources[$model_class] ?? null;
 
          return Message::ok([
              'resources' => $resources,
-             'current_resource' => $resources[$model_class] ?? null
+             'current_resource' => $current_resource
          ]);
      }
 }

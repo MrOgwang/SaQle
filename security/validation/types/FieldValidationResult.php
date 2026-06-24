@@ -6,6 +6,8 @@ final class FieldValidationResult {
      public function __construct(
          public readonly string $field,
          public readonly bool $isvalid,
-         public readonly array $errors = []
+         public readonly array $errors = [],
+         public readonly mixed $normalized = null
      ) {}
+     
 }

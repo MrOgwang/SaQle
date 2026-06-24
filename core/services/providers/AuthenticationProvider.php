@@ -18,7 +18,10 @@
  * */
 namespace SaQle\Core\Services\Providers;
 
-use SaQle\Auth\Interfaces\StrategyRegistryInterface;
+use SaQle\Auth\Interfaces\{
+     StrategyRegistryInterface,
+     HashServiceInterface
+};
 use SaQle\Auth\Identity\Tenant\Interfaces\TenantProviderInterface;
 use SaQle\Auth\Identity\User\Interfaces\UserProviderInterface;
 use SaQle\Auth\Strategies\{
@@ -27,14 +30,24 @@ use SaQle\Auth\Strategies\{
      GoogleLoginStrategy
 };
 use SaQle\Core\Services\Providers\ServiceProvider;
+use SaQle\Auth\Identity\User\Providers\PlatformUserProvider;
+use SaQle\Auth\Services\PasswordHashService;
 
 class AuthenticationProvider extends ServiceProvider {
      public function register(): void {
-         
+
+         //register password hashing
+         $this->app->container->singleton(HashServiceInterface::class, function(){
+             return new PasswordHashService();
+         });
+
          //register user provider
-         $this->app->container->singleton(UserProviderInterface::class, function(){
-             $provider = config('auth.user_provider');
-             return new $provider();
+         $this->app->container->singleton(UserProviderInterface::class, function($c){
+             
+             $provider = auth_context() === 'saqle' ? 
+             $c->resolve(PlatformUserProvider::class) : $c->resolve(config('auth.user_provider'));
+             
+             return $provider;
          });
 
          //register tenant provider

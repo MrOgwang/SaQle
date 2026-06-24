@@ -7,10 +7,10 @@ use RuntimeException;
 
 class MigrationUtils {
 
-     public static function check_system_database() : bool {
+     public static function check_system_database(bool $with_database = false) : bool {
 
          $system_db = Db::get_system_db();
-         $system_db_driver = Db::using($system_db[0].".".$system_db[1])->driver(with_database: false);
+         $system_db_driver = Db::using($system_db[0].".".$system_db[1])->driver(with_database: $with_database);
 
          return $system_db_driver->check_database_exists();
      }

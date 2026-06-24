@@ -13,13 +13,13 @@
          <div class='scrollable navbody'>
              <div>
                  @foreach($resources as $r)
-                 @if($r->url === $current_resource->url)
+                 @if($r->url === $current_resource?->url)
                  <a href='{{ $r->url }}' class="focused flex v_center">
                  @else
                  <a href='{{ $r->url }}' class="flex v_center">
                  @endif
                      <span class="flex center icon material-symbols-outlined"></span>
-                     <span class='flex v_center label'>{{ $r->plural_label }}</span>
+                     <span class='flex v_center label'>{{ $r->ui_label }}</span>
                  </a>
                  @endforeach
              </div>

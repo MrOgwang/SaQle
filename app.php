@@ -37,6 +37,7 @@ use SaQle\Http\Request\{
 use SaQle\Session\Providers\SessionProvider;
 use SaQle\Auth\Guards\GuardManager;
 use SaQle\Build\Manage\Manage;
+use SaQle\Auth\utils\AuthContext;
 
 final class App {
      private AppStage $stage;
@@ -102,6 +103,9 @@ final class App {
      }
 
      private function boot(): void {
+
+         AuthContext::set();
+
          $framework_providers = [
              FrameworkDIProvider::class,
              EventServiceProvider::class,
@@ -132,7 +136,7 @@ final class App {
 
      public function get_stage(): AppStage {
          return $this->stage;
-     }
+     }  
 
      public function is_stage(AppStage $stage): bool {
          return $this->stage === $stage;

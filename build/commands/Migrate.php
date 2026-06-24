@@ -146,7 +146,8 @@ class Migrate {
 
          $up_operations = $class_instance->up();
 
-         if(!$tenants || !$tenancy_enabled){
+         if(!$tenants){
+
              foreach($touched_snapshots as $snapshot_name => $snapshot_location){
                  $this->process_snapshot(
                      $snapshot_name, 
@@ -156,7 +157,9 @@ class Migrate {
                      $up_operations
                  );
              }
+
          }else{
+
              foreach($tenants as $tenant){
 
                  //record tenant migration in db
@@ -287,7 +290,7 @@ class Migrate {
          $snapshot_path = $snapshot_location['path'];
          $snapshot_class = $snapshot_location['name'];
 
-         if($tenant){
+         if($tenant && config('tenancy.enabled')){
              [$snapshot_name, $snapshot_schema] = Db::register_tenant_db($snapshot_name, $tenant);
          }
 
@@ -338,10 +341,7 @@ class Migrate {
          return $files;
      }
      
-     private function migrate($type){
-
-         $tenancy_enabled = config('tenancy.enabled', false);
-         $tenant_model = config('tenancy.model_class');
+     private function migrate($type, $tenancy_enabled, $tenant_model){
 
          $destination_folder = path_join([$this->migrations_folder, $type]);
          $files = $this->scandir(path: $destination_folder, exts: ['php']);
@@ -370,8 +370,13 @@ class Migrate {
      }
 
      public function execute(){
-         $this->migrate('system');
-         $this->migrate('tenant');
+
+         $tenancy_enabled = config('tenancy.enabled', false);
+         $tenant_model = config('tenancy.model_class');
+
+         $this->migrate('system', $tenancy_enabled, $tenant_model);
+         $this->migrate('tenant', $tenancy_enabled, $tenant_model);
+
          return;
      }
 }

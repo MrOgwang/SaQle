@@ -2,15 +2,16 @@
 namespace SaQle\Auth\Identity\User\Providers;
 
 use SaQle\Auth\Identity\User\Interfaces\UserProviderInterface;
+use SaQle\Auth\Models\PlatformUser;
 use SaQle\Auth\Interfaces\HashServiceInterface;
 
-class DefaultUserProvider implements UserProviderInterface {
+class PlatformUserProvider implements UserProviderInterface {
 
      use UserProviderUtils;
-
+     
      public function __construct(
          private HashServiceInterface $hash_service
      ){
-         $this->model_class = config('auth.model_class');
+         $this->model_class = PlatformUser::class;
      }
 }

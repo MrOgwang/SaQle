@@ -178,6 +178,10 @@ class Request {
          $this->params->set($name, $value);
      }
 
+     public function host(){
+         return $_SERVER['HTTP_HOST'];
+     }
+
      public function uri(){
          return $_SERVER['REQUEST_URI'] ?? '/';
      }

@@ -30,21 +30,18 @@ class FieldValidator {
 
          $app = app();
 
-         if(isset($this->rules['required'])){
-             $required = ['required' => $this->rules['required']];
-             unset($this->rules['required']);
+         $ordered_rules = $this->rules;
 
-             $this->rules = $required + $this->rules;
-         }
+         uksort($ordered_rules, fn($a, $b) => $app->rules->priority($a) <=> $app->rules->priority($b));
 
-         foreach($this->rules as $rule => $threshold){
+         foreach($ordered_rules as $rule => $threshold){
 
              //Check if rule exists in registry
              if(!$app->rules->has($rule)){
                  throw new RuntimeException("Validator for rule '{$rule}' is not registered in the app.");
              } 
 
-             $validator_class = app()->rules->get($rule);
+             $validator_class = app()->rules->get($rule)['validator'];
              $validator = new $validator_class($field, $threshold);
              $result = $validator->validate($value);
 
@@ -54,14 +51,18 @@ class FieldValidator {
                  if($this->mode === ValidationMode::FAIL_FAST) {
                      break;
                  }
+             }else{
+                 if(!is_null($result->normalized)){
+                     $value = $result->normalized;
+                 }
              }
-
+            
              if($result->action && $result->action === ValidationAction::STOP){
                  break;
              }
          }
 
-         return new FieldValidationResult($field, empty($errors), $errors);
+         return new FieldValidationResult($field, empty($errors), $errors, $value);
 	 }
 
      public function get_rules(){

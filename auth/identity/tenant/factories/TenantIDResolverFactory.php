@@ -13,15 +13,39 @@ use RuntimeException;
 
 class TenantIDResolverFactory {
 
-     public static function make() : TenantIDResolverInterface {
+     private const MAP = [
+         'user'      => AuthUserTenantIDResolver::class,
+         'subdomain' => SubdomainTenantIDResolver::class,
+         'domain'    => DomainTenantIDResolver::class,
+         'header'    => HeaderTenantIDResolver::class,
+         'path'      => PathTenantIDResolver::class,
+     ];
 
-         return match(config('tenancy.id_provider')){
-             'subdomain' => new SubdomainTenantIDResolver(),
-             'domain'    => new DomainTenantIDResolver(),
-             'path'      => new PathTenantIDResolver(),
-             'header'    => new HeaderTenantIDResolver(),
-             'user'      => new AuthUserTenantIDResolver(),
-              default    => throw new RuntimeException('Invalid tenant identity provider')
-         };
+     public static function make() : array {
+
+         $registered_resolvers = config('tenancy.resolvers', []);
+ 
+         if(!$registered_resolvers){
+             return [new AuthUserTenantIDResolver(key: 'tenant_id')];
+         }
+
+         $resolvers = [];
+
+         foreach($registered_resolvers as $r){
+             if($r['enabled'] ?? false){
+
+                 $resolver = $r['resolver'];
+                 $key = $r['key'] ?? "";
+
+                 if(class_exists($resolver)){
+                     $resolvers[] = new $resolver();
+                 }else{
+                     $resolver_class = self::MAP[$resolver];
+                     $resolvers[] = new $resolver_class(key: $key);
+                 }
+             }
+         }
+
+         return $resolvers;
      }
 }

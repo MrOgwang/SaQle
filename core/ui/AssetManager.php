@@ -62,7 +62,9 @@ class AssetManager {
                  file_put_contents($output_path, $content);
              }
 
-             $assets[] = config("static_assets_route")."/{$type}/{$output_filename}";
+             $prefix = auth_context() === 'saqle' ? '/saqle' : '';
+             
+             $assets[] = $prefix.config("static_assets_route")."/{$type}/{$output_filename}";
          }
 
          return $assets;

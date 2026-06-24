@@ -119,11 +119,20 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
  	 	 //fill in defaults for all the fields that haven't been provided
          $this->fill_defaults($data);
 
+         //run first validation on the data
+         $this->run_data_validation($data, false);
+
+         //compute missing values
+         $this->fill_computed_values($data);
+
          //make sure data is provided for all the required fields
          $this->assert_required_fields($data);
 
-         //run validation on the data
-         $this->run_data_validation($data);
+         //transform values
+         $this->run_data_transformation($data);
+
+         //run final validation on the data
+         $this->run_data_validation($data, true);
 
          //save files to temporary holding
          $this->save_model_files($data);
@@ -279,9 +288,11 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
 	         }
 
 	         $value = $kwargs[$ffn];
+ 
+             $is_missing = is_null($value) || (is_string($value) && trim($value) === "");
 
-	         if($value === null){
-	            continue;
+	         if($is_missing){
+	             continue;
 	         }
 
              $field = $this->table->get_clean_fields()[$ffn];
@@ -593,6 +604,35 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
 	 	 }
      }
 
+     private function fill_computed_values(array &$data){
+        
+         foreach($this->table->get_clean_fields() as $f){
+             if(!in_array($f->get_name(), $this->table->get_defined_field_names())){
+                 continue;
+             }
+
+             $compute_callback = $f->get_compute();
+             if($compute_callback){
+                 $field_name = $f->get_name();
+                 $data[$field_name] = $compute_callback((Object)$data);
+             }
+         }
+     }
+
+     private function run_data_transformation(array &$data){
+         foreach($this->table->get_clean_fields() as $f){
+             if(!in_array($f->get_name(), $this->table->get_defined_field_names())){
+                 continue;
+             }
+
+             $transform_callback = $f->get_transform();
+             if($transform_callback){
+                 $field_name = $f->get_name();
+                 $data[$field_name] = $transform_callback($data[$field_name], (Object)$data);
+             }
+         }
+     }
+
      /**
       * Ensure that the keys of the data array are field names defined on the model.
       * Note: at this point even a column name instead of a field name will be disregarded.
@@ -616,13 +656,20 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
      /**
       * Run validation on the data to ensure the model is in a valid
       * and correct state.
+      * 
+      * @param array $data - associative data array
+      * @param bool  $with_computed - whether to leave out computed fields or not
       * */
-     private function run_data_validation(array $data, bool $partial = false){
+     private function run_data_validation(array &$data, bool $with_computed = true){
      	 
      	 $errors = [];
 
      	 foreach($data as $field_name => $field_value){
      	 	 $field = $this->table->get_clean_fields()[$field_name];
+
+             if(!$with_computed && $field->get_compute()){
+                 continue;
+             }
      	 	 
      	 	 $validator = $field->validator();
 
@@ -631,6 +678,8 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
      	 	 if(!$result->isvalid){
      	 	 	 $errors[$field_name] = $result->errors;
              }
+
+             $data[$field_name] = $result->normalized;
      	 }
 
      	 if(!empty($errors)){
@@ -927,6 +976,13 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
 	 	 return $update_columns;
 	 }
 
+     /**
+      * Form methods
+      * 
+      * These methods enable the framework to build
+      * automatic forms for create/update operations
+      * 
+      * */
      public function create_form(Form $form) : Form {
          $form->for_create();
          $form->auto_wire();

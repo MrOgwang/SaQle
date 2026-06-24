@@ -1,14 +1,15 @@
 <?php
 namespace SaQle\Auth\Identity\Tenant\Resolvers;
 
-use SaQle\Auth\interfaces\TenantIDProviderInterface;
+use SaQle\Auth\Identity\Tenant\Interfaces\TenantIDResolverInterface;
 
-class PathTenantIDResolver implements TenantIDProviderInterface {
-	 public function tenant_id() : null|int|string {
+class PathTenantIDResolver implements TenantIDResolverInterface {
 
-	 	 $segment =config('tenancy.path_segment', 1);
+	 public function __construct(private string $key){}
 
-         return null;
+	 public function resolve() : null|int|string {
 
+         return request()->params->get($this->key, null);
+         
 	 }
 }

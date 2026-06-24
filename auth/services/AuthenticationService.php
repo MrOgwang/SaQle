@@ -22,24 +22,24 @@ use SaQle\Auth\Identity\User\Interfaces\{
      UserInterface,
      UserProviderInterface
 };
-use SaQle\Auth\Identity\User\Factories\UserIDResolverFactory;
 use SaQle\Auth\Utils\AuthResult;
 use SaQle\Core\Services\IService;
-use SaQle\Auth\Events\{LoginSucceeded, LoginFailed, Logout};
+use SaQle\Auth\Events\{
+     LoginSucceeded, 
+     LoginFailed, 
+     Logout
+};
 use SaQle\Core\Support\Emits;
 use RuntimeException;
 use Throwable;
 
 class AuthenticationService implements IService {
-
-     private UserIDResolverInterface $id_resolver;
-
+    
      public function __construct(
          private StrategyRegistryInterface $strategies,
-         private UserProviderInterface $user_provider
-     ){
-         $this->id_resolver = UserIDResolverFactory::make();
-     }
+         private UserProviderInterface $user_provider,
+         private UserIDResolverInterface $id_resolver
+     ){}
 
      /**
      * Main login entry point.
@@ -48,6 +48,7 @@ class AuthenticationService implements IService {
      #[Emits(before: [LoginAttempt::class])]
      public function login(string $strategy_name, array $credentials): AuthResult {
          try{
+
              $strategy = $this->strategies->get($strategy_name);
 
              if(!$strategy){
@@ -64,11 +65,6 @@ class AuthenticationService implements IService {
              //issue credentials
              $identity_token = $this->id_resolver->create($user);
 
-             //get user id
-             $user_id = $this->id_resolver->resolve();
-
-             $user = $this->user_provider->find($user_id);
-
              //event(new LoginSucceeded($user));
              return new AuthResult(true, $user, $identity_token, "Login successful");
          }catch(Throwable $e){
@@ -79,11 +75,14 @@ class AuthenticationService implements IService {
      }
 
      public function resolve_user() : ?UserInterface {
+          
          $user_id = $this->id_resolver->resolve();
 
          if(!$user_id) return null;
 
-         return $this->user_provider->find($user_id);
+         $user = $this->user_provider->find($user_id);
+
+         return $user;
      }
 
      //#[Emits(before: [Logout::class])]
@@ -92,8 +91,6 @@ class AuthenticationService implements IService {
          $user = $this->resolve_user();
 
          $this->id_resolver->destroy();
-
-         $identity_provider->destroy();
 
          return $user;
      }

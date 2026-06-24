@@ -35,15 +35,42 @@ class NativeTypeValidator extends IValidator {
      }
 
      private function validate_integer(mixed $value, array $context): ValidationResult {
-         return is_int($value) ? new ValidationResult(true, null) : new ValidationResult(false, "{$this->field} must be an integer.");
+
+         if(is_int($value)){
+             return new ValidationResult(true, null, $value);
+         }
+
+         if(is_string($value) && filter_var($value, FILTER_VALIDATE_INT) !== false){
+             return new ValidationResult(true, null, (int)$value);
+         }
+
+         return new ValidationResult(false, "{$this->field} must be an integer.");
      }
 
      private function validate_string(mixed $value, array $context): ValidationResult {
-         return is_string($value) ? new ValidationResult(true, null) : new ValidationResult(false, "{$this->field} must be a string.");
-     }
+
+         if(is_string($value)){
+             return new ValidationResult(true, null, $value);
+         }
+
+         if(is_scalar($value)){
+             return new ValidationResult(true, null, (string)$value);
+         }
+
+         return new ValidationResult(false, "{$this->field} must be a string.");
+     } 
 
      private function validate_float(mixed $value, array $context): ValidationResult {
-         return is_float($value) ? new ValidationResult(true, null) : new ValidationResult(false, "{$this->field} must be a float.");
+         
+         if(is_float($value)){
+             return new ValidationResult(true, null, $value);
+         }
+
+         if(is_numeric($value)){
+             return new ValidationResult(true, null, (float)$value);
+         }
+
+         return new ValidationResult(false, "{$this->field} must be a float.");
      }
 
      private function validate_file(mixed $value, array $context) : ValidationResult {

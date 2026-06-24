@@ -15,12 +15,15 @@ class RequiredValidator extends IValidator {
      }
 
      public function validate(mixed $value, array $context = []): ValidationResult {
+         
+         $is_missing = is_null($value) || (is_string($value) && trim($value) === "");
+
          /**
           * If the value has been provided, it doesnt matter whether it is 
           * required or optional. Pass the validation and continue
           * validation chain.
           * */
-         if(!is_null($value)){
+         if(!$is_missing){
              return new ValidationResult(
                  isvalid: true, 
                  message: null, 
@@ -34,7 +37,7 @@ class RequiredValidator extends IValidator {
           * If required and value is missing, fail
           * and stop the validation chain immediatly
           * */
-         if($this->threshold === true && is_null($value)){
+         if($this->threshold === true && $is_missing){
              return new ValidationResult(
                  isvalid: false, 
                  message: "{$this->field} is required.", 
@@ -47,7 +50,7 @@ class RequiredValidator extends IValidator {
           * If optional and value is missing, the validation passes
           * but stop the validation chain immediatly
           * */
-         if($this->threshold === false && is_null($value)){
+         if($this->threshold === false && $is_missing){
              return new ValidationResult(
                  isvalid: true, 
                  message: null, 

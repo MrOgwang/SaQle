@@ -102,6 +102,13 @@ final class Config {
 
              'saqle_routes_dirs' => [realpath(__DIR__.'/../../routes')],
 
+             'saqle_models_dirs' => [
+                 realpath(__DIR__.'/../../core/migration/models'),
+                 realpath(__DIR__.'/../../core/queue/models'),
+                 realpath(__DIR__.'/../../session/models'),
+                 realpath(__DIR__.'/../../auth/models')
+             ],
+
              'static_assets_route' => '/private-asset',
 
              'protected_file_component' => 'saqle.protectedfile',
@@ -112,7 +119,9 @@ final class Config {
              'framework_connection' => 'framework',
 
              //Default framework database
-             'framework_database' => '${app.name}_system'
+             'framework_database' => '${app.name}_system',
+
+             'system_url_prefix' => '/saqle/'
          ];
      }
 }

@@ -4,7 +4,7 @@ namespace SaQle\Build\Manage;
 use SaQle\Build\Commands\{MakeMigrations, Migrate, MakeCollections, MakeModels, 
 	MakeThroughs, SeedDatabase, ResetDatabase, MakeSuperuser, StartProject, 
 	StartApps, MakeResources, BuildProject, TestModel, RunCron, QueueCron,
-	MakeComponent
+	MakeComponent, MakeUser
 };
 use SaQle\Build\Utils\MigrationUtils;
 use Exception;
@@ -25,6 +25,7 @@ class Manage {
 	 	 	'make:models'      => $this->extract_makemodels_args($args),
 	 	 	'make:throughs'    => $this->extract_makemodels_args($args),
 	 	 	'make:superuser'   => [],
+	 	 	'make:user'        => [],
 	 	 	'db:seed'          => [],
 	 	 	'db:reset'         => [],
 	 	 	'start:project'    => $this->extract_startproject_args($args),
@@ -146,6 +147,9 @@ class Manage {
 			 break;
 			 case 'make:superuser':
 			     resolve(MakeSuperuser::class)->execute();
+			 break;
+			 case 'make:user':
+			     resolve(MakeUser::class)->execute();
 			 break;
 			 case 'db:seed':
 			     resolve(SeedDatabase::class)->execute();

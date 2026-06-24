@@ -11,29 +11,80 @@ use SaQle\Auth\Identity\Tenant\Providers\DefaultTenantProvider;
 return [
 
      /**
-      * Whether to enable multitenancy for project or not.
+      * -----------------------------------------------------
+      * ENABLE/DISABLE MULTITENANCY
+      * ---------------------------------------------------------
       * 
-      * Turn this on/off before any migrations are run
+      * Turn this on/off before any migrations are run to enable
+      * or disanle multi tenancy
+      * 
       * */
-     'enabled' => true,
+     'enabled' => false,
 
      /**
-      * Preffered tenant ID source for your project.
+      * ------------------------------------------------
+      * TENANT IDENTIFICATION
+      * ------------------------------------------------
       * 
-      * Options:
-      * 
-      * user : The tenant id will be acquired from t he currently logged in user object.
-      *        Assumes a tenant_id field on the user model
-      * 
-      * subdomain : The tenant id is acquired from the request's subdomain
-      * 
-      * domain : the tenant id is the request's domain
-      * 
-      * header : the tenant id is a request header
+      * Resolvers are executed in order. The first resolver that
+      * returns a non-null value wins.
       * 
       * path : the tenant id will be acquired from a url path parameter
+      * 
       * */
-     'id_provider' => 'user',
+     'resolvers' => [
+
+         /**
+          * Get tenant id from the logged in user object
+          * */
+         [
+             'resolver' => 'user',
+             'enabled'  => true,
+             'key'      => 'tenant_id'
+         ],
+
+         /**
+          * Get tenant id from request header
+          * */
+         [
+             'resolver' => 'header',
+             'enabled'  => true,
+             'key'      => 'X-Tenant'
+         ],
+
+         /**
+          * Get tenant id from url subdomain
+          * 
+          * Example: tenant.yoursite.com
+          * */
+         [
+             'resolver' => 'subdomain',
+             'enabled'  => true,
+             'key'      => ''
+         ],
+
+         /**
+          * Get tenant id from url domain
+          * 
+          * Example: yoursite.com
+          * */
+         [
+             'resolver' => 'domain',
+             'enabled'  => true,
+             'key'      => ''
+         ],
+
+         /**
+          * Get tenant id from url path
+          * 
+          * Example: yoursite.com/:tenant/...
+          * */
+         [
+             'resolver' => 'path',
+             'enabled'  => true,
+             'key'      => 'tenant'
+         ]
+     ],
 
      /**
       * --------------------------------------------------
@@ -48,20 +99,28 @@ return [
       * to be represented in your application
       * 
       * */
-      'tenant_provider' => DefaultTenantProvider::class,
+     'tenant_provider' => DefaultTenantProvider::class,
 
      /**
-      * The model class representing a tenant.
+      * ------------------------------------------------
+      * TENANT MODEL
+      * ------------------------------------------------
+      * 
+      * This model represents a tenant object. Defaults to BaseTenant
+      * 
       * */
      'model_class' => BaseTenant::class,
 
-     'tenant_key' => 'slug',
-
-     'header_name' => 'X-Tenant',
-
-     'path_segment' => 1,
-
-     'cache_session' => true
+     /**
+      * ---------------------------------------------
+      * CACHE TENANT
+      * ----------------------------------------------
+      * 
+      * To avoid resolving the tenant on every request,
+      * turn this to true in order for the tenant to be cached to session
+      * 
+      * */
+     'cache_session' => true,
 ];
 
 ?>

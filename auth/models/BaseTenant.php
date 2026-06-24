@@ -15,13 +15,16 @@ class BaseTenant extends Model implements ISystemModel, TenantInterface {
 	 	 $table->primary_key('tenant_id');
 
 		 $table->fields([ 
-		     'tenant_name' => Table::char_field()->required(),
+		     'tenant_name' => Table::char_field()->required()->unique(),
+		     'url' => Table::url_field()->compute(function($model){
+		     	  return slugify($model->tenant_name).'/_admin/dashboard';
+		     })->required(),
 		 ]);
 
-		 $table->with_user_audit(false);
+		 $table->with_user_audit(false); 
 		 $table->with_timestamps(true);
 		 $table->with_soft_delete(false);
-	 } 
+	 }
 
      public function get_id() : mixed {
      	 return $this->tenant_id;
@@ -29,5 +32,15 @@ class BaseTenant extends Model implements ISystemModel, TenantInterface {
 
      public function get_name() : string {
      	 return $this->tenant_name;
+     }
+
+     #[Presenter('admin')]
+     public function admin_presenter(){
+ 
+     }
+
+     #[Form(mode: 'create')]
+     public function new_tenant_form(){
+
      }
 }

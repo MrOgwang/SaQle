@@ -1,10 +1,13 @@
 <?php
 namespace SaQle\Auth\Identity\Tenant\Resolvers;
 
-use SaQle\Auth\interfaces\TenantIDProviderInterface;
+use SaQle\Auth\Identity\Tenant\Interfaces\TenantIDResolverInterface;
 
-class DomainTenantIDResolver implements TenantIDProviderInterface {
-	 public function tenant_id() : null|int|string {
+class DomainTenantIDResolver implements TenantIDResolverInterface {
+
+	 public function __construct(private string $key){}
+	 
+	 public function resolve() : null|int|string {
 	 	  return request()->host();
 	 }
 }

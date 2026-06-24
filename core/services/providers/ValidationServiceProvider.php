@@ -18,56 +18,55 @@ use SaQle\Security\Validation\Validators\{
 
 class ValidationServiceProvider extends ServiceProvider {
      public function register(): void {
-         $this->app->rules->add('max_length', MaxLengthValidator::class); //
-         $this->app->rules->add('required', RequiredValidator::class); //
-         $this->app->rules->add('duration', DurationValidator::class); //
-         $this->app->rules->add('max_duration', MaxDurationValidator::class); //
-         $this->app->rules->add('min_duration', MinDurationValidator::class); //
-         $this->app->rules->add('max_width', MaxWidthValidator::class); //
-         $this->app->rules->add('min_width', MinWidthValidator::class); //
-         $this->app->rules->add('width', WidthValidator::class); //
-         $this->app->rules->add('max_height', MaxHeightValidator::class); //
-         $this->app->rules->add('min_height', MinHeightValidator::class); //
-         $this->app->rules->add('height', HeightValidator::class); //
-         $this->app->rules->add('aspect_ratio', AspectRatioValidator::class); //
+
+         $this->app->rules->add('required', RequiredValidator::class, 0); //
+         $this->app->rules->add('blank', BlankValidator::class, 10); //
+         $this->app->rules->add('type', NativeTypeValidator::class, 20); //
+         $this->app->rules->add('email', EmailValidator::class, 30); //
+         $this->app->rules->add('slug', SlugValidator::class, 30); //
+         $this->app->rules->add('json', JsonValidator::class, 30); //
+         $this->app->rules->add('ip', IpAddressValidator::class, 30); //
+         $this->app->rules->add('url', UrlValidator::class, 30); //
+         $this->app->rules->add('phone', PhoneValidator::class, 30); //
+         $this->app->rules->add('uuid', UuidValidator::class, 30); //
+         $this->app->rules->add('duration', DurationValidator::class, 30); //
+         $this->app->rules->add('schemes', SchemesValidator::class, 40); //
+         $this->app->rules->add('require_tld', RequireTldValidator::class, 40);
+         $this->app->rules->add('international', InternationalPhoneValidator::class, 40);
+         $this->app->rules->add('countries', PhoneCountryValidator::class, 40);
+         $this->app->rules->add('charset', CharacterSetValidator::class, 40);
+         $this->app->rules->add('pattern', RegexPatternValidator::class, 40); //
+         $this->app->rules->add('choices', ChoicesValidator::class, 50); //
+         $this->app->rules->add('whitelist', WhitelistValidator::class, 50); //
+         $this->app->rules->add('blacklist', BlacklistValidator::class, 50); //
+         $this->app->rules->add('length', LengthValidator::class, 60);//
+         $this->app->rules->add('max_length', MaxLengthValidator::class, 60); //
+         $this->app->rules->add('min_length', MinLengthValidator::class, 60);//
+         $this->app->rules->add('min', MinValidator::class, 70); //
+         $this->app->rules->add('max', MaxValidator::class, 70); //
+         $this->app->rules->add('unsigned', UnsignedValidator::class, 70); //
+         $this->app->rules->add('precision', PrecisionValidator::class, 70); //
+         $this->app->rules->add('scale', ScaleValidator::class, 70); //
+         $this->app->rules->add('min_time', MinTimeValidator::class, 80);
+         $this->app->rules->add('max_time', MaxTimeValidator::class, 80);
+         $this->app->rules->add('min_datetime', MinDateTimeValidator::class, 80);
+         $this->app->rules->add('max_datetime', MaxDateTimeValidator::class, 80);
+         $this->app->rules->add('min_date', MinDateValidator::class, 80);
+         $this->app->rules->add('max_date', MaxDateValidator::class, 80);
+         $this->app->rules->add('max_duration', MaxDurationValidator::class, 80); //
+         $this->app->rules->add('min_duration', MinDurationValidator::class, 80); //
+         $this->app->rules->add('min_strength', MinStrengthValidator::class, 90); //
+         $this->app->rules->add('extensions', ExtensionsValidator::class, 100); //
+         $this->app->rules->add('mime_types', MimeTypesValidator::class, 100); //
+         $this->app->rules->add('width', WidthValidator::class, 110); //
+         $this->app->rules->add('height', HeightValidator::class, 110); //
+         $this->app->rules->add('max_width', MaxWidthValidator::class, 120); //
+         $this->app->rules->add('min_width', MinWidthValidator::class, 120); //
+         $this->app->rules->add('max_height', MaxHeightValidator::class, 120); //
+         $this->app->rules->add('min_height', MinHeightValidator::class, 120); //
+         $this->app->rules->add('aspect_ratio', AspectRatioValidator::class, 130); //
          $this->app->rules->add('max_size', MaxSizeValidator::class); //
          $this->app->rules->add('min_size', MinSizeValidator::class); //
-         $this->app->rules->add('extensions', ExtensionsValidator::class); //
-         $this->app->rules->add('mime_types', MimeTypesValidator::class); //
-         $this->app->rules->add('email', EmailValidator::class); //
-         $this->app->rules->add('choices', ChoicesValidator::class); //
-         $this->app->rules->add('blank', BlankValidator::class); //
-         $this->app->rules->add('type', NativeTypeValidator::class); //
-         $this->app->rules->add('uuid', UuidValidator::class); //
-         $this->app->rules->add('unsigned', UnsignedValidator::class); //
-         $this->app->rules->add('min_length', MinLengthValidator::class);//
-         $this->app->rules->add('length', LengthValidator::class);//
-         $this->app->rules->add('min', MinValidator::class); //
-         $this->app->rules->add('max', MaxValidator::class); //
-         $this->app->rules->add('min_strength', MinStrengthValidator::class); //
-         $this->app->rules->add('pattern', RegexPatternValidator::class); //
-         $this->app->rules->add('slug', SlugValidator::class); //
-         $this->app->rules->add('json', JsonValidator::class); //
-         $this->app->rules->add('ip', IpAddressValidator::class); //
-         $this->app->rules->add('url', UrlValidator::class); //
-         $this->app->rules->add('phone', PhoneValidator::class); //
-         $this->app->rules->add('schemes', SchemesValidator::class); //
-         $this->app->rules->add('whitelist', WhitelistValidator::class); //
-         $this->app->rules->add('blacklist', BlacklistValidator::class); //
-         $this->app->rules->add('precision', PrecisionValidator::class); //
-         $this->app->rules->add('scale', ScaleValidator::class); //
-         
-         $this->app->rules->add('charset', CharacterSetValidator::class);
-         $this->app->rules->add('require_tld', RequireTldValidator::class);
-         $this->app->rules->add('international', InternationalPhoneValidator::class);
-         $this->app->rules->add('countries', PhoneCountryValidator::class);
-
-         $this->app->rules->add('min_time', MinTimeValidator::class);
-         $this->app->rules->add('max_time', MaxTimeValidator::class);
-         $this->app->rules->add('min_datetime', MinDateTimeValidator::class);
-         $this->app->rules->add('max_datetime', MaxDateTimeValidator::class);
-         $this->app->rules->add('min_date', MinDateValidator::class);
-         $this->app->rules->add('max_date', MaxDateValidator::class);
          $this->app->rules->add('format', FormatValidator::class);
      }
 }

@@ -15,7 +15,7 @@ abstract class Schema {
 	 //all the models registered in schema
 	 protected array $models = [];
 
-	 public function get_developer_models() : array {
+	 public function get_defined_models() : array {
 	 	 $resolved = [];
          foreach($this->models as $key => $model_class){
              $table = is_numeric($key) ? $this->infer_table_name($model_class) : $key;
@@ -27,7 +27,7 @@ abstract class Schema {
 
 	 public function get_models() : array {
          return array_merge(
-         	 $this->get_developer_models(),
+         	 $this->get_defined_models(),
          	 ['model_temp_ids' => TempId::class]
          );
 	 }

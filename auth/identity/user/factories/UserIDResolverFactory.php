@@ -10,7 +10,7 @@ use SaQle\Auth\Identity\User\Resolvers\{
 
 class UserIDResolverFactory {
 
-     public function make() : UserIDResolverInterface {
+     public static function make() : UserIDResolverInterface {
          $headers = function_exists('getallheaders') ? getallheaders() : [];
 
          // --- Explicit mode ---

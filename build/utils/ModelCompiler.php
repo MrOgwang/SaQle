@@ -83,7 +83,7 @@ class ModelCompiler {
           * 
           * Module model names will be prefixed with module name
           * */
-         $models_dirs = [
+         $models_dirs = [ 
              [
                  'path' => path_join([config('base_path'), 'models']),
                  'prefix' => ""
@@ -100,6 +100,13 @@ class ModelCompiler {
          foreach(config('app.extra_models_dirs') as $d){
              $models_dirs[] = [
                  'path' => path_join([config('base_path'), $d]),
+                 'prefix' => ""
+             ];
+         }
+
+         foreach(config('saqle_models_dirs') as $d){
+             $models_dirs[] = [
+                 'path' => $d,
                  'prefix' => ""
              ];
          }

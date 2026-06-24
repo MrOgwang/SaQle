@@ -85,6 +85,10 @@ class Field implements IField {
 	 //the render callback is used to change how the value is presented
 	 protected ?Closure $render_callback = null;
 
+	 protected ?Closure $transform_callback = null;
+
+	 protected ?Closure $compute_callback = null;
+
 	 //initialize a new field
 	 public function __construct(...$kwargs){
 	 	 foreach($kwargs as $k => $v){
@@ -219,8 +223,6 @@ class Field implements IField {
 	             continue;
 	         }
 
-	         //$property->setAccessible(true);
-
 	         $attribute_instance = $attributes[0]->newInstance();
 
 	         $key = $attribute_instance->get_key() ?? $property->getName();
@@ -297,12 +299,38 @@ class Field implements IField {
      }
 
      public function build(string $name, string $model_class, string $model_pk){
-
      	 $this->name = $name;
      	 $this->model_class = $model_class;
      	 $this->model_pk = $model_pk;
 	 	 $this->initialize_defaults();
 	 	 $this->validate_field_state();
      }
+
+     /**
+      * Provide a callback that transforms a validated
+      * field value into a format or another value
+      * */
+     public function transform(callable $callback){
+     	 $this->transform_callback = $callback;
+     	 return $this;
+     }
+
+     /**
+      * Provide a callback that computes a field 
+      * value from the rest of model fields
+      * */
+     public function compute(callable $callback){
+     	 $this->compute_callback = $callback;
+     	 return $this;
+     }
+
+     public function get_transform(){
+     	 return $this->transform_callback;
+     }
+
+     public function get_compute(){
+     	 return $this->compute_callback;
+     }
+
 }
 

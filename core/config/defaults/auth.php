@@ -63,9 +63,25 @@ return [
 	  * */
 	 'model_class' => BaseUser::class,
 
+     /**
+      * ------------------------------------------------------
+      * 
+      * ------------------------------------------------------
+      * */
 	 //This is the service class that is responsible for authentication.
  	 'backend_class' => AuthenticationService::class,
-     
+ 	 
+ 	 'passwords' => [
+ 	 	 'default' => [
+ 	 	 	 'algorithm' => PASSWORD_ARGON2ID,
+		     'options' => [
+		         'memory_cost' => 65536,
+		         'time_cost' => 4,
+		         'threads' => 2,
+		     ],
+ 	 	 ]
+ 	 ],
+
      //the jwt token key
  	 'jwt_key' => '',
 

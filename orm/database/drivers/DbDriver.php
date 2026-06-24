@@ -143,6 +143,7 @@ abstract class DbDriver {
              Cli::print("SQL: $sql\n");
              Cli::print("DATA: ".json_encode($data)."\n");
          }
+         
          $statement = $this->connection->prepare($sql);
          $response  = $statement->execute($data);
          return ['statement' => $statement, 'response' => $response];

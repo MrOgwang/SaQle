@@ -10,6 +10,7 @@ use SaQle\Core\Support\{Directory, AppContext};
 use SaQle\Core\Events\{EventBus, Event};
 use SaQle\App;
 use SaQle\Core\Support\ActorContext;
+use SaQle\Auth\utils\AuthContext;
 
 
 if(!function_exists('app')){
@@ -52,6 +53,12 @@ if(!function_exists('config')){
 if(!function_exists('config_all')){
      function config_all(): mixed {
          return app()->container->resolve(ConfigRepository::class)->all();
+     }
+}
+
+if(!function_exists('auth_context')){
+     function auth_context(): mixed {
+         return AuthContext::get();
      }
 }
 

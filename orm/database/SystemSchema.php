@@ -21,7 +21,7 @@ class SystemSchema extends Schema {
 	 public function __construct(){
 
 	 	 $tenant_model = config('tenancy.model_class');
-
+ 
 	 	 $this->models = [
 		 	 'platform_users'    => PlatformUser::class,
 		 	 'tenants'           => $tenant_model,

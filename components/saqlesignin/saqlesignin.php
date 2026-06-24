@@ -2,7 +2,7 @@
 
 namespace SaQle\Components\SaqleSignin;
 
-use App\Modules\Account\Services\AuthenticationService;
+use SaQle\Auth\Services\AuthenticationService;
 use SaQle\Http\Response\Message;
 
 class SaqleSignin {
@@ -18,14 +18,11 @@ class SaqleSignin {
 	 ){
 		 $auth_result = $this->auth_service->login('password', ['username' => $username, 'password' => $password]);
 
-		 if(!$auth_result->success || ($auth_result->success && $auth_result->user->is_removed)){
+		 if(!$auth_result->success){
 		 	 throw authorization_exception("Invalid credentials!");
 		 }
-		 
-		 //$next = request()->session->get("auth.next", config('app.root_domain'));
 
-		 //return Message::redirect($next)->as_get();
-		 return Message::ok();
+		 return Message::redirect(route('saqle.admin.dashboard'));
 	 }
 
 	 public function get(){
@@ -36,7 +33,7 @@ class SaqleSignin {
 
 	 	 $this->auth_service->logout();
 	 	 
-	 	 return Message::redirect(config('app.root_domain'))->as_get();
+	 	 return Message::redirect(route('saqle.login.form'));
 	 }
 }
 ?>

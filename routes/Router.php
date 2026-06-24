@@ -424,26 +424,26 @@ final class Router {
 
         // Parse URI
         $parts = parse_url($uri);
-        $path = '/' . trim($parts['path'] ?? '/', '/'); // normalize path with leading slash
+        $path = '/'.trim($parts['path'] ?? '/', '/'); // normalize path with leading slash
         $query_params = [];
-        if (isset($parts['query'])) {
+        if(isset($parts['query'])){
             parse_str($parts['query'], $query_params);
         }
 
-        // Strip prefix
+        //Strip prefix
         $prefix_data = self::strip_prefix($path, $all_prefixes);
         $prefix = $prefix_data['prefix'];           // matched prefix string (e.g., /api/v1)
         $path_without_prefix = $prefix_data['path']; // path after removing prefix
 
         // Iterate over compiled routes
-        foreach ($compiled_routes as $route) {
+        foreach ($compiled_routes as $route){
             // HTTP method check
             if(strtoupper($route['method']) !== strtoupper($method)) continue;
 
             // Match path regex
             if(preg_match($route['pattern'], $path_without_prefix, $matches)){
 
-                 // Extract path params
+                 //Extract path params
                  $params = [];
                  if (!empty($route['param_names'])) {
                      foreach ($route['param_names'] as $i => $name) {
@@ -510,8 +510,8 @@ final class Router {
      * Helper: check if normalized prefix is in an array of prefixes
      */
      protected static function prefix_in_array(string $prefix, array $prefix_array): bool{
-        foreach ($prefix_array as $p) {
-            if ('/' . trim($p, '/') === $prefix) return true;
+        foreach($prefix_array as $p) {
+            if('/'.trim($p, '/') === $prefix) return true;
         }
         return false;
      }

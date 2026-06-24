@@ -8,8 +8,9 @@ use SaQle\Core\Support\Session;
 class SessionMiddleware implements MiddlewareInterface {
 
      public function handle($request, $response = null) : ?Message {
-         
+        
          if(!$response && $request->is_web_request()){
+
              if(session_status() === PHP_SESSION_NONE){
                  session_start();
              }
@@ -24,6 +25,8 @@ class SessionMiddleware implements MiddlewareInterface {
                  Session::set('__flash_current', Session::get('__flash_next'));
                  Session::remove('__flash_next');
              }
+
+             $request->session->set('__auth_context', auth_context(), true);
          }
 
          if($response){

@@ -418,7 +418,9 @@ class MakeMigrations {
                  $removed_columns = [];
 
                  try{
-                     if(MigrationUtils::check_system_database()){
+                     if(MigrationUtils::check_system_database(with_database: true)){
+                         Cli::print("System database exists!");
+
                          //Database exists, acquire the timestamp for the last snapshot.
                          $last_migration = Migration::get()
                          ->order(fields: ['migration_timestamp'], direction: 'DESC')

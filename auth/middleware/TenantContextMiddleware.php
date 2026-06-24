@@ -17,12 +17,17 @@
 namespace SaQle\Auth\Middleware;
 
 use SaQle\Middleware\MiddlewareInterface;
-use SaQle\Auth\Identity\Factories\Tenant\TenantIDResolverFactory;
 use SaQle\Auth\Identity\Tenant\Interfaces\TenantProviderInterface;
+use SaQle\Auth\Identity\Tenant\Resolvers\TenantIDResolver;
 use SaQle\Http\Response\Message;
 use RuntimeException;
 
 class TenantContextMiddleware implements MiddlewareInterface {
+
+     public function __construct(
+         private TenantIDResolver $id_resolver,
+         private TenantProviderInterface $tenant_provider
+     ){}
 
      public function handle($request, $response = null) : ?Message {
 
@@ -32,17 +37,14 @@ class TenantContextMiddleware implements MiddlewareInterface {
              $request->session->set('__tenant', $tenant, true);
              return null;
          }
-         
-         $id_resolver = TenantIDResolverFactory::make();
-         $tenant_id = $id_resolver->resolve();
+
+         $tenant_id = $this->id_resolver->resolve();
 
          if(!$tenant_id){
              return null;
          }
 
-         $tenant_provider = resolve(TenantProviderInterface::class);
-
-         $tenant = $tenant_provider->find($identifier);
+         $tenant = $this->tenant_provider->find($tenant_id);
 
          if(!$tenant){
              return null;
