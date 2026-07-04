@@ -17,7 +17,7 @@
  	 	 >
  	 	     <block name='picker-option'>
  	 	     	 <div class="picker-option" data-value="{{ $key }}">
- 	 	     	 	 <a class='flex v_center' href='{{ route($current_resource->route_name) }}?page=1&records={{ $key }}'>
+ 	 	     	 	 <a class='flex v_center' href='{{ $current_resource->url }}?page=1&records={{ $key }}'>
  	 	     	 	 	 {{ $value }}
  	 	     	     </a>
                  </div>

@@ -3,7 +3,8 @@ namespace SaQle\Auth\Models;
 
 use SaQle\Orm\Entities\Model\Schema\{
 	 Model, 
-	 Table
+	 Table,
+	 Presenter
 };
 use SaQle\Auth\Identity\Tenant\Interfaces\TenantInterface;
 use SaQle\Orm\Entities\Model\Interfaces\ISystemModel;
@@ -16,6 +17,9 @@ class BaseTenant extends Model implements ISystemModel, TenantInterface {
 
 		 $table->fields([ 
 		     'tenant_name' => Table::char_field()->required()->unique(),
+		     'slug'        => Table::slug_field()->compute(function($model){
+		     	  return slugify($model->tenant_name);
+		     })->required(),
 		     'url' => Table::url_field()->compute(function($model){
 		     	  return slugify($model->tenant_name).'/_admin/dashboard';
 		     })->required(),
@@ -34,13 +38,15 @@ class BaseTenant extends Model implements ISystemModel, TenantInterface {
      	 return $this->tenant_name;
      }
 
-     #[Presenter('admin')]
+     #[Presenter(name: 'admin')] 
      public function admin_presenter(){
- 
-     }
-
-     #[Form(mode: 'create')]
-     public function new_tenant_form(){
-
+     	 return [
+     	 	 'tenant_id'   => null,
+     	 	 'tenant_name' => null,
+     	 	 'slug'        => null,
+     	 	 'url'         => function($model){
+     	 	 	 return "<a target='_blank' href='/{$model->url}'>Go to tenant</a>";
+     	 	 }
+     	 ];
      }
 }

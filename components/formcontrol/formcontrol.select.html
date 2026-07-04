@@ -1,14 +1,39 @@
-@if($field->multiple)
-<select multiple style="height:140px;padding:12px;" name='{{ $field->name }}' id='{{ $field->id }}'>
+@if($field->is_searchable())
+    <div data-multiple="{{ $field->multiple }}" {!! $field->data !!} class="search-select">
+         @if($field->multiple)
+         <div class="search-hidden-inputs"></div>
+         <div class="chips-container"></div>
+         @else
+         <input type='hidden' name='{{ $field->name }}' id='{{ $field->id }}'/>
+         @endif
+         <input placeholder='{{ $field->placeholder }}' {!! $field->data !!} class="search-select-input" type="text" autocomplete="off" placeholder="Search member...">
+         <div class="search-select-results"></div>
+    </div>
 @else
-<select name='{{ $field->name }}' id='{{ $field->id }}'>
+    @if($field->multiple)
+	<select 
+	     class='{{ $field->class }}'
+	     {!! $field->data !!}
+	     multiple  
+	     style="height:140px;padding:12px;" 
+	     name='{{ $field->name }}[]' 
+	     id='{{ $field->id }}'
+	>
+	@else
+	<select 
+	     class='{{ $field->class }}'
+	     {!! $field->data !!}
+	     name='{{ $field->name }}' 
+	     id='{{ $field->id }}'
+	>
+	@endif
+		 <option value=''>--Select--</option>
+		 @foreach($field->choices as $key => $value)
+		     @if($field->value === $key)
+			 <option selected value='{{ $key }}'>{{ $value }}</option>
+			 @else
+			 <option value='{{ $key }}'>{{ $value }}</option>
+			 @endif
+		 @endforeach
+	</select>
 @endif
-	 <option value=''>--Select--</option>
-	 @foreach($field->choices as $key => $value)
-	     @if($field->value === $key)
-		 <option selected value='{{ $key }}'>{{ $value }}</option>
-		 @else
-		 <option value='{{ $key }}'>{{ $value }}</option>
-		 @endif
-	 @endforeach
-</select>

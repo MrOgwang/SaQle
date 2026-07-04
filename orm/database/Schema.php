@@ -15,6 +15,8 @@ abstract class Schema {
 	 //all the models registered in schema
 	 protected array $models = [];
 
+	 protected array $admin_models = [];
+
 	 public function get_defined_models() : array {
 	 	 $resolved = [];
          foreach($this->models as $key => $model_class){
@@ -23,6 +25,24 @@ abstract class Schema {
          }
 
          return $resolved;
+	 }
+
+	 public function get_admin_models() : array {
+	 	 $models = [];
+
+	 	 $defined_models = $this->get_defined_models();
+
+	 	 if(!$this->admin_models){
+	 	 	 return $defined_models;
+	 	 }
+
+	 	 foreach($defined_models as $model_label => $model_class){
+	 	 	 if(in_array($model_label, $this->admin_models)){
+	 	 	 	 $models[$model_label] = $model_class;
+	 	 	 }
+	 	 }
+
+	 	 return $models;
 	 }
 
 	 public function get_models() : array {

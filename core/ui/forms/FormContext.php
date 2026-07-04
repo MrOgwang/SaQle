@@ -6,7 +6,7 @@ namespace SaQle\Core\Ui\Forms;
 use SaQle\Core\Support\Session;
 use SaQle\Http\Request\RuntimeContext;
 
-final class FormRuntimeContext extends RuntimeContext {
+final class FormContext extends RuntimeContext {
      public function __construct(
          public readonly string  $message = '', //the submit message. mostly available with errors
          public readonly string  $action = '', //route to handle submission
@@ -17,7 +17,7 @@ final class FormRuntimeContext extends RuntimeContext {
      ) {}
 
      /**
-     * Retrieve a FormRuntimeContext for a given form from the session.
+     * Retrieve a FormContext for a given form from the session.
      * Returns a context with empty arrays if not yet submitted.
      */
      public static function from_session(): self {

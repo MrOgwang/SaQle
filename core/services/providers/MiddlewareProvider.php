@@ -36,12 +36,9 @@ class MiddlewareProvider extends ServiceProvider {
              'cors',
              'data',
              'csrf',
-             'authorization'
+             'authorization',
+             'tenantcontext'
          ];
-
-         if(config('tenancy.enabled')){
-             $request_middlewares[] = 'tenantcontext';
-         }
 
          $this->app->middleware->request($request_middlewares);
 

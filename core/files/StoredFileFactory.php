@@ -4,7 +4,6 @@ namespace SaQle\Core\Files;
 
 use SaQle\Core\Files\Storage\StorageFactory;
 use RuntimeException;
-use JsonSerializable;
 
 class StoredFileFactory {
 

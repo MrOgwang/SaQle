@@ -25,23 +25,107 @@ use RecursiveDirectoryIterator;
 class ModelCompiler {
 
      use CompileUtils;
+     
+     private static function get_model_classes_from_file(string $file) : array {
+         $classes = self::get_classes_declared_in_file($file);
 
-     private static function get_model_classes_from_file(string $file): array {
-         $declared_before = get_declared_classes();
-
-         include_once $file;
-
-         $declared_after = get_declared_classes();
-         $new_classes = array_diff($declared_after, $declared_before);
+         //load the file if it hasn't already been loaded.
+         require_once $file;
 
          $models = [];
-         foreach ($new_classes as $class) {
-             if (is_subclass_of($class, Model::class)) {
-                $models[] = $class;
+
+         foreach($classes as $class){
+             if(class_exists($class, false) && is_subclass_of($class, Model::class)){
+                 $models[] = $class;
              }
          }
- 
+
          return $models;
+     }
+
+     private static function get_classes_declared_in_file(string $file) : array {
+
+         $tokens = token_get_all(file_get_contents($file));
+
+         $namespace = '';
+
+         $classes = [];
+
+         $count = count($tokens);
+
+         for($i = 0; $i < $count; $i++){
+             if(!is_array($tokens[$i])){
+                 continue;
+             }
+
+             if($tokens[$i][0] === T_NAMESPACE){
+                 $namespace = '';
+
+                 for($j = $i + 1; $j < $count; $j++){
+                     if(!is_array($tokens[$j])){
+                         if($tokens[$j] === ';' || $tokens[$j] === '{'){
+                             break;
+                         }
+
+                         continue;
+                     }
+
+                     if($tokens[$j][0] === T_STRING || 
+                        (defined('T_NAME_QUALIFIED') && $tokens[$j][0] === T_NAME_QUALIFIED) ||
+                        (defined('T_NS_SEPARATOR') && $tokens[$j][0] === T_NS_SEPARATOR)
+                     ){
+                         $namespace .= $tokens[$j][1];
+                     }
+                 }
+
+                 continue;
+             }
+
+             //look for classes
+             if($tokens[$i][0] !== T_CLASS){
+                 continue;
+             }
+
+             //ignore anonymous classes
+             $previous = null;
+
+             for($j = $i - 1; $j >= 0; $j--){
+                 if(!is_array($tokens[$j])){
+                     if(trim($tokens[$j]) === ''){
+                         continue;
+                     }
+
+                     break;
+                 }
+
+                 if(in_array($tokens[$j][0], [T_WHITESPACE, T_COMMENT, T_DOC_COMMENT])){
+                     continue;
+                 }
+
+                 $previous = $tokens[$j][0];
+                 break;
+             }
+
+             if($previous === T_NEW){
+                 continue;
+             }
+
+             //find the class name
+             for($j = $i + 1; $j < $count; $j++){
+                 if(!is_array($tokens[$j])){
+                     continue;
+                 }
+
+                 if($tokens[$j][0] === T_STRING){
+                     $class = $tokens[$j][1];
+                     $classes[] = $namespace ? $namespace . '\\' . $class : $class;
+
+                     break;
+                 }
+             }
+         }
+
+         return $classes;
      }
 
      private static function cache_models(array $items): void {

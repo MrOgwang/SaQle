@@ -1,4 +1,10 @@
 
+@let(
+    $create_form_route_name = strtolower($current_resource?->plural_label).'.create.form',
+    $create_form_url = $auth_context === 'saqle' ? 
+             route($create_form_route_name) : 
+             route($create_form_route_name, ['tenant' => $tenant_slug])
+)
 <div class='resourcelist'>
      <div class='resourcelist-header'>
          <div class='breadcramb'>
@@ -9,7 +15,7 @@
                  <h2>{{ ucwords($current_resource->ui_label) }}</h2>
              </div>
              <div class='titleo'>
-                 <a href="{{ route(strtolower($current_resource->plural_label).'.create.form') }}">Create {{ ucwords($current_resource->ui_label) }}</a>
+                 <a href="{{ $create_form_url }}">Create {{ ucwords($current_resource->ui_label) }}</a>
              </div>
          </div>
      </div>

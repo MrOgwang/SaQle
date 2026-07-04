@@ -31,23 +31,40 @@ class TenantContextMiddleware implements MiddlewareInterface {
 
      public function handle($request, $response = null) : ?Message {
 
-         $tenant = $request->session->get('__tenant', null);
-         
-         if($tenant){
-             $request->session->set('__tenant', $tenant, true);
+         $tenant_key = config('session_tenant_key');
+
+         if(
+             config('protected_file_component') === $request->route->compiled_target->name || 
+             config('static_assets_component') === $request->route->compiled_target->name
+         ){
              return null;
          }
 
-         $tenant_id = $this->id_resolver->resolve();
+         if(auth_context() === 'saqle'){
+             $request->session->remove($tenant_key);
+             return null;
+         }
+         
+         /**
+          * There is always a tenant, even when multi tenancy is turned off. In
+          * such a case the tenant id is the name of the app, slugified
+          * */
+         $tenant_id = config('tenancy.enabled') ? $this->id_resolver->resolve() : slugify(config('app.name'));
 
          if(!$tenant_id){
+             return Message::bad_request(message: "Failed to resolve tenant id!");
+         }
+
+         $tenant = $request->session->get($tenant_key, null);
+         
+         if($tenant && ($tenant->get_id() === $tenant_id || strtolower($tenant->get_name()) === strtolower($tenant_id))){
              return null;
          }
 
          $tenant = $this->tenant_provider->find($tenant_id);
 
          if(!$tenant){
-             return null;
+             return Message::bad_request(message: "Failed to resolve tenant. Tenant Id - {$tenant_id}!");
          }
 
          $request->session->set('__tenant', $tenant, true);

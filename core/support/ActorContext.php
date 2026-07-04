@@ -2,11 +2,27 @@
 
 namespace SaQle\Core\Support;
 
-class ActorContext {
-     private static mixed $actor = null;
+use SaQle\Auth\Identity\User\Interfaces\UserInterface;
+use SaQle\Auth\Models\CliUser;
 
-     public static function set(mixed $actor) : void {
+class ActorContext {
+
+     private static ?UserInterface $actor = null;
+
+     private static ?UserInterface $impersonated_actor = null;
+
+     private static ?TenantInterface $tenant = null;
+
+     public static function set_actor(UserInterface $actor){
          self::$actor = $actor;
+     }
+
+     public static function set_impersonated_actor(UserInterface $actor){
+         self::$impersonated_actor = $actor;
+     }
+
+     public static function set_tenant(TenantInterface $tenant){
+         self::$tenant = $tenant;
      }
 
      public static function get() : mixed {
@@ -18,6 +34,6 @@ class ActorContext {
      }
 
      public static function is_system() : bool {
-         return self::$actor?->first_name === 'System' || self::$actor === 'System';
+         return self::$actor instanceof CliUser;
      }
 }

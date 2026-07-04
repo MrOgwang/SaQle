@@ -24,7 +24,7 @@ use Throwable;
 
 class ValidationException extends FrameworkException {
 
-     protected string $safe_message = "Validation failed.";
+     protected string $safe_message = "Validation failed";
 
      public function __construct(
          string $message = '', 
@@ -51,11 +51,15 @@ class ValidationException extends FrameworkException {
          $output = $this->safe_message.": \n\n";
 
          foreach($errors as $field => $messages){
-             $output .= strtoupper($field) . ":\n";
+             $output .= strtoupper($field).":\n";
 
              foreach($messages as $message) {
                  $output .= "  • {$message}\n";
              }
+             
+             $value_provided = $this->input()[$field] ?? "";
+
+             $output .= "Value provided: {$value_provided}\n";
 
              $output .= "\n";
          }

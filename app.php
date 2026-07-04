@@ -141,12 +141,21 @@ final class App {
      public function is_stage(AppStage $stage): bool {
          return $this->stage === $stage;
      }
-     
-     public function run(): void {
+
+     private function run_request(){
          new Runtime()->handle(Request::init());
      }
 
-     public function run_cli($args){
+     private function run_cli($args){
          (new Manage($args))();
      }
+     
+     public function run($args = null) : void {
+         if(PHP_SAPI === 'cli'){
+             $this->run_cli($args);
+         }else{
+             $this->run_request();
+         }
+     }
+
 }

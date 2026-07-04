@@ -32,6 +32,11 @@ class SystemSchema extends Schema {
 		 	 'queue_jobs'        => Job::class,
 		 	 'queue_job_batches' => JobBatch::class
 		 ];
+
+		 $this->admin_models = [
+		 	 'platform_users',
+		 	 'tenants'
+		 ];
 	 }
 
 }

@@ -17,7 +17,7 @@ return [
       * 
       * This is important if you want a single signon across multiple sub domains
       * */
-      'cookie_domain' => '',
+      'cookie_domain' => null,
 
       /**
       * Session handler

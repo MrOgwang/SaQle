@@ -40,7 +40,8 @@ return [
          [
              'resolver' => 'user',
              'enabled'  => true,
-             'key'      => 'tenant_id'
+             'key'      => 'tenant_id',
+             'priority' => 1
          ],
 
          /**
@@ -49,7 +50,8 @@ return [
          [
              'resolver' => 'header',
              'enabled'  => true,
-             'key'      => 'X-Tenant'
+             'key'      => 'X-Tenant',
+             'priority' => 2
          ],
 
          /**
@@ -60,18 +62,8 @@ return [
          [
              'resolver' => 'subdomain',
              'enabled'  => true,
-             'key'      => ''
-         ],
-
-         /**
-          * Get tenant id from url domain
-          * 
-          * Example: yoursite.com
-          * */
-         [
-             'resolver' => 'domain',
-             'enabled'  => true,
-             'key'      => ''
+             'key'      => '',
+             'priority' => 4
          ],
 
          /**
@@ -82,7 +74,8 @@ return [
          [
              'resolver' => 'path',
              'enabled'  => true,
-             'key'      => 'tenant'
+             'key'      => 'tenant',
+             'priority' => 3
          ]
      ],
 

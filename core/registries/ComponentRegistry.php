@@ -191,9 +191,10 @@ final class ComponentRegistry {
 
          $reflection = new ReflectionClass($class_name);
          $public_methods = array_filter($reflection->getMethods(ReflectionMethod::IS_PUBLIC), fn($m) => !$m->isConstructor() && !$m->isStatic());
+         $public_methods = array_values($public_methods);
 
          //Rule 1: single public method
-         if (count($public_methods) === 1) {
+         if (count($public_methods) === 1){
              return $public_methods[0]->getName();
          }
 

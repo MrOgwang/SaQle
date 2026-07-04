@@ -13,8 +13,14 @@ use SaQle\Build\Utils\MigrationUtils;
 use SaQle\Core\Files\{TempFileRef, UploadedFile, StoredFileFactory};
 use SaQle\Core\Files\Storage\TempStorage;
 use SaQle\Core\Assert\Assert;
-use SaQle\Core\Ui\Forms\Form;
-use SaQle\Core\Support\Db;
+use SaQle\Core\Ui\Forms\{
+     Form,
+     FormFieldsCompiler
+};
+use SaQle\Core\Support\{
+     Db, 
+     AttributeResolver
+};
 use Exception;
 use JsonSerializable;
 use InvalidArgumentException;
@@ -153,6 +159,8 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
          $table->clean_model_fields();
          $table->set_unique_constraints();
          $table->set_fk_constraints();
+         $table->set_presenters($this->extract_presenters());
+         $table->set_forms($this->extract_forms());
      }
 
      public function set_table_and_connection(?string $connection = null){
@@ -471,8 +479,109 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
 	 	 foreach($this->data as $key => $val){
 	 	 	 $formatted_data[$key] = $this->$key;
 	 	 }
+
          return $formatted_data;
      }
+
+     private function extract_presenters(){
+
+         $attr_resolver = new AttributeResolver();
+         $presenter_methods = $attr_resolver->get_methods_with_attribute($this::class, Presenter::class);
+
+         $presenters = [];
+
+         foreach($presenter_methods as $method => $presenter){
+             $presenters[$presenter->name ?? $method] = $this->$method();
+         }
+
+         return $presenters;
+     }
+
+     private function extract_forms(){
+
+         $model_class = $this::class;
+
+         $attr_resolver = new AttributeResolver();
+         $form_methods = $attr_resolver->get_methods_with_attribute($model_class, NamedForm::class);
+
+         $forms = [];
+         $form_fields = FormFieldsCompiler::compile($model_class);
+
+         foreach($form_methods as $method => $named_form){
+
+             $form_name = $named_form->name ?? $method;
+
+             $form = $this->$method(new Form($form_name, $model_class, $form_fields));
+             $form->remove_fields_register();
+
+             $forms[$form_name] = $form;
+         }
+
+         $form_def = new FormDefinition($form_fields, $forms);
+
+         return $form_def;
+     }
+
+     private function present_field(string $presenter, string $field){
+         $presenters = $this->table->get_presenters();
+
+         if(!array_key_exists($presenter, $presenters)){
+             return $this->$field;
+         }
+
+         $presenter = $presenters[$presenter];
+
+         if(!array_key_exists($field, $presenter)){
+             throw new Exception("The field: {$field} doesn't exist in the presenter: {$presenter}");
+         }
+
+         $field_presenter = $presenter[$field];
+
+         if(is_null($field_presenter)){
+             return $this->$field;
+         }
+
+         if(is_callable($field_presenter)){
+             return $field_presenter((Object)$this->data);
+         }
+
+         return $field_presenter;
+     }
+
+     private function present_model(string $presenter){
+         $presenters = $this->table->get_presenters();
+
+         if(!array_key_exists($presenter, $presenters)){
+             return $this;
+         }
+
+         $presenter = $presenters[$presenter];
+
+         $data = [];
+
+         foreach($presenter as $field => $field_presenter){
+             if(is_null($field_presenter)){
+                 $data[$field] = $this->$field;
+             }elseif(is_callable($field_presenter)){
+                 $data[$field] = $field_presenter((Object)$this->data);
+             }else{
+                $data[$field] = $field_presenter;
+             }
+         }
+
+         $this->data = $data;
+
+         return $this;
+     }
+
+     public function present(string $presenter, ?string $field = null){
+
+         if($field){
+             return $this->present_field($presenter, $field);
+         }
+
+         return $this->present_model($presenter);
+     } 
 
      public function __toString() : string {
          
@@ -976,6 +1085,10 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
 	 	 return $update_columns;
 	 }
 
+     public static function get_forms_definition() : FormDefinition {
+         return self::get_model_setup()->get_forms();
+     }
+
      /**
       * Form methods
       * 
@@ -983,15 +1096,19 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
       * automatic forms for create/update operations
       * 
       * */
+     #[NamedForm('default_create')]
      public function create_form(Form $form) : Form {
          $form->for_create();
          $form->auto_wire();
+         $form->fill_all();
          return $form;
      }
 
+     #[NamedForm('default_update')]
      public function update_form(Form $form) : Form {
          $form->for_update();
          $form->auto_wire();
+         $form->fill_all();
          return $form;
      }
 }

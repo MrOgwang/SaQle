@@ -17,7 +17,7 @@ use RuntimeException;
 
 final class FormFieldsCompiler {
 
-     private static function derive_label(string $name): string {
+     public static function derive_label(string $name): string {
         // Replace snake_case underscores with spaces
         $label = str_replace('_', ' ', $name);
 
@@ -53,7 +53,24 @@ final class FormFieldsCompiler {
          return $field instanceof VirtualField || $field instanceof Pk || $field instanceof ManyToMany || $field instanceof OneToMany;
      }
 
-     public static function compile(string $model_class, ?FormRuntimeContext $context = null) : array {
+     private static function get_field_classes(array $attrs) : string {
+         return match($attrs['type']){
+             'select' => 'auto_form_select',
+             default  => ''
+         };
+     }
+
+     private static function get_field_data(array $attrs) : array {
+
+         $data = ['field' => $attrs['name']];
+
+         return match($attrs['type']){
+             'select' => array_merge($data, []),
+             default  => []
+         };
+     }
+
+     public static function compile(string $model_class) : array {
 
          $model_instance = $model_class::make();
          $model_fields = $model_instance->get_fields();
@@ -72,38 +89,35 @@ final class FormFieldsCompiler {
 
              $field_attrs = array_filter($field->get_form_field_attrs(), fn($v) => $v !== null);
 
+             if(!$field_attrs){
+                continue;
+             }
+             
              $field_attrs['id'] = $field_attrs['name'];
              $field_attrs['label'] = self::derive_label($field_attrs['name']);
              $field_attrs['helper_text'] = $field_attrs['description'] ?? '';
-             $field_attrs['value'] = $context?->input[$name] ?? '';
-             $field_attrs['errors'] = $context?->errors[$name] ?? [];
+             $field_attrs['value'] = '';
+             $field_attrs['errors'] = [];
 
+             $ui_type = $field instanceof ImageField ? 'image' : 'normal';
+
+             $source = null;
              if($field instanceof OneToOne){
-                 $related_model = $field->get_related_model();
-                 $name_property = $related_model::get_name_property() ?? [];
-                 if($name_property){
-                     $name_property = is_array($name_property) ? $name_property : [$name_property];
-                 }
-                 $pk_name = $related_model::get_pk_name();
+                 $source = [
+                     'model'         => $model_class,
+                     'related_model' => $field->get_related_model()
+                 ];
 
-                 $select_columns = [$pk_name];
-                 if($name_property){
-                     $select_columns = array_merge($select_columns, $name_property);
-                 }
-
-                 $data = $related_model::get()->select($select_columns)->all();
-                 $choices = [];
-
-                 foreach($data as $d){
-                     $choices[$d->$pk_name] = $name_property ? (string)$d : $d->$pk_name;
-                 }
-
-                 $field_attrs['choices'] = $choices;
+                 $field_attrs['choices'] = [];
                  $field_attrs['type'] = "select";
              }
 
-             $ui_type = $field instanceof ImageField ? 'image' : 'normal';
-             $fields[$name] = new FormField($field_attrs, $ui_type);
+             $form_field = new FormField($field_attrs, $ui_type);
+             $form_field->class(self::get_field_classes($field_attrs));
+             $form_field->data(self::get_field_data($field_attrs));
+             $form_field->source($source);
+
+             $fields[$name] = $form_field;
          }
 
          return $fields;

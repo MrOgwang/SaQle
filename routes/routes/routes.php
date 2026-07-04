@@ -19,6 +19,6 @@ Router::match(['GET', 'POST'], "/saqle/signin/", 'saqle.saqlesignin')->name(['sa
 
 Router::get("/saqle/dashboard/", 'saqle.dashboard')->compose_with(['saqle.app'])->name('saqle.admin.dashboard');
 
-Router::get("/administrator/dashboard/", 'saqle.dashboard')->compose_with(['saqle.app'])->name('tenant.admin.dashboard');
+Router::get("/:tenant/_admin/dashboard/", 'saqle.dashboard')->compose_with(['saqle.app'])->name('tenant.admin.dashboard');
 
 ?>

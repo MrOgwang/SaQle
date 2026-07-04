@@ -2,8 +2,13 @@
      <div class='appleft'>
          <div class='flex v_center navheader'>
              <div>
+                 @if(auth_context() === 'saqle')
+                 <h2>{{ config('app.name') }}</h2>
+                 <p>System Panel</p>
+                 @else
                  <h2>{{ config('app.name') }}</h2>
                  <p>Admin Panel</p>
+                 @endif
              </div>
          </div>
          <a href='#' class="dashboard flex v_center">

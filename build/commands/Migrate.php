@@ -354,8 +354,8 @@ class Migrate {
          foreach($migration_file_names as $migration_file){
              $this->process_migration_file($type, $migration_file, $tenants, $tenancy_enabled);
          }
-
-         if($type === 'system'){
+ 
+         if($type === 'system' && !$tenancy_enabled){
              $latest_tenant = $tenant_model::get()
              ->order(fields: ['created_at'], direction: 'DESC')
              ->limit(1)

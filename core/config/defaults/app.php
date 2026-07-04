@@ -11,8 +11,25 @@ return [
      //whether to display startup errors
 	 'display_startup_errors' => 0,
 
-     //the root domain
- 	 'root_domain' => "",
+     //domain configurations
+     'domain' => [
+         /**
+          * The canonical/root domain of the application.
+          * Used for URL genetaion and redirects
+          * */
+         'root' => '',
+
+         /**
+          * Domains that represent the central application
+          * */
+         'hosts' => [],
+
+         /**
+          * Hostnames that should never be interpreted
+          * as tenants
+          * */
+         'reserved_subdomains' => ['www']
+     ],
 
  	 /**
       * List of all the modules in the project. 

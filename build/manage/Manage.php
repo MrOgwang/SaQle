@@ -9,6 +9,7 @@ use SaQle\Build\Commands\{MakeMigrations, Migrate, MakeCollections, MakeModels,
 use SaQle\Build\Utils\MigrationUtils;
 use Exception;
 use SaQle\Core\Support\ActorContext;
+use SaQle\Auth\Models\CliUser;
 
 class Manage {
 	 private string $command      = '';
@@ -95,10 +96,7 @@ class Manage {
          date_default_timezone_set(config('app.timezone'));
 
 	     //Default CLI actor
-	     ActorContext::set((object)[
-	         'user_id' => null,
-	         'first_name' => 'System'
-	     ]);
+	     ActorContext::set_actor(new CliUser);
 	 }
 
 	 public function __invoke(){

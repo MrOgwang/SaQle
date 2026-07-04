@@ -95,4 +95,30 @@ class AttributeResolver {
 
          return array_map(fn($attr) => $attr->newInstance(), $ref->getAttributes());
      }
+
+     public function get_methods_with_attribute(
+         string $class,
+         string $attribute_class,
+         bool   $multiple = false
+     ): array {
+
+         $result = [];
+
+         $reflection = new ReflectionClass($class);
+
+         foreach($reflection->getMethods() as $method){
+             $attributes = $method->getAttributes($attribute_class);
+
+             if(!$attributes){
+                 continue;
+             }
+
+             $result[$method->getName()] = !$multiple ? $attributes[0]->newInstance() : array_map(
+                 fn($attribute) => $attribute->newInstance(),
+                 $attributes
+             );
+         }
+
+         return $result;
+     }
 }

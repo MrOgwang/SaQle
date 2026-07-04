@@ -25,7 +25,6 @@ class BaseUser extends Model implements UserInterface {
 	 	 $table->primary_key('user_id');
 
 		 $table->fields([ 
-		 	 'tenant_id'    => Table::char_field()->nullable(),
 		     'first_name'   => Table::char_field()->required(),
 		     'last_name'    => Table::char_field()->required(),
 		     'gender'       => Table::choice_field([

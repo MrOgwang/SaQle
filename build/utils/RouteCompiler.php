@@ -63,8 +63,16 @@ final class RouteCompiler {
 
      }
 
-     private static function register_resource_routes($type, $model_label, $model_class){
-         $route_prifix = $type === 'system' ? 'saqle' : 'admin';
+     private static function register_resource_routes($type, $model_label, $model_class, $multitenancy){
+         
+         $route_prifix = "";
+
+         if($type === 'system'){
+             $route_prifix = '/saqle';
+         }else{
+             $route_prifix = $multitenancy ? '/:tenant' : "";
+         }
+
          $permissions = $type === 'system' ? 'authenticated && super-user' : 'authenticated && super-admin';
          $permissions = '';
          
@@ -72,7 +80,7 @@ final class RouteCompiler {
          $list_resource_route = new RouteAttribute( 
              name: $model_label.'.list',
              method: 'get', 
-             url: '/'.$route_prifix.'/_auto/'.$model_label, 
+             url: $route_prifix.'/_admin/'.$model_label, 
              guards: $permissions,
              layout: ['saqle.app'],
              model: $model_class
@@ -84,10 +92,10 @@ final class RouteCompiler {
          $create_form_route = new RouteAttribute(
              name: $model_label.'.create.form',
              method: 'get', 
-             url: '/'.$route_prifix.'/_auto/'.$model_label.'/create', 
+             url: $route_prifix.'/_admin/'.$model_label.'/create', 
              guards: $permissions,
              layout: ['saqle.app'],
-             model: $model_class."@create_form"
+             model: $model_class
          );
          $create_form_route->set_target("saqle.autoresource@show_create_form");
          $create_form_route->initialize();
@@ -96,10 +104,10 @@ final class RouteCompiler {
          $create_resource_route = new RouteAttribute(
              name: $model_label.'.create',
              method: 'post', 
-             url: '/'.$route_prifix.'/_auto/'.$model_label.'/create',
+             url: $route_prifix.'/_admin/'.$model_label.'/create',
              guards: $permissions,
              layout: ['saqle.app'],
-             model: $model_class."@create_form"
+             model: $model_class
          );
          $create_resource_route->set_target("saqle.autoresource@create_resource");
          $create_resource_route->initialize();
@@ -108,7 +116,7 @@ final class RouteCompiler {
          $show_resource_route = new RouteAttribute(
              name: $model_label.'.view',
              method: 'get', 
-             url: '/'.$route_prifix.'/_auto/'.$model_label.'/:id', 
+             url: $route_prifix.'/_admin/'.$model_label.'/:id', 
              guards: $permissions,
              layout: ['saqle.app'],
              model: $model_class
@@ -120,10 +128,10 @@ final class RouteCompiler {
          $edit_form_route = new RouteAttribute(
              name: $model_label.'.edit.form',
              method: 'get', 
-             url: '/'.$route_prifix.'/_auto/'.$model_label.'/:id/edit', 
+             url: $route_prifix.'/_admin/'.$model_label.'/:id/edit', 
              guards: $permissions,
              layout: ['saqle.app'],
-             model: $model_class."@update_form"
+             model: $model_class
          );
          $edit_form_route->set_target("saqle.autoresource@show_edit_form");
          $edit_form_route->initialize();
@@ -132,10 +140,10 @@ final class RouteCompiler {
          $edit_resource_route = new RouteAttribute(
              name: $model_label.'.edit',
              method: 'patch', 
-             url: '/'.$route_prifix.'/_auto/'.$model_label.'/:id/edit', 
+             url: $route_prifix.'/_admin/'.$model_label.'/:id/edit', 
              guards: $permissions,
              layout: ['saqle.app'],
-             model: $model_class."@update_form"
+             model: $model_class
          );
          $edit_resource_route->set_target("saqle.autoresource@edit_resource");
          $edit_resource_route->initialize();
@@ -144,7 +152,7 @@ final class RouteCompiler {
          $del_resource_route = new RouteAttribute(
              name: $model_label.'.delete',
              method: 'delete', 
-             url: '/'.$route_prifix.'/_auto/'.$model_label.'/:id', 
+             url: $route_prifix.'/_admin/'.$model_label.'/:id', 
              guards: $permissions,
              layout: ['saqle.app'],
              model: $model_class
@@ -155,23 +163,24 @@ final class RouteCompiler {
 
      private static function load_resource_routes(){
          
+         $multitenancy = (bool)config('tenancy.enabled');
          $system_schema = new SystemSchema();
-         $system_models = $system_schema->get_defined_models();
+         $system_models = $system_schema->get_admin_models();
 
          foreach($system_models as $model_label => $model_class){
-             self::register_resource_routes('system', $model_label, $model_class);
+             self::register_resource_routes('system', $model_label, $model_class, $multitenancy);
          }
 
-         /*/get developer defined db schemas
+         //get developer defined db schemas
          $db_schemas = Db::get_developer_schemas();
 
          foreach($db_schemas as $schema_name => $schema_class){
-             $models = new $schema_class()->get_defined_models();
-
+             $models = new $schema_class()->get_admin_models();
+             
              foreach($models as $model_label => $model_class){
-                 self::register_resource_routes($model_label, $model_class);
+                 self::register_resource_routes('tenant', $model_label, $model_class, $multitenancy);
              }
-         }*/
+         }
      }
 
      private static function load_routes($files){

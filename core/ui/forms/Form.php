@@ -2,28 +2,22 @@
 declare(strict_types=1);
 
 namespace SaQle\Core\Ui\Forms;
-
-use SaQle\Auth\Models\GuestUser;
-use SaQle\Orm\Entities\Model\Schema\Model;
-use SaQle\Core\Registries\FormBlueprintRegistry;
-use SaQle\Core\Assert\Assert;
+ 
+use SaQle\Core\Registries\ModelRegistry;
 
 final class Form {
+
+     //form name as declared in the model
+     private string $name;
 
      //form mode: create or update
      private ?string $mode = null;
 
      //the runtime context for form
-     private ?FormRuntimeContext $context = null;
+     private ?FormContext $context = null;
 
      //form description
      private string $_description = "";
-
-     //the name of the form as used in the ui:form tag
-     private string $_name = "";
-
-     //the name of the model associated with form.
-     private ?string $model_name = null;
 
      //the class of the model associated with form
      private ?string $model_class = null;
@@ -32,46 +26,15 @@ final class Form {
      private bool $wire = false;
 
      //all form fields. This to be used internally
-     private array $all_fields = [];
+     private array $fields_register = [];
 
      //final fields to be shown on form
      private array $fields = [];
-     
-     /**
-      * The name of the method on the model class
-      * that will be called to customize this form
-      * */
-     private ?string $_customizer = null;
 
-
-     public function __construct(string $model_class, ?string $model_name = null){
-         $this->model($model_name, $model_class);
-         $this->bind(FormRuntimeContext::from_session());
-         $this->all_fields = FormFieldsCompiler::compile($this->model_class, $this->context);
-         $this->fill_all();
-     }
-
-     //create new form apis
-     public static function make_from_model(
-         string $model_class, 
-         string $method, 
-         ?string $model_name = null,
-         ?string $form_name = null
-     ) : static {
-
-         $form = new static($model_class, $model_name);
-         $form->name($form_name);
-         $form->customizer($method);
-        
-         $model_instance = $model_class::make();
-         $form = $model_instance->$method($form);
-
-         return $form;
-     }
-
-     public static function make_from_name(string $form_name) : static {
-         [$model_name, $model_class, $method] = FormModelResolver::resolve($form_name);
-         return self::make_from_model($model_class, $method, $model_name, $form_name);
+     public function __construct(string $name, string $model_class, array $form_fields){
+         $this->name = $name;
+         $this->model_class = $model_class;
+         $this->fields_register = $form_fields;
      }
 
      //custom form modes
@@ -100,7 +63,7 @@ final class Form {
      }
 
      //runtime context api
-     public function bind(FormRuntimeContext $context) {
+     public function bind(FormContext $context) {
          $this->context = $context;
 
          return $this;
@@ -121,31 +84,12 @@ final class Form {
          return $this->_description;
      }
 
-     //form name
-     public function name(string $name){
-         $this->_name = $name;
-
-         return $this;
-     }
-
-     public function get_name() : string {
-         return $this->_name;
-     }
-
-     //form model
-     public function model(string $name, string $class){
-         $this->model_name = $name;
-         $this->model_class = $class;
-
-         return $this;
+     public function get_model() : string {
+         return $this->model_class;
      }
 
      public function get_model_name() : string {
-         return $this->model_name;
-     }
-
-     public function get_model_class() : string {
-         return $this->model_class;
+         return ModelRegistry::get_model_name($this->model_class);
      }
 
      //form auto wiring
@@ -164,11 +108,29 @@ final class Form {
          return $this->fields;
      }
 
+     public function remove_fields_register(){
+         $this->fields_register = [];
+     }
+
+     private function decorate_field(FormField $field) : FormField {
+         $new_field = unserialize(serialize($field));
+
+         $new_field->data('fname', $this->name);
+         $new_field->data('mode', $this->mode);
+         $new_field->data('model', ModelRegistry::get_long_model_name($this->model_class));
+         
+         if($new_field->is_relation()){
+             $new_field->class('opts_deferred');
+         }  
+
+         return $new_field;
+     }
+
      public function fill_all(){
          $this->fields = [];
 
-         foreach($this->all_fields as $field_name => $field){
-             $this->fields[$field_name] = $field;
+         foreach($this->fields_register as $field_name => $field){
+             $this->fields[$field_name] = $this->decorate_field($field);
          }
 
          return $this;
@@ -179,8 +141,9 @@ final class Form {
          $fillable_fields = [];
 
          foreach($fields as $field_name){
-             if(isset($this->all_fields[$field_name])){
-                 $fillable_fields[$field_name] = $this->all_fields[$field_name];
+             if(isset($this->fields_register[$field_name])){
+                 $field = $this->decorate_field($this->fields_register[$field_name]);
+                 $fillable_fields[$field_name] = $field;
              }
          }
 
@@ -193,9 +156,9 @@ final class Form {
 
          $fillable_fields = [];
 
-         foreach($this->all_fields as $field_name => $field){
+         foreach($this->fields_register as $field_name => $field){
              if(!in_array($field_name, $fields)){
-                 $fillable_fields[$field_name] = $field;
+                 $fillable_fields[$field_name] = $this->decorate_field($field);
              }
          }
 
@@ -204,20 +167,9 @@ final class Form {
          return $this;
      }
 
-     //the method name that customizes the form
-     public function customizer(string $customizer){
-         $this->_customizer = $customizer;
-
-         return $this;
-     }
-
-     public function get_customizer() : string {
-         return $this->_customizer;
-     }
-
      //customize form fields
      public function field(string $name){
-         return $this->fields[$name];
+         return $this->fields[$name] ?? null;
      }
 
 }

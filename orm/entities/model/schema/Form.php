@@ -19,9 +19,6 @@
 namespace SaQle\Orm\Entities\Model\Schema;
 
 final class Form {
-
-     
-	 
 	 /**
 	  * The fields of the model whose values will come from form data
 	  * 
@@ -77,9 +74,4 @@ final class Form {
 	 * This list tells the edit controler which fields are optional to update
 	 * */
 	 public $optional_update = [];
-
-
-
-
-	
 }

@@ -18,7 +18,7 @@ namespace SaQle\Http\Request;
 
 use SaQle\Http\Request\Data\{Session, Data};
 use SaQle\Routes\MatchedRoute;
-use SaQle\Auth\Models\BaseUser;
+use SaQle\Auth\Models\{BaseUser, BaseTenant};
 use SaQle\Http\Request\RequestScope;
 use SaQle\Http\Response\ResponseType;
 use Closure;
@@ -98,6 +98,13 @@ class Request {
      public ?BaseUser $user {
          get {
             return $this->session->get('user', null);
+         }
+     }
+
+     //the current session tenant
+     public ?BaseTenant $tenant {
+         get {
+            return $this->session->get(config('session_tenant_key'), null);
          }
      }
 

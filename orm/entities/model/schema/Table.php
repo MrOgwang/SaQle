@@ -192,6 +192,33 @@ final class Table {
 
      private array $fk_constraints = [];
 
+     /**
+      * Presenters is a list of field names and their render callbacks.
+      * 
+      * Presenters are basically used to return model data in
+      * different formats depending on whatever the developer desires.
+      * */
+     private array $presenters = [];
+
+     //table form definitions
+     private ?FormDefinition $forms = null;
+
+     public function set_presenters(array $presenters){
+         $this->presenters = $presenters;
+     }
+
+     public function get_presenters() : array {
+         return $this->presenters;
+     }
+
+     public function set_forms(FormDefinition $forms){
+         $this->forms = $forms;
+     }
+
+     public function get_forms() : FormDefinition {
+         return $this->forms;
+     }
+
      //add or remove creator and modifier fields depending on with_user_audit setting
      private function get_user_audit_fields(bool $switch = true) : array {
          if($this->_with_user_audit){

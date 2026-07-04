@@ -159,9 +159,8 @@ class Db {
          $schemas = [];
 
          foreach(config('db.connections') as $connection_name => $connection_config){
-
              foreach($connection_config['databases'] as $db_name => $db_schema){
-                 if(!$db_schema instanceof SystemSchema){
+                 if(!is_a($db_schema, SystemSchema::class, true)){
                      $schemas[$db_name] = $db_schema;
                  }
              }

@@ -16,7 +16,7 @@ class TenantIDResolverFactory {
      private const MAP = [
          'user'      => AuthUserTenantIDResolver::class,
          'subdomain' => SubdomainTenantIDResolver::class,
-         'domain'    => DomainTenantIDResolver::class,
+         //'domain'    => DomainTenantIDResolver::class,
          'header'    => HeaderTenantIDResolver::class,
          'path'      => PathTenantIDResolver::class,
      ];
@@ -24,6 +24,10 @@ class TenantIDResolverFactory {
      public static function make() : array {
 
          $registered_resolvers = config('tenancy.resolvers', []);
+
+         usort($registered_resolvers, function ($a, $b){
+             return $a['priority'] <=> $b['priority'];
+         });
  
          if(!$registered_resolvers){
              return [new AuthUserTenantIDResolver(key: 'tenant_id')];

@@ -10,7 +10,7 @@ use SaQle\Orm\Entities\Field\Types\{
 use SaQle\Build\Utils\MakeUserUtils;
 use Exception;
 
-class MakeSuperuser {
+class MakeUser {
 
      use MakeUserUtils;
 

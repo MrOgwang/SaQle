@@ -36,7 +36,7 @@ class AuthenticationMiddleware implements MiddlewareInterface {
 
          if($user){
              $request->session->set('user', $user, true);
-             ActorContext::set($user);
+             ActorContext::set_actor($user);
          }
 
          return null;

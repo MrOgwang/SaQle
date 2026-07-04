@@ -130,11 +130,13 @@ class TemplateCompiler {
      }
 
      private static function compile_directives($template){
+         
          $output = '';
          $length = strlen($template);
 
          for($i = 0; $i < $length; $i++){
              if($template[$i] === '@'){
+
                  if(substr($template, $i, 4) === '@if('){
                      $parsed = self::parse_parentheses($template, $i + 3);
 
@@ -180,6 +182,16 @@ class TemplateCompiler {
                  if(substr($template, $i, 11) === '@endforeach'){
                      $output .= "<?php endforeach; ?>";
                      $i += 10;
+                     continue;
+                 }
+
+                 if(substr($template, $i, 5) === '@let('){
+                     $parsed = self::parse_parentheses($template, $i + 4);
+
+                     $expr = $parsed['expression'];
+                     $i = $parsed['end'];
+
+                     $output .= self::compile_let($expr);
                      continue;
                  }
              }
@@ -382,5 +394,109 @@ class TemplateCompiler {
          }
 
          return $value;
+     }
+
+     private static function split_assignments(string $expression): array {
+         $parts = [];
+         $current = '';
+
+         $paren = 0;
+         $bracket = 0;
+         $brace = 0;
+
+         $quote = null;
+         $escaped = false;
+
+         $length = strlen($expression);
+
+         for ($i = 0; $i < $length; $i++) {
+             $ch = $expression[$i];
+
+             if ($quote !== null) {
+                $current .= $ch;
+
+                if ($escaped) {
+                    $escaped = false;
+                    continue;
+                }
+
+                if ($ch === '\\') {
+                    $escaped = true;
+                    continue;
+                }
+
+                if ($ch === $quote) {
+                    $quote = null;
+                }
+
+                continue;
+            }
+
+            if ($ch === '"' || $ch === "'") {
+                $quote = $ch;
+                $current .= $ch;
+                continue;
+            }
+
+            switch ($ch) {
+                case '(':
+                    $paren++;
+                    break;
+
+                case ')':
+                    $paren--;
+                    break;
+
+                case '[':
+                    $bracket++;
+                    break;
+
+                case ']':
+                    $bracket--;
+                    break;
+
+                case '{':
+                    $brace++;
+                    break;
+
+                case '}':
+                    $brace--;
+                    break;
+
+                case ',':
+                    if (
+                        $paren === 0 &&
+                        $bracket === 0 &&
+                        $brace === 0
+                    ) {
+                        $parts[] = trim($current);
+                        $current = '';
+                        continue 2;
+                    }
+                    break;
+            }
+
+            $current .= $ch;
+         }
+
+         if (trim($current) !== '') {
+            $parts[] = trim($current);
+         }
+
+         return $parts;
+     }
+
+     private static function compile_let(string $expression): string {
+         $assignments = self::split_assignments($expression);
+         
+         $php = "<?php ";
+
+         foreach($assignments as $assignment){
+             $php .= trim($assignment) . "; ";
+         }
+
+         $php .= "?>";
+
+         return $php;
      }
 }

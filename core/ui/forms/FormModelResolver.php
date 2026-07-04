@@ -20,9 +20,9 @@ class FormModelResolver {
 	 	 $parts = explode('.', $form_name);
 
          if(count($parts) === 3){
-             [$module, $model, $method] = $parts;
+             [$module, $model, $name] = $parts;
          }elseif(count($parts) === 2){
-             [$model, $method] = $parts;
+             [$model, $name] = $parts;
              $module = "";
          }else{
              throw new RuntimeException("Invalid form name format.");
@@ -36,10 +36,6 @@ class FormModelResolver {
              throw new RuntimeException("No model class found in file.");
          }
 
-         if(!method_exists($model_class, $method)){
-             throw new RuntimeException("Method '{$method}' not found in model '{$model_class}'.");
-         }
-
-         return [$model, $model_class, $method];
+         return [$model, $model_class, $name];
 	 }
 }

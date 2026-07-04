@@ -16,6 +16,10 @@ class DefaultTenantProvider implements TenantProviderInterface {
      }
 
      public function find(string|int $id): ?TenantInterface {
-         return $this->model_class::get()->where('tenant_id', $id)->first_or_null();
+         return $this->model_class::get()
+         ->where('tenant_id', $id)
+         ->or_where('tenant_name', $id)
+         ->or_where('slug', $id)
+         ->first_or_null();
      }
 }

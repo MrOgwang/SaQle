@@ -121,7 +121,9 @@ final class Config {
              //Default framework database
              'framework_database' => '${app.name}_system',
 
-             'system_url_prefix' => '/saqle/'
+             'system_url_prefix' => '/saqle/',
+
+             'session_tenant_key' => '__tenant'
          ];
      }
 }

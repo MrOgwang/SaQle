@@ -55,7 +55,7 @@
 	 </div>
 	 <div class='datapanel-body'>
 	 	 <!-------------->
-	 	  <table id='table-{{ str_replace(" ", "_", $current_resource->singular_label) }}'>
+	 	  <table id='table-{{ str_replace(" ", "_", $current_resource->singular_label ?? "") }}'>
  	 	 	 <thead>
  	 	 	 	<tr>
  	 	 	 		 <th><span class='flex center'><i class="fa-solid fa-grip-vertical"></i></span></th>
@@ -66,7 +66,7 @@
 	 	 	 	 		 	 <span title='Sort By {!! $column->label !!}' 
 	 	 	 	 		 	 	data-column="{!! $column->index !!}" 
 	 	 	 	 		 	 	data-order="asc" 
-	 	 	 	 		 	 	data-table='table-{{ str_replace(" ", "_", $current_resource->singular_label) }}'
+	 	 	 	 		 	 	data-table='table-{{ str_replace(" ", "_", $current_resource->singular_label ?? "") }}'
 	 	 	 	 		 	 	class="sort-but flex center icon">
 						         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 20 20">
 								    <line x1="8" y1="4" x2="8" y2="20"/>
@@ -86,17 +86,35 @@
  	 	 	 <tbody>
  	 	 	 	 <!--the table rows go here-->
  	 	 	 	 @foreach($panel->data as $row)
+ 	 	 	 	 @let(
+ 	 	 	 	     $frow = $row->present('admin'),
+
+ 	 	 	 	     $edit_form_route_name = strtolower($current_resource?->plural_label).'.edit.form',
+                     $edit_form_url = $auth_context === 'saqle' ? 
+                         route($edit_form_route_name, ['id' => $row->{$current_resource->pk_column}]) : 
+                         route($edit_form_route_name, ['tenant' => $tenant_slug, 'id' => $row->{$current_resource->pk_column}]),
+
+                     $view_route_name = strtolower($current_resource?->plural_label).'.view',
+                     $view_url = $auth_context === 'saqle' ? 
+                         route($view_route_name, ['id' => $row->{$current_resource->pk_column}]) : 
+                         route($view_route_name, ['tenant' => $tenant_slug, 'id' => $row->{$current_resource->pk_column}]),
+
+                     $del_route_name = strtolower($current_resource?->plural_label).'.delete',
+                     $del_url = $auth_context === 'saqle' ? 
+                         route($del_route_name, ['id' => $row->{$current_resource->pk_column}]) : 
+                         route($del_route_name, ['tenant' => $tenant_slug, 'id' => $row->{$current_resource->pk_column}])
+ 	 	 	 	 )
  	 	 	 	 <tr>
  	 	 	 	 	 <td><span class='flex center'><i class="fa-solid fa-grip-vertical"></i></span></td>
  	 	 	 	     @foreach($panel->columns as $column_name => $column)
  	 	 	 	     @if($panel->columns[$column_name]->type === 'image')
- 	 	 	 	     <td><img class='dp-image' src="{!! $row->$column_name !!}"/></td>
+ 	 	 	 	     <td><img class='dp-image' src="{!! $frow->$column_name !!}"/></td>
  	 	 	 	     @else
- 	 	 	 	     <td>{{ ucwords($row->$column_name ?? "") }}</td>
+ 	 	 	 	     <td>{!! ucwords($frow->$column_name ?? "") !!}</td>
  	 	 	 	     @endif
- 	 	 	 	     @endforeach
+ 	 	 	 	     @endforeach 
  	 	 	 	     <td title='View'>
- 	 	 	 	     	<a href="{{ route(strtolower($current_resource->plural_label).'.view', ['id' => $row->{$current_resource->pk_column}]) }}" class='dp-action'>
+ 	 	 	 	     	<a href="{{ $view_url }}" class='dp-action'>
  	 	 	 	     		<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
 							    <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/>
 							    <circle cx="12" cy="12" r="3"/>
@@ -104,7 +122,7 @@
  	 	 	 	     	</a>
  	 	 	 	     </td>
  	 	 	 	     <td title='Edit'>
- 	 	 	 	     	 <a href="{{ route(strtolower($current_resource->plural_label).'.edit.form', ['id' => $row->{$current_resource->pk_column}]) }}" class='dp-action'>
+ 	 	 	 	     	 <a href="{{ $edit_form_url }}" class='dp-action'>
  	 	 	 	     		 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
 							    <path d="M12 20h9"/>
 							    <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/>
@@ -112,7 +130,7 @@
  	 	 	 	     	 </a>
  	 	 	 	     </td>
  	 	 	 	     <td title='Delete'>
- 	 	 	 	     	<form method='POST' action="{{ route(strtolower($current_resource->plural_label).'.delete', ['id' => $row->{$current_resource->pk_column}]) }}">
+ 	 	 	 	     	<form method='POST' action="{{ $del_url }}">
  	 	 	 	     		 <input type='hidden' name='_method' value='DELETE'/>
 	 	 	 	 	     	 <button type='submit' class='dp-action'>
 	 	 	 	 	     		 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">

@@ -1,24 +1,35 @@
-
  @if($form->is_for_create())
+ @let(
+     $create_route_name = strtolower($current_resource?->plural_label).'.create',
+     $create_url = $auth_context === 'saqle' ? 
+     route($create_route_name) : 
+     route($create_route_name, ['tenant' => $tenant_slug])
+ )
  <form 
      method='POST' 
-     action="{{ route(strtolower($current_resource->plural_label).'.create') }}" 
+     action="{{ $create_url }}" 
      enctype='multipart/form-data' 
      class='resourcelist'
  >
      <input type='hidden' name='_method' value='POST'/>
  @else
+ @let(
+     $edit_route_name = strtolower($current_resource?->plural_label).'.edit',
+     $edit_url = $auth_context === 'saqle' ? 
+     route($edit_route_name, ['id' => $object->{$current_resource->pk_column}]) : 
+     route($edit_route_name, ['tenant' => $tenant_slug, 'id' => $object->{$current_resource->pk_column}])
+ )
  <form 
      method='POST' 
-     action="{{ route(strtolower($current_resource->plural_label).'.edit', ['id' => $object->{$current_resource->pk_column}]) }}" enctype='multipart/form-data' 
+     action="{{ $edit_url }}" enctype='multipart/form-data' 
      class='resourcelist'
  >
      <input type='hidden' name='_method' value='PATCH'/>
-@endif
+ @endif
      {!! $csrf_token !!}
      <div class='resourcelist-header'>
          <div class='breadcramb'>
-             Resources > {{ ucwords($current_resource->plural_label) }} > {{ ucwords($form->get_mode() ) }}
+             Resources > {{ ucwords($current_resource?->plural_label) }} > {{ ucwords($form->get_mode() ) }}
          </div>
          <div class='title'>
              <div class='titleh'>
@@ -28,7 +39,7 @@
                  <button type="submit" class="btn-primary">
                      {{ ucwords($form->get_mode()) }}
                  </button>
-                 <a class='flex center form-action-btn btn-cancel' href="{{ route(strtolower($current_resource->plural_label).'.list') }}">Cancel</a>
+                 <a class='flex center form-action-btn btn-cancel' href="{{ $current_resource?->url }}">Cancel</a>
              </div>
          </div>
      </div>
