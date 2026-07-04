@@ -4,7 +4,7 @@ namespace SaQle\Build\Manage;
 use SaQle\Build\Commands\{MakeMigrations, Migrate, MakeCollections, MakeModels, 
 	MakeThroughs, SeedDatabase, ResetDatabase, MakeSuperuser, StartProject, 
 	StartApps, MakeResources, BuildProject, TestModel, RunCron, QueueCron,
-	MakeComponent, MakeUser
+	MakeComponent, MakeUser, Install
 };
 use SaQle\Build\Utils\MigrationUtils;
 use Exception;
@@ -35,7 +35,8 @@ class Manage {
 	 	 	'model:test'       => [],
 	 	 	'run:cron'         => [],
 	 	 	'queue:cron'       => [],
-	 	 	default            => throw new \Exception("Unknown command!")
+	 	 	'install'          => [],
+	 	 	default            => throw new Exception("Unknown command!")
 	 	 };
 	 	 $this->project_root = config('base_path');
 	 }
@@ -178,6 +179,9 @@ class Manage {
 			 break;
 			 case "queue:cron":
 			     QueueCron::execute();
+			 break;
+			 case "install":
+			     Install::execute();
 			 break;
 			 default:
 			     throw new Exception("Unknown command!");
