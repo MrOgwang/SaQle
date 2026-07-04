@@ -15,9 +15,16 @@ Some Features
 10. Out of the box image/video uploads, resizing and cropping
 11. Out of the box administrator panel
 
-Installation
+ ## Installation
 
-composer require mrogwang/saqle:dev-main
+ Install into an existing project via composer
+
+ `composer require mrogwang/saqle`
+
+ For a quick start, install the starter project via composer. Replace 'project_name' with the name
+ of your project
+
+ `composer create-project mrogwang/saqle-project project_name`
 
 Full Docs: [View Documentation](docs/index.md)
 
