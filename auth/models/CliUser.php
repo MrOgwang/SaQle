@@ -1,18 +1,25 @@
 <?php
 namespace SaQle\Auth\Models;
 
-use SaQle\Orm\Entities\Model\Interfaces\ISystemModel;
-use SaQle\Orm\Entities\Model\Schema\Table;
+use SaQle\Auth\Identity\User\Interfaces\UserInterface;
 
-class CliUser extends PlatformUser {
-	 public function __construct(){
-	 	 parent::__construct(...[
-	 	 	 'first_name'     => 'Cli',
-	 	 	 'last_name'      => 'System',
-	 	 	 'username'       => 'saqle-cli',
-	 	 	 'password'       => '$argon2id$v=19$m=65536,t=4,p=1$Q1JOM29MSEFRdHQzMm5KMg$+UVd357YI1B+9H/dezus0Un6e0Q1MIQapXzawQA45MI',
-	 	 	 'is_super_admin' => 1,
-	 	 	 'is_super_user'  => 1
-	 	 ]);
+class CliUser implements UserInterface {
+
+	 public function __construct(
+	 	 public readonly string $user_id = "saqle-cli-user",
+	 	 public readonly string $first_name = "Cli",
+	 	 public readonly string $last_name = "System"
+	 ){}
+
+	 public function check(string $action) : bool {
+	 	 return true;
+	 }
+
+	 public function authorize(string $action) : bool {
+	 	 return true;
+	 }
+
+	 public function is_guest() : bool {
+	 	 return false;
 	 }
 }
