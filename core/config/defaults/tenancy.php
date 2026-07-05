@@ -29,8 +29,6 @@ return [
       * Resolvers are executed in order. The first resolver that
       * returns a non-null value wins.
       * 
-      * path : the tenant id will be acquired from a url path parameter
-      * 
       * */
      'resolvers' => [
 

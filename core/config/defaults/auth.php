@@ -65,12 +65,20 @@ return [
 
      /**
       * ------------------------------------------------------
-      * 
+      * BACKEND CLASS
       * ------------------------------------------------------
+      * 
+      * This is the service class responsible for user authentication
       * */
-	 //This is the service class that is responsible for authentication.
  	 'backend_class' => AuthenticationService::class,
  	 
+ 	 /**
+ 	  * ------------------------------------------------------------
+ 	  * PASSWORDS
+ 	  * -----------------------------------------------------------
+ 	  * 
+ 	  * Preferred password hashing strategies for your app
+ 	  * */
  	 'passwords' => [
  	 	 'default' => [
  	 	 	 'algorithm' => PASSWORD_ARGON2ID,

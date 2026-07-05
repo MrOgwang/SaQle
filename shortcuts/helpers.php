@@ -148,7 +148,7 @@ if(!function_exists('str_limit')){
 }
 
 if(!function_exists('env')){
-     function env(string $key, mixed $default): mixed {
+     function env(string $key, mixed $default = null): mixed {
          $key = strtoupper($key);
          
          //Prefer $_ENV
