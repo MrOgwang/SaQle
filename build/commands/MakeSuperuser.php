@@ -17,7 +17,8 @@ class MakeSuperuser {
      
      public function execute(){
          try{
-             
+             Cli::print("Creating super user account!");
+
              $data = $this->collect_user_data(PlatformUser::class);
 
              PlatformUser::create($data)->now();

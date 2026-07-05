@@ -4,7 +4,7 @@ namespace SaQle\Build\Manage;
 use SaQle\Build\Commands\{MakeMigrations, Migrate, MakeCollections, MakeModels, 
 	MakeThroughs, SeedDatabase, ResetDatabase, MakeSuperuser, StartProject, 
 	StartApps, MakeResources, BuildProject, TestModel, RunCron, QueueCron,
-	MakeComponent, MakeUser, Install
+	MakeComponent, MakeUser, Install, MakeEnv
 };
 use SaQle\Build\Utils\MigrationUtils;
 use Exception;
@@ -182,6 +182,9 @@ class Manage {
 			 break;
 			 case "install":
 			     Install::execute();
+			 break;
+			 case "make:env":
+			     MakeEnv::execute();
 			 break;
 			 default:
 			     throw new Exception("Unknown command!");
