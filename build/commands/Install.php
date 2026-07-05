@@ -8,14 +8,14 @@ class Install {
 
          Cli::print("Installing SaQle...\n");
          
-         $this->copy_env();
+         self::copy_env();
 
          Cli::print("Installation complete!\n");
 
          return 0;
      }
 
-     private function copy_env(): void {
+     private static function copy_env(): void {
 
          Cli::print("Creating a development .env file\n");
 
@@ -23,12 +23,12 @@ class Install {
          $destination_dir = path_join([config('base_path'), 'env', 'development']);
          $destination_file = path_join([$destination_dir, '.env']);
 
-         if(file_exists($destination)){
+         if(file_exists($destination_file)){
              Cli::print(".env file already exists");
              return;
          }
 
-         if(!file_exists($origin)){
+         if(!file_exists($origin_file)){
              Cli::print(".env.example file not found!");
              return;
          }
