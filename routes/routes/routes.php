@@ -21,4 +21,6 @@ Router::get("/saqle/dashboard/", 'saqle.dashboard')->compose_with(['saqle.app'])
 
 Router::get("/:tenant/_admin/dashboard/", 'saqle.dashboard')->compose_with(['saqle.app'])->name('tenant.admin.dashboard');
 
+Router::get("/_admin/dashboard/", 'saqle.dashboard')->compose_with(['saqle.app'])->name('admin.dashboard');
+
 ?>

@@ -7,27 +7,46 @@ use SaQle\Routes\{
      Route, 
      Router
 };
-use SaQle\Core\Support\Route as RouteAttribute;
+use SaQle\Core\Support\{
+     Route as RouteAttribute,
+     Db
+};
 use SaQle\Core\Registries\RouteRegistry;
 use SaQle\Core\Registries\ComponentRegistry;
-use SaQle\Core\Support\Db;
 use ReflectionClass;
 use ReflectionMethod;
 use SaQle\Orm\Database\SystemSchema;
 
 final class RouteCompiler {
 
-     private static function filter_route_files($files){
-         return array_filter($files, function($file){
-             $filename = basename($file['path']);
-             return $file['dir'] === 'routes' && $file['type'] === 'modified' && $filename === 'routes.php';
-         });
-     }
+     private static function load_file_routes(){
+         /**
+          * Get all directories where routes live
+          * 
+          * 1. Top level routes in project root
+          * 2. Module level routes inside module directories
+          * 3. Saqle routes in saqle_routes_dirs config
+          * 4. Other routes as listed in extra_routes_dirs config
+          * 
+          * */
+         $routes_dirs = [path_join([config('base_path'), 'routes'])];
 
-     private static function load_file_routes(array $files){
-         foreach ($files as $file){
-             if(file_exists($file['path'])){
-                 require_once $file['path'];
+         foreach(config('app.modules') as $f){
+             $routes_dirs[] = path_join([config('base_path'), 'modules', $f, 'routes']);
+         }
+
+         foreach(config('app.extra_routes_dirs') as $d){
+             $routes_dirs[] = path_join([config('base_path'), $d]);
+         }
+
+         foreach(config('saqle_routes_dirs') as $d){
+             $routes_dirs[] = $d;
+         }
+
+         foreach($routes_dirs as $dir){
+             $file = path_join([$dir, "routes.php"]);
+             if(file_exists($file)){
+                 require_once $file;
              }
          }
      }
@@ -183,9 +202,9 @@ final class RouteCompiler {
          }
      }
 
-     private static function load_routes($files){
+     private static function load_routes(){
          //load routes from files
-         self::load_file_routes($files);
+         self::load_file_routes();
 
          //load routes defined in components via Route attribute
          self::load_component_routes();
@@ -194,20 +213,15 @@ final class RouteCompiler {
          self::load_resource_routes();
      }
 
-     public static function compile(array $modified_files){
-
-         //filter route files
-         $route_files = self::filter_route_files($modified_files);
-
+     public static function compile(){
          //load route files
-         self::load_routes($route_files);
+         self::load_routes();
         
          $routes = Router::all();
          
          $compiled = [];
 
-         foreach ($routes as $route){
-             //$compiled[] = self::compile_route($route);
+         foreach($routes as $route){
              $compiled[$route->key] = self::compile_route($route);
          }
 

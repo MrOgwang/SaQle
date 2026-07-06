@@ -100,7 +100,7 @@ final class Config {
 
              'saqle_components_dirs' => [realpath(__DIR__.'/../../components')],
 
-             'saqle_routes_dirs' => [realpath(__DIR__.'/../../routes')],
+             'saqle_routes_dirs' => [realpath(__DIR__.'/../../routes/routes')],
 
              'saqle_models_dirs' => [
                  realpath(__DIR__.'/../../core/migration/models'),
