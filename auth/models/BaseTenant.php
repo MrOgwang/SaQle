@@ -21,8 +21,10 @@ class BaseTenant extends Model implements ISystemModel, TenantInterface {
 		     	  return slugify($model->tenant_name);
 		     })->required(),
 		     'url' => Table::url_field()->compute(function($model){
-		     	  return slugify($model->tenant_name).'/_admin/dashboard';
-		     })->required(),
+		     	 return config('tenancy.enabled', false) ? 
+		     	 config('app.domain.root').'/'.slugify($model->tenant_name).'/_admin/dashboard' : 
+		     	 config('app.domain.root').'/_admin/dashboard';
+		     })->required()->require_tld(false)->schemes([parse_url(config('app.domain.root'), PHP_URL_SCHEME)]),
 		 ]);
 
 		 $table->with_user_audit(false); 

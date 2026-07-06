@@ -31,7 +31,7 @@ class ValidationServiceProvider extends ServiceProvider {
          $this->app->rules->add('uuid', UuidValidator::class, 30); //
          $this->app->rules->add('duration', DurationValidator::class, 30); //
          $this->app->rules->add('schemes', SchemesValidator::class, 40); //
-         $this->app->rules->add('require_tld', RequireTldValidator::class, 40);
+         $this->app->rules->add('require_tld', RequireTldValidator::class, 40); //
          $this->app->rules->add('international', InternationalPhoneValidator::class, 40);
          $this->app->rules->add('countries', PhoneCountryValidator::class, 40);
          $this->app->rules->add('charset', CharacterSetValidator::class, 40);

@@ -17,6 +17,7 @@
 namespace SaQle\Security\Validation\Abstracts;
 
 use SaQle\Security\Validation\Types\ValidationResult;
+use RuntimeException;
 
 abstract class IValidator {
 

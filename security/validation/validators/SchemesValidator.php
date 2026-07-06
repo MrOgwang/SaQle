@@ -17,7 +17,7 @@ class SchemesValidator extends IValidator {
          if(!is_array($this->threshold) || empty($this->threshold)){
              return new ValidationResult(
                  false,
-                 "Schemes rule for {$field} must be a non-empty array."
+                 "Schemes rule for {$this->field} must be a non-empty array."
              );
          }
 

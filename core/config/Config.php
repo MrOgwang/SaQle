@@ -119,7 +119,11 @@ final class Config {
              'framework_connection' => 'framework',
 
              //Default framework database
-             'framework_database' => '${app.name}_system',
+             'framework_database' => function($config){
+                 $db_name = strtolower(str_replace('-', '_', $config->get('app.name').'_system'));
+                 $db_name = str_replace(' ', '_', $db_name);
+                 return $db_name;
+             },
 
              'system_url_prefix' => '/saqle/',
 

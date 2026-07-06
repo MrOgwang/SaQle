@@ -32,6 +32,18 @@ class UrlField extends CharField {
 
 		 parent::initialize_defaults();
      }
+
+     public function schemes(array $schemes){
+     	  $this->schemes = $schemes;
+
+     	  return $this;
+     }
+
+     public function require_tld(bool $require_tld){
+     	 $this->require_tld = $require_tld;
+
+     	 return $this;
+     }
 	 
 }
 

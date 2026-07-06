@@ -11,83 +11,51 @@ class RequireTldValidator extends IValidator {
          return 'bool';
      }
 
-    public function validate(
-        string $field,
-        mixed $value,
-        mixed $threshold = null,
-        array $context = []
-    ): ValidationResult {
+     public function validate(mixed $value, array $context = []): ValidationResult {
+         //if rule is false → always pass
+         if($this->threshold === false){
+             return new ValidationResult(true, null);
+         }
 
-        // 1️⃣ Threshold must be boolean
-        if (!is_bool($threshold)) {
-            return new ValidationResult(
-                false,
-                "require_tld rule for {$field} must be true or false."
-            );
-        }
+         //must be non-empty string
+         if(!is_string($value) || trim($value) === ''){
+             return new ValidationResult(false, "{$this->field} must be a valid URL.");
+         }
 
-        // 2️⃣ If rule is false → always pass
-        if ($threshold === false) {
-            return new ValidationResult(true, null);
-        }
+         $value = trim($value);
 
-        // 3️⃣ Must be non-empty string
-        if (!is_string($value) || trim($value) === '') {
-            return new ValidationResult(
-                false,
-                "{$field} must be a valid URL."
-            );
-        }
+         //validate URL structure
+         if(!filter_var($value, FILTER_VALIDATE_URL)){
+             return new ValidationResult(false, "{$this->field} must be a valid URL.");
+         }
 
-        $value = trim($value);
+         //extract host
+         $host = parse_url($value, PHP_URL_HOST);
 
-        // 4️⃣ Validate URL structure
-        if (!filter_var($value, FILTER_VALIDATE_URL)) {
-            return new ValidationResult(
-                false,
-                "{$field} must be a valid URL."
-            );
-        }
+         if($host === null || $host === ''){
+             return new ValidationResult(false, "{$this->field} must contain a valid host.");
+         }
 
-        // 5️⃣ Extract host
-        $host = parse_url($value, PHP_URL_HOST);
+         //reject IP addresses (IPs do not have TLDs)
+         if(filter_var($host, FILTER_VALIDATE_IP)){
+             return new ValidationResult(false, "{$this->field} must contain a top level domain.");
+         }
 
-        if ($host === null || $host === '') {
-            return new ValidationResult(
-                false,
-                "{$field} must contain a valid host."
-            );
-        }
+         //check TLD existence
+         //host must contain at least one dot
+         if(!str_contains($host, '.')){
+             return new ValidationResult(false, "{$this->field} must contain a top level domain.");
+         }
 
-        // 6️⃣ Reject IP addresses (IPs do not have TLDs)
-        if (filter_var($host, FILTER_VALIDATE_IP)) {
-            return new ValidationResult(
-                false,
-                "{$field} must contain a top level domain."
-            );
-        }
+         //extract last label (TLD)
+         $parts = explode('.', $host);
+         $tld = end($parts);
 
-        // 7️⃣ Check TLD existence
-        // Host must contain at least one dot
-        if (!str_contains($host, '.')) {
-            return new ValidationResult(
-                false,
-                "{$field} must contain a top level domain."
-            );
-        }
+         //validate TLD format (letters only, 2–63 chars per RFC)
+         if(!preg_match('/^[a-z]{2,63}$/i', $tld)) {
+             return new ValidationResult(false, "{$this->field} must contain a valid top level domain.");
+         }
 
-        // Extract last label (TLD)
-        $parts = explode('.', $host);
-        $tld = end($parts);
-
-        // 8️⃣ Validate TLD format (letters only, 2–63 chars per RFC)
-        if (!preg_match('/^[a-z]{2,63}$/i', $tld)) {
-            return new ValidationResult(
-                false,
-                "{$field} must contain a valid top level domain."
-            );
-        }
-
-        return new ValidationResult(true, null);
-    }
+         return new ValidationResult(true, null);
+     }
 }

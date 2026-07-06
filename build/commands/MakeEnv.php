@@ -25,12 +25,15 @@ class MakeEnv {
          if(!is_dir($destination_dir)){
              saqle_dir()->create($destination_dir);
          }
-         
+
          //get the project folder name
          $project = basename(getcwd());
 
          //convert to a nice application name
          $app_name = ucwords(str_replace(['-', '_'], ' ', $project));
+         if(str_contains($app_name, " ")){
+             $app_name = "'".$app_name."'";
+         }
 
          //domains
          $cookie_domain = '.'.strtolower($project).'.local';
@@ -54,6 +57,10 @@ class MakeEnv {
          }
 
          file_put_contents($destination_file, $contents);
+
+         //reload the app
+         $app_factory = require config('base_path').'/bootstrap/app.php';
+         $app_factory();
 
          Cli::print("Created a development .env file\n");
      }

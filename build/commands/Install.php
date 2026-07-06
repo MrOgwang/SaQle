@@ -11,18 +11,15 @@ class Install {
          //create a .env file
          MakeEnv::execute();
 
+         //build the project
+         new BuildProject()->execute();
+
          //run migrations
          new MakeMigrations()->execute('Initial');
          new Migrate()->execute();
 
-         //seed the database
-         new SeedDatabase()->execute();
-
          //create super user
          new MakeSuperuser()->execute();
-         
-         //build the project
-         new BuildProject()->execute();
 
          Cli::print("Installation complete!\n");
 

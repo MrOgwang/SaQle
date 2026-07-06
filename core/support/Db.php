@@ -99,7 +99,6 @@ class Db {
      }
 
      public static function get_connection_key(?string $connection_key = null){
-         
          $connection = trim(config('db.default_connection', ''));
          $database = trim(config('db.default_database', ''));
 

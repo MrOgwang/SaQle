@@ -8,7 +8,7 @@ use SaQle\Security\Validation\Types\ValidationResult;
 class UrlValidator extends IValidator {
 
      protected function threshold_type() : string {
-         return 'int';
+         return 'bool';
      }
 
      public function validate(mixed $value, array $context = []) : ValidationResult {
