@@ -47,7 +47,7 @@ class BaseTenant extends Model implements ISystemModel, TenantInterface {
      	 	 'tenant_name' => null,
      	 	 'slug'        => null,
      	 	 'url'         => function($model){
-     	 	 	 return "<a target='_blank' href='/{$model->url}'>Go to tenant</a>";
+     	 	 	 return "<a target='_blank' href='{$model->url}'>Go to tenant</a>";
      	 	 }
      	 ];
      }
