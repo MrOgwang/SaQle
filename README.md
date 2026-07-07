@@ -1,7 +1,12 @@
 # SaQle
-SaQle is a simple, component based, MVC framework for rapid prototyping. This is a fan personal project and by no means meant to compete Laravel or CakePhp and the likes. However, for developers looking to rapidly deploy small to medium scale web apps and/or prototypes, this framework will get you started quickly and get your idea out to the world.
+SaQle is a simple, component based, MVC framework for rapid prototyping.
 
-Some Features
+It is designed to be super light weight, easy to pick up by anyone from beginner to expert level PHP developers.
+
+SaQle is built to help get you from idea to prototype/POC in hours instead of days while 
+giving you a solid foundation to build a complex and secure application on.
+
+Feature Overview
 
 1. A simple, fully functional and customizable ORM for database interaction
 2. Component first MVC architecture for ease of re-use
