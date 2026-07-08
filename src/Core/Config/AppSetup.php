@@ -5,14 +5,15 @@ namespace SaQle\Core\Config;
 use SaQle\Core\Config\Config;
 use SaQle\Core\Support\Environment;
 use Dotenv\Dotenv;
+use Closure;
 
 final class AppSetup {
 
-     public $environment_loader = null;
+     public ?Closure $environment_loader = null;
+     public ?string $framework_path = null;
 
      public function __construct(
          public string $base_path,
-         public string $framework_path,
          public string $document_root,
          public string $config_dir,
          public Environment $environment = Environment::DEVELOPMENT,
@@ -27,6 +28,8 @@ final class AppSetup {
                  Dotenv::createImmutable($env_dir)->load();
              }
          };
+         
+         $this->framework_path = realpath(__DIR__.'/../../../');
      }
 
      public function get_framework_configs(){

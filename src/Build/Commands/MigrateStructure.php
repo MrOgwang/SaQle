@@ -8,10 +8,15 @@ use SaQle\Core\Support\Cli;
 
 class MigrateStructure {
      static public function execute(){
+         Cli::print(config('framework_path'));
+         //self::execute_migrate();
+     }
 
-         $root = config('framework_path');
+     static public function execute_migrate(){
 
-         $destination_root = path_join([$root, 'src']);
+         $root = path_join([config('framework_path'), 'src']);
+
+         $destination_root = path_join([config('framework_path'), 'src_tmp']);
 
          $core_dirs = [
              'apis',
@@ -80,6 +85,81 @@ class MigrateStructure {
          Cli::print("\n");
      }
 
+     static private function get_new_filename(string $source_file, string $basename, string $extension){
+
+         $new_filename = "";
+
+         if(strtolower($extension) === 'php'){
+             $code = file_get_contents($source_file);
+             $tokens = token_get_all($code);
+
+             $declarations = [];
+
+             $count = count($tokens);
+
+             //Token types we want to detect.
+             $declaration_tokens = [
+                 T_CLASS,
+                 T_INTERFACE,
+                 T_TRAIT,
+             ];
+
+             //T_ENUM exists only on PHP 8.1+
+             if(defined('T_ENUM')){
+                 $declaration_tokens[] = T_ENUM;
+             }
+
+             for($i = 0; $i < $count; $i++){
+                 if(!is_array($tokens[$i])){
+                     continue;
+                 }
+
+                 if(!in_array($tokens[$i][0], $declaration_tokens, true)){
+                     continue;
+                 }
+
+                 //Skip whitespace/comments until we reach the class name
+                 $j = $i + 1;
+
+                 while($j < $count){
+                     if(!is_array($tokens[$j])){
+                         $j++;
+                         continue;
+                     }
+
+                     if($tokens[$j][0] === T_WHITESPACE || $tokens[$j][0] === T_COMMENT || $tokens[$j][0] === T_DOC_COMMENT){
+                         $j++;
+                         continue;
+                     }
+
+                     if($tokens[$j][0] === T_STRING){
+                         $declarations[] = $tokens[$j][1];
+                     }
+
+                     break;
+                 }
+             }
+
+             if(count($declarations) === 1){
+                 //Rename to match the declared type.
+                 $new_filename = $declarations[0];
+             }elseif (count($declarations) > 1) {
+                 Cli::print(">>>> Multiple classes found in: {$source_file}");
+
+                 //Leave filename as-is (or ucfirst if lowercase).
+                 $new_filename = ($basename === strtolower($basename)) ? ucfirst($basename) : $basename;
+             }else{
+                 //No classes found.
+                 $new_filename = ($basename === strtolower($basename)) ? ucfirst($basename) : $basename;
+             }
+         }else{
+             //Non-PHP file.
+             $new_filename = ($basename === strtolower($basename)) ? ucfirst($basename) : $basename;
+         }
+
+         return $new_filename;
+     }
+
      static private function copy_file(string $source_file, string $destination_folder) : void {
          
          Cli::print(">>>> Copying {$source_file} --> {$destination_folder}");
@@ -93,19 +173,8 @@ class MigrateStructure {
          $extension = pathinfo($filename, PATHINFO_EXTENSION);
          $basename  = pathinfo($filename, PATHINFO_FILENAME);
 
-         /*
-         * Rename only if the filename is entirely lowercase.
-         *
-         * application.php
-         *      -> Application.php
-         *
-         * Connection.php
-         *      -> Connection.php
-         */
-
-         if($basename === strtolower($basename)){
-             $basename = ucfirst($basename);
-         }
+         //determine new file name.
+         $basename = self::get_new_filename($source_file, $basename, $extension);
 
          $new_filename = $extension ? $basename.'.'.$extension : $basename;
          $destination_filename = path_join([$destination_folder, $new_filename]);

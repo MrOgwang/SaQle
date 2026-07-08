@@ -21,14 +21,6 @@ use SaQle\Http\Request\Execution\ActionExecutor;
 use SaQle\Core\Registries\ComponentRegistry;
 use SaQle\Core\Exceptions\ValidationException;
 
-class ErrorContext {
-     public bool  $should_redirect = false;
-     public bool  $should_flash_input = false;
-     public bool  $should_flash_errors = false;
-     public mixed $errors_payload;
-     public mixed $input_payload;
-}
-
 class Runtime {
 
      private function app() {

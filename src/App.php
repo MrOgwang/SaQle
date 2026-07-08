@@ -37,7 +37,7 @@ use SaQle\Http\Request\{
 use SaQle\Session\Providers\SessionProvider;
 use SaQle\Auth\Guards\GuardManager;
 use SaQle\Build\Manage\Manage;
-use SaQle\Auth\utils\AuthContext;
+use SaQle\Auth\Utils\AuthContext;
 
 final class App {
      private AppStage $stage;
@@ -85,13 +85,20 @@ final class App {
      }
 
      private function initialize() : void {
-         require_once __DIR__.'/shortcuts/helpers.php';
-         require_once __DIR__.'/shortcuts/strings.php';
-         require_once __DIR__.'/shortcuts/routes.php';
-         require_once __DIR__.'/shortcuts/dates.php';
-         require_once __DIR__.'/shortcuts/arrays.php';
-         require_once __DIR__.'/shortcuts/exceptions.php';
-         require_once __DIR__.'/shortcuts/session.php';
+         $shortcuts = [
+             'Helpers',
+             'Strings',
+             'Routes',
+             'Dates',
+             'Arrays',
+             'Exceptions',
+             'Session'
+         ];
+
+         foreach($shortcuts as $s){
+             require_once __DIR__.'/Shortcuts/'.$s.'.php';
+         }
+
          $this->load_environment();
      }
 

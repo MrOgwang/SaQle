@@ -1,6 +1,7 @@
 <?php
 namespace SaQle\Commons;
-trait DateUtils{
+
+trait DateUtils {
 	 public static function current_date(){
 		 date_default_timezone_set(config('app.timezone'));
          $current_date_time = new \DateTime();

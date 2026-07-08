@@ -4,6 +4,7 @@ namespace SaQle\Build\Utils;
 
 trait CompileUtils {
 	 protected static function normalize_path(string $path){
+        
          $owner = "project";
 
          if(str_starts_with($path, config('base_path'))){

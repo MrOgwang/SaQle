@@ -31,7 +31,7 @@ class BuildProject {
                  EventCompiler::compile();
              break;
              case "all":
-                 Cli::print("Building project now...\n");
+                 Cli::print("Building project...\n");
                 
                  //compile components
                  ComponentCompiler::compile();

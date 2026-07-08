@@ -218,6 +218,7 @@ class ComponentCompiler {
                      $component_name = $prefix
                          ? $prefix.'.'.$base_component_name
                          : $base_component_name;
+                     $component_name = strtolower($component_name);
 
                      if(!isset($components[$component_name])){
                          $components[$component_name] = self::initialize_component($owner);
@@ -261,6 +262,7 @@ class ComponentCompiler {
                      $component_name = $prefix
                          ? $prefix.'.'.$component_name
                          : $component_name;
+                     $component_name = strtolower($component_name);
 
                      if(!isset($components[$component_name])){
                          $components[$component_name] = self::initialize_component($owner);
