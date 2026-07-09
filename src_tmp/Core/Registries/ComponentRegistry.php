@@ -38,11 +38,13 @@ final class ComponentRegistry {
              return "";
          }
          
-         return path_join(
+         $real_path = path_join(
              $owner === 'project' ? 
              [config('base_path'), $template_path] : 
              [config('framework_path'), $template_path]
          );
+
+         return $real_path;
      }
 
      public static function get(string $name): array {
@@ -103,7 +105,7 @@ final class ComponentRegistry {
 
          $controller = $component['controller'];
          $template_path = $component['template_path'];
-         $compiled_template_path = $component['compiled_template_path'];
+         $compiled_template_path = path_join([config('base_path'), $component['compiled_template_path']]);
 
          $real_template_path = self::real_template_path(
              $component['template_path'],
@@ -142,8 +144,12 @@ final class ComponentRegistry {
 
          //if there is a template_path, ensure the file exists
          if($real_template_path && $compiled_template_path){
-             if(!file_exists($real_template_path) || !file_exists($compiled_template_path)){
-                 throw new InvalidArgumentException('The template file: '.$template_path.' does not exist!');
+             if(!file_exists($real_template_path)){
+                 throw new InvalidArgumentException('The real template file: '.$real_template_path.' does not exist!');
+             }
+
+             if(!file_exists($compiled_template_path)){
+                 throw new InvalidArgumentException('The compiled template file: '.$compiled_template_path.' does not exist!');
              }
 
              $extension = pathinfo($real_template_path, PATHINFO_EXTENSION);

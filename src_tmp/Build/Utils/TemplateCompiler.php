@@ -71,9 +71,11 @@ class TemplateCompiler {
              $filename = "block";
          }
 
-         $compiled_path = self::cache_path()."/{$filename}_{$hash}.php";
+         $compiled_filename = "{$filename}_{$hash}.php";
+         $compiled_absolute_path = path_join([self::cache_path(), $compiled_filename]);
+         $compiled_relative_path = path_join([config('templates_cache_dir'), $compiled_filename]);
 
-         if($template_path && file_exists($compiled_path) && filemtime($compiled_path) > filemtime($template_path)){
+         if($template_path && file_exists($compiled_absolute_path) && filemtime($compiled_absolute_path) > filemtime($template_path)){
              //return $compiled_path;
          }
 
@@ -100,9 +102,9 @@ class TemplateCompiler {
              $content = self::compile_component_blocks($content);
          }
 
-         file_put_contents($compiled_path, $content);
+         file_put_contents($compiled_absolute_path, $content);
 
-         return $compiled_path;
+         return $compiled_relative_path;
      } 
 
      private static function parse_parentheses($text, $start_pos){
