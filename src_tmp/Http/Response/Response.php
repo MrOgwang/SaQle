@@ -157,7 +157,6 @@ abstract class Response {
          }
 
          while(ob_get_level() > 0){
-             //ob_end_clean();
              ob_end_flush();
          }
      }

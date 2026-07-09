@@ -50,8 +50,8 @@ final class ComponentRegistry {
      public static function get(string $name): array {
          $components = self::all();
 
-         if (!isset($components[$name])){
-            throw new InvalidArgumentException("Component [$name] does not exist.");
+         if(!isset($components[$name])){
+             throw new InvalidArgumentException("Component [$name] does not exist.");
          }
 
          return $components[$name];
@@ -156,9 +156,9 @@ final class ComponentRegistry {
 
              $template_ext = config('app.component_template_ext');
 
-             if (strtolower($extension) !== strtolower($template_ext)) {
+             if(strtolower($extension) !== strtolower($template_ext)) {
                  throw new InvalidArgumentException("Invalid template file type! Expected an .".$template_ext." file.");
-             }
+             } 
 
              $component_def->path = dirname($real_template_path);
              $component_def->template_path = $real_template_path;

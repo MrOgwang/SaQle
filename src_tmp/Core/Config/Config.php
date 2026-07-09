@@ -118,11 +118,17 @@ final class Config {
              //Default frame work connection.
              'framework_connection' => 'framework',
 
-             //Default framework database
+             /**
+              * Default framework database
+              * 
+              * Note: The default framework database is added to the db config
+              * automatically on app startup, therefore it is important that its name
+              * is derived from the default_database set by the developer.
+              * 
+              * This is important especially for shared hosting deployment
+              * */
              'framework_database' => function($config){
-                 $db_name = strtolower(str_replace('-', '_', $config->get('app.name').'_system'));
-                 $db_name = str_replace(' ', '_', $db_name);
-                 return $db_name;
+                 return $config->get('db.default_database').'_system';
              },
 
              'system_url_prefix' => '/saqle/',

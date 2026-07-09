@@ -39,7 +39,7 @@ class StaticFile {
          $file = [
              'size' => filesize($path),
              'mime' => $allowed_types[$type],
-             'inline' => false,
+             'inline' => true,
              'name' => "asset",
              'path' => $path,
              'cache' => true

@@ -91,22 +91,10 @@ class ComponentCompiler {
 
          $caching_file = path_join([$caching_folder, "components.php"]);
 
-         $exported_array = var_export($items, true);
+         $export = var_export($items, true);
+         $export = preg_replace('/^/m', '    ', $export); // indent
 
-         $php_content = <<<PHP
-             <?php
-             /**
-             * This is an auto generated file: A mapping of all component controllers and templates.
-             * 
-             * WARNING: 
-             * This file is used by the framework.
-             * DO NOT MODIFY this file or its contents
-             * 
-             */
-
-             return {$exported_array};
-             
-         PHP;
+         $php_content ="<?php\n\n"."return ".$export.";\n";
 
          file_put_contents($caching_file, $php_content);
      }

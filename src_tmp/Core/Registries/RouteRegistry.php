@@ -50,9 +50,7 @@ final class RouteRegistry {
          $export = var_export($routes_cache, true);
          $export = preg_replace('/^/m', '    ', $export); // indent
 
-         $php =
-         "<?php\n\n" .
-         "return ".$export.";\n";
+         $php ="<?php\n\n"."return ".$export.";\n";
 
          //write to the cache file
          $mappings_folder = path_join([config('base_path'), config('class_mappings_dir')]);
