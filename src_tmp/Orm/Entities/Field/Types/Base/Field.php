@@ -55,6 +55,7 @@ class Field implements IField {
 
 	 //the default value or callable
 	 #[FieldDefinition()]
+	 #[FormControl()]
 	 protected mixed $default = null;
 
 	 //whether field is required
@@ -245,7 +246,7 @@ class Field implements IField {
 
 	 public function get_form_field_attrs() : array {
 	 	 $is_field = $this instanceof VirtualField || ($this instanceof RelationField && $this->navigation) ? false : true;
-	     if (!$is_field){
+	     if(!$is_field){
 	         return [];
 	     }
 

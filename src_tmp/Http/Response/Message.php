@@ -20,6 +20,7 @@ namespace SaQle\Http\Response;
 
 use SaQle\Core\FeedBack\FeedBack;
 use SaQle\Http\Request\Data\Data;
+use SaQle\Core\Support\Session;
 
 class Message extends FeedBack {
 
@@ -68,6 +69,18 @@ class Message extends FeedBack {
 	 }
 
      //session flashing
+     public function with_message(string $type, string $message){
+         Session::flash('__notification', ['type' => $type, 'message' => $message]);
+     }
+
+     public function with_input(?array $input = null){
+         Session::flash('__old', $input ? $input : request()->data->get_all());
+     }
+
+     public function with_errors(array $errors){
+         Session::flash('__errors', $errors);
+     }
+
      public function flash(string $key, mixed $data = null){
          if(!$this->_flash){
              $this->_flash = new Data();
@@ -90,8 +103,8 @@ class Message extends FeedBack {
          return new SuccessMessage($message, $data);
      }
 
-     public static function redirect(string $url){
-         return new RedirectMessage($url);
+     public static function redirect(?string $url = null){
+         return new RedirectMessage( $url ? $url : request()->uri() );
      }
 
      public static function file(array $file_info){

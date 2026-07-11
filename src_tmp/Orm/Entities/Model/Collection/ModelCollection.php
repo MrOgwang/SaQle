@@ -165,6 +165,18 @@ abstract class ModelCollection extends TypedCollection implements IModel, JsonSe
          return $this->items();
      }
 
+     public function present(string $presenter){
+         $presented = [];
+
+         foreach($this->items() as $item){
+             $presented[] = $item->present($presenter);
+         }
+
+         $this->elements = $presented;
+
+         return $this;
+     }
+
      public function randomize() : static {
          shuffle($this->elements);
          return $this;

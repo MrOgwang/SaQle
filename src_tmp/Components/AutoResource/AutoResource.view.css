@@ -1,0 +1,223 @@
+.resource-view{
+
+    max-width:1400px;
+    margin:auto;
+
+}
+
+.resource-header{
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    margin-bottom:24px;
+
+}
+
+.breadcrumbs{
+
+    font-size:.85rem;
+    color:#64748b;
+    margin-bottom:6px;
+
+}
+
+.resource-header h1{
+
+    font-size:2rem;
+    color:#0f172a;
+
+}
+
+.resource-actions{
+
+    display:flex;
+    gap:12px;
+
+}
+
+.btn{
+
+    height:42px;
+
+    padding:0 18px;
+
+    border:none;
+
+    border-radius:10px;
+
+    cursor:pointer;
+
+    font-weight:600;
+
+}
+
+.btn.secondary{
+
+    background:#2563eb;
+    color:white;
+
+}
+
+.btn.danger{
+
+    background:#ef4444;
+    color:white;
+
+}
+
+.card{
+
+    background:white;
+
+    border:1px solid #e2e8f0;
+
+    border-radius:14px;
+
+    padding:24px;
+
+    margin-bottom:24px;
+
+}
+
+.hero-card{
+
+    display:flex;
+    align-items:center;
+
+    gap:24px;
+
+}
+
+.avatar{
+
+    width:90px;
+    height:90px;
+
+    border-radius:50%;
+
+    background:#2563eb;
+
+    color:white;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    font-size:2rem;
+    font-weight:bold;
+
+}
+
+.hero-details h2{
+
+    margin-bottom:8px;
+
+}
+
+.hero-details p{
+
+    color:#64748b;
+
+    margin-bottom:14px;
+
+}
+
+.badges{
+
+    display:flex;
+    gap:10px;
+
+}
+
+.badge{
+
+    padding:6px 12px;
+
+    border-radius:20px;
+
+    background:#e2e8f0;
+
+    font-size:.8rem;
+
+}
+
+.badge.success{
+
+    background:#dcfce7;
+
+    color:#15803d;
+
+}
+
+.details-grid{
+
+    display:grid;
+
+    grid-template-columns:1fr 1fr;
+
+    gap:24px;
+
+}
+
+.property{
+
+    display:flex;
+    justify-content:space-between;
+
+    padding:14px 0;
+
+    border-bottom:1px solid #edf2f7;
+
+}
+
+.property:last-child{
+
+    border-bottom:none;
+
+}
+
+.property span{
+
+    color:#64748b;
+
+}
+
+.relations{
+
+    display:grid;
+
+    grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+
+    gap:18px;
+
+}
+
+.relation{
+
+    border:1px solid #e2e8f0;
+
+    border-radius:12px;
+
+    padding:20px;
+
+    text-align:center;
+
+}
+
+.relation strong{
+
+    display:block;
+
+    font-size:1.8rem;
+
+    color:#2563eb;
+
+}
+
+.relation span{
+
+    color:#64748b;
+
+}

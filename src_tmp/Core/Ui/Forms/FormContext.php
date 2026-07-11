@@ -8,29 +8,27 @@ use SaQle\Http\Request\RuntimeContext;
 
 final class FormContext extends RuntimeContext {
      public function __construct(
-         public readonly string  $message = '', //the submit message. mostly available with errors
-         public readonly string  $action = '', //route to handle submission
-         public readonly string  $method = '', //http verb (post, put)
-         public readonly array   $input  = [], //this is the data coming in from a form submit
-         public readonly array   $errors = [], //form validation errors, keyed by field name
-         public readonly ?object $model  = null
-     ) {}
+         public readonly ?FormMessage $message = null, //the submit message. mostly available with errors
+         public readonly ?array       $input   = null, //this is the data coming in from a form submit
+         public readonly ?array       $errors  = null, //form validation errors, keyed by field name
+         public readonly ?object      $model   = null //the object being edited for edit forms
+     ){}
 
-     /**
-     * Retrieve a FormContext for a given form from the session.
-     * Returns a context with empty arrays if not yet submitted.
-     */
-     public static function from_session(): self {
-         $errors = flash_from_session('__errors', []);
-         $input  = flash_from_session('__old', []);
+     static public function make(?object $model = null){
+         $errors       = flash_from_session('__errors', null);
+         $input        = flash_from_session('__old', null);
+         $notification = flash_from_session('__notification', null);
+         $message      = $notification ? new FormMessage($notification['type'], $notification['message']) : null;
 
-         return new self (
-             message: "",
-             action: "#",
-             method: "POST",
-             input: $input,
-             errors: $errors,
-             model: null
+         if($errors && !$message){
+             $message = new FormMessage(type: 'error', text: 'There were errors with your submission!');
+         }
+
+         return new self(
+             message: $message,
+             input:   $input,
+             errors:  $errors,
+             model:   $model
          );
-     }
+     } 
 }

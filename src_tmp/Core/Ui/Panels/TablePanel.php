@@ -57,15 +57,26 @@ final class TablePanel {
      }
 
      protected function extract_table_columns(){
+
+         $presenters = $this->model_class::get_presenters($this->props['presenter'] ?? null);
+
+         
          $fields = FormFieldsCompiler::compile($this->model_class);
+         $column_names = $presenters ? array_keys($presenters) : array_keys($fields);
          $columns = [];
 
          $column_index = 0;
-         foreach($fields as $field_name => $field){
-             $columns[$field_name] = (Object)[
+         foreach($column_names as $col_name){
+
+             if(!array_key_exists($col_name, $fields)){
+                 continue;
+             }
+
+             $field = $fields[$col_name];
+             $columns[$col_name] = (Object)[
                  'label' => ucwords(str_replace(" ", "&nbsp;", $field->label)),
                  'index' => $column_index,
-                 'name' => $field_name,
+                 'name' => $col_name,
                  'type' => $field->ui_type
              ];
              $column_index++;
@@ -94,7 +105,8 @@ final class TablePanel {
              }
          }
          
-         $this->data = $manager->all();
+         $this->data = $manager->all()->present('admin');
+
          $this->paginator = $this->data->paginator;
      }
 }

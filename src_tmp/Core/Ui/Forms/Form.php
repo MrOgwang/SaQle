@@ -63,7 +63,28 @@ final class Form {
      }
 
      //runtime context api
-     public function bind(FormContext $context) {
+     public function bind(FormContext $context){
+
+         $model_data = $context->model ? $context->model->get_data() : [];
+
+         foreach($this->fields as $field){
+
+             $value = $field->default;
+
+             if(is_array($context->input) && array_key_exists($field->name, $context->input)){
+                 $value = $context->input[$field->name];
+             }elseif(array_key_exists($field->name, $model_data)){
+                 $value = $model_data[$field->name];
+             }
+
+             $field->value($value);
+
+             if(is_array($context->errors) && array_key_exists($field->name, $context->errors)){
+                 $field->errors($context->errors[$field->name]);
+             }
+             
+         }
+
          $this->context = $context;
 
          return $this;

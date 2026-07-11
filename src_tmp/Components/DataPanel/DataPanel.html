@@ -87,8 +87,6 @@
  	 	 	 	 <!--the table rows go here-->
  	 	 	 	 @foreach($panel->data as $row)
  	 	 	 	 @let(
- 	 	 	 	     $frow = $row->present('admin'),
-
  	 	 	 	     $edit_form_route_name = strtolower($current_resource?->plural_label).'.edit.form',
                      $edit_form_url = $auth_context === 'saqle' ? 
                          route($edit_form_route_name, ['id' => $row->{$current_resource->pk_column}]) : 
@@ -108,9 +106,9 @@
  	 	 	 	 	 <td><span class='flex center'><i class="fa-solid fa-grip-vertical"></i></span></td>
  	 	 	 	     @foreach($panel->columns as $column_name => $column)
  	 	 	 	     @if($panel->columns[$column_name]->type === 'image')
- 	 	 	 	     <td><img class='dp-image' src="{!! $frow->$column_name !!}"/></td>
+ 	 	 	 	     <td><img class='dp-image' src="{!! $row->$column_name !!}"/></td>
  	 	 	 	     @else
- 	 	 	 	     <td>{!! ucwords($frow->$column_name ?? "") !!}</td>
+ 	 	 	 	     <td>{!! ucwords($row->$column_name ?? "") !!}</td>
  	 	 	 	     @endif
  	 	 	 	     @endforeach 
  	 	 	 	     <td title='View'>

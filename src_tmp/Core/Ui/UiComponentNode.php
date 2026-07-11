@@ -90,13 +90,16 @@ class UiComponentNode {
 
          $compiled_template_path = $this->def->compiled_template_path;
          $template_path = $this->def->template_path;
-         
+
          if($this->def->has_many_templates){
              $resolver = Template::get_resolver($this->def->name);
              if($resolver){
                  $template_key = $resolver($request, $this->props);
                  $compiled_template_path = $this->def->template_variations[$template_key]['compiled_template_path'] ?? $compiled_template_path;
                  $template_path = $this->def->template_variations[$template_key]['template_path'] ?? $template_path;
+
+                 $compiled_template_path = path_join([config('base_path'), $compiled_template_path]);
+                 $template_path = path_join([config('base_path'), $template_path]);
              }
          }
 

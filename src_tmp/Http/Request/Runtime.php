@@ -8,9 +8,7 @@ use SaQle\Core\Exceptions\Abstracts\FrameworkException;
 use SaQle\Http\Response\{
      Response, 
      Message,
-     RedirectMessage,
-     FileMessage,
-     ResponseType
+     RedirectMessage
 };
 use SaQle\Core\Support\{
      AppContext,
@@ -87,7 +85,7 @@ class Runtime {
      }
 
      private function apply_flash(Request $request, Message $msg, ?ErrorContext $ctx = null) : void { 
-         
+
          $should_flash_input = $ctx && $ctx->should_flash_input ? true : $msg->should_flash();
          $should_flash_errors = $ctx && $ctx->should_flash_errors ? true : $msg->should_flash();
          $errors_payload = $ctx ? $ctx->errors_payload : $msg->message;

@@ -31,15 +31,15 @@ final class RouteCompiler {
           * */
          $routes_dirs = [path_join([config('base_path'), 'routes'])];
 
-         foreach(config('app.modules') as $f){
+         foreach(config('app.modules', []) as $f){
              $routes_dirs[] = path_join([config('base_path'), 'modules', $f, 'routes']);
          }
 
-         foreach(config('app.extra_routes_dirs') as $d){
+         foreach(config('app.extra_routes_dirs', []) as $d){
              $routes_dirs[] = path_join([config('base_path'), $d]);
          }
 
-         foreach(config('saqle_routes_dirs') as $d){
+         foreach(config('saqle_routes_dirs', []) as $d){
              $routes_dirs[] = $d;
          }
 

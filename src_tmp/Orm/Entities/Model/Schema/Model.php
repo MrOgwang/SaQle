@@ -1054,6 +1054,15 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
          return self::get_model_setup()->get_fk_field_names();
      }
 
+     public static function get_presenters(?string $name) : ? array {
+         $presenters = self::get_model_setup()->get_presenters();
+         if(!$name){
+             return $presenters;
+         }
+
+         return $presenters[$name] ?? null;
+     }
+
 	 public function get_connection_name(){
 	 	 return $this->table->get_connection_name();
 	 }

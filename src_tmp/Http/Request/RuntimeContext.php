@@ -8,8 +8,8 @@ use SaQle\Core\Support\Session;
 abstract class RuntimeContext {
      protected function __construct(
          public readonly string $type,
-         public readonly array  $input = [],
-         public readonly array  $errors = []
+         public readonly ?array $input = null,
+         public readonly ?array $errors = null
      ) {}
 
      protected static function session_key(string $type, string $name): string {

@@ -215,7 +215,7 @@ class ComponentCompiler {
                      /**
                       * Store variation
                       * */
-                     $components[$component_name]['template_variations'][$variation_name] = [
+                     $components[$component_name]['template_variations'][strtolower($variation_name)] = [
                          'template_path'          => $compile_path,
                          'compiled_template_path' => ''
                      ];

@@ -6,7 +6,8 @@ use SaQle\Core\Ui\Forms\{
 	 Form,
 	 FormField,
 	 FormMode,
-	 FormModelResolver
+	 FormModelResolver,
+	 FormContext
 };
 use SaQle\Core\Ui\Panels\TablePanel;
 use SaQle\Http\Request\Request;
@@ -97,8 +98,6 @@ class AutoResource {
          	 $query = $query_callback($query);
          }
 
-         log_to_file($query->sql());
-
          $data = $query->all();
 
          $choices = [];
@@ -123,7 +122,8 @@ class AutoResource {
 	 	 	 	     'page' => $page,
 	 	 	 	     'records' => $records
 	 	 	     ],
-	 	 	     'search' => $search
+	 	 	     'search' => $search,
+	 	 	     'presenter' => 'admin'
 	 	 	 ]
 	 	 );
 
@@ -133,8 +133,10 @@ class AutoResource {
 	 }
 
 	 public function show_create_form(array $__props) : Message {
-
+	 	 $incoming = request()->data->get_all();
+	 	
 	 	 $form = $this->create_auto_form(FormMode::CREATE, $__props);
+	 	 $form->bind(FormContext::make());
 
 	 	 if(!$form){
 	 	 	 throw new RuntimeException("Unknown resource form requested!");
@@ -159,7 +161,7 @@ class AutoResource {
 	 	 
 	 	 $saved = $model_class::create($data)->now();
 
-		 return Message::ok();
+		 return Message::redirect()->with_message('success', 'Created successfully!');
 	 }
 
 	 public function show_resource() : Message {
@@ -178,6 +180,7 @@ class AutoResource {
 	 	 }
 
 	 	 $object = $model_class::get()->where($model_class::get_pk_name()."__eq", $id)->first_or_fail();
+	 	 $form->bind(FormContext::make($object));
 
 		 return Message::ok([
 		 	 'form' => $form,
@@ -185,8 +188,22 @@ class AutoResource {
 		 ]);
 	 }
 
-	 public function edit_resource() : Message {
-		 return Message::ok();
+	 public function edit_resource(string $pk) : Message {
+
+	 	 $form = $this->create_auto_form(FormMode::UPDATE);
+
+	 	 $incoming = request()->data->get_all();
+	 	 $data = array_intersect_key(
+             $incoming,
+             array_flip(array_keys($form->get_fields()))
+         );
+
+	 	 $model_parts = explode("@", request()->route->model_class);
+         $model_class = $model_parts[0] ?? "";
+	 	 
+	 	 $saved = $model_class::update($data)->where($model_class::get_pk_name()."__eq", $pk)->now();
+
+		 return Message::redirect()->with_message('success', 'Updated successfully!');
 	 }
 
 	 public function delete_resource() : Message {
