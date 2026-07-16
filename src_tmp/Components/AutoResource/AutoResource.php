@@ -9,14 +9,24 @@ use SaQle\Core\Ui\Forms\{
 	 FormModelResolver,
 	 FormContext
 };
-use SaQle\Core\Ui\Panels\TablePanel;
+use SaQle\Core\Ui\Panels\TableView;
+use SaQle\Core\Ui\Details\DetailView;
 use SaQle\Http\Request\Request;
 use SaQle\Core\Support\Route;
 use SaQle\Core\Registries\ModelRegistry;
+use SaQle\Routes\Resources\ResourceRouteUtils;
 use RuntimeException;
 use Throwable;
 
 class AutoResource {
+
+     use ResourceRouteUtils {
+         ResourceRouteUtils::__construct as private __utilsConstruct;
+     }
+
+     public function __construct(){
+         $this->__utilsConstruct();
+     }
 
      private function create_auto_form(FormMode $mode, array $props = []){
 
@@ -110,12 +120,13 @@ class AutoResource {
      }
 
 	 public function list_resources(
-	 	 int $page = 1,
-	 	 int $records = 100,
-	 	 string $search = ""
+	 	 int    $page    = 1,
+	 	 int    $records = 100,
+	 	 string $search  = "",
+	 	 array  $filter  = []
 	 ) : Message {
 
-	 	 $panel = new TablePanel(
+	 	 $panel = new TableView(
 	 	 	 request()->route->model_class,
 	 	 	 [
 	 	 	 	 'pagination' => [
@@ -123,7 +134,9 @@ class AutoResource {
 	 	 	 	     'records' => $records
 	 	 	     ],
 	 	 	     'search' => $search,
-	 	 	     'presenter' => 'admin'
+	 	 	     'presenter' => 'admin',
+	 	 	     'with_audit' => true,
+	 	 	     'filter' => $filter
 	 	 	 ]
 	 	 );
 
@@ -164,11 +177,25 @@ class AutoResource {
 		 return Message::redirect()->with_message('success', 'Created successfully!');
 	 }
 
-	 public function show_resource() : Message {
-		 return Message::ok();
+	 public function show_resource(int | string $id) : Message {
+
+	 	 $model_parts = explode("@", request()->route->model_class);
+         $model = $model_parts[0] ?? "";
+
+         $panel = new DetailView(
+         	 $model,
+         	 [
+         	 	 'id' => $id,
+         	 	 'with_audit' => true
+         	 ]
+         );
+
+		 return Message::ok([
+		 	 'panel' => $panel
+		 ]);
 	 }
 
-	 public function show_edit_form(string $id, array $__props) : Message {
+	 public function show_edit_form(int | string $id, array $__props) : Message {
 	 
 	 	 $model_parts = explode("@", request()->route->model_class);
          $model_class = $model_parts[0] ?? "";
@@ -188,7 +215,7 @@ class AutoResource {
 		 ]);
 	 }
 
-	 public function edit_resource(string $pk) : Message {
+	 public function edit_resource(int | string $pk) : Message {
 
 	 	 $form = $this->create_auto_form(FormMode::UPDATE);
 
@@ -203,11 +230,25 @@ class AutoResource {
 	 	 
 	 	 $saved = $model_class::update($data)->where($model_class::get_pk_name()."__eq", $pk)->now();
 
-		 return Message::redirect()->with_message('success', 'Updated successfully!');
+	 	 $resources = $this->get_resource_links();
+	 	 $current_resource = $resources[$model_class] ?? null;
+
+		 return Message::redirect($current_resource ? $current_resource->url : null)
+		 ->with_message('success', 'Updated successfully!');
 	 }
 
-	 public function delete_resource() : Message {
-		 return Message::ok();
+	 public function delete_resource(int | string $pk) : Message {
+
+	 	 $model_parts = explode("@", request()->route->model_class);
+         $model_class = $model_parts[0] ?? "";
+
+         $deleted = $model_class::delete()->where($model_class::get_pk_name()."__eq", $pk)->now();
+
+         $resources = $this->get_resource_links();
+	 	 $current_resource = $resources[$model_class] ?? null;
+
+		 return Message::redirect($current_resource ? $current_resource->url : null)
+		 ->with_message('success', 'Deleted successfully!');
 	 } 
 
      #[Route(

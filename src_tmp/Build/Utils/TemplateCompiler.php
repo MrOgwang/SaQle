@@ -87,7 +87,7 @@ class TemplateCompiler {
          //escaped echo
          $content = preg_replace(
              '/{{\s*(.*?)\s*}}/s',
-             "<?php echo htmlspecialchars($1, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8'); ?>",
+             "<?php echo htmlspecialchars((string)$1, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8'); ?>",
              $content
          );
 

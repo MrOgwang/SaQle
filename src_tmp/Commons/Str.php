@@ -1,9 +1,55 @@
 <?php
 namespace SaQle\Commons;
 
-use stdClass;
+final class Str {
 
-trait StringUtils {
+     /**
+      * Convert a string value to snake_case
+      * */
+     public static function snake(string $value) : string {
+         return strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $value));
+     }
+
+     /**
+      * Simple pluralizer: 
+      * 
+      * Add 's' or handle irregulars (expand as needed, e.g., 'person' => 'people').
+      * 
+      * TO DO: Complete this implementation into a proper string pluralization
+      * */
+     public static function plural(string $value): string {
+         return $value.'s';
+     }
+
+     /**
+	 * Joins an array of strings into a human-readable list using a natural language conjunction.
+	 *
+	 * @param array<string> $items The array of strings to join.
+	 * @param string $conjunction The final separator (e.g., 'and', 'or', 'vs'). Defaults to 'and'.
+	 * @param bool $use_oxford_comma Whether to include a comma before the conjunction for 3+ items. Defaults to false.
+	 * @return string
+	 */
+     public static function natural_join(array $items, string $conjunction = 'and', bool $use_oxford_comma = false): string {
+         $count = count($items);
+
+         if($count === 0){
+             return '';
+         }
+        
+         if($count === 1){
+             return $items[0];
+         }
+
+         $last_item = array_pop($items);
+         $glue = implode(', ', $items);
+        
+         if($use_oxford_comma && $count > 2){
+             $glue .= ',';
+         }
+
+         return $glue.' '.$conjunction.' '.$last_item;
+     }
+
 	 public static function random_string($max_length = 30, $min_length = 30){
 		 $min_length = $max_length < $min_length ? $max_length : $min_length;
          $half_min = ceil($min_length / 2);

@@ -48,6 +48,9 @@
 .datapanel-body{
 	overflow-y: auto;
 }
+.datapanel-body td {
+    white-space: nowrap;
+}
 .datapanel-body .icon{
 	width:25px;
 	height:25px;
@@ -66,4 +69,20 @@
 	height:35px;
 	border-radius: 5px;
 	object-fit: cover;
+}
+.dp-action{
+	border:0;
+	background-color: transparent;
+	border:1px solid transparent;
+	width:40px!important;
+	height:30px!important;
+	border-radius: 3px;
+	min-width: 0;
+}
+.dp-action.del{
+	color:red!important;
+}
+.dp-action:hover{
+	border:1px solid var(--steel_gray_100);
+	background-color:#fff;
 }

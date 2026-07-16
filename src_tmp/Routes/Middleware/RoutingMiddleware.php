@@ -27,7 +27,6 @@ use SaQle\Core\Exceptions\Route\RouteNotFoundException;
 use SaQle\Core\Exceptions\Http\NotAcceptableException;
 use SaQle\Core\Ui\UiComponentDefinition;
 use SaQle\Http\Request\RequestScope;
-use SaQle\Http\Response\ResponseType;
 use SaQle\Http\Response\Message;
 
 class RoutingMiddleware implements MiddlewareInterface {
@@ -52,7 +51,6 @@ class RoutingMiddleware implements MiddlewareInterface {
              UiComponentDefinition::from_array($match['route']['compiled_target']),
              $match['route']['name'],
              RequestScope::from($match['route']['scope']),
-             ResponseType::tryFrom($match['route']['restype'] ?? ""),
              $match['route']['model_class'],
              $match['route']['layout'],
              $match['route']['guards'],
@@ -70,11 +68,6 @@ class RoutingMiddleware implements MiddlewareInterface {
          //set query params
          foreach($match['query'] as $qk => $qv){
              $request->add_query_param($qk, $qv);
-         }
-
-         //override negotiated response type
-         if($request->route->restype){
-             $request->responsetype = $request->route->restype;
          }
 
          return null;

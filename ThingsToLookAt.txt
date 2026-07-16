@@ -1,0 +1,10 @@
+Admin Panel
+
+      1. A toast message on data panel when a row is deleted successfully
+DONE: 2. Filter data on soft deletes
+      3. Enable viewing of deleted rows
+      4. Enable restoring deleted rows
+      5. Enable bulk delete from table(Check many rows and delete in one go)
+      6. Single resource view
+      7. Single resource view with context
+      8. Admin dashboard

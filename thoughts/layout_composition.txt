@@ -14,11 +14,10 @@ A component may have a controller, a template or both. But one has to exist.
 Component templates exist independently and do not know about the existance of other component templates
 either via extends or inherits tags. 
 
-A component template is made of blocks and slots. A slot is the child of a template, and only one can exist. Blocks
-are more of building parts of a template and many can exist.
+A component template is made of blocks and slots. A slot is the child of a template, and only one can exist. Blocks are more of building parts of a template and many can exist.
 
 
-Question: So how does the layout get composed if templates don't know each other
+Question: So how does the layout get composed if templates don't know about each other
 
 -------------------------------------------------------------------------------------------------
 

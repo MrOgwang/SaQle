@@ -1,12 +1,11 @@
 <?php
 namespace SaQle\Auth\Services;
 
-use SaQle\Commons\StringUtils;
+use SaQle\Commons\Str;
 use SaQle\Auth\Interfaces\VerificationCodeRepositoryInterface;
 use RuntimeException;
 
 class VerificationCodeService {
-     use StringUtils;
 
      protected VerificationCodeRepositoryInterface $repository;
 
@@ -26,7 +25,7 @@ class VerificationCodeService {
                  throw new RuntimeException("Unable to generate a unique code after {$max_retries} attempts.");
              }
 
-             $code = $this->random_string2($length, $base64_encode, $characters);
+             $code = Str::random_string2($length, $base64_encode, $characters);
              $retry++;
          } while ($this->repository->find_by_code($code));
 

@@ -46,8 +46,6 @@ class Route {
 
      private array $layout;
 
-     private ?ResponseType $response;
-
      private ?string $model = null;
 
      public function __construct(
@@ -56,7 +54,6 @@ class Route {
      	 string $url,
      	 string $guards = "",
      	 array $layout = [],
-     	 ?ResponseType $response = null,
          ?string $model = null
      ){
      	 $this->name = $name;
@@ -64,7 +61,6 @@ class Route {
      	 $this->url = $url;
      	 $this->guards = trim($guards);
      	 $this->layout = $layout;
-     	 $this->response = $response;
          $this->model = $model;
      }
 
@@ -94,10 +90,5 @@ class Route {
      	 if($this->layout){
      	 	 $router->compose_with($this->layout);
      	 }
-
-     	 if($this->response){
-     	 	 $router->respond_with($this->response);
-     	 }
-
      }
 }

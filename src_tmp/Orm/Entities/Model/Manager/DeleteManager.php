@@ -19,6 +19,7 @@ class DeleteManager extends QueryManager {
 	 use EventUtils;
 
 	 private bool $permanently = false;
+	 
 	 private ?QueryReferenceMap $query_reference_map = null;
 
 	 public function __construct(Model $model, bool $permanently = false){

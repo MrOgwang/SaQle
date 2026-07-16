@@ -22,7 +22,6 @@ use SaQle\Core\Assert\Assert;
 use SaQle\Core\Registries\RouteRegistry;
 use SaQle\Core\Support\RouteResolver;
 use SaQle\Http\Request\RequestScope;
-use SaQle\Http\Response\ResponseType;
 use RuntimeException;
 use Closure;
 
@@ -220,7 +219,6 @@ final class Router {
      }
 
      // Route decoration methods
-
      private static function apply_decoration(string $deco, ...$params){
          if(!self::$routes)
              return;
@@ -238,7 +236,6 @@ final class Router {
                  match($deco){
                      'compose_with' => $r->compose_with(...$params),
                      'requires'     => $r->requires(...$params),
-                     'respond_with' => $r->respond_with(...$params),
                      'sse'          => $r->sse(...$params),
                      'scope'        => $r->scope(...$params)
                  };
@@ -335,20 +332,11 @@ final class Router {
      }
 
      /**
-      * Set the response type from this route
-      * */
-     public function respond_with(ResponseType $restype){
-         $this->apply_decoration('respond_with', ...['restype' => $restype]);
-         return $this;
-     }
-
-     /**
       * Apply same attributes on a group of routes.
       * 
       * Attributes include:
       * compose_with
       * requires
-      * respond_with
       * aggregate_with
       * scope
       * */
@@ -363,10 +351,6 @@ final class Router {
 
              case 'requires':
                  self::with_group(['guards' => $value], $routes);
-             break;
-
-             case 'respond_with':
-                 self::with_group(['restype' => $value], $routes);
              break;
 
              case 'aggregate_with':
@@ -399,10 +383,6 @@ final class Router {
          foreach (self::$group_stack as $group){
              if(!empty($group['guards'])) {
                  $router->requires($group['guards']);
-             }
-
-             if (!empty($group['restype'])) {
-                 $router->respond_with($group['restype']);
              }
 
              if (!empty($group['layouts'])) {

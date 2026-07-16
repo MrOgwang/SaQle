@@ -4,7 +4,7 @@ namespace SaQle\Orm\Entities\Model\Schema;
 use SaQle\Orm\Entities\Field\Interfaces\IField;
 use SaQle\Orm\Entities\Field\Types\{Pk, TextField, OneToOne, OneToMany, FloatField, IntegerField, ManyToMany, FileField, DateField, TimeField, DateTimeField, TimestampField, BooleanField, VirtualField};
 use SaQle\Core\Exceptions\ValidationException;
-use SaQle\Commons\StringUtils;
+use SaQle\Commons\Str;
 use SaQle\Orm\Entities\Model\Manager\{CreateManager, UpdateManager, DeleteManager, TruncateManager, ReadManager, RunManager};
 use SaQle\Orm\Entities\Model\Interfaces\{IModel, ITableSchema, ISystemModel};
 use SaQle\Orm\Entities\Model\Collection\GenericModelCollection;
@@ -27,7 +27,6 @@ use InvalidArgumentException;
 use ReflectionClass;
 
 abstract class Model implements ITableSchema, IModel, JsonSerializable {
-	 use StringUtils;
 
      /**
       * Mark a model as read only. When a model instant is read only,
@@ -588,6 +587,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
          $class_name = static::class;
 
          $name_property = $class_name::get_name_property() ?? [];
+
          if($name_property){
              $name_property = is_array($name_property) ? $name_property : [$name_property];
          }
@@ -687,7 +687,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
 
      	 	 if(!array_key_exists($f->get_name(), $data)){
      	 	 	 if($f->is_primary()){
-     	 	 	 	 $data[$f->get_name()] = $this->table->get_pk_type() === 'UUID' ? $this->guid() : 1;
+     	 	 	 	 $data[$f->get_name()] = $this->table->get_pk_type() === 'UUID' ? Str::guid() : 1;
      	 	 	 	 continue;
      	 	 	 }
 
@@ -897,11 +897,14 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
 	 }
 
 	 //delete one or more rows
-	 public static function delete(bool $permanently = false){
-	 	 $model_instance = self::make();
-	 	 $model_instance->set_table_and_connection();
-	 	 return new DeleteManager($model_instance, $permanently);
-	 }
+     public static function delete(?bool $permanently = null){
+         $model = self::make();
+         $model->set_table_and_connection();
+
+         $permanently ??= !$model->table->has_soft_delete();
+
+         return new DeleteManager($model, $permanently);
+     }
 
 	 //empty the entire table
 	 public static function empty(){
@@ -1011,6 +1014,11 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
      	 return self::get_model_setup()->get_defined_field_names();
      }
 
+     //get all the defined field names
+     public static function get_audit_field_names(){
+         return self::get_model_setup()->get_audit_field_names();
+     }
+
      //get all the unique fields
      public static function get_unique_field_names(){
      	 return self::get_model_setup()->get_unique_field_names();
@@ -1054,8 +1062,9 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
          return self::get_model_setup()->get_fk_field_names();
      }
 
-     public static function get_presenters(?string $name) : ? array {
+     public static function get_presenters(?string $name = null) : ? array {
          $presenters = self::get_model_setup()->get_presenters();
+         
          if(!$name){
              return $presenters;
          }

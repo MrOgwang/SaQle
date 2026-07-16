@@ -20,7 +20,7 @@ class BaseUser extends Model implements UserInterface {
 	 	 })
 	 	 ->depends_on(['user_id', 'gender'])
 	 	 ->resize(['max_width' => 500, 'max_height' => 500])
-		 ->storage('local');
+		 ->storage('local'); 
 
 	 	 $table->primary_key('user_id');
 

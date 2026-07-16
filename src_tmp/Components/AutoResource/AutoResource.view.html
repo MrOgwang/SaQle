@@ -1,3 +1,105 @@
-<div>
-    <h3>Single resource view will be here</h3>
+<div class="resource-view">
+     <!-- ================= HEADER ================= -->
+     <div class="resource-header">
+         <div>
+             <div class="flex v_center breadcrumbs">
+                 <a class='flex v_center' href='{{ $current_resource?->url }}'>
+                     < {{ ucwords($current_resource->ui_label) }}
+                 </a>
+             </div>
+             <h2>{{ (string)$panel->data }}</h2>
+         </div>
+         <div class="resource-actions">
+             @let(
+                 $edit_form_route_name = strtolower($current_resource?->plural_label).'.edit.form',
+                 $edit_form_url = $auth_context === 'saqle' ? 
+                     route($edit_form_route_name, ['id' => $panel->data->{$current_resource->pk_column}]) : 
+                     route($edit_form_route_name, ['tenant' => $tenant_slug, 'id' => $panel->data->{$current_resource->pk_column}]),
+
+                 $del_route_name = strtolower($current_resource?->plural_label).'.delete',
+                 $del_url = $auth_context === 'saqle' ? 
+                     route($del_route_name, ['id' => $panel->data->{$current_resource->pk_column}]) : 
+                     route($del_route_name, ['tenant' => $tenant_slug, 'id' => $panel->data->{$current_resource->pk_column}])
+             )
+             <a class='flex center' href='{{ $edit_form_url }}'>Edit</a>
+             <form method='POST' action="{{ $del_url }}">
+                 <input type='hidden' name='_method' value='DELETE'/>
+                 <input type='hidden' name='pk' value='{{ $panel->data->{$current_resource->pk_column} }}'/>
+                 {!! $csrf_token !!}
+                 <button type='submit'>
+                     Delete
+                 </button>
+             </form>
+         </div>
+     </div>
+
+     <!-- ================= HERO ================= -->
+     <!--<div class="hero-card card">
+         <div class="avatar">
+             JD
+         </div>
+         <div class="hero-details">
+             <h2>John Doe</h2>
+             <p>john@example.com</p>
+             <div class="badges">
+                 <span class="badge success">
+                     Active
+                 </span>
+                 <span class="badge">
+                     Administrator
+                 </span>
+             </div>
+         </div>
+     </div>-->
+
+    <!-- ================= GRID ================= -->
+    <div class="details-grid">
+         <div class="card">
+             <h3>General</h3>
+             @foreach($panel->general as $label => $value)
+             <div class="property">
+                 <span>{{ $label }}</span>
+                 <strong>{{ $value }}</strong>
+             </div>
+             @endforeach
+         </div>
+         <div class="card">
+             <h3>Metadata</h3>
+             @foreach($panel->meta as $label => $value)
+             <div class="property">
+                 <span>{{ $label }}</span>
+                 <strong>{{ $value }}</strong>
+             </div>
+             @endforeach
+         </div>
+     </div>
+
+     @if($panel->descriptions)
+     <!-- ================= DESCRIPTION ================= -->
+     @foreach($panel->descriptions as $label => $value)
+     <div class="card">
+         <h3>{{ $label }}</h3>
+         <p>{{ $value }}</p>
+     </div>
+     @endforeach
+     @endif
+
+     @if($panel->relations)
+     <!-- ================= RELATIONSHIPS ================= -->
+     <div class="card">
+         <h3>Relationships</h3>
+         <div class="relations">
+             @foreach($panel->relations as $rel)
+             <div class="relation">
+                 <div>
+                     <strong>{{ $rel->count }}</strong>
+                     <span>{{ $rel->label }}</span>
+                 </div>
+                 <a class='flex center' href='{{ $rel->url }}'>View all {{ strtolower($rel->label) }}</a>
+             </div>
+             @endforeach
+         </div>
+     </div>
+     @endif
+
 </div>

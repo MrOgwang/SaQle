@@ -37,16 +37,6 @@ delete one user [DELETE: /users/:user_id] - this should be done from the view pa
 delete many users [DELETE: /users] - this should be done from the table panel
 
 
-route methods: 
-
-compose_with(array $layouts)
-requires(string $guard)
-requires_any(array $guards)
-requires_all(array $guard)
-respond_with($restype)
-
-
-
 
 
 

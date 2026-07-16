@@ -242,10 +242,9 @@ final class RouteCompiler {
                  'model_class'     => $r->model_class,
                  'guards'          => $r->guards,
                  'layout'          => $r->layout,
-                 'restype'         => $r->restype?->value,
                  'sse_event'       => $r->sse_event
              ];
-         }
+         } 
 
          return $variants;
      }
@@ -276,7 +275,6 @@ final class RouteCompiler {
                  'model_class'     => $route->model_class,
                  'guards'          => $route->guards,
                  'layout'          => $route->layout,
-                 'restype'         => $route->restype?->value,
                  'sse_event'       => $route->sse_event
              ] : null,
              'variants'    => $route instanceof Route ? null : self::get_route_variants($route)

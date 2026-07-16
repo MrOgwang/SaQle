@@ -9,7 +9,6 @@ namespace SaQle\Routes;
 use SaQle\Core\Assert\Assert;
 use SaQle\Core\Registries\ComponentRegistry;
 use SaQle\Http\Request\RequestScope;
-use SaQle\Http\Response\ResponseType;
 use SaQle\Core\Ui\UiLayout;
 use SaQle\Auth\Guards\GuardParser;
 use InvalidArgumentException;
@@ -157,9 +156,6 @@ final class Route {
      //parsed guards
      public array $guards = [];
 
-     //customize the response from this route
-     public ?ResponseType $restype = null;
-
      /**
       * The model class name for 
       * a resource route
@@ -185,7 +181,7 @@ final class Route {
      public function target(string $target){
          $this->target = $target;
          return $this;
-     }
+     } 
 
      /**
       * Normalize a route url by:
@@ -257,11 +253,6 @@ final class Route {
 
          $this->guard = $current_guard." && ".$guard;
 
-         return $this;
-     }
-
-     public function respond_with(ResponseType $restype){
-         $this->restype = $restype;
          return $this;
      }
 

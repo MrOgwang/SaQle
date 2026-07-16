@@ -6,7 +6,7 @@ use SaQle\Core\Registries\RouteRegistry;
 use Exception;
 
 class UrlGenerator {
-     public static function route(string $name, array $params = []): string {
+     public static function route(string $name, array $params = []) : string {
          $route = RouteRegistry::get($name);
 
          if(!$route){
@@ -16,9 +16,9 @@ class UrlGenerator {
          $url = $route['route']['url'];
 
          foreach($params as $key => $value){
-             $url = str_replace(':'.$key, $value, $url);
+             $url = str_replace(":{$key}", rawurlencode($value), $url);
          }
 
-         return $url;
+         return new UrlBuilder($url);
      }
 }

@@ -71,14 +71,20 @@ class Message extends FeedBack {
      //session flashing
      public function with_message(string $type, string $message){
          Session::flash('__notification', ['type' => $type, 'message' => $message]);
+
+         return $this;
      }
 
      public function with_input(?array $input = null){
          Session::flash('__old', $input ? $input : request()->data->get_all());
+
+         return $this;
      }
 
      public function with_errors(array $errors){
          Session::flash('__errors', $errors);
+
+         return $this;
      }
 
      public function flash(string $key, mixed $data = null){

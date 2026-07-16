@@ -9,7 +9,6 @@ namespace SaQle\Routes;
 use SaQle\Core\Assert\Assert;
 use SaQle\Core\Ui\UiComponentDefinition;
 use SaQle\Http\Request\RequestScope;
-use SaQle\Http\Response\ResponseType;
 use InvalidArgumentException;
 
 final class MatchedRoute {
@@ -32,9 +31,6 @@ final class MatchedRoute {
          //the route scope
          public RequestScope $scope, 
 
-         //the response types.
-         public ?ResponseType $restype = null,
-
          //the route handler
          public ?string $model_class = null,
 
@@ -50,9 +46,4 @@ final class MatchedRoute {
          //the sse meta data
          public ?array $sse = null,
      ){}
-
-     //check if the matched route supports a given response type
-     public function supports(string $response_type){
-         return in_array($response_type, $this->restype, true);
-     }
 }

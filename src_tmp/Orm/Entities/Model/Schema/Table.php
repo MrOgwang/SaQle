@@ -1,4 +1,5 @@
 <?php
+
 namespace SaQle\Orm\Entities\Model\Schema;
 
 use SaQle\Core\Assert\Assert;

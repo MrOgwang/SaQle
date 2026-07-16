@@ -48,7 +48,7 @@ final class RelationLoader {
      private function extract_ids(iterable $items, string $key): array {
          $ids = [];
 
-         foreach ($items as $item){
+         foreach($items as $item){
              $item_value = $item->$key ?? null;
              if($item_value){
                  $ids[] = $item_value;
@@ -64,14 +64,12 @@ final class RelationLoader {
 
          if($driver->supports_window_functions()){
              return $this->load_with_window_function($connection, $parents, $relation, $nested, $tuning, $relation_stack);
-             //return;
          }
 
          /*if($tuning){
              $this->load_with_fallback($connection, $parents, $relation, $nested, $tuning, $relation_stack);
              return;
          }*/
-
          return $this->load_without_limit($connection, $parents, $relation, $nested, $relation_stack);
      }
      
@@ -202,6 +200,9 @@ final class RelationLoader {
          $relation_stack_parent = $relation_stack->parent();
          $local_key = $relation->get_local_key();
          $foreign_key = $relation->get_foreign_key();
+
+         //print_r($relation);
+        // print_r($parents); 
 
          $ids = $this->extract_ids($parents, $local_key);
 

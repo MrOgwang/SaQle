@@ -1,5 +1,0 @@
-Field methods
-- get_field_definition
-- get_kwargs
-- get_relation
-- get_validation_configurations

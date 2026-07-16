@@ -1,0 +1,51 @@
+
+Route grouping is a powerful feature, that makes it easy for the developer to share common
+characteristics among routes. However, its obvious from my experience that grouping
+should not be done just for the sake of it. Therefo0re SaQle will insist on grouping based on
+functional unit. 
+
+Examples:
+
+These are user profile related routes. They share authenticated and onboared-talent
+guards, they share layout and have the same prefix. This makes much more sense at a glance.
+
+Router::context('profile')
+->require('authenticated', 'onboarded-talent')
+->layout(['booibo', 'profile'])
+->prefix('profile')
+->routes(function(){
+	 Router::get("/skills/", "profileskills");
+     Router::get("/advertise/", "advertise");
+     Router::get("/interests/", "industry");
+     Router::get("/welcome/", "welcome");
+     Router::get("/socials/", "socials");
+     Router::get("/basic/", "basic");
+     Router::match(['POST', 'GET'], "/custom/", "custom");
+});
+
+Router::context('experiences')
+->require('authenticated', 'onboarded-talent')
+->layout(['booibo', 'experiences'])
+->prefix('experiences')
+->routes(function(){
+	 Router::get("/merchandise/", "merchandise");
+     Router::get("/video-message/", "shoutouts");
+     Router::get("/virtualmeet/", "virtualmeet");
+     Router::get("/businessmarketing/", "businessmarketing");
+     Router::get("/dms/", "directmessage");
+});
+
+Router::context('settings')
+->require('authenticated')
+->layout(['booibo', 'settings'])
+->prefix('settings')
+->routes(function(){
+	 Router::get("/account/", "account");
+     Router::get("/contacts/", "contacts");
+     Router::get("/notifications/", "notifications");
+     Router::get("/personal/", "personal");
+     Router::post("/account/reset/", "account@reset_user_password");
+     Router::post("/account/enable/", "account@enable_account");
+     Router::post("/account/disable/", "account@disable_account");
+     Router::post("/account/delete/", "account@delete_account");
+});

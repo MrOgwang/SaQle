@@ -3,6 +3,7 @@ namespace SaQle\Core\Ui\Forms;
 
 use RuntimeException;
 use SaQle\Core\Ui\Forms\Form;
+use SaQle\Core\Ui\Utils\Label;
 
 class FormField {
 
@@ -222,7 +223,7 @@ class FormField {
          $this->attributes['searchable'] = $search_fields;
          $this->attributes['placeholder'] = ucfirst(
              strtolower("Search ".$this->label." by "
-                 .implode_natural(array_map(fn($f) => FormFieldsCompiler::derive_label($f), $search_fields), 'or')
+                 .natural_join(array_map(fn($f) => Label::make($f), $search_fields), 'or')
              )
          );
 
