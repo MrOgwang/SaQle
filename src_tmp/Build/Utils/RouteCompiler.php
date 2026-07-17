@@ -16,6 +16,7 @@ use SaQle\Core\Registries\ComponentRegistry;
 use ReflectionClass;
 use ReflectionMethod;
 use SaQle\Orm\Database\SystemSchema;
+use RuntimeException;
 
 final class RouteCompiler {
 
@@ -221,7 +222,20 @@ final class RouteCompiler {
          
          $compiled = [];
 
-         foreach($routes as $route){
+         foreach($routes as $r){
+
+             $route = array_values($r)[0];
+
+             $route_name = trim($route->name ?? "");
+
+             if($route_name){
+                 if(in_array($route_name, Router::$aliases)){
+                     throw new RuntimeException("Duplicate route name: {$route_name} found. Exiting!");
+                 }
+
+                 Router::$aliases[] = $route_name;
+             }
+
              $compiled[$route->key] = self::compile_route($route);
          }
 

@@ -19,10 +19,6 @@ final class Route {
      public private(set) ?string $key = null {
          set(?string $value){
              $this->key = $value;
-
-             if(is_null($this->name)){
-                 $this->name = $value;
-             }
          }
 
          get => $this->key;
@@ -46,6 +42,15 @@ final class Route {
          get => $this->name;
      }
 
+     //route prefix
+     public private(set) ?string $prefix = null {
+         set(?string $value){
+             $this->prefix = $value;
+         }
+
+         get => $this->prefix;
+     }
+
      //if this is an event stream route, customize the event info here
      public private(set) ?array $sse_event = null {
          set(?array $value){
@@ -58,6 +63,7 @@ final class Route {
      //the route url
      public string $url {
          set(string $value){
+
              //the url must be a non empty string, otherwise complain loudly
              Assert::stringNotEmpty($value, 'A route url must be a non empty string!');
 
@@ -127,6 +133,17 @@ final class Route {
      }
 
      /**
+      * Route middleware
+      * */
+     public ?array $middleware = null {
+         set(?array $value){
+             $this->middleware = $value;
+         }
+
+         get => $this->middleware;
+     }
+
+     /**
      * These are roles, permissions and attributes as the developer will have defined
      * in the AuthorizationProvider class that will determine whether the user 
      * is authorized to access this route or not
@@ -171,11 +188,12 @@ final class Route {
 
      //create a new route object
 	 public function __construct(string $method, string $url, string $target, ?string $model_class = null){
-         $this->method = $method;
-         $this->url    = $url;
-         $this->target = $target;
+         $this->method      = $method;
+         $this->url         = $url;
+         $this->target      = $target;
          $this->model_class = $model_class;
-         $this->scope = RequestScope::WEB;
+         $this->scope       = RequestScope::WEB;
+         $this->key         = substr(hash('xxh128', $method.$url), 0, 16);
 	 }
 
      public function target(string $target){
@@ -205,13 +223,11 @@ final class Route {
       * For web requests, the route will declare which components
       * the final UI layout will be composed with
       * 
-      * @param array $layouts: an array of components to compose the layout from. This can be an array of strings,
-      * or an array of arrays of strings.
+      * @param array $layouts: an array of components to compose the layout from.
       * 
-      * When an array of arrays of strings is provided, the resolver must be provided to determine
-      * which layout group to use.
+      * Layouts are appended to already set layouts
       * */
-     public function compose_with(array $layouts): self {
+     public function layout(array $layouts): self {
 
          Assert::allStringNotEmpty($layouts, 'Layout components must be non-empty strings for route: '.$this->url);
 
@@ -228,8 +244,10 @@ final class Route {
       * Add roles, permissions and attributes as the developer will have defined
       * in the AuthorizationProvider class that will determine whether the user 
       * is authorized to access this route or not
+      * 
+      * Guards are appended to previous set guards
       * */
-     public function requires(string $guard){
+     public function authorize(string $guard){
 
          $guard = trim($guard);
 
@@ -257,11 +275,22 @@ final class Route {
      }
 
      /**
+      * Scope overrides previsously set scope
+      * */
+     public function scope(RequestScope $scope){
+         $this->scope = $scope;
+
+         return $this;
+     }
+
+     /**
       * Customize event meta data for event stream
       * routes.
       * 
       * @var string event - the name of event
       * @var int interval - the interval for sleep
+      * 
+      * Overrides previously set sse meta data
       * */
      public function sse(string $event, int $interval){
          $meta = [
@@ -274,20 +303,45 @@ final class Route {
          return $this;
      }
 
-     public function set_name(string $name){
-         $this->name = $name;
-     }
-
+     /**
+      * Appends to already existing name
+      * */
      public function name(string $name){
-         $this->name = $name;
+
+         if(!trim($name)){
+             return $this;
+         }
+
+         $this->name = $this->name ? trim($this->name.".".$name) : $name;
+         
          return $this;
      }
 
-     public function set_scope(RequestScope $scope){
-         $this->scope = $scope;
+     /**
+      * Appends to already existing prefix
+      * */
+     public function prefix(string $prefix){
+         
+         if(!trim($prefix)){
+             return $this;
+         }
+
+         $this->prefix = $this->prefix ? trim($this->prefix."/".$prefix) : $prefix;
+
+         $this->url = url_join([$this->prefix, $this->url]);
+         
+         return $this;
      }
 
-     public function set_key(string $key){
-         $this->key = $key;
+      /**
+       * Middleware is appended to already existing middleware
+       * */
+      public function middleware(array $middleware): self {
+
+         $middleware = array_unique(array_merge($this->middleware ?? [], $middleware));
+         
+         $this->middleware = $middleware;
+
+         return $this;
      }
 }

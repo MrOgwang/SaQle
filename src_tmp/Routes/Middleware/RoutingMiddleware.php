@@ -20,7 +20,7 @@ namespace SaQle\Routes\Middleware;
 
 use SaQle\Middleware\MiddlewareInterface;
 use SaQle\Routes\{
-     Router, 
+     RouteMatcher, 
      MatchedRoute
 };
 use SaQle\Core\Exceptions\Route\RouteNotFoundException;
@@ -33,7 +33,7 @@ class RoutingMiddleware implements MiddlewareInterface {
      
      public function handle($request, $response = null) : ?Message {
          //find matching route
-         $match = Router::find_matching_route($request->method(), $request->uri());
+         $match = RouteMatcher::find_matching_route($request->method(), $request->uri());
          
          if(!$match){
              $url = $request->uri();

@@ -18,24 +18,17 @@ declare(strict_types = 1);
 
 namespace SaQle\Routes;
 
-use SaQle\Core\Assert\Assert;
-use SaQle\Core\Registries\RouteRegistry;
 use SaQle\Core\Support\RouteResolver;
 use SaQle\Http\Request\RequestScope;
 use RuntimeException;
-use Closure;
 
 final class Router {
 
-     protected static array $group_stack = [];
+     public static array $aliases = [];
 
-     protected static array $route_names = [];
-
-     /**
-      * The routes are batched(so this is technically an array of arrays). This is to make it easy
-      * to apply shared route properties to a group of routes.
-      * */
      protected static array $routes = [];
+
+     protected static array $context_stack = [];
 
      //only one instance of router must exist
      protected static ?self $instance = null;
@@ -49,22 +42,6 @@ final class Router {
 
          return static::$instance;
      }
-
-     private static function route_key(string $method, string $url) : string {
-         return substr(hash('xxh128', $method.$url), 0, 16);
-     }
-
-     private static function assign_route_name(&$route, $name = null){
-
-         $name = $name ?? self::route_key($route->method, $route->url);
-         
-         if($name && !in_array($name, self::$route_names)){
-             $route->set_name($name);
-             self::$route_names[] = $name;
-         }else{
-            throw new RuntimeException("No name defined for the route - {$route->method} : {$route->url} or the name {$name} is already taken by another route!");
-         }
-     }
      
      /**
       * Define a route for a get request
@@ -73,24 +50,28 @@ final class Router {
       *     - the url to match for this route
       * 
       * @param string $target 
+      *     - the name of the component whose controller will process request.
       * 
-      * Target can be provided in several formats:
+      * The target should be provided in one of these formats:
       * 
-      * ControllerName@method - the controller class name and the method to execute
-      * componentname@method  - the component name and the method to execute
-      * ControllerName        - just the controller name, the method to execute will be determined
-      * componentname         - just the component name, the method to excute will be determined automatically if a component has a controller
+      * component_name : component lives in the global namespace,
+      *                  and the controller method to be executed will be determined from the request
+      *                  http method
+      * 
+      * component_name@method_name : No guessing controller method to execute
+      * 
+      * module.component_name : component lives in a module.
+      * 
+      * module.component_name@method_name 
       * 
       * */
      static public function get(string $url, string $target, ?string $model_class = null) : Router {
     
          $route = new Route('get', $url, $target, $model_class);
-         $key = self::route_key($route->method, $route->url);
-         $route->set_key($key);
+        
+         self::apply_context($route);
          
-         self::$routes[] = [$key => $route];
-
-         self::push_group_attributes();
+         self::$routes[] = [$route->key => $route];
 
          return static::instance();
      }
@@ -99,12 +80,10 @@ final class Router {
      static public function post(string $url, string $target, ?string $model_class = null) : Router {
         
          $route = new Route('post', $url, $target, $model_class);
-         $key = self::route_key($route->method, $route->url);
-         $route->set_key($key);
+    
+         self::apply_context($route);
 
-         self::$routes[] = [$key => $route];
-
-         self::push_group_attributes();
+         self::$routes[] = [$route->key => $route];
 
          return static::instance();
      }
@@ -113,12 +92,10 @@ final class Router {
      static public function patch(string $url, string $target, ?string $model_class = null) : Router {
 
          $route = new Route('patch', $url, $target, $model_class);
-         $key = self::route_key($route->method, $route->url);
-         $route->set_key($key);
 
-         self::$routes[] = [$key => $route];
+         self::apply_context($route);
 
-         self::push_group_attributes();
+         self::$routes[] = [$route->key => $route];
 
          return static::instance();
      }
@@ -127,12 +104,10 @@ final class Router {
      static public function put(string $url, string $target, ?string $model_class = null) : Router {
 
          $route = new Route('put', $url, $target, $model_class);
-         $key = self::route_key($route->method, $route->url);
-         $route->set_key($key);
+        
+         self::apply_context($route);
 
-         self::$routes[] = [$key => $route];
-
-         self::push_group_attributes();
+         self::$routes[] = [$route->key => $route];
 
          return static::instance();
      }
@@ -141,49 +116,10 @@ final class Router {
      static public function delete(string $url, string $target, ?string $model_class = null) : Router {
 
          $route = new Route('delete', $url, $target, $model_class);
-         $key = self::route_key($route->method, $route->url);
-         $route->set_key($key);
+        
+         self::apply_context($route);
 
-         self::$routes[] = [$key => $route];
-
-         self::push_group_attributes();
-
-         return static::instance();
-     }
-
-     /**
-      * Handle more than one http verb for a given route and target
-      * 
-      * @param array $methods
-      *    - http methods to handle
-      * 
-      * @param string $url 
-      *     - the url
-      * 
-      * @param string $target
-      * 
-      * Target can be provided in several formats:
-      * 
-      * ControllerName@method - the controller class name and the method to execute
-      * componentname@method  - the component name and the method to execute
-      * ControllerName        - just the controller name, the method to execute will be determined
-      * componentname         - just the component name, the method to excute will be determined automatically if a component has a controller
-      * 
-      * */
-     static public function match(array $methods, string $url, string $target, ?string $model_class = null) : Router {
-         
-         $routes = [];
-         foreach($methods as $m){
-             $route = new Route($m, $url, $target, $model_class);
-             $key = self::route_key($route->method, $route->url);
-             $route->set_key($key);
-             
-             $routes[$key] = $route;
-         }
-
-         self::$routes[] = $routes;
-
-         self::push_group_attributes();
+         self::$routes[] = [$route->key => $route];
 
          return static::instance();
      }
@@ -203,44 +139,18 @@ final class Router {
          }
 
          $route = new DeferedRoute($method, $url, $variant_routes, $resolver_class);
-         $key = self::route_key($route->method, $route->url);
-         $route->set_key($key);
+         
+         self::apply_context($route);
 
-         self::$routes[] = [$key => $route];
+         self::$routes[] = [$route->key => $route];
      }
 
      public static function all(): array {
-         //return a flattened array
-         return array_merge(...self::$routes);
+         return self::$routes;
      }
 
      public static function clear(): void {
          self::$routes = [];
-     }
-
-     // Route decoration methods
-     private static function apply_decoration(string $deco, ...$params){
-         if(!self::$routes)
-             return;
-
-         $last_batch = self::$routes[ count(self::$routes) - 1];
-
-         if($deco === 'name'){
-             $r_index = 0;
-             foreach($last_batch as $r){
-                 self::assign_route_name($r, $params['name'][$r_index]);
-                 $r_index++;
-             }
-         }else{
-             foreach($last_batch as $r){
-                 match($deco){
-                     'compose_with' => $r->compose_with(...$params),
-                     'requires'     => $r->requires(...$params),
-                     'sse'          => $r->sse(...$params),
-                     'scope'        => $r->scope(...$params)
-                 };
-             }
-         }
      }
 
      /**
@@ -248,12 +158,26 @@ final class Router {
       * 
       * @var string name - name of route
       * */
-     public function name(array | string $name){
-         if(!is_array($name)){
-             $name = [$name];
-         }
+     public function name(string $name){
 
-         $this->apply_decoration('name', ...['name' => $name]);
+         $route = array_values(self::$routes[count(self::$routes) - 1])[0];
+
+         $route->name($name);
+
+         return $this;
+     }
+
+     /**
+      * Provide a custom route prefix
+      * 
+      * @var string prefix 
+      * */
+     public function prefix(string $prefix){
+
+         $route = array_values(self::$routes[count(self::$routes) - 1])[0];
+
+         $route->prefix($prefix);
+
          return $this;
      }
 
@@ -263,7 +187,11 @@ final class Router {
       * @var RequestScope $scope
       * */
      public function scope(RequestScope $scope){
-         $this->apply_decoration('scope', ...['scope' => $scope]);
+
+         $route = array_values(self::$routes[count(self::$routes) - 1])[0];
+
+         $route->scope($scope);
+         
          return $this;
      }
 
@@ -275,7 +203,11 @@ final class Router {
       * @var int interval - the interval for sleep
       * */
      public function sse(string $event, int $interval){
-         $this->apply_decoration('sse', ...['event' => $event, 'interval' => $interval]);
+
+         $route = array_values(self::$routes[count(self::$routes) - 1])[0];
+
+         $route->sse($event, $interval);
+         
          return $this;
      }
 
@@ -289,210 +221,113 @@ final class Router {
       * When an array of arrays of strings is provided, the resolver must be provided to determine
       * which layout group to use.
       * */
-     public function compose_with(array $layouts){
-         $this->apply_decoration('compose_with', ...['layouts' => $layouts]);
+     public function layout(array $layouts){
+
+         $route = array_values(self::$routes[count(self::$routes) - 1])[0];
+
+         $route->layout($layouts);
+         
+         return $this;
+     }
+
+     /**
+      * Custom route middleware
+      * */
+     public function middleware(array $middleware){
+
+         $route = array_values(self::$routes[count(self::$routes) - 1])[0];
+
+         $route->middleware($middleware);
+         
          return $this;
      }
 
      /**
       * Add roles, permissions and attributes as the developer will have defined
       * in the AuthorizationProvider class that will determine whether the user 
-      * is authorized to access this route or not
+      * is authorized to access this resource or not
       * */
-     public function requires(string $guard){
-         $this->apply_decoration('requires', ...['guard' => $guard]);
-         return $this;
-     }
+     public function authorize(string $guard){
 
-     /**
-      * Add url aliases for this route
-      * */
-     public function with_aliase(array $aliases){
-         if(!self::$routes)
-             return $this;
+         $route = array_values(self::$routes[count(self::$routes) - 1])[0];
 
-         //aliases must be an array of non empty strings, otherwise complain loudly
-         Assert::allStringNotEmpty($aliases, 'Please provide an array of non empty string names for url aliases');
-
-         $last_batch = self::$routes[ count(self::$routes) - 1];
-         $new_last_batch = [];
-
-         //for each aliase, for each route in last batch, create a new route 
-         foreach($last_batch as $r){
-             foreach($aliases as $a){
-                 $aliase_route = clone $r;
-                 $aliase_route->url = $a;
-                 $new_last_batch[] = $aliase_route;
-             }
-         }
-
-         self::$routes[] = $new_last_batch;
-
-         return $this;
-     }
-
-     /**
-      * Apply same attributes on a group of routes.
-      * 
-      * Attributes include:
-      * compose_with
-      * requires
-      * aggregate_with
-      * scope
-      * */
-     public static function group(string $attribute, mixed $value, callable $routes){
-
-         $attribute = strtolower($attribute);
-
-         switch($attribute){
-             case 'compose_with':
-                 self::with_group(['layouts' => $value], $routes);
-             break;
-
-             case 'requires':
-                 self::with_group(['guards' => $value], $routes);
-             break;
-
-             case 'aggregate_with':
-             break;
-
-             case 'scope':
-                 self::with_group(['scope' => $value], $routes);
-             break;
-             
-             default:
-                 throw new RuntimeException('Uknown attribute provided to route group!');
-             break;
-         }
-     }
-
-     private static function with_group(array $attributes, callable $routes): void {
-         self::$group_stack[] = $attributes;
-
-         $routes();
+         $route->authorize($guard);
          
-         array_pop(self::$group_stack);
+         return $this;
      }
 
-     private static function push_group_attributes(){
-         if(!self::$group_stack) return;
+     //create shared route context for two or more routes
+     public static function context(){
+         return new RouteContext(is_group: true);
+     }
 
-         $router = static::instance();
+     public static function route(string $url, string $target){
+         $context = new RouteContext(is_group: false);
+         
+         $context->url($url);
+         $context->target($target);
 
-         //Apply group attributes
-         foreach (self::$group_stack as $group){
-             if(!empty($group['guards'])) {
-                 $router->requires($group['guards']);
-             }
+         return $context;
+     }
 
-             if (!empty($group['layouts'])) {
-                 $router->compose_with($group['layouts']);
-             }
-
-             if (!empty($group['scope'])) {
-                 $router->scope($group['scope']);
-             }
+     public static function method(string $http_verb, ?string $method = null){
+         if(!self::$context_stack){
+             return;
          }
+
+         $route_attrs = self::$context_stack[count(self::$context_stack) - 1];
+         
+         $route = new Route(
+             $http_verb, 
+             $route_attrs['url'], 
+             $method ? $route_attrs['target']."@".$method : $route_attrs['target']
+         );
+
+         self::apply_context($route);
+
+         self::$routes[] = [$route->key => $route];
+
+         return static::instance();
      }
 
-     public static function find_matching_route(string $method, string $uri): ?array{
-        // Merge all prefixes
-        $all_prefixes = array_merge(config('app.api_url_prefixes'), config('app.sse_url_prefixes'));
+     public static function register_context(array $attributes) : void {
 
-        //Get all compiled routes from your registry
-        $compiled_routes = RouteRegistry::all();
+         self::$context_stack[] = $attributes;
 
-        // Parse URI
-        $parts = parse_url($uri);
-        $path = '/'.trim($parts['path'] ?? '/', '/'); // normalize path with leading slash
-        $query_params = [];
-        if(isset($parts['query'])){
-            parse_str($parts['query'], $query_params);
-        }
-
-        //Strip prefix
-        $prefix_data = self::strip_prefix($path, $all_prefixes);
-        $prefix = $prefix_data['prefix'];           // matched prefix string (e.g., /api/v1)
-        $path_without_prefix = $prefix_data['path']; // path after removing prefix
-
-        // Iterate over compiled routes
-        foreach ($compiled_routes as $route){
-            // HTTP method check
-            if(strtoupper($route['method']) !== strtoupper($method)) continue;
-
-            // Match path regex
-            if(preg_match($route['pattern'], $path_without_prefix, $matches)){
-
-                 //Extract path params
-                 $params = [];
-                 if (!empty($route['param_names'])) {
-                     foreach ($route['param_names'] as $i => $name) {
-                         $params[$name] = $matches[$i + 1] ?? null;
-                     }
-                 }
-
-                 if($route['type'] === 'conditional'){
-
-                     $resolver_class = $route['resolver'];
-                     if(!is_a($resolver_class, RouteResolver::class, true)){
-                         throw new RuntimeException("The class {$resolver_class} must be an instance of a ".RouteResolver::class);
-                     }
-
-                     $resolver_instance = resolve($resolver_class);
-                     $route_details = $route['variants'][$resolver_instance->resolve(request())] ?? null;
-
-                     if(!$route_details){
-                         throw new RuntimeException("Invalid route resolver class definition for: {$resolver_class}!");
-                     }
-
-                 }else{
-                     $route_details = $route['route'];
-                 }
-
-                 return [
-                     'route' => $route_details,
-                     'params' => $params,
-                     'query' => $query_params,
-                     'path' => $path_without_prefix,
-                     'method' => $method,
-                     'prefix' => $prefix,
-                 ];
-            }
-        }
-
-        // No match found
-        return null;
      }
 
-     /**
-     * Strip the longest matching prefix from the path
-     */
-     protected static function strip_prefix(string $path, array $prefixes): array{
-        // Normalize path: ensure leading slash
-        $normalizedPath = '/' . trim($path, '/');
+     public static function remove_context() : void {
 
-        // Sort prefixes by length descending to match the longest first
-        usort($prefixes, fn($a, $b) => strlen(trim($b, '/')) - strlen(trim($a, '/')));
-
-        foreach ($prefixes as $prefix) {
-            $normalizedPrefix = '/' . trim($prefix, '/');
-            if (str_starts_with($normalizedPath, $normalizedPrefix)) {
-                $stripped = substr($normalizedPath, strlen($normalizedPrefix));
-                $stripped = '/' . ltrim($stripped, '/'); // ensure leading slash
-                return ['prefix' => $normalizedPrefix, 'path' => $stripped];
-            }
-        }
-
-        return ['prefix' => null, 'path' => $normalizedPath];
+         array_pop(self::$context_stack);
+         
      }
 
-     /**
-     * Helper: check if normalized prefix is in an array of prefixes
-     */
-     protected static function prefix_in_array(string $prefix, array $prefix_array): bool{
-        foreach($prefix_array as $p) {
-            if('/'.trim($p, '/') === $prefix) return true;
-        }
-        return false;
+     private static function apply_context(Route $route) : void {
+         foreach(self::$context_stack as $context){
+
+             if(!empty($context['authorize'])){
+                 $route->authorize($context['authorize']);
+             }
+
+             if(!empty($context['middleware'])){
+                 $route->middleware($context['middleware']); 
+             }
+
+             if(!empty($context['layout'])){
+                 $route->layout($context['layout']);
+             }
+
+             if(!empty($context['scope'])){
+                 $route->scope($context['scope']); 
+             }
+
+             if(!empty($context['prefix'])){
+                 $route->prefix($context['prefix']); 
+             }
+
+             if(!empty($context['name'])){
+                 $route->name($context['name']); 
+             } 
+         }
      }
 }

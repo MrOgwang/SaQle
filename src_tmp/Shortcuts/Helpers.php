@@ -82,6 +82,51 @@ if(!function_exists('session')){
      }
 }
 
+if (!function_exists('url_join')){
+     /**
+     * Join URL segments using forward slashes.
+     *
+     * Examples:
+     *  url_join(['https://example.com', 'api', 'users']);
+     *      => https://example.com/api/users
+     *
+     *  url_join(['http://localhost:8080/', '/admin/', '/users']);
+     *      => http://localhost:8080/admin/users
+     *
+     *  url_join(['https://example.com', '', null, 'images', 'logo.png']);
+     *      => https://example.com/images/logo.png
+     */
+     function url_join(array $parts, bool $trailing_slash = false) : string {
+        if(empty($parts)) {
+            return '';
+        }
+
+        $clean = [];
+
+        foreach ($parts as $index => $part) {
+            if ($part === '' || $part === null) {
+                continue;
+            }
+
+            // URLs always use forward slashes
+            $part = str_replace('\\', '/', $part);
+
+            if (empty($clean)) {
+                // Preserve the scheme (https://, ftp://, etc.)
+                $clean[] = rtrim($part, '/');
+            } else {
+                $clean[] = trim($part, '/');
+            }
+        }
+
+        $url = implode('/', $clean);
+
+        return $trailing_slash
+            ? rtrim($url, '/') . '/'
+            : $url;
+    }
+}
+
 if(!function_exists('path_join')){
      function path_join(array $parts, bool $trailing_slash = false): string {
          $separator = DIRECTORY_SEPARATOR;

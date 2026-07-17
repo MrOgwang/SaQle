@@ -15,12 +15,15 @@ Router::get(config('static_assets_route')."/:type/:file", config('static_assets_
 
 Router::get("/saqle".config('static_assets_route')."/:type/:file", config('static_assets_component'))->name('saqle.static.asset');
 
-Router::match(['GET', 'POST'], "/saqle/signin/", 'saqle.saqlesignin')->name(['saqle.login.form', 'saqle.login.submit']);
+Router::route("/saqle/signin", 'saqle.saqlesignin')->name("saqle.login")->methods(function(){
+	 Router::method("GET", "get")->name('form');
+	 Router::method("POST", "post")->name('submit');
+});
 
-Router::get("/saqle/dashboard/", 'saqle.dashboard')->compose_with(['saqle.app'])->name('saqle.admin.dashboard');
+Router::get("/saqle/dashboard/", 'saqle.dashboard')->layout(['saqle.app'])->name('saqle.admin.dashboard');
 
-Router::get("/:tenant/_admin/dashboard/", 'saqle.dashboard')->compose_with(['saqle.app'])->name('tenant.admin.dashboard');
+Router::get("/:tenant/_admin/dashboard/", 'saqle.dashboard')->layout(['saqle.app'])->name('tenant.admin.dashboard');
 
-Router::get("/_admin/dashboard/", 'saqle.dashboard')->compose_with(['saqle.app'])->name('admin.dashboard');
+Router::get("/_admin/dashboard/", 'saqle.dashboard')->layout(['saqle.app'])->name('admin.dashboard');
 
 ?>

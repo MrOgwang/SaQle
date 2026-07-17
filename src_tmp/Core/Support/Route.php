@@ -84,11 +84,11 @@ class Route {
      	 $router = Router::$method($this->url, $this->target, $this->model)->name($this->name);
 
      	 if($this->guards){
-     	 	 $router->requires($this->guards);
+     	 	 $router->authorize($this->guards);
      	 }
 
      	 if($this->layout){
-     	 	 $router->compose_with($this->layout);
+     	 	 $router->layout($this->layout);
      	 }
      }
 }
