@@ -4,6 +4,7 @@ namespace SaQle\Http\Request\Data;
 use SaQle\Core\Exceptions\Data\KeyNotFoundException;
 
 class Session extends Data {
+	
 	 private array $pointers = [];
 
 	 private bool  $session_active = false;

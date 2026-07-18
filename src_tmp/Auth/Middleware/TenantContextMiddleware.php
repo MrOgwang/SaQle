@@ -16,20 +16,20 @@
  * */
 namespace SaQle\Auth\Middleware;
 
-use SaQle\Middleware\MiddlewareInterface;
+use SaQle\Middleware\RequestMiddleware;
 use SaQle\Auth\Identity\Tenant\Interfaces\TenantProviderInterface;
 use SaQle\Auth\Identity\Tenant\Resolvers\TenantIDResolver;
 use SaQle\Http\Response\Message;
 use RuntimeException;
 
-class TenantContextMiddleware implements MiddlewareInterface {
+class TenantContextMiddleware implements RequestMiddleware {
 
      public function __construct(
          private TenantIDResolver $id_resolver,
          private TenantProviderInterface $tenant_provider
      ){}
 
-     public function handle($request, $response = null) : ?Message {
+     public function before($request) : ?Message {
 
          $tenant_key = config('session_tenant_key');
 

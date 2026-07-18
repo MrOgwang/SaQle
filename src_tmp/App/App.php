@@ -1,5 +1,5 @@
 <?php
-namespace SaQle;
+namespace SaQle\App;
 
 use SaQle\Core\Services\Container\Container;
 
@@ -27,13 +27,10 @@ use SaQle\Core\Support\{
 };
 use SaQle\Core\Config\{
      ConfigRepository, 
-     AppSetup, 
      Config
 };
-use SaQle\Http\Request\{
-     Request, 
-     Runtime
-};
+use SaQle\Http\Request\Request;
+use SaQle\Http\Kernel\Runtime;
 use SaQle\Session\Providers\SessionProvider;
 use SaQle\Auth\Guards\GuardManager;
 use SaQle\Build\Manage\Manage;
@@ -96,7 +93,7 @@ final class App {
          ];
 
          foreach($shortcuts as $s){
-             require_once __DIR__.'/Shortcuts/'.$s.'.php';
+             require_once __DIR__.'/../Shortcuts/'.$s.'.php';
          }
 
          $this->load_environment();
@@ -150,7 +147,7 @@ final class App {
      }
 
      private function run_request(){
-         new Runtime()->handle(Request::init());
+         new Runtime()->handle();
      }
 
      private function run_cli($args){
@@ -163,6 +160,10 @@ final class App {
          }else{
              $this->run_request();
          }
+     }
+
+     public static function configure(string $base_path): AppBuilder {
+         return new AppBuilder($base_path);
      }
 
 }

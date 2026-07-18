@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace SaQle\Http\Request;
+namespace SaQle\Http\Kernel;
 
-use SaQle\Core\Support\Session;
+use SaQle\Http\Kernel\Session;
 
 abstract class RuntimeContext {
      protected function __construct(

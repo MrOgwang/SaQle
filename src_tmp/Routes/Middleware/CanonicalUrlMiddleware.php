@@ -16,11 +16,11 @@
  * */
 namespace SaQle\Routes\Middleware;
 
-use SaQle\Middleware\MiddlewareInterface;
+use SaQle\Middleware\RequestMiddleware;
 use SaQle\Routes\Canonical\CanonicalUrlPolicy;
 use SaQle\Http\Response\Message;
 
-final class CanonicalUrlMiddleware implements MiddlewareInterface {
+final class CanonicalUrlMiddleware implements RequestMiddleware {
 
      private CanonicalUrlPolicy $policy;
 
@@ -28,7 +28,7 @@ final class CanonicalUrlMiddleware implements MiddlewareInterface {
          $this->policy = resolve(CanonicalUrlPolicy::class);
      }
 
-     public function handle($request, $response = null) : ?Message {
+     public function before($request) : ?Message {
 
          if($request->is_unsafe()){
              return null;

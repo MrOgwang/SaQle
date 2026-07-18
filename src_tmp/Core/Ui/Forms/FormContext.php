@@ -3,8 +3,8 @@ declare(strict_types=1);
 
 namespace SaQle\Core\Ui\Forms;
 
-use SaQle\Core\Support\Session;
-use SaQle\Http\Request\RuntimeContext;
+use SaQle\Http\Kernel\Session;
+use SaQle\Http\Kernel\RuntimeContext;
 
 final class FormContext extends RuntimeContext {
      public function __construct(

@@ -10,12 +10,17 @@ class RouteList {
 
          $compiled_routes = RouteRegistry::all();
 
-         $headers = ['METHOD', 'URI', 'NAME', 'COMPONENT'];
+         $headers = ['#', 'METHOD', 'URI', 'NAME', 'COMPONENT'];
 
          $rows = [];
 
+         $count = 0;
          foreach($compiled_routes as $route){
+
+             $count += 1;
+
              $rows[] = [
+                 "#{$count}",
                  $route['method'],
                  $route['route']['url'],
                  $route['route']['name'],

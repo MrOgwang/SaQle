@@ -1,13 +1,44 @@
 <?php
 
-namespace SaQle\Core\Support;
+namespace SaQle\Http\Kernel;
 
 use SaQle\Http\Request\Request;
+use SaQle\Http\Request\Data\Session;
 use RuntimeException;
 
-final class Session {
+final class Session {  
 
-     private static function real(): \SaQle\Http\Request\Data\Session {
+     public static function start(Request $request){
+         if($request->is_web_request()){
+
+             if(session_status() === PHP_SESSION_NONE){
+                 session_start();
+             }
+
+             $request->session->activate_session();
+
+             self::promote_flash_data($request);
+         }
+     }
+
+     public static function close(Request $request){
+         if($request->is_web_request()){
+
+             $request->session()->remove('__flash_current');
+
+             $request->session()->set('__auth_context', auth_context(), true);
+             
+         }
+     }
+
+     private static function promote_flash_data(Request $request){
+         if($request->session()->exists('__flash_next')){
+             $request->session()->set('__flash_current', $request->session()->get('__flash_next'));
+             $request->session()->remove('__flash_next');
+         }
+     }
+
+     private static function real(): Session {
          $request = Request::get();
 
          if(!$request){

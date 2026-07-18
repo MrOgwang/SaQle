@@ -1,7 +1,7 @@
 <?php
 namespace SaQle\Core\Services\Providers;
 
-use SaQle\App;
+use SaQle\App\App;
 
 abstract class ServiceProvider {
       protected App $app;

@@ -8,7 +8,7 @@ use SaQle\Core\Config\ConfigRepository;
 use SaQle\Http\Request\Request;
 use SaQle\Core\Support\{Directory, AppContext};
 use SaQle\Core\Events\{EventBus, Event};
-use SaQle\App;
+use SaQle\App\App;
 use SaQle\Core\Support\ActorContext;
 use SaQle\Auth\utils\AuthContext;
 

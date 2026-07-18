@@ -1,14 +1,14 @@
 <?php
 namespace SaQle\Http\Request\Middleware;
 
-use SaQle\Middleware\MiddlewareInterface;
+use SaQle\Middleware\RequestMiddleware;
 use SaQle\Http\Response\Message;
 
-class CsrfMiddleware implements MiddlewareInterface {
+class CsrfMiddleware implements RequestMiddleware {
 
      private static string $token_key = 'csrf_token';
      
-     public function handle($request, $response = null) : ?Message {
+     public function before($request) : ?Message {
 
          //Generate CSRF token if not set
          $token_key = CsrfMiddleware::get_token_key();

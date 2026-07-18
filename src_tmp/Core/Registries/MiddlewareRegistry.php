@@ -6,6 +6,10 @@ use SaQle\Http\Request\{
      RequestScope
 };
 use SaQle\Core\Assert\Assert;
+use SaQle\Middleware\{
+     RequestMiddleware,
+     ResponseMiddleware
+};
 
 class MiddlewareRegistry {
 
@@ -13,21 +17,20 @@ class MiddlewareRegistry {
 
      private array $request_stack = [];
 
-     private array $response_stack = [];
+     private array $response_stack = []; 
 
      public function add(string $name, string $middleware, ?RequestScope $scope = null) : void {
+
          $this->stack[$name] = [
              'scope' => $scope ? $scope->value : null,
              'middleware' => $middleware
          ];
-     }
 
-     public function request(array $request_stack) : void {
-         $this->request_stack = array_merge($this->request_stack, $request_stack);
-     }
-
-     public function response(array $response_stack) : void {
-         $this->response_stack = array_merge($this->response_stack, $response_stack);
+         if(is_a($middleware, RequestMiddleware::class, true)){
+             $this->request_stack[] = $name;
+         }elseif(is_a($middleware, ResponseMiddleware::class, true)){
+             $this->response_stack[] = $name;
+         }
      }
 
      private function filter_middleware(array $stack, Request $request){
@@ -56,11 +59,19 @@ class MiddlewareRegistry {
          return $shortlisted;
      }
 
-     public function get_request_middleware(Request $request) : array {
+     private function get_before(Request $request) : array {
          return $this->filter_middleware($this->request_stack, $request);
      }
 
-     public function get_response_middleware(Request $request) : array {
+     private function get_after(Request $request) : array {
          return $this->filter_middleware($this->response_stack, $request);
+     }
+
+     public function get(string $phase, Request $request) : array {
+         if($phase === 'before'){
+             return $this->get_before($request);
+         }
+
+         return $this->get_after($request);
      }
 }

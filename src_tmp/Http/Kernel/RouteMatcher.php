@@ -18,15 +18,61 @@
 
 declare(strict_types = 1);
 
-namespace SaQle\Routes;
+namespace SaQle\Http\Kernel;
 
 use SaQle\Core\Registries\RouteRegistry;
 use SaQle\Core\Support\RouteResolver;
+use SaQle\Http\Request\Request;
+use SaQle\Routes\MatchedRoute;
+use SaQle\Core\Exceptions\Route\RouteNotFoundException;
+use SaQle\Core\Ui\UiComponentDefinition;
+use SaQle\Http\Request\RequestScope;
 use RuntimeException;
 
 final class RouteMatcher {
 
-     public static function find_matching_route(string $method, string $uri): ?array{
+     public static function match(Request $request){
+         //find matching route
+         $match = self::find_matching_route($request->method(), $request->uri());
+         
+         if(!$match){
+             $url = $request->uri();
+             throw new RouteNotFoundException(
+                 "The resource [".$url."] either does not exist or has been permanently moved!",
+                 ['url' => $url]
+             );
+         }
+
+         //set request route
+         $matched_route = new MatchedRoute(
+             $match['route']['url'],
+             $match['path'], 
+             $match['method'], 
+             UiComponentDefinition::from_array($match['route']['compiled_target']),
+             $match['route']['name'],
+             RequestScope::from($match['route']['scope']),
+             $match['route']['model_class'],
+             $match['route']['layout'],
+             $match['route']['guards'],
+             $match['prefix'],
+             $match['route']['sse_event'] ?? null
+         );
+
+         $request->route = $matched_route;
+         
+         //set path params
+         foreach($match['params'] as $pk => $pv){
+             $request->add_path_param($pk, $pv);
+         }
+
+         //set query params
+         foreach($match['query'] as $qk => $qv){
+             $request->add_query_param($qk, $qv);
+         }
+
+     }
+
+     private static function find_matching_route(string $method, string $uri): ?array{
 
          //merge all prefixes
          $all_prefixes = array_merge(config('app.api_url_prefixes'), config('app.sse_url_prefixes'));

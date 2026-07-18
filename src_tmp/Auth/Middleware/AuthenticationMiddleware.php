@@ -17,20 +17,18 @@
 namespace SaQle\Auth\Middleware;
 
 use SaQle\Http\Response\Message;
-use SaQle\Middleware\MiddlewareInterface;
+use SaQle\Middleware\RequestMiddleware;
 use SaQle\Auth\Services\AuthenticationService;
 use SaQle\Core\Services\IService;
 use SaQle\Core\Support\ActorContext;
 
-class AuthenticationMiddleware implements MiddlewareInterface {
-     
-     private IService $auth_service;
+class AuthenticationMiddleware implements RequestMiddleware {
+    
+     public function __construct(
+         private AuthenticationService $auth_service 
+     ){}
 
-     public function __construct(){
-         $this->auth_service = resolve(AuthenticationService::class);
-     }
-
-     public function handle($request, $response = null) : ?Message {
+     public function before($request) : ?Message {
          
          $user = $this->auth_service->resolve_user();
 

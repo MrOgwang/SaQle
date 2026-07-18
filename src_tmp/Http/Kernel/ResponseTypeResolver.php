@@ -1,7 +1,8 @@
 <?php
-namespace SaQle\Http\Response;
+namespace SaQle\Http\Kernel;
 
 use SaQle\Http\Request\Request;
+use SaQle\Http\Response\ResponseType;
 
 final class ResponseTypeResolver {
 
@@ -16,7 +17,7 @@ final class ResponseTypeResolver {
         'text/plain'            => ResponseType::TEXT,
      ];
 
-     public function resolve(Request $request): ResponseType {
+     public static function resolve(Request $request){
 
          $accept = $request->header('Accept');
          $accept = $accept ? strtolower(trim((string)$accept)) : '*/*';
@@ -30,18 +31,20 @@ final class ResponseTypeResolver {
              * for fetch/ajax requests, which should not suddenly
              * become HTML
          */
-         if($this->expects_json($request)){
-             return ResponseType::JSON;
+         if(self::expects_json($request)){
+             $request->responsetype = ResponseType::JSON;
+             return;
          }
 
          //Proper Accept negotiation.
-         $accepted = $this->parse_accept_header($accept);
+         $accepted = self::parse_accept_header($accept);
 
          foreach($accepted as $mime => $q){
 
              //exact match
              if(isset(self::SUPPORTED[$mime])){
-                 return self::SUPPORTED[$mime];
+                 $request->responsetype = self::SUPPORTED[$mime];
+                 return;
              }
 
              //subtype wildcard: application/*
@@ -50,27 +53,33 @@ final class ResponseTypeResolver {
 
                  foreach(self::SUPPORTED as $supported => $response_type){
                      if(str_starts_with($supported, $type.'/')) {
-                         return $response_type;
+                         $request->responsetype = $response_type;
+                         return;
                      }
                  }
              }
 
              //global wildcard
              if($mime === '*/*'){
-                 if($this->expects_json($request)){
-                     return ResponseType::JSON;
+                 if(self::expects_json($request)){
+                     $request->responsetype = ResponseType::JSON;
+                     return;
                  }
 
-                 return ResponseType::HTML;
+                 $request->responsetype = ResponseType::HTML;
+                 return;
              }
          }
 
          //Final fallback heuristics.
-         if($this->expects_json($request)){
-             return ResponseType::JSON;
+         if(self::expects_json($request)){
+             $request->responsetype = ResponseType::JSON;
+             return;
          }
 
-         return ResponseType::HTML;
+         $request->responsetype = ResponseType::HTML;
+         
+         return;
      }
 
      /**
@@ -93,7 +102,7 @@ final class ResponseTypeResolver {
          *   '*\/*' => 0.8
          * ]
      */
-     private function parse_accept_header(string $header): array {
+     private static function parse_accept_header(string $header): array {
          $results = [];
 
          foreach(explode(',', $header) as $part){
@@ -123,7 +132,7 @@ final class ResponseTypeResolver {
      }
 
      //detect modern fetch/ajax/api expectations
-     private function expects_json(Request $request): bool {
+     private static function expects_json(Request $request): bool {
          $fetch_mode = strtolower((string)$request->header('Sec-Fetch-Mode'));
          $fetch_dest = strtolower((string)$request->header('Sec-Fetch-Dest'));
 
@@ -140,7 +149,7 @@ final class ResponseTypeResolver {
          return false;
      }
 
-     private function expects_html(): bool {
+     private static function expects_html(): bool {
          $fetch_mode = strtolower((string)$request->header('Sec-Fetch-Mode'));
          $fetch_dest = strtolower((string)$request->header('Sec-Fetch-Dest'));
 
@@ -150,40 +159,4 @@ final class ResponseTypeResolver {
 
          return false;
      }
-
-     /*public function resolve(Request $request): ResponseType {
-
-         if($request->accepts('text/event-stream')){
-             return ResponseType::SSE;
-         }
-
-         if($request->accepts('application/json')){
-            return ResponseType::JSON;
-         }
-
-         if($request->accepts('application/xml') || $request->accepts('text/xml')) {
-             return ResponseType::XML;
-         }
-
-         if($request->accepts('text/plain')){
-             return ResponseType::TEXT;
-         }
-
-         if($request->accepts('text/html')){
-             return ResponseType::HTML;
-         }
-
-         $fetch_mode = $request->header('Sec-Fetch-Mode');
-         $fetch_dest = $request->header('Sec-Fetch-Dest');
-
-         if($fetch_mode === 'navigate' && $fetch_dest === 'document'){
-             return ResponseType::HTML;
-         }
-
-         if(in_array($fetch_mode, ['cors', 'same-origin'], true) || $request->header('X-Requested-With') === 'XMLHttpRequest'){
-             return ResponseType::JSON;
-         }
-
-         return ResponseType::HTML;
-     }*/
 }

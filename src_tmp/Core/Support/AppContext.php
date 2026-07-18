@@ -2,7 +2,7 @@
 
 namespace SaQle\Core\Support;
 
-use SaQle\App;
+use SaQle\App\App;
 
 final class AppContext{
      private static App $app;

@@ -221,7 +221,6 @@ class Request {
      }
 
      //request scope helpers
-
      public function is_api_request() : bool {
          return $this->route->scope === RequestScope::API;
      }
@@ -231,7 +230,6 @@ class Request {
      }
 
      //response type helpers
-
      public function expects_json() : bool {
          return $this->responsetype === ResponseType::JSON;
      }
@@ -243,7 +241,6 @@ class Request {
      public function expects_sse() : bool {
          return $this->responsetype === ResponseType::SSE;
      }
-
 
      public function session() : Session {
          return $this->session;

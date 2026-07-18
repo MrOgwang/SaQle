@@ -1,6 +1,6 @@
 <?php
 
-use SaQle\Core\Support\Session;
+use SaQle\Http\Kernel\Session;
 use SaQle\Auth\Identity\Tenant\Interfaces\TenantInterface;
 
 if(!function_exists('flash_to_session')){

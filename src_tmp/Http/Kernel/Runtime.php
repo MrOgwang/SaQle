@@ -1,8 +1,7 @@
 <?php
-namespace SaQle\Http\Request;
+namespace SaQle\Http\Kernel;
 
 use Throwable;
-use SaQle\Middleware\MiddlewareGroup;
 use SaQle\Http\Response\ResponseResolver;
 use SaQle\Core\Exceptions\Abstracts\FrameworkException;
 use SaQle\Http\Response\{
@@ -18,20 +17,24 @@ use SaQle\Core\Support\{
 use SaQle\Http\Request\Execution\ActionExecutor;
 use SaQle\Core\Registries\ComponentRegistry;
 use SaQle\Core\Exceptions\ValidationException;
+use SaQle\Http\Request\{
+     Request,
+     ErrorContext
+};
 
 class Runtime {
 
-     private function app() {
+     private function app(){
          return AppContext::get();
      }
 
      private function bootstrap_request(Request $request) : ?Message {
          date_default_timezone_set(config('app.timezone'));
-         return (new MiddlewareGroup())->handle_incoming($request, null);
+         return MiddlewarePipeline::run('before', $request, null);
      }
 
      private function bootstrap_response(Request $request, Response $response) : ?Message {
-         return (new MiddlewareGroup())->handle_outgoing($request, $response);
+         return MiddlewarePipeline::run('after', $request, $response);
      }
 
      private function resolve_response(Request $request, Message $result) : Response {
@@ -133,11 +136,19 @@ class Runtime {
          $response->send();
      }
 
-     public function handle(Request $request){
+     public function handle(){
+
+         $this->app()->set_stage(AppStage::REQUEST_BOOTSTRAP);
+
+         //create the request
+         $request = RequestFactory::make();
+
          try{
 
-             //step 1: run request middleware
-             $this->app()->set_stage(AppStage::REQUEST_BOOTSTRAP);
+             //start session
+             Session::start($request);
+
+             //run middleware pipeline
              $req_bootstrap_msg = $this->bootstrap_request($request);
              if($req_bootstrap_msg){
                  $this->apply_flash($request, $req_bootstrap_msg);
@@ -175,6 +186,9 @@ class Runtime {
              $response->send(); 
 
              $this->app()->set_stage(AppStage::TERMINATED);
+
+             //close session
+             Session::close($request);
 
          }catch(Throwable $e){
              $this->handle_exception($e, $request);

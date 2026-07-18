@@ -1,7 +1,5 @@
 <?php
 /**
- * DataMiddleware
- *
  * Collects all input sources (GET, POST, FILES, SESSION, and raw bodies from PUT/PATCH/DELETE)
  * and merges them into $request->data for uniform access.
  *
@@ -9,15 +7,14 @@
  *   $name = $request->data->get('name', 'default');
  *
  */
-namespace SaQle\Http\Request\Middleware;
+namespace SaQle\Http\Kernel;
 
-use SaQle\Middleware\MiddlewareInterface;
 use SaQle\Core\Files\UploadedFile;
-use SaQle\Http\Response\Message;
+use SaQle\Http\Request\Request;
 
-class DataMiddleware implements MiddlewareInterface {
+final class RequestDataBag {
 
-     public function handle($request, $response = null) : ?Message {
+     public static function fill(Request $request) {
          $data = [];
 
          //1. Query parameters (GET)
@@ -68,8 +65,6 @@ class DataMiddleware implements MiddlewareInterface {
          foreach ($data as $key => $value) {
              $request->data->set($key, $value);
          }
-         
-         return null;
      }
 
      //Normalize $_FILES into a predictable structure

@@ -20,7 +20,7 @@ namespace SaQle\Http\Response;
 
 use SaQle\Core\FeedBack\FeedBack;
 use SaQle\Http\Request\Data\Data;
-use SaQle\Core\Support\Session;
+use SaQle\Http\Kernel\Session;
 
 class Message extends FeedBack {
 
