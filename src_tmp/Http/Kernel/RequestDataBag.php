@@ -58,7 +58,7 @@ final class RequestDataBag {
 
          //4. Files (normalized)
          if (!empty($_FILES)) {
-             $data = array_merge($data, $this->normalize_files($_FILES));
+             $data = array_merge($data, self::normalize_files($_FILES));
          }
 
          //5. Inject into request data bag
@@ -68,7 +68,7 @@ final class RequestDataBag {
      }
 
      //Normalize $_FILES into a predictable structure
-     private function normalize_files(array $files): array {
+     private static function normalize_files(array $files): array {
          $normalized = [];
 
          foreach ($files as $field => $file){

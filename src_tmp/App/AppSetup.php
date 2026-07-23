@@ -23,9 +23,13 @@ final class AppSetup {
 
      public array $providers = [];
 
-     public array $middleware = [];
+     public ?MiddlewareBuilder $http_middleware = null;
+
+     public ?MiddlewareBuilder $console_middleware = null;
 
      public array $cors = [];
+
+     public array $commands = [];
 
      public function initialize() : void {
 

@@ -115,3 +115,10 @@ button:hover {
 .signup a:hover {
     text-decoration: underline;
 }
+.siginin-error{
+    background-color:#dc2626;
+    padding:10px;
+    color:#fff;
+    font-size:12px;
+    border-radius:3px;
+}

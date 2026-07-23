@@ -9,7 +9,7 @@
  * */
 
 /**
- * The auth middleware injects the session user into the request
+ * The tenant middleware injects the tenant into the request
  * 
  * @pacakge SaQle
  * @author  Wycliffe Omondi Otieno <wycliffomondiotieno@gmail.com>
@@ -20,9 +20,10 @@ use SaQle\Middleware\RequestMiddleware;
 use SaQle\Auth\Identity\Tenant\Interfaces\TenantProviderInterface;
 use SaQle\Auth\Identity\Tenant\Resolvers\TenantIDResolver;
 use SaQle\Http\Response\Message;
+use SaQle\Auth\Context\ActorContext;
 use RuntimeException;
 
-class TenantContextMiddleware implements RequestMiddleware {
+class TenantMiddleware implements RequestMiddleware {
 
      public function __construct(
          private TenantIDResolver $id_resolver,
@@ -40,7 +41,7 @@ class TenantContextMiddleware implements RequestMiddleware {
              return null;
          }
 
-         if(auth_context() === 'saqle'){
+         if(ActorContext::is_platform()){
              $request->session->remove($tenant_key);
              return null;
          }

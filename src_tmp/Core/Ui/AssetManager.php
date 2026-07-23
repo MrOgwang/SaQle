@@ -2,6 +2,8 @@
 
 namespace SaQle\Core\Ui;
 
+use SaQle\Auth\Context\ActorContext;
+
 class AssetManager {
 
      private static array $css = [];
@@ -62,7 +64,7 @@ class AssetManager {
                  file_put_contents($output_path, $content);
              }
 
-             $prefix = auth_context() === 'saqle' ? '/saqle' : '';
+             $prefix = ActorContext::is_platform() ? '/saqle' : '';
              
              $assets[] = $prefix.config("static_assets_route")."/{$type}/{$output_filename}";
          }

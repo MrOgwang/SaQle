@@ -11,13 +11,13 @@
          </div>
          <div class="resource-actions">
              @let(
-                 $edit_form_route_name = strtolower($current_resource?->plural_label).'.edit.form',
-                 $edit_form_url = $auth_context === 'saqle' ? 
+                 $edit_form_route_name = rr_name(strtolower($current_resource?->plural_label), 'edit.form'),
+                 $edit_form_url = $is_platform ? 
                      route($edit_form_route_name, ['id' => $panel->data->{$current_resource->pk_column}]) : 
                      route($edit_form_route_name, ['tenant' => $tenant_slug, 'id' => $panel->data->{$current_resource->pk_column}]),
 
-                 $del_route_name = strtolower($current_resource?->plural_label).'.delete',
-                 $del_url = $auth_context === 'saqle' ? 
+                 $del_route_name = rr_name(strtolower($current_resource?->plural_label), 'delete'),
+                 $del_url = $is_platform ? 
                      route($del_route_name, ['id' => $panel->data->{$current_resource->pk_column}]) : 
                      route($del_route_name, ['tenant' => $tenant_slug, 'id' => $panel->data->{$current_resource->pk_column}])
              )

@@ -8,10 +8,8 @@ use SaQle\Orm\Connection\{
 };
 use SaQle\Orm\Database\Features\DatabaseFeatures;
 use SaQle\Orm\Database\Features\FeatureDetector;
-use SaQle\Core\Support\{
-     Cli, 
-     ActorContext
-};
+use SaQle\Auth\Context\ActorContext;
+use SaQle\Core\Support\Cli;
 
 abstract class DbDriver {
 

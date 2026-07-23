@@ -1,4 +1,5 @@
 <?php
+
 namespace SaQle\Auth\Services;
 
 use SaQle\Auth\Interfaces\UserRepositoryInterface;

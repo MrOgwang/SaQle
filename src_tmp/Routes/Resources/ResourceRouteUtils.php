@@ -4,6 +4,7 @@ namespace SaQle\Routes\Resources;
 use SaQle\Orm\Database\SystemSchema;
 use SaQle\Core\Support\Db;
 use SaQle\Core\Registries\ModelRegistry;
+use SaQle\Auth\Context\ActorContext;
 
 trait ResourceRouteUtils {
 
@@ -14,7 +15,7 @@ trait ResourceRouteUtils {
          $this->tenant_slug = request()->tenant?->slug;
          $this->multitenancy = (bool)config('tenancy.enabled');
      }
-
+ 
      private function table_name_to_label(string $name) : string {
          $name = str_replace(['_', '-'], ' ', $name);
          return ucwords($name);
@@ -39,7 +40,7 @@ trait ResourceRouteUtils {
              'ui_label' => $this->table_name_to_label($model_label),
              'plural_label' => $model_label,
              'singular_label' => ModelRegistry::get_model_name($model_class),
-             'route_name' => $model_label.'.list',
+             'route_name' => rr_name($model_label, 'list'),
              'pk_column' => $model_class::get_pk_name()
          ];
      }
@@ -47,7 +48,7 @@ trait ResourceRouteUtils {
      protected function get_resource_links(){
          $links = [];
 
-         if(auth_context() === 'saqle'){
+         if(ActorContext::is_platform()){
              $system_schema = new SystemSchema();
              $system_models = $system_schema->get_admin_models();
 

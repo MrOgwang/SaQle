@@ -21,6 +21,7 @@ use SaQle\Core\Support\{
      Db, 
      AttributeResolver
 };
+use SaQle\Auth\Context\ActorContext;
 use Exception;
 use JsonSerializable;
 use InvalidArgumentException;
@@ -695,7 +696,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
      	 	 }
      	 }
 
-     	 $user_id = actor()?->user_id ?? null;
+     	 $user_id =  ActorContext::actor()?->user_id;
 
      	 //inject creator and modifier fields, created and modified date time fields and deleted fields
 	 	 if($this->table->has_user_audit()){
@@ -826,7 +827,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
 
      	 //Inject modifier and modified date time fields
 	 	 if($this->table->has_user_audit()){
-	 	 	$data['modifier'] = actor()?->user_id ?? null;
+	 	 	$data['modifier'] = ActorContext::actor()?->user_id ?? null;
 	 	 }
 	 	 if($this->table->has_timestamps()){
 	 	 	 $data['modified_at'] = time();

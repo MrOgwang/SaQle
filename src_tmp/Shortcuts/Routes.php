@@ -14,3 +14,33 @@ if(!function_exists('add_query_param')){
          return Url::add_query($url, $param_name, $param_value);
      }
 }
+
+/**
+ * Return resource route name
+ * */
+if(!function_exists('rr_name')){
+     function rr_name($model_label, $action){
+
+         $route_name_prefix = config('admin.routes.name_prefix', "admin");
+
+         return implode(".", [
+             $route_name_prefix, 
+             $model_label, 
+             $action
+         ]);
+     }
+}
+
+if(!function_exists('admin_route_name')){
+     function admin_route_name(string $model_label, string $action = ""){
+
+         $route_name_prefix = config('admin.routes.name_prefix', "admin");
+
+         return implode(".", [
+             $route_name_prefix, 
+             $model_label, 
+             $action
+         ]);
+
+     }
+}

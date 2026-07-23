@@ -8,3 +8,7 @@ DONE: 2. Filter data on soft deletes
       6. Single resource view
       7. Single resource view with context
       8. Admin dashboard
+
+Authentication
+
+      1. Password recovery

@@ -8,7 +8,6 @@ namespace SaQle\Routes;
 
 use SaQle\Core\Assert\Assert;
 use SaQle\Core\Registries\ComponentRegistry;
-use SaQle\Http\Request\RequestScope;
 use SaQle\Core\Ui\UiLayout;
 use SaQle\Auth\Guards\GuardParser;
 use InvalidArgumentException;
@@ -22,15 +21,6 @@ final class Route {
          }
 
          get => $this->key;
-     }
-
-     //scope of route
-     public private(set) ?RequestScope $scope = null {
-         set(?RequestScope $value){ 
-             $this->scope = $value;
-         }
-
-         get => $this->scope;
      }
 
      //name of route
@@ -192,7 +182,6 @@ final class Route {
          $this->url         = $url;
          $this->target      = $target;
          $this->model_class = $model_class;
-         $this->scope       = RequestScope::WEB;
          $this->key         = substr(hash('xxh128', $method.$url), 0, 16);
 	 }
 
@@ -275,15 +264,6 @@ final class Route {
      }
 
      /**
-      * Scope overrides previsously set scope
-      * */
-     public function scope(RequestScope $scope){
-         $this->scope = $scope;
-
-         return $this;
-     }
-
-     /**
       * Customize event meta data for event stream
       * routes.
       * 
@@ -306,13 +286,17 @@ final class Route {
      /**
       * Appends to already existing name
       * */
-     public function name(string $name){
+     public function name(string $name, bool $append = true){
 
          if(!trim($name)){
              return $this;
          }
 
-         $this->name = $this->name ? trim($this->name.".".$name) : $name;
+         if($append){
+             $this->name = $this->name ? trim($this->name.".".$name) : $name;
+         }else{
+             $this->name = $name;
+         }
          
          return $this;
      }
@@ -329,6 +313,8 @@ final class Route {
          $this->prefix = $this->prefix ? trim($this->prefix."/".$prefix) : $prefix;
 
          $this->url = url_join([$this->prefix, $this->url]);
+
+         $this->key = substr(hash('xxh128', $this->method.$this->url), 0, 16);
          
          return $this;
      }

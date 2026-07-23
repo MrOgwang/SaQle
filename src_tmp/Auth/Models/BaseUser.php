@@ -33,7 +33,7 @@ class BaseUser extends Model implements UserInterface {
 			 	 'none' => 'Prefer not to say'
 			 ], true)->default('male'),
 		     'username'     => Table::char_field()->required(),
-		     'password'     => Table::password_field()->required(),
+		     'password'     => Table::password_field()->required()->max_length(255),
 		     'is_super_admin' => Table::boolean_field()->required()->render(function($value, $model){
 			 	 return $value ? 'Yes' : 'No';
 			 })->default(false),

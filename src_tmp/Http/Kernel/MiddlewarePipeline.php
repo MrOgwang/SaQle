@@ -11,13 +11,13 @@ class MiddlewarePipeline {
 
      public static function run(string $phase, Request $request, ?Response $response = null): ?Message {
 
-         $middleware = app()->middleware->get($phase, $request);
+         $middleware = app()->http_middleware->get($phase, $request);
 
-         return $this->run_middlewares($phase, $middleware, $request, $response);
+         return self::run_middlewares($phase, $middleware, $request, $response);
 
      }
 
-     protected function run_middlewares(
+     protected static function run_middlewares(
          string $phase, 
          array $middlewares, 
          Request $request, 

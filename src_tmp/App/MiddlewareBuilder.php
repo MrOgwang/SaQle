@@ -24,4 +24,8 @@ final class MiddlewareBuilder {
      public function all(): array {
          return $this->middleware;
      }
+
+     public function get_global(): array {
+         return $this->global;
+     }
 }

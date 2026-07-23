@@ -13,6 +13,7 @@ use SaQle\Orm\Database\Transaction\TransactionManager;
 use SaQle\Orm\Database\DbProxy;
 use SaQle\Orm\Database\Schema;
 use SaQle\Orm\Database\SystemSchema;
+use SaQle\Auth\Context\ActorContext;
 use ReflectionFunction;
 use Exception;
 
@@ -79,8 +80,10 @@ class Db {
      }
 
      public static function get_connection_schema(?string $connection_key = null, bool $is_system = false){
+         
          $connection_key = self::get_connection_key($connection_key);
-         if($is_system){
+         
+         if($is_system || ActorContext::is_platform()){
              $system_db = self::get_system_db();
              $connection_key = $system_db[0].".".$system_db[1];
          }

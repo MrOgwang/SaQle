@@ -46,22 +46,26 @@ class Route {
 
      private array $layout;
 
+     private array $middleware;
+
      private ?string $model = null;
 
      public function __construct(
      	 string $name,
      	 string $method,
      	 string $url,
-     	 string $guards = "",
+     	 string $authorize = "",
+         array  $middleware = [],
      	 array $layout = [],
          ?string $model = null
      ){
      	 $this->name = $name;
      	 $this->method = $method;
      	 $this->url = $url;
-     	 $this->guards = trim($guards);
+     	 $this->guards = trim($authorize);
      	 $this->layout = $layout;
          $this->model = $model;
+         $this->middleware = $middleware;
      }
 
      private function validate_property(string $prop, string $value) : string {
@@ -81,7 +85,9 @@ class Route {
      public function initialize(){
 
      	 $method = $this->method;
-     	 $router = Router::$method($this->url, $this->target, $this->model)->name($this->name);
+     	 $router = Router::$method($this->url, $this->target, $this->model)->name($this->name, false);
+         
+         $router->middleware($this->middleware);
 
      	 if($this->guards){
      	 	 $router->authorize($this->guards);

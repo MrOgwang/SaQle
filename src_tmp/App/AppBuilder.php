@@ -2,12 +2,11 @@
 
 namespace SaQle\App;
 
-use Closure;
 use SaQle\Core\Support\Environment;
 
-final class AppBuilder {
+abstract class AppBuilder {
 
-     private AppSetup $setup;
+     protected AppSetup $setup;
 
      public function __construct(string $base_path){
 
@@ -47,29 +46,7 @@ final class AppBuilder {
 
          return $this;
      }
-
-     public function cors(Closure $callback): self {
-
-         $builder = new CorsBuilder();
-
-         $callback($builder);
-
-         $this->setup->cors = $builder->to_array();
-
-         return $this;
-     }
-
-     public function middleware(Closure $callback) : self {
-
-         $builder = new MiddlewareBuilder();
-
-         $callback($builder);
-
-         $this->setup->middleware = $builder->all();
-
-         return $this;
-     }
-
+    
      public function build(): App {
          
          $this->setup->initialize();

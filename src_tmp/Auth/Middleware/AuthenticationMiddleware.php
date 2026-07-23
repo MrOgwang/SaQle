@@ -20,13 +20,19 @@ use SaQle\Http\Response\Message;
 use SaQle\Middleware\RequestMiddleware;
 use SaQle\Auth\Services\AuthenticationService;
 use SaQle\Core\Services\IService;
-use SaQle\Core\Support\ActorContext;
 
 class AuthenticationMiddleware implements RequestMiddleware {
-    
-     public function __construct(
-         private AuthenticationService $auth_service 
-     ){}
+     
+     private IService $auth_service;
+
+     public function __construct(){
+         /**
+          * The auth_service must be resolved this way. If you provide
+          * the auth_service as a constructor parameter, you end up with 
+          * a ProxyService class instead
+          * */
+         $this->auth_service = resolve(AuthenticationService::class);
+     }
 
      public function before($request) : ?Message {
          
@@ -34,7 +40,6 @@ class AuthenticationMiddleware implements RequestMiddleware {
 
          if($user){
              $request->session->set('user', $user, true);
-             ActorContext::set_actor($user);
          }
 
          return null;

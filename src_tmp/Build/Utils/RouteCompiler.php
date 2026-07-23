@@ -83,99 +83,143 @@ final class RouteCompiler {
 
      }
 
-     private static function register_resource_routes($type, $model_label, $model_class, $multitenancy){
-         
-         $route_prifix = "";
+     private static function construct_route_authorization($model_label, $model_class){
 
-         if($type === 'system'){
-             $route_prifix = '/saqle';
-         }else{
-             $route_prifix = $multitenancy ? '/:tenant' : "";
+         $global = trim(config('admin.authorization.global', ""));
+         $route  = trim(config('admin.authorization.resources', [])[$model_label] ?? "");
+
+         if($global && $route){
+             return $global." && ".$route;
          }
 
-         $permissions = $type === 'system' ? 'authenticated && super-user' : 'authenticated && super-admin';
-         $permissions = '';
+         if($global && !$route){
+             return $global;
+         }
+
+         return $route;
+     }
+
+     private static function construct_route_middleware($model_label, $model_class){
+
+         $global = config('admin.middleware.global', []);
+         $route  = config('admin.middleware.resources', [])[$model_label] ?? [];
+
+         if($global && $route){
+             return array_merge($global, $route);
+         }
+
+         if($global && !$route){
+             return $global;
+         }
+
+         return $route;
+     }
+
+     private static function register_resource_routes($type, $model_label, $model_class, $multitenancy){
          
+         $route_prefix = "";
+         $admin_route_prefix = config('admin.routes.prefix', "_admin");
+         $route_name_prefix = config('admin.routes.name_prefix', "admin");
+
+         if($type === 'system'){
+             $route_prefix = '/saqle';
+         }else{
+             $route_prefix = $multitenancy ? '/:tenant' : "";
+         } 
+
+         $authorize = $type === 'system' ? '__authenticated__ && __super_admin__' : 
+         self::construct_route_authorization($model_label, $model_class);
+
+         $middleware = $type === 'system' ? ['__authentication__', '__authorization__'] : 
+         self::construct_route_middleware($model_label, $model_class);
+
          //list resources route
-         $list_resource_route = new RouteAttribute( 
-             name: $model_label.'.list',
+         $list_resource_route = new RouteAttribute(  
+             name: implode(".", [$route_name_prefix, $model_label, 'list']),
              method: 'get', 
-             url: $route_prifix.'/_admin/'.$model_label, 
-             guards: $permissions,
+             url: url_join([$route_prefix, $admin_route_prefix, $model_label]), 
+             authorize: $authorize,
              layout: ['saqle.app'],
-             model: $model_class
+             model: $model_class,
+             middleware: $middleware
          );
          $list_resource_route->set_target("saqle.autoresource@list_resources");
          $list_resource_route->initialize();
 
          //create form route
          $create_form_route = new RouteAttribute(
-             name: $model_label.'.create.form',
+             name: implode(".", [$route_name_prefix, $model_label, 'create.form']),
              method: 'get', 
-             url: $route_prifix.'/_admin/'.$model_label.'/create', 
-             guards: $permissions,
+             url: url_join([$route_prefix, $admin_route_prefix, $model_label, 'create']), 
+             authorize: $authorize,
              layout: ['saqle.app'],
-             model: $model_class
+             model: $model_class,
+             middleware: $middleware
          );
          $create_form_route->set_target("saqle.autoresource@show_create_form");
          $create_form_route->initialize();
 
          //submit create resource route
          $create_resource_route = new RouteAttribute(
-             name: $model_label.'.create',
+             name: implode(".", [$route_name_prefix, $model_label, 'create']),
              method: 'post', 
-             url: $route_prifix.'/_admin/'.$model_label.'/create',
-             guards: $permissions,
+             url: url_join([$route_prefix, $admin_route_prefix, $model_label, 'create']), 
+             authorize: $authorize,
              layout: ['saqle.app'],
-             model: $model_class
+             model: $model_class,
+             middleware: $middleware
          );
          $create_resource_route->set_target("saqle.autoresource@create_resource");
          $create_resource_route->initialize();
 
          //show a single resource route
          $show_resource_route = new RouteAttribute(
-             name: $model_label.'.view',
+             name: implode(".", [$route_name_prefix, $model_label, 'view']),
              method: 'get', 
-             url: $route_prifix.'/_admin/'.$model_label.'/:id', 
-             guards: $permissions,
+             url: url_join([$route_prefix, $admin_route_prefix, $model_label, ':id']), 
+             authorize: $authorize,
              layout: ['saqle.app'],
-             model: $model_class
+             model: $model_class,
+             middleware: $middleware
          );
          $show_resource_route->set_target("saqle.autoresource@show_resource");
          $show_resource_route->initialize();
 
          //show edit resource form
          $edit_form_route = new RouteAttribute(
-             name: $model_label.'.edit.form',
+             name: implode(".", [$route_name_prefix, $model_label, 'edit.form']),
              method: 'get', 
-             url: $route_prifix.'/_admin/'.$model_label.'/:id/edit', 
-             guards: $permissions,
+             url: url_join([$route_prefix, $admin_route_prefix, $model_label, ':id', 'edit']), 
+             authorize: $authorize,
              layout: ['saqle.app'],
-             model: $model_class
+             model: $model_class,
+             middleware: $middleware
          );
          $edit_form_route->set_target("saqle.autoresource@show_edit_form");
          $edit_form_route->initialize();
 
          //edit resource route
          $edit_resource_route = new RouteAttribute(
-             name: $model_label.'.edit',
+             name: implode(".", [$route_name_prefix, $model_label, 'edit']),
              method: 'patch', 
-             url: $route_prifix.'/_admin/'.$model_label.'/:id/edit', 
-             guards: $permissions,
+             url: url_join([$route_prefix, $admin_route_prefix, $model_label, ':id', 'edit']), 
+             authorize: $authorize,
              layout: ['saqle.app'],
-             model: $model_class
+             model: $model_class,
+             middleware: $middleware
          );
          $edit_resource_route->set_target("saqle.autoresource@edit_resource");
          $edit_resource_route->initialize();
 
          //delete resource route
          $del_resource_route = new RouteAttribute(
-             name: $model_label.'.delete',
+             name: implode(".", [$route_name_prefix, $model_label, 'delete']),
              method: 'delete', 
-             url: $route_prifix.'/_admin/'.$model_label.'/:id', 
-             guards: $permissions,
+             url: url_join([$route_prefix, $admin_route_prefix, $model_label, ':id']), 
+             authorize: $authorize,
              layout: ['saqle.app'],
-             model: $model_class
+             model: $model_class,
+             middleware: $middleware
          );
          $del_resource_route->set_target("saqle.autoresource@delete_resource");
          $del_resource_route->initialize();
@@ -201,7 +245,7 @@ final class RouteCompiler {
                  self::register_resource_routes('tenant', $model_label, $model_class, $multitenancy);
              }
          }
-     }
+     }  
 
      private static function load_routes(){
          //load routes from files
@@ -226,7 +270,7 @@ final class RouteCompiler {
 
              $route = array_values($r)[0];
 
-             $route_name = trim($route->name ?? "");
+             $route_name = trim($route->name ?? $route->key);
 
              if($route_name){
                  if(in_array($route_name, Router::$aliases)){
@@ -234,6 +278,10 @@ final class RouteCompiler {
                  }
 
                  Router::$aliases[] = $route_name;
+             }
+
+             if(!$route->name){
+                 $route->name($route_name);
              }
 
              $compiled[$route->key] = self::compile_route($route);
@@ -249,14 +297,14 @@ final class RouteCompiler {
          foreach($route->routes as $name => $r){
              $variants[$name] = [
                  'name'            => $r->name,
-                 'scope'           => $r->scope->value,
                  'url'             => $r->url,
                  'target'          => $r->target,
                  'compiled_target' => $r->compiled_target,
                  'model_class'     => $r->model_class,
                  'guards'          => $r->guards,
                  'layout'          => $r->layout,
-                 'sse_event'       => $r->sse_event
+                 'sse_event'       => $r->sse_event,
+                 'middleware'      => $r->middleware
              ];
          } 
 
@@ -282,14 +330,14 @@ final class RouteCompiler {
              'param_names' => $param_names,
              'route'       => $route instanceof Route ? [
                  'name'            => $route->name,
-                 'scope'           => $route->scope->value,
                  'url'             => $route->url,
                  'target'          => $route->target,
                  'compiled_target' => $route->compiled_target,
                  'model_class'     => $route->model_class,
                  'guards'          => $route->guards,
                  'layout'          => $route->layout,
-                 'sse_event'       => $route->sse_event
+                 'sse_event'       => $route->sse_event,
+                 'middleware'      => $route->middleware
              ] : null,
              'variants'    => $route instanceof Route ? null : self::get_route_variants($route)
          ];

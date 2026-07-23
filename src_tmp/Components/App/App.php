@@ -5,6 +5,7 @@ namespace SaQle\Components\App;
 use SaQle\Http\Response\Message;
 use SaQle\Routes\Resources\ResourceRouteUtils;
 use SaQle\Core\Support\Index;
+use SaQle\Auth\Context\ActorContext;
 
 class App {
 
@@ -46,7 +47,7 @@ class App {
              'resources' => $resources,
              'current_resource' => $current_resource,
              'tenant_slug' => $this->tenant_slug,
-             'auth_context' => auth_context()
+             'is_platform' => ActorContext::is_platform()
          ]);
      }
 }

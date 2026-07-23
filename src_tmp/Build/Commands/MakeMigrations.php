@@ -451,7 +451,7 @@ class MakeMigrations {
                              foreach($maintained_models as $table_name => $model_name){
                                  $current_column_keys  = array_keys($all_model_fields[$table_name]);
                                  $previous_column_keys = array_keys($all_last_model_fields[$table_name]);
-
+ 
                                  $added_column_keys = array_diff($current_column_keys, $previous_column_keys);
                                  $removed_column_keys = array_diff($previous_column_keys, $current_column_keys);
 

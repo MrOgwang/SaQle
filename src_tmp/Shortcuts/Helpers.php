@@ -9,9 +9,6 @@ use SaQle\Http\Request\Request;
 use SaQle\Core\Support\{Directory, AppContext};
 use SaQle\Core\Events\{EventBus, Event};
 use SaQle\App\App;
-use SaQle\Core\Support\ActorContext;
-use SaQle\Auth\utils\AuthContext;
-
 
 if(!function_exists('app')){
      function app() : App {
@@ -53,12 +50,6 @@ if(!function_exists('config')){
 if(!function_exists('config_all')){
      function config_all(): mixed {
          return app()->container->resolve(ConfigRepository::class)->all();
-     }
-}
-
-if(!function_exists('auth_context')){
-     function auth_context(): mixed {
-         return AuthContext::get();
      }
 }
 
@@ -160,8 +151,13 @@ if(!function_exists('base_path')){
 }
 
 if(!function_exists('redirect')){
-     function redirect(?string $url = null, int $status = Message::FOUND, mixed $data = null, ?string $message = null){
-         return new RedirectResponse(url: $url, status: $status)->send();
+     function redirect(string $url, int $status = Message::FOUND): never {
+         if(!headers_sent()){
+             http_response_code($status);
+             header("Location: {$url}");
+         }
+
+         exit;
      }
 }
 
@@ -343,11 +339,5 @@ if(!function_exists('mask_phone')){
          $masked = str_repeat('*', strlen($phone) - 5);
 
          return $start.$masked.$end;
-     }
-}
-
-if(!function_exists('actor')){
-     function actor() : mixed {
-         return ActorContext::get();
      }
 }

@@ -1,7 +1,9 @@
 <?php
+
 namespace SaQle\Http\Kernel;
 
 use Throwable;
+use SaQle\App\Kernel;
 use SaQle\Http\Response\ResponseResolver;
 use SaQle\Core\Exceptions\Abstracts\FrameworkException;
 use SaQle\Http\Response\{
@@ -9,10 +11,9 @@ use SaQle\Http\Response\{
      Message,
      RedirectMessage
 };
-use SaQle\Core\Support\{
+use SaQle\Core\Support\{ 
      AppContext,
-     AppStage,
-     Session
+     AppStage
 };
 use SaQle\Http\Request\Execution\ActionExecutor;
 use SaQle\Core\Registries\ComponentRegistry;
@@ -21,14 +22,11 @@ use SaQle\Http\Request\{
      Request,
      ErrorContext
 };
+use SaQle\Auth\Context\ActorContext;
 
-class Runtime {
+class HttpKernel extends Kernel {
 
-     private function app(){
-         return AppContext::get();
-     }
-
-     private function bootstrap_request(Request $request) : ?Message {
+     private function bootstrap_request(Request $request) : ? Message {
          date_default_timezone_set(config('app.timezone'));
          return MiddlewarePipeline::run('before', $request, null);
      }
@@ -69,6 +67,7 @@ class Runtime {
          }
 
          $ctx->should_flash_input = $ctx->should_redirect;
+         $ctx->should_flash_errors = $ctx->should_redirect;
          $ctx->errors_payload = $e->getMessage();
          $ctx->input_payload = null;
 
@@ -77,7 +76,7 @@ class Runtime {
 
      private function build_http_message(Throwable $e, ErrorContext $ctx, Request $request) {
          if($ctx->should_redirect){
-             //return new RedirectMessage($request->uri());
+             return new RedirectMessage($request->uri());
          }
 
          if($e instanceof FrameworkException){
@@ -113,6 +112,7 @@ class Runtime {
      }
 
      private function handle_exception(Throwable $e, Request $request): void {
+         
          $this->log_exception($e);
 
          $context = $this->build_error_context($e, $request);
@@ -136,12 +136,16 @@ class Runtime {
          $response->send();
      }
 
-     public function handle(){
+     public function process(mixed $options = null){
 
          $this->app()->set_stage(AppStage::REQUEST_BOOTSTRAP);
 
          //create the request
          $request = RequestFactory::make();
+
+         if(str_starts_with($request->uri(), '/saqle/')){
+             ActorContext::to_platform();
+         }
 
          try{
 
@@ -154,7 +158,11 @@ class Runtime {
                  $this->apply_flash($request, $req_bootstrap_msg);
                  $this->short_circuit_response($request, $req_bootstrap_msg);
                  return;
-             } 
+             }
+
+             if($request->user){
+                 ActorContext::set_user($request->user);
+             }
 
              //step 2: execute the controller action
              $this->app()->set_stage(AppStage::REQUEST_RESOLUTION);

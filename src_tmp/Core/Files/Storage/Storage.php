@@ -4,6 +4,7 @@ namespace SaQle\Core\Files\Storage;
 
 use SaQle\Core\Files\Storage\Drivers\IStorageDriver;
 use SaQle\Core\Files\Utils\DefaultFileUrlEncoder;
+use SaQle\Auth\Context\ActorContext;
 
 class Storage {
      public function __construct(
@@ -29,7 +30,7 @@ class Storage {
 
          $token = $encoder->encode($file_meta);
 
-         $route_name = auth_context() === 'saqle' ? 
+         $route_name = ActorContext::is_platform() ? 
          "saqle.".$file_meta['storage'].".media" : 
          "app.".$file_meta['storage'].".media";
 

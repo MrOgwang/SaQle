@@ -18,6 +18,7 @@ class PasswordLoginStrategy implements LoginStrategyInterface {
      ){}
 
      public function authenticate(array $credentials): ?UserInterface {
+
          $user = $this->user_provider->find_by_credentials($credentials);
 
          if($user){

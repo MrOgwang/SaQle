@@ -49,9 +49,6 @@ return [
  	 //api url prefixes
  	 'api_url_prefixes' => ['/api/v1/'],
 
- 	 //sse url prefixes
- 	 'sse_url_prefixes' => ['/sse/v1/'],
-
      /**
        * By default, components will be searched in the top level project directory, or inside
        * the individual module directories as listed in modules. 

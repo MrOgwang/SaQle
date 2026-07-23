@@ -9,13 +9,12 @@ final class RequestFactory {
 
 	 	 $request = Request::init();
 
+	 	 RouteMatcher::match($request);
+
 	 	 ResponseTypeResolver::resolve($request);
 
 	 	 RequestDataBag::fill($request);
 
-	 	 RouteMatcher::match($request);
-
 	 	 return $request;
-
 	 }
 }

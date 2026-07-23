@@ -20,7 +20,12 @@
                      </svg>
                  </button>
                  <div class="nav-items">
-                     <a href="#" class="nav-item active">
+                     @let(
+                         $multitenant = config('tenancy.enabled'),
+                         $route_name = $is_platform ? 'saqle.admin.dashboard' : 
+                         ($multitenant ? 'tenant.admin.dashboard' : 'admin.dashboard')
+                     )   
+                     <a href="{{ route($route_name) }}" class="nav-item active">
                          <svg viewBox="0 0 24 24">
                              <path d="M3 11L12 3l9 8"/>
                              <path d="M5 10v10h14V10"/>

@@ -27,7 +27,6 @@ final class RouteContext {
          'middleware' => [],
          'layout'     => [],
          'authorize'  => null,
-         'scope'      => null,
          'prefix'     => '',
          'name'       => '',
          'url'        => '',
@@ -54,11 +53,6 @@ final class RouteContext {
 
      public function layout(array $layout): self {
          $this->attributes['layout'] = $layout;
-         return $this;
-     }
-
-     public function scope(RequestScope $scope): self {
-         $this->attributes['scope'] = $scope;
          return $this;
      }
 

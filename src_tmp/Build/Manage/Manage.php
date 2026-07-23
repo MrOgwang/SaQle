@@ -8,7 +8,7 @@ use SaQle\Build\Commands\{MakeMigrations, Migrate, MakeCollections, MakeModels,
 };
 use SaQle\Build\Utils\MigrationUtils;
 use Exception;
-use SaQle\Core\Support\ActorContext;
+use SaQle\Auth\Context\ActorContext;
 use SaQle\Auth\Models\CliUser;
 
 class Manage {
@@ -129,9 +129,6 @@ class Manage {
 			 break;
 			 case 'migrate':
 			     resolve(Migrate::class)->execute();
-			 break;
-			 case 'make:backoffice':
-			     //resolve(MakeBackoffice::class)->execute($this->project_root);
 			 break;
 			 case 'make:collections':
 	             $app_name       = $this->arguments['app']     ?? null;

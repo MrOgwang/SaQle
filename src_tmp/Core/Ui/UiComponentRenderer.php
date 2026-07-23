@@ -29,6 +29,7 @@ class UiComponentRenderer {
      //runtime block rendering api
      public function block(string $name, string $default_template, array $scope) : string {
          $template = $this->current_node?->blocks[$name] ?? $default_template;
+         $template = path_join([config('base_path'), $template]);
          extract($scope);
          ob_start();
          include $template;

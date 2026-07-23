@@ -23,7 +23,7 @@ class SystemSchema extends Schema {
 	 	 $tenant_model = config('tenancy.model_class');
  
 	 	 $this->models = [
-		 	 'platform_users'    => PlatformUser::class,
+		 	 'users'    => config('auth.model_class'), //PlatformUser::class,
 		 	 'tenants'           => $tenant_model,
 		 	 'migrations'        => Migration::class,
 		 	 'tenant_migrations' => TenantMigration::class,

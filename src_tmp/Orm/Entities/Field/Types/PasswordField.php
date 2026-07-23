@@ -39,9 +39,9 @@ class PasswordField extends CharField {
 	 	 /**
 	 	  * Password fields must remain masked by default
 	 	  * */
-	 	 $this->render(function($value, $model){
+	 	 /*$this->render(function($value, $model){
 			 	 return "******";
-		 });
+		 });*/
 
 	 	 if(!$this->control_type){
 	 	 	 $this->control_type = "password";

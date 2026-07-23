@@ -19,7 +19,6 @@ namespace SaQle\Http\Request;
 use SaQle\Http\Request\Data\{Session, Data};
 use SaQle\Routes\MatchedRoute;
 use SaQle\Auth\Models\{BaseUser, BaseTenant};
-use SaQle\Http\Request\RequestScope;
 use SaQle\Http\Response\ResponseType;
 use Closure;
 
@@ -221,12 +220,17 @@ class Request {
      }
 
      //request scope helpers
+
+     public function scope(){
+         return $this->route->prefix ? RequestScope::API->value : RequestScope::WEB->value;
+     }
+
      public function is_api_request() : bool {
-         return $this->route->scope === RequestScope::API;
+         return $this->route->prefix ? true : false;
      }
 
      public function is_web_request() : bool {
-         return $this->route->scope === RequestScope::WEB;
+         return $this->route->prefix ? false : true;
      }
 
      //response type helpers

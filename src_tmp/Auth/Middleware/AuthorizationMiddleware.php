@@ -5,8 +5,9 @@ use SaQle\Middleware\RequestMiddleware;
 use SaQle\Auth\Guards\GuardEvaluator;
 use SaQle\Auth\Exceptions\AuthorizationException;
 use SaQle\Http\Response\Message;
+
 /**
-* This middleware checks that all permissions defined on a controller are met.
+* This middleware checks that the user meets route permissions
 */
 class AuthorizationMiddleware implements RequestMiddleware {
      

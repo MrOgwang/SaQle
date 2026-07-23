@@ -8,7 +8,6 @@ namespace SaQle\Routes;
 
 use SaQle\Core\Assert\Assert;
 use SaQle\Core\Ui\UiComponentDefinition;
-use SaQle\Http\Request\RequestScope;
 use InvalidArgumentException;
 
 final class MatchedRoute {
@@ -28,9 +27,6 @@ final class MatchedRoute {
          //the route name
          public string $name, 
 
-         //the route scope
-         public RequestScope $scope, 
-
          //the route handler
          public ?string $model_class = null,
 
@@ -43,7 +39,10 @@ final class MatchedRoute {
          //the prefix the url came with
          public ?string $prefix = null,
 
+         //the route middleware
+         public ?array $middleware = null,
+
          //the sse meta data
-         public ?array $sse = null,
+         public ?array $sse = null
      ){}
 }

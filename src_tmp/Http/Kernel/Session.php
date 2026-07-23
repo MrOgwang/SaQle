@@ -3,7 +3,7 @@
 namespace SaQle\Http\Kernel;
 
 use SaQle\Http\Request\Request;
-use SaQle\Http\Request\Data\Session;
+use SaQle\Http\Request\Data\Session as RequestSession;
 use RuntimeException;
 
 final class Session {  
@@ -23,11 +23,7 @@ final class Session {
 
      public static function close(Request $request){
          if($request->is_web_request()){
-
              $request->session()->remove('__flash_current');
-
-             $request->session()->set('__auth_context', auth_context(), true);
-             
          }
      }
 
@@ -38,7 +34,7 @@ final class Session {
          }
      }
 
-     private static function real(): Session {
+     private static function real(): RequestSession {
          $request = Request::get();
 
          if(!$request){

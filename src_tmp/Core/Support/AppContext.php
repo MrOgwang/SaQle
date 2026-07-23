@@ -5,6 +5,7 @@ namespace SaQle\Core\Support;
 use SaQle\App\App;
 
 final class AppContext{
+
      private static App $app;
 
      public static function set(App $app): void {

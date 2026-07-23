@@ -15,4 +15,5 @@ class PasswordHashService implements HashServiceInterface {
      public function needs_rehash(string $hashed): bool {
          return password_needs_rehash($hashed, config('auth.passwords.default.algorithm', PASSWORD_DEFAULT));
      }
-} 
+}
+

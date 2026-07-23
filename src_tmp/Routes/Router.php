@@ -19,7 +19,6 @@ declare(strict_types = 1);
 namespace SaQle\Routes;
 
 use SaQle\Core\Support\RouteResolver;
-use SaQle\Http\Request\RequestScope;
 use RuntimeException;
 
 final class Router {
@@ -182,20 +181,6 @@ final class Router {
      }
 
      /**
-      * Provide a route scope
-      * 
-      * @var RequestScope $scope
-      * */
-     public function scope(RequestScope $scope){
-
-         $route = array_values(self::$routes[count(self::$routes) - 1])[0];
-
-         $route->scope($scope);
-         
-         return $this;
-     }
-
-     /**
       * Customize event meta data for event stream
       * routes.
       * 
@@ -315,10 +300,6 @@ final class Router {
 
              if(!empty($context['layout'])){
                  $route->layout($context['layout']);
-             }
-
-             if(!empty($context['scope'])){
-                 $route->scope($context['scope']); 
              }
 
              if(!empty($context['prefix'])){

@@ -37,7 +37,7 @@ final class Config {
              );
 
              //Get file name without extension as namespace
-             $namespace = pathinfo($file->getFilename(), PATHINFO_FILENAME);
+             $namespace = strtolower(pathinfo($file->getFilename(), PATHINFO_FILENAME));
 
              $config[$namespace] = [];
 

@@ -4,6 +4,10 @@ namespace SaQle\Build\Utils;
 
 use SaQle\Core\Support\Cli;
 use SaQle\Core\Ui\Utils\Label;
+use SaQle\Orm\Entities\Field\Types\{
+     CharChoiceField,
+     IntegerChoiceField
+};
 
 trait MakeUserUtils {
      private function collect_user_data(string $model_class) : array {

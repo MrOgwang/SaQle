@@ -2,7 +2,7 @@
 
 namespace SaQle\Components\SaqleSignin;
 
-use SaQle\Auth\Services\AuthenticationService;
+use SaQle\Auth\Services\{AuthenticationService, PasswordHashService};
 use SaQle\Http\Response\Message;
 
 class SaqleSignin {
@@ -26,7 +26,9 @@ class SaqleSignin {
 	 }
 
 	 public function get(){
-		 return Message::ok([]);
+		 return Message::ok([
+		 	 'errors' => flash_from_session('__errors', '')
+		 ]);
 	 }
 
 	 public function signout(){

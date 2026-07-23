@@ -26,7 +26,6 @@ use SaQle\Http\Request\Request;
 use SaQle\Routes\MatchedRoute;
 use SaQle\Core\Exceptions\Route\RouteNotFoundException;
 use SaQle\Core\Ui\UiComponentDefinition;
-use SaQle\Http\Request\RequestScope;
 use RuntimeException;
 
 final class RouteMatcher {
@@ -50,11 +49,11 @@ final class RouteMatcher {
              $match['method'], 
              UiComponentDefinition::from_array($match['route']['compiled_target']),
              $match['route']['name'],
-             RequestScope::from($match['route']['scope']),
              $match['route']['model_class'],
              $match['route']['layout'],
              $match['route']['guards'],
-             $match['prefix'],
+             trim($match['prefix'] ?? ""),
+             $match['route']['middleware'] ?? [],
              $match['route']['sse_event'] ?? null
          );
 
@@ -75,7 +74,7 @@ final class RouteMatcher {
      private static function find_matching_route(string $method, string $uri): ?array{
 
          //merge all prefixes
-         $all_prefixes = array_merge(config('app.api_url_prefixes'), config('app.sse_url_prefixes'));
+         $all_prefixes = config('app.api_url_prefixes');
 
          //get all compiled routes from your registry
          $compiled_routes = RouteRegistry::all();

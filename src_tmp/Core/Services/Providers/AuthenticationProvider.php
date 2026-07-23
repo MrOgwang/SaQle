@@ -41,13 +41,10 @@ class AuthenticationProvider extends ServiceProvider {
              return new PasswordHashService();
          });
 
-         //register user provider
          $this->app->container->singleton(UserProviderInterface::class, function($c){
-             
-             $provider = auth_context() === 'saqle' ? 
-             $c->resolve(PlatformUserProvider::class) : $c->resolve(config('auth.user_provider'));
-             
-             return $provider;
+ 
+              return $c->resolve(config('auth.user_provider'));
+
          });
 
          //register tenant provider

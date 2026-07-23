@@ -1,7 +1,7 @@
 
 @let(
-    $create_form_route_name = strtolower($current_resource?->plural_label).'.create.form',
-    $create_form_url = $auth_context === 'saqle' ? 
+    $create_form_route_name = rr_name(strtolower($current_resource?->plural_label), 'create.form'),
+    $create_form_url = $is_platform ? 
              route($create_form_route_name) : 
              route($create_form_route_name, ['tenant' => $tenant_slug])
 )

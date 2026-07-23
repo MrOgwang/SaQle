@@ -19,6 +19,11 @@ final class ResponseTypeResolver {
 
      public static function resolve(Request $request){
 
+         if($request->is_api_request()){
+             $request->responsetype = ResponseType::JSON;
+             return;
+         }
+
          $accept = $request->header('Accept');
          $accept = $accept ? strtolower(trim((string)$accept)) : '*/*';
 
@@ -78,7 +83,6 @@ final class ResponseTypeResolver {
          }
 
          $request->responsetype = ResponseType::HTML;
-         
          return;
      }
 
