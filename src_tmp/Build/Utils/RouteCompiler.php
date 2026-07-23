@@ -115,29 +115,19 @@ final class RouteCompiler {
          return $route;
      }
 
-     private static function register_resource_routes($type, $model_label, $model_class, $multitenancy){
+     private static function register_resource_routes($is_platform, $model_label, $model_class, $multitenancy){
          
-         $route_prefix = "";
-         $admin_route_prefix = config('admin.routes.prefix', "_admin");
-         $route_name_prefix = config('admin.routes.name_prefix', "admin");
-
-         if($type === 'system'){
-             $route_prefix = '/saqle';
-         }else{
-             $route_prefix = $multitenancy ? '/:tenant' : "";
-         } 
-
-         $authorize = $type === 'system' ? '__authenticated__ && __super_admin__' : 
+         $authorize = $is_platform ? '__authenticated__ && __super_admin__' : 
          self::construct_route_authorization($model_label, $model_class);
 
-         $middleware = $type === 'system' ? ['__authentication__', '__authorization__'] : 
+         $middleware = $is_platform ? ['__authentication__', '__authorization__'] : 
          self::construct_route_middleware($model_label, $model_class);
 
          //list resources route
          $list_resource_route = new RouteAttribute(  
-             name: implode(".", [$route_name_prefix, $model_label, 'list']),
+             name: admin_route_name($model_label, 'list', $is_platform),
              method: 'get', 
-             url: url_join([$route_prefix, $admin_route_prefix, $model_label]), 
+             url: admin_route_url($model_label, [], $is_platform),
              authorize: $authorize,
              layout: ['saqle.app'],
              model: $model_class,
@@ -148,9 +138,9 @@ final class RouteCompiler {
 
          //create form route
          $create_form_route = new RouteAttribute(
-             name: implode(".", [$route_name_prefix, $model_label, 'create.form']),
+             name: admin_route_name($model_label, 'create.form', $is_platform),
              method: 'get', 
-             url: url_join([$route_prefix, $admin_route_prefix, $model_label, 'create']), 
+             url: admin_route_url($model_label, ['create'], $is_platform),
              authorize: $authorize,
              layout: ['saqle.app'],
              model: $model_class,
@@ -161,9 +151,9 @@ final class RouteCompiler {
 
          //submit create resource route
          $create_resource_route = new RouteAttribute(
-             name: implode(".", [$route_name_prefix, $model_label, 'create']),
+             name: admin_route_name($model_label, 'create', $is_platform),
              method: 'post', 
-             url: url_join([$route_prefix, $admin_route_prefix, $model_label, 'create']), 
+             url: admin_route_url($model_label, ['create'], $is_platform),
              authorize: $authorize,
              layout: ['saqle.app'],
              model: $model_class,
@@ -174,9 +164,9 @@ final class RouteCompiler {
 
          //show a single resource route
          $show_resource_route = new RouteAttribute(
-             name: implode(".", [$route_name_prefix, $model_label, 'view']),
+             name: admin_route_name($model_label, 'view', $is_platform),
              method: 'get', 
-             url: url_join([$route_prefix, $admin_route_prefix, $model_label, ':id']), 
+             url: admin_route_url($model_label, [':id'], $is_platform),
              authorize: $authorize,
              layout: ['saqle.app'],
              model: $model_class,
@@ -187,9 +177,9 @@ final class RouteCompiler {
 
          //show edit resource form
          $edit_form_route = new RouteAttribute(
-             name: implode(".", [$route_name_prefix, $model_label, 'edit.form']),
-             method: 'get', 
-             url: url_join([$route_prefix, $admin_route_prefix, $model_label, ':id', 'edit']), 
+             name: admin_route_name($model_label, 'edit.form', $is_platform),
+             method: 'get',  
+             url: admin_route_url($model_label, [':id', 'edit'], $is_platform),
              authorize: $authorize,
              layout: ['saqle.app'],
              model: $model_class,
@@ -200,9 +190,9 @@ final class RouteCompiler {
 
          //edit resource route
          $edit_resource_route = new RouteAttribute(
-             name: implode(".", [$route_name_prefix, $model_label, 'edit']),
-             method: 'patch', 
-             url: url_join([$route_prefix, $admin_route_prefix, $model_label, ':id', 'edit']), 
+             name: admin_route_name($model_label, 'edit', $is_platform),
+             method: 'patch',  
+             url: admin_route_url($model_label, [':id', 'edit'], $is_platform),
              authorize: $authorize,
              layout: ['saqle.app'],
              model: $model_class,
@@ -213,9 +203,9 @@ final class RouteCompiler {
 
          //delete resource route
          $del_resource_route = new RouteAttribute(
-             name: implode(".", [$route_name_prefix, $model_label, 'delete']),
+             name: admin_route_name($model_label, 'delete', $is_platform),
              method: 'delete', 
-             url: url_join([$route_prefix, $admin_route_prefix, $model_label, ':id']), 
+             url: admin_route_url($model_label, [':id'], $is_platform),
              authorize: $authorize,
              layout: ['saqle.app'],
              model: $model_class,
@@ -232,7 +222,7 @@ final class RouteCompiler {
          $system_models = $system_schema->get_admin_models();
 
          foreach($system_models as $model_label => $model_class){
-             self::register_resource_routes('system', $model_label, $model_class, $multitenancy);
+             self::register_resource_routes(true, $model_label, $model_class, $multitenancy);
          }
 
          //get developer defined db schemas
@@ -242,7 +232,7 @@ final class RouteCompiler {
              $models = new $schema_class()->get_admin_models();
              
              foreach($models as $model_label => $model_class){
-                 self::register_resource_routes('tenant', $model_label, $model_class, $multitenancy);
+                 self::register_resource_routes(false, $model_label, $model_class, $multitenancy);
              }
          }
      }  

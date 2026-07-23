@@ -1,9 +1,7 @@
  @if($form->is_for_create())
  @let(
-     $create_route_name = rr_name(strtolower($current_resource?->plural_label), 'create'),
-     $create_url = $is_platform ? 
-     route($create_route_name) : 
-     route($create_route_name, ['tenant' => $tenant_slug])
+     $create_route_name = admin_route_name($current_resource?->plural_label, "create", $is_platform),
+     $create_url = route($create_route_name)
  )
  <form 
      method='POST' 
@@ -14,10 +12,8 @@
      <input type='hidden' name='_method' value='POST'/>
  @else
  @let(
-     $edit_route_name = rr_name(strtolower($current_resource?->plural_label), 'edit'),
-     $edit_url = $is_platform ? 
-     route($edit_route_name, ['id' => $object->{$current_resource->pk_column}]) : 
-     route($edit_route_name, ['tenant' => $tenant_slug, 'id' => $object->{$current_resource->pk_column}]) 
+     $edit_route_name = admin_route_name($current_resource?->plural_label, "edit", $is_platform),
+     $edit_url = route($edit_route_name, ['id' => $object->{$current_resource->pk_column}])
  )
  <form 
      method='POST' 

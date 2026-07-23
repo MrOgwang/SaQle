@@ -20,9 +20,10 @@ use SaQle\Http\Request\Data\{Session, Data};
 use SaQle\Routes\MatchedRoute;
 use SaQle\Auth\Models\{BaseUser, BaseTenant};
 use SaQle\Http\Response\ResponseType;
+use SaQle\Middleware\Pipeable;
 use Closure;
 
-class Request {
+class Request implements Pipeable {
      //only one instance of a request will be available
 	 private static $instance;
 

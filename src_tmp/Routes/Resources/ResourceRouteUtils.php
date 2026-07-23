@@ -21,31 +21,23 @@ trait ResourceRouteUtils {
          return ucwords($name);
      }
 
-     private function construct_url($type, $model_label){
-         return $type === 'system' ? 
-         '/saqle/_admin/'.$model_label : 
-         ( $this->multitenancy ? 
-            '/'.$this->tenant_slug.'/_admin/'.$model_label : 
-            '/_admin/'.$model_label
-         );
-     }
-
      protected function list_route_def(
-         string $type, 
          string $model_label, 
-         string $model_class
+         string $model_class,
+         bool   $is_platform
      ){
          return (Object)[
-             'url' => $this->construct_url($type, $model_label),
+             'url' => admin_route_url($model_label, [], $is_platform),
              'ui_label' => $this->table_name_to_label($model_label),
              'plural_label' => $model_label,
              'singular_label' => ModelRegistry::get_model_name($model_class),
-             'route_name' => rr_name($model_label, 'list'),
+             'route_name' => admin_route_name($model_label, "list", $is_platform),
              'pk_column' => $model_class::get_pk_name()
          ];
      }
 
      protected function get_resource_links(){
+
          $links = [];
 
          if(ActorContext::is_platform()){
@@ -53,7 +45,7 @@ trait ResourceRouteUtils {
              $system_models = $system_schema->get_admin_models();
 
              foreach($system_models as $model_label => $model_class){
-                 $links[$model_class] = $this->list_route_def('system', $model_label, $model_class);
+                 $links[$model_class] = $this->list_route_def($model_label, $model_class, true);
              }
          }else{
              //get developer defined db schemas
@@ -63,7 +55,7 @@ trait ResourceRouteUtils {
                  $models = new $schema_class()->get_admin_models();
 
                  foreach($models as $model_label => $model_class){
-                     $links[$model_class] = $this->list_route_def('tenant', $model_label, $model_class);
+                     $links[$model_class] = $this->list_route_def($model_label, $model_class, false);
                  }
              }
          }

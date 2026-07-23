@@ -9,6 +9,7 @@ use SaQle\Build\Commands\{MakeMigrations, Migrate, MakeCollections, MakeModels,
     StartApps, MakeResources, BuildProject, TestModel, RunCron, QueueCron,
     MakeComponent, MakeUser, Install, MakeEnv, MigrateStructure, RouteList
 };
+use SaQle\Build\Middleware\SuperUserContextMiddleware;
 
 class FrameworkCommandsProvider extends ServiceProvider {
      public function register(): void {
@@ -16,7 +17,9 @@ class FrameworkCommandsProvider extends ServiceProvider {
          $superuser = new CommandDefinition(
              name: 'make:superuser',
              class: MakeSuperuser::class,
-             middleware: []
+             middleware: [
+                 SuperUserContextMiddleware::class
+             ]
          );
 
          $component = new CommandDefinition(

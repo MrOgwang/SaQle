@@ -47,7 +47,7 @@ return [
           * */
          [
              'resolver' => 'header',
-             'enabled'  => true,
+             'enabled'  => false,
              'key'      => 'X-Tenant',
              'priority' => 2
          ],
@@ -59,7 +59,7 @@ return [
           * */
          [
              'resolver' => 'subdomain',
-             'enabled'  => true,
+             'enabled'  => false,
              'key'      => '',
              'priority' => 4
          ],
@@ -71,7 +71,7 @@ return [
           * */
          [
              'resolver' => 'path',
-             'enabled'  => true,
+             'enabled'  => false,
              'key'      => 'tenant',
              'priority' => 3
          ]

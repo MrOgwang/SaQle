@@ -10,6 +10,24 @@ final class Guard {
 
      protected static array $guards = [];
 
+     protected static array $before = [];
+
+     public static function before(Closure $callback): void {
+         self::$before[] = $callback;
+     }
+
+     protected static function run_before(string $guard, $user, array $args): ?bool {
+         foreach(self::$before as $callback){
+             $result = $callback($user, $guard, ...$args);
+
+             if($result !== null){
+                 return (bool)$result;
+             }
+         }
+
+         return null;
+     }
+
      public static function add(string $name, Closure $evaluate, ?Closure $fail = null): void {
          self::$guards[$name] = [
              'evaluate' => $evaluate,
@@ -22,15 +40,22 @@ final class Guard {
              return false;
          }
 
-         $resolved_user = $user ?? resolve('request')->user;
-
-         return (bool) $callback($resolved_user, ...$args);
+         return (bool) $callback($user, ...$args);
      }
 
      public static function check(string $name, $user = null, ...$args): bool {
+
+         $resolved_user = $user ?? resolve('request')->user;
+
+         $before = self::run_before($name, $resolved_user, $args);
+
+         if($before !== null){
+             return $before;
+         }
+
          return self::evaluate(
              self::$guards[$name]['evaluate'] ?? null,
-             $user,
+             $resolved_user,
              $args
          );
      }

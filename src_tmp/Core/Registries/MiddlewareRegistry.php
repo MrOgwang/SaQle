@@ -5,6 +5,7 @@ use SaQle\Http\Request\{
      Request, 
      RequestScope
 };
+use SaQle\Middleware\Pipeable;
 
 abstract class MiddlewareRegistry {
 
@@ -16,25 +17,24 @@ abstract class MiddlewareRegistry {
 
      protected array $after_stack = []; 
 
-
      abstract public function add(string $name, string $middleware, ?RequestScope $scope = null) : void;
 
-     abstract protected function filter_middleware(array $stack, Request $request) : array;
+     abstract protected function filter_middleware(array $stack, Pipeable $pipeable) : array;
 
-     protected function get_before(Request $request) : array {
-         return $this->filter_middleware($this->before_stack, $request);
+     protected function get_before(Pipeable $pipeable) : array {
+         return $this->filter_middleware($this->before_stack, $pipeable);
      }
 
-     protected function get_after(Request $request) : array {
-         return $this->filter_middleware($this->after_stack, $request);
+     protected function get_after(Pipeable $pipeable) : array {
+         return $this->filter_middleware($this->after_stack, $pipeable);
      }
 
-     public function get(string $phase, Request $request) : array {
+     public function get(string $phase, Pipeable $pipeable) : array {
          if($phase === 'before'){
-             return $this->get_before($request);
+             return $this->get_before($pipeable);
          }
 
-         return $this->get_after($request);
+         return $this->get_after($pipeable);
      }
 
      public function set_global(array $global){

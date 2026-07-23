@@ -3,8 +3,9 @@
 namespace SaQle\Console;
 
 use SaQle\Core\Support\AttributeBag;
+use SaQle\Middleware\Pipeable;
 
-class CommandContext {
+class CommandContext implements Pipeable {
      public function __construct(
          protected string $command,
          protected array $arguments = [],

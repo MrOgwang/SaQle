@@ -4,6 +4,7 @@ namespace SaQle\Console;
 
 use SaQle\Console\Signature\SignatureBinder;
 use SaQle\Console\Exceptions\UnknownCommandException;
+use SaQle\Middleware\ConsoleMiddlewarePipeline;
 
 class CommandDispatcher {
      public function __construct(
@@ -23,6 +24,8 @@ class CommandDispatcher {
          $signature = $command->signature();
 
          $context = new SignatureBinder()->bind($parsed, $signature);
+
+         ConsoleMiddlewarePipeline::run('before', $context, $definition->middleware);
 
          return $command->handle($context);
 

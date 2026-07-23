@@ -34,7 +34,7 @@ class SystemSchema extends Schema {
 		 ];
 
 		 $this->admin_models = [
-		 	 'platform_users',
+		 	 'users',
 		 	 'tenants'
 		 ];
 	 }

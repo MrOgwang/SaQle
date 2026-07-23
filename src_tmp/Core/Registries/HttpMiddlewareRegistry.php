@@ -9,6 +9,7 @@ use SaQle\Middleware\{
      RequestMiddleware,
      ResponseMiddleware
 };
+use SaQle\Middleware\Pipeable;
 
 class HttpMiddlewareRegistry extends MiddlewareRegistry {
 
@@ -26,9 +27,9 @@ class HttpMiddlewareRegistry extends MiddlewareRegistry {
          }
      }
 
-     protected function filter_middleware(array $stack, Request $request) : array {
+     protected function filter_middleware(array $stack, Pipeable $pipeable) : array {
 
-         $route_middleware = $request->route->middleware ?? [];
+         $route_middleware = $pipeable->route->middleware ?? [];
 
          $shortlisted = [];
 
@@ -42,7 +43,7 @@ class HttpMiddlewareRegistry extends MiddlewareRegistry {
              $record = $this->stack[$name];
 
              //middleware is either api or web middleware
-             if($record['scope'] && $record['scope'] !== $request->scope()){
+             if($record['scope'] && $record['scope'] !== $pipeable->scope()){
                  continue;
              }
 

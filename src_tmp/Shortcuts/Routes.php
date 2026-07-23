@@ -15,32 +15,43 @@ if(!function_exists('add_query_param')){
      }
 }
 
-/**
- * Return resource route name
- * */
-if(!function_exists('rr_name')){
-     function rr_name($model_label, $action){
+if(!function_exists('admin_route_name')){
+     function admin_route_name(string $model_label, string $action = "", bool $is_platform = false){
 
-         $route_name_prefix = config('admin.routes.name_prefix', "admin");
+         $route_name_prefix = $is_platform ? 'saqle' : config('admin.routes.name_prefix', "admin");
 
          return implode(".", [
              $route_name_prefix, 
-             $model_label, 
+             strtolower($model_label), 
              $action
          ]);
+
      }
 }
 
-if(!function_exists('admin_route_name')){
-     function admin_route_name(string $model_label, string $action = ""){
+if(!function_exists('admin_route_url')){
+     function admin_route_url(string $model_label, array $parts = [], bool $is_platform = false){
 
-         $route_name_prefix = config('admin.routes.name_prefix', "admin");
+         $model_label = strtolower($model_label);
 
-         return implode(".", [
-             $route_name_prefix, 
-             $model_label, 
-             $action
-         ]);
+         $url_parts = [];
+
+         if($is_platform){
+             $url_parts = array_merge(
+                 ['/saqle', $model_label],
+                 $parts
+             );
+         }else{
+
+             $prefix = config('admin.routes.prefix', "_admin");
+
+             $url_parts = array_merge(
+                 ["/".$prefix, $model_label],
+                 $parts
+             );
+         }
+
+         return url_join($url_parts);
 
      }
 }

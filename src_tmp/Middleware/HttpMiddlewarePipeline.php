@@ -1,5 +1,6 @@
 <?php
-namespace SaQle\Http\Kernel;
+
+namespace SaQle\Middleware;
 
 use SaQle\Http\Request\Request;
 use SaQle\Http\Response\{
@@ -7,7 +8,7 @@ use SaQle\Http\Response\{
      Message
 };
 
-class MiddlewarePipeline {
+class HttpMiddlewarePipeline {
 
      public static function run(string $phase, Request $request, ?Response $response = null): ?Message {
 

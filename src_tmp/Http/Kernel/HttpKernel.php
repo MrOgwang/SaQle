@@ -23,16 +23,17 @@ use SaQle\Http\Request\{
      ErrorContext
 };
 use SaQle\Auth\Context\ActorContext;
+use SaQle\Middleware\HttpMiddlewarePipeline;
 
 class HttpKernel extends Kernel {
 
      private function bootstrap_request(Request $request) : ? Message {
          date_default_timezone_set(config('app.timezone'));
-         return MiddlewarePipeline::run('before', $request, null);
+         return HttpMiddlewarePipeline::run('before', $request, null);
      }
 
      private function bootstrap_response(Request $request, Response $response) : ?Message {
-         return MiddlewarePipeline::run('after', $request, $response);
+         return HttpMiddlewarePipeline::run('after', $request, $response);
      }
 
      private function resolve_response(Request $request, Message $result) : Response {

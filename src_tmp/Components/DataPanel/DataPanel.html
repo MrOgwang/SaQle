@@ -87,20 +87,14 @@
  	 	 	 	 <!--the table rows go here-->
  	 	 	 	 @foreach($panel->data as $row)
  	 	 	 	 @let(
- 	 	 	 	     $edit_form_route_name = rr_name(strtolower($current_resource?->plural_label), 'edit.form'),
-                     $edit_form_url = $is_platform ? 
-                         route($edit_form_route_name, ['id' => $row->{$current_resource->pk_column}]) : 
-                         route($edit_form_route_name, ['tenant' => $tenant_slug, 'id' => $row->{$current_resource->pk_column}]),
+ 	 	 	 	     $edit_form_route_name = admin_route_name($current_resource?->plural_label, "edit.form", $is_platform),
+                     $edit_form_url = route($edit_form_route_name, ['id' => $row->{$current_resource->pk_column}]),
 
-                     $view_route_name = rr_name(strtolower($current_resource?->plural_label), 'view'),
-                     $view_url = $is_platform ? 
-                         route($view_route_name, ['id' => $row->{$current_resource->pk_column}]) : 
-                         route($view_route_name, ['tenant' => $tenant_slug, 'id' => $row->{$current_resource->pk_column}]),
+                     $view_route_name = admin_route_name($current_resource?->plural_label, "view", $is_platform),
+                     $view_url = route($view_route_name, ['id' => $row->{$current_resource->pk_column}]),
 
-                     $del_route_name = rr_name(strtolower($current_resource?->plural_label), 'delete'),
-                     $del_url = $is_platform ? 
-                         route($del_route_name, ['id' => $row->{$current_resource->pk_column}]) : 
-                         route($del_route_name, ['tenant' => $tenant_slug, 'id' => $row->{$current_resource->pk_column}])
+                     $del_route_name = admin_route_name($current_resource?->plural_label, "delete", $is_platform),
+                     $del_url = route($del_route_name, ['id' => $row->{$current_resource->pk_column}])
  	 	 	 	 )
  	 	 	 	 <tr>
  	 	 	 	 	 <td><span class='flex center'><i class="fa-solid fa-grip-vertical"></i></span></td>

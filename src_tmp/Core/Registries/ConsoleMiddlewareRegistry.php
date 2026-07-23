@@ -5,10 +5,11 @@ use SaQle\Http\Request\{
      Request, 
      RequestScope
 };
-use SaQle\Middleware\{
+use SaQle\Console\Middleware\{
      BeforeCommandMiddleware,
      AfterCommandMiddleware
 };
+use SaQle\Middleware\Pipeable;
 
 class ConsoleMiddlewareRegistry extends MiddlewareRegistry {
 
@@ -26,7 +27,7 @@ class ConsoleMiddlewareRegistry extends MiddlewareRegistry {
          }
      }
 
-     protected function filter_middleware(array $stack, Request $request) : array {
+     protected function filter_middleware(array $stack, Pipeable $pipeable) : array {
 
          $route_middleware = $request->route->middleware ?? [];
 

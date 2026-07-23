@@ -39,6 +39,12 @@ class BaseUser extends Model implements UserInterface {
 			 })->default(false),
 		     'avatar'       => $avatar_field
 		 ]);
+
+		 if(config('tenancy.enabled')){
+		 	 $table->fields([
+		 	 	 'tenant_id' => Table::char_field()->max_length(255), 
+		 	 ]);
+		 }
 	 } 
 
      //check if a user passes a guard
