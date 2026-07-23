@@ -3,10 +3,40 @@ namespace SaQle\Build\Commands;
 
 use Exception;
 use SaQle\Core\Support\Cli;
+use SaQle\Console\{
+     Command, 
+     CommandContext
+};
+use SaQle\Console\Signature\Signature;
 
-final class MakeComponent {
-     public static function execute(string $name, ?string $module = null, bool $proxy = false){
-         
+final class MakeComponent extends Command {
+
+     public function signature(): Signature {
+         return Signature::make()
+         ->argument(
+             name: 'name',
+             required: true,
+             description: 'The name of the component to create'
+         )
+         ->argument(
+             name: 'module',
+             default: "",
+             required: false,
+             description: 'The module to which the component belongs'
+         )
+         ->flag(
+             name: 'proxy',
+             shortcut: '-p',
+             description: 'Whether this is a proxy component or not'
+         );
+     }
+
+     public function handle(CommandContext $context) : int {
+
+         $name = $context->argument('name');
+         $module = $context->argument('module');
+         $proxy  = $context->option('proxy', false);
+
          $name_slug = self::slug($name);
          $module_slug = $module ? self::slug($module, "Module") : "";
 
@@ -22,7 +52,7 @@ final class MakeComponent {
 
          if(is_dir($component_path)){
              Cli::print("Component already exists.\n");
-             return;
+             return 0;
          }
 
          mkdir($component_path, 0777, true);
@@ -36,6 +66,8 @@ final class MakeComponent {
          }
 
          Cli::print("Component {$name} created successfully.\n");
+
+         return 0;
      }
 
      private static function slug($name, string $type = "Component"){

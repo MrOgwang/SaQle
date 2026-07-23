@@ -19,7 +19,7 @@ class MakeSuperuser extends Command {
      public function signature(): Signature {
          return Signature::make();
      }
-
+     
      public function handle(CommandContext $context) : int {
 
          print_r($context);

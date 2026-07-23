@@ -98,6 +98,19 @@ class FrameworkCommandsProvider extends ServiceProvider {
          );
 
          $this->app->commands->add($superuser);
+         $this->app->commands->add($component);
+         $this->app->commands->add($migration);
+         $this->app->commands->add($migrate);
+         $this->app->commands->add($collections);
+         $this->app->commands->add($models);
+         $this->app->commands->add($throughs);
+         $this->app->commands->add($user);
+         $this->app->commands->add($seed);
+         $this->app->commands->add($reset);
+         $this->app->commands->add($build);
+         $this->app->commands->add($install);
+         $this->app->commands->add($env);
+         $this->app->commands->add($routes);
          
      }
 }

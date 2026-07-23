@@ -2,10 +2,19 @@
 namespace SaQle\Build\Commands;
 
 use SaQle\Core\Support\Cli;
+use SaQle\Console\{
+     Command, 
+     CommandContext
+};
+use SaQle\Console\Signature\Signature;
 
-class Install {
-     public static function execute(){
+class Install extends Command {
 
+     public function signature(): Signature {
+         return Signature::make();
+     }
+
+     public function handle(CommandContext $context) : int {
          Cli::print("Installing SaQle...\n");
 
          //create a .env file
@@ -24,5 +33,5 @@ class Install {
          Cli::print("Enjoy SaQle. Send your feedback to wycliffomondiotieno@gmail.com\n");
 
          return 0;
-     }  
+     }
 }

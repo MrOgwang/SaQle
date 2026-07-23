@@ -10,8 +10,13 @@ use SaQle\Core\Migration\Models\{
 use SaQle\Core\Migration\Tracker\MigrationTracker;
 use SaQle\Build\Utils\MigrationUtils;
 use SaQle\Core\Support\Cli;
+use SaQle\Console\{
+     Command, 
+     CommandContext
+};
+use SaQle\Console\Signature\Signature;
 
-class Migrate {
+class Migrate extends Command {
      use FileUtils;
 
      private string $migrations_folder;
@@ -20,6 +25,21 @@ class Migrate {
          $base_path = config('base_path');
 
          $this->migrations_folder = $base_path."/databases/migrations";
+     }
+
+     public function signature(): Signature {
+         return Signature::make();
+     }
+
+     public function handle(CommandContext $context) : int {
+
+         $tenancy_enabled = config('tenancy.enabled', false);
+         $tenant_model = config('tenancy.model_class');
+
+         $this->migrate('system', $tenancy_enabled, $tenant_model);
+         $this->migrate('tenant', $tenancy_enabled, $tenant_model);
+
+         return 0;
      }
 
      private function create_system_database() : array {
@@ -367,16 +387,5 @@ class Migrate {
                  ])->now();
              }
          } 
-     }
-
-     public function execute(){
-
-         $tenancy_enabled = config('tenancy.enabled', false);
-         $tenant_model = config('tenancy.model_class');
-
-         $this->migrate('system', $tenancy_enabled, $tenant_model);
-         $this->migrate('tenant', $tenancy_enabled, $tenant_model);
-
-         return;
      }
 }

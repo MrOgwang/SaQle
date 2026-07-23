@@ -8,13 +8,23 @@ use SaQle\Orm\Entities\Field\Types\{
      IntegerChoiceField
 };
 use SaQle\Build\Utils\MakeUserUtils;
+use SaQle\Console\{
+     Command, 
+     CommandContext
+};
+use SaQle\Console\Signature\Signature;
 use Exception;
 
-class MakeUser {
+class MakeUser extends Command {
 
      use MakeUserUtils;
 
-     public function execute(){
+     public function signature(): Signature {
+         return Signature::make();
+     }
+
+     public function handle(CommandContext $context) : int {
+
          try{
 
              $model_class = config('auth.model_class');
@@ -31,9 +41,13 @@ class MakeUser {
              }
 
              Cli::print("User was created successfully!");
+
+             return 0;
          }catch(Exception $e){
              Cli::print("ERROR:");
              Cli::print($e->getMessage());
+
+             return 1;
          }
      }
 }

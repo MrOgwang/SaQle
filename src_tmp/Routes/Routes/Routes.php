@@ -8,11 +8,10 @@ use SaQle\Routes\Router;
 foreach(config('app.media_storage_drivers') as $storage_key => $storage_config){
 
 	 $app_route = $storage_config['base_url']."/:storage_key/:file";
-	 Router::get($route, config('protected_file_component'))->name("app.{$storage_key}.media");
+	 Router::get($app_route, config('protected_file_component'))->name("app.{$storage_key}.media");
 
 	 $platform_root = '/saqle'.$storage_config['base_url']."/:storage_key/:file";
-	 
-	 Router::get(route_url()   $platform_root, config('protected_file_component'))->name("saqle.{$storage_key}.media");
+	 Router::get($platform_root, config('protected_file_component'))->name("saqle.{$storage_key}.media");
 } 
 
 Router::get(config('error.route'), config('error.component'))->name('app.error');

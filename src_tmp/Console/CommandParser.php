@@ -3,6 +3,14 @@
 namespace SaQle\Console;
 
 class CommandParser {
+
+     /**
+      * NOTE: This command parser needs to be refactored to accomodate
+      * shortcut options:
+      * 
+      * --name (works)
+      * -n (Ignored)
+      * */
      public static function parse(array $argv): ParsedCommand {
          $command = $argv[1] ?? '';
 

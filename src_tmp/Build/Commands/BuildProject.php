@@ -11,9 +11,28 @@ use SaQle\Build\Utils\{
 use SaQle\Core\Support\Cli;
 use RecursiveIteratorIterator;
 use RecursiveDirectoryIterator;
+use SaQle\Console\{
+     Command, 
+     CommandContext
+};
+use SaQle\Console\Signature\Signature;
 
-class BuildProject {
-     public function execute(string $type = 'all'){
+class BuildProject extends Command {
+
+     public function signature(): Signature {
+         return Signature::make()
+         ->argument(
+             name: 'type',
+             required: false,
+             default: 'all',
+             description: 'Specifies which part of the application to build'
+          );
+     }
+
+     public function handle(CommandContext $context) : int {
+
+         $type = $context->argument('type', 'all');
+
          switch($type){
              case "routes":
                  RouteCompiler::compile();
@@ -54,5 +73,7 @@ class BuildProject {
                  //build resources here
              break;
          }
+
+         return 0;
      }
 }

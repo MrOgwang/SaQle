@@ -1,9 +1,20 @@
 <?php
 namespace SaQle\Build\Commands;
 
-class ResetDatabase {
+use SaQle\Console\{
+     Command, 
+     CommandContext
+};
+use SaQle\Console\Signature\Signature;
+
+class ResetDatabase extends Command {
      
-     public function reset_database(){
+     public function signature(): Signature {
+         return Signature::make();
+     }
+
+     public function handle(CommandContext $context) : int {
+
          foreach(config('db.connections') as $connection_name => $params){
              $schema = config('db.schemas')[$connection_name];
              $schema_instance = new $schema();
@@ -14,10 +25,9 @@ class ResetDatabase {
                  }
              }
          }
-         (new SeedDatabase())->seed_database();
-     }
 
-     public function execute(){
-           $this->reset_database();
+         (new SeedDatabase())->seed_database();
+
+         return 0;
      }
 }

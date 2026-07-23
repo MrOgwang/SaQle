@@ -2,8 +2,14 @@
 namespace SaQle\Build\Commands;
 
 use SaQle\Build\Utils\MigrationUtils;
+use SaQle\Console\{
+     Command, 
+     CommandContext
+};
+use SaQle\Console\Signature\Signature;
+use SaQle\Core\Support\Cli;
 
-class SeedDatabase {
+class SeedDatabase extends Command {
      private string $seeders_folder;
 
      public function __construct(){
@@ -11,23 +17,27 @@ class SeedDatabase {
          $this->seeders_folder = $base_path."/databases/seeders";
      }
 
-     public function seed_database(){
+     public function signature(): Signature {
+         return Signature::make();
+     }
+
+     public function handle(CommandContext $context) : int {
+
          $db_seeder = config('db.seeder');
+
          if($db_seeder !== ''){
              $seeds = $db_seeder::get_seeds();
              foreach($seeds as $c => $seed){
                  $model = $seed['model'];
                  $file  = $this->seeders_folder."/".$seed['file'];
 
-                 echo "Now seeding for model: {$model}\n";
+                 Cli::print("Now seeding for model: {$model}\n");
                  $data = require_once $file;
                  $seeded_data = $model::create($data)->now();
-                 echo "Model: {$model} seeded!\n\n";
+                 Cli::print("Model: {$model} seeded!\n\n");
              }
          }
-     }
 
-     public function execute(){
-           $this->seed_database();
+         return 0;
      }
 }

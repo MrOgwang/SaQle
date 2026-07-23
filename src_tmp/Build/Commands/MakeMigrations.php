@@ -9,10 +9,15 @@ use SaQle\Core\Support\{
      Db, 
      Cli
 };
+use SaQle\Console\{
+     Command, 
+     CommandContext
+};
+use SaQle\Console\Signature\Signature;
 use ReflectionClass;
 use Exception;
 
-class MakeMigrations {
+class MakeMigrations extends Command {
 
      use FileUtils;
 
@@ -26,6 +31,35 @@ class MakeMigrations {
          $this->migrations_folder = $base_path."/databases/migrations";
          $this->snapshots_folder  = $base_path."/databases/snapshots";
          $this->schemas_folder    = $base_path."/databases/schemas";
+     }
+
+     public function signature(): Signature {
+         return Signature::make()
+         ->argument(
+             name: 'name',
+             required: true,
+             description: 'The name of the migration to make'
+         );
+     }
+
+     public function handle(CommandContext $context) : int {
+
+         $migration_name = $context->argument('name');
+
+         $timestamp  = date('YmdHis');
+
+         $connections = config('db.connections');
+
+         $system_connection_names = [config('framework_connection')];
+
+         $system_connections = array_intersect_key($connections, array_flip($system_connection_names));
+
+         $tenant_connections = array_diff_key($connections, array_flip($system_connection_names));
+
+         $this->make_migrations('system', $timestamp, $migration_name, $system_connections);
+         $this->make_migrations('tenant', $timestamp, $migration_name, $tenant_connections);
+
+         return 0;
      }
 
      private function constraints_are_equal(array $a, array $b) : bool {
@@ -546,19 +580,4 @@ class MakeMigrations {
          }
      }
 
-     public function execute($migration_name){
-
-         $timestamp  = date('YmdHis');
-
-         $connections = config('db.connections');
-
-         $system_connection_names = [config('framework_connection')];
-
-         $system_connections = array_intersect_key($connections, array_flip($system_connection_names));
-
-         $tenant_connections = array_diff_key($connections, array_flip($system_connection_names));
-
-         $this->make_migrations('system', $timestamp, $migration_name, $system_connections);
-         $this->make_migrations('tenant', $timestamp, $migration_name, $tenant_connections);
-     }
 }

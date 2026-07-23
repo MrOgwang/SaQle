@@ -3,10 +3,19 @@ namespace SaQle\Build\Commands;
 
 use SaQle\Core\Support\Cli;
 use SaQle\Core\Registries\RouteRegistry;
+use SaQle\Console\{
+     Command, 
+     CommandContext
+};
+use SaQle\Console\Signature\Signature;
 
-class RouteList {
+class RouteList extends Command {
 
-     public static function execute(){
+     public function signature(): Signature {
+         return Signature::make();
+     }
+
+     public function handle(CommandContext $context) : int {
 
          $compiled_routes = RouteRegistry::all();
 
@@ -29,6 +38,8 @@ class RouteList {
          }
 
          self::table($headers, $rows);
+
+         return 0;
      }
 
      private static function table(array $headers, array $rows) : void {

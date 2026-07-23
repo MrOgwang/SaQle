@@ -2,9 +2,19 @@
 namespace SaQle\Build\Commands;
 
 use SaQle\Core\Support\Cli;
+use SaQle\Console\{
+     Command, 
+     CommandContext
+};
+use SaQle\Console\Signature\Signature;
 
-class MakeEnv {
-     public static function execute(){
+class MakeEnv extends Command {
+
+     public function signature(): Signature {
+         return Signature::make();
+     }
+
+     public function handle(CommandContext $context) : int {
 
          Cli::print("Creating a development .env file\n");
 
@@ -63,5 +73,7 @@ class MakeEnv {
          $app_factory();
 
          Cli::print("Created a development .env file\n");
+
+         return 0;
      }
 }

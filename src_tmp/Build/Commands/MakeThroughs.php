@@ -3,8 +3,30 @@ namespace SaQle\Build\Commands;
 
 use SaQle\Build\Utils\MigrationUtils;
 use SaQle\Orm\Entities\Field\Types\ManyToMany;
+use SaQle\Console\{
+     Command, 
+     CommandContext
+};
+use SaQle\Console\Signature\Signature;
 
-class MakeThroughs{
+class MakeThroughs extends Command {
+
+     public function signature(): Signature {
+         return Signature::make();
+     }
+
+     public function handle(CommandContext $context) : int {
+
+         $schemas = config('db.schemas');
+         $manytomany_throughs = [];
+
+         foreach($schemas as $schema_name => $schema_class){
+             $models = new $schema_class()->get_permanent_models(); 
+             $this->extract_through_models($models, $manytomany_throughs);
+         }
+
+         return 0;
+     }
 
       private function has_manytomany_relationship_with(Model $model1, Model $model2){
          $relation = false;
@@ -126,19 +148,5 @@ class MakeThroughs{
              }
          }
          return $through_models;
-      }
-
-      private function make_throughs(){
-         $schemas = config('db.schemas');
-         $manytomany_throughs = [];
-
-         foreach($schemas as $schema_name => $schema_class){
-             $models = new $schema_class()->get_permanent_models(); 
-             $this->extract_through_models($models, $manytomany_throughs);
-         }
-      }
-
-      public function execute(){
-         $this->make_throughs();
       }
 }
