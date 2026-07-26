@@ -2,7 +2,6 @@
 namespace SaQle\Components\ProtectedFile;
 
 use SaQle\Core\Files\Storage\StorageFactory;
-use SaQle\Core\Support\BindFrom;
 use SaQle\Http\Response\Message;
 
 class ProtectedFile {

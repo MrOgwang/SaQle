@@ -6,7 +6,7 @@ namespace SaQle\Core\Support;
  * 
  * During controller method execution, parameters are automatically injected into the method.
  * 
- * The BindFrom attribute tells the Runtime where to extract the parameter from. Options include:
+ * The BindFrom attribute tells the Kernel where to extract the parameter from. Options include:
  * 
  * session - extract parameter from session
  * cookie  - extract parameter from cookie
@@ -65,7 +65,7 @@ class BindFrom {
 
      /**
       * Embedded tells us whether the key points to a completely formed object or
-      * the object will have to be scrambled from various input params
+      * the object will have to be scrambled from various input keys
       * */
 	 public ?bool $embedded = null {
 	 	 set(?bool $value){
@@ -77,6 +77,8 @@ class BindFrom {
 
 	 /**
 	  * The validation rules to be used for valiadtion
+	  * 
+	  * @var array<string>
 	  * */
 	 public array $rules = [] {
 	 	 set(array $value){
@@ -90,7 +92,7 @@ class BindFrom {
 	 	 $this->from     = $source;
 	 	 $this->key      = $key;
 	 	 $this->embedded = $embedded;
-	 	 $this->rules = $rules;
+	 	 $this->rules = $rules; 
 	 }
 
 	 public function set_key(string $key, bool $update = false){

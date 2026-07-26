@@ -1,7 +1,7 @@
 
 Route grouping is a powerful feature, that makes it easy for the developer to share common
 characteristics among routes. However, its obvious from my experience that grouping
-should not be done just for the sake of it. Therefo0re SaQle will insist on grouping based on
+should not be done just for the sake of it. Therefore SaQle will insist on grouping based on
 functional unit. 
 
 Examples:

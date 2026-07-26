@@ -321,7 +321,7 @@ button:active{
   INPUT ERRORS
 ===========================*/
 .input_error {
-    border-color: #dc2626;
+    border-color: #dc2626!important;
 }
 .field-error {
     margin-top: 0.4rem;

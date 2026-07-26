@@ -134,12 +134,15 @@ final class Router {
          $variant_routes = [];
 
          foreach($resolver_instance->routes() as $variant_name => $variant_callback){
-             $variant_routes[$variant_name] = $variant_callback(new Route($method, $url, "", null));
+
+             $vr = $variant_callback(new Route($method, $url, "", null));
+
+             self::apply_context($vr);
+
+             $variant_routes[$variant_name] = $vr;
          }
 
          $route = new DeferedRoute($method, $url, $variant_routes, $resolver_class);
-         
-         self::apply_context($route);
 
          self::$routes[] = [$route->key => $route];
      }

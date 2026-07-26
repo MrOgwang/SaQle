@@ -18,10 +18,10 @@ class Install extends Command {
          Cli::print("Installing SaQle...\n");
 
          //create a .env file
-         MakeEnv::execute();
+         new MakeEnv()->handle($context);
 
          //build the project
-         new BuildProject()->execute();
+         new BuildProject()->handle($context);
 
          Cli::print("Saqle installation complete! Next steps to finish your setup >\n");
          Cli::print("1. Update email and database details in development/.env");

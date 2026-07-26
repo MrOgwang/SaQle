@@ -24,12 +24,12 @@ class MakeEnv extends Command {
 
          if(file_exists($destination_file)){
              Cli::print(".env file already exists");
-             return;
+             return 0;
          }
 
          if(!file_exists($origin_file)){
              Cli::print(".env.example file not found!");
-             return;
+             return 0;
          }
 
          if(!is_dir($destination_dir)){

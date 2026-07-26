@@ -5,10 +5,15 @@ DONE: 2. Filter data on soft deletes
       3. Enable viewing of deleted rows
       4. Enable restoring deleted rows
       5. Enable bulk delete from table(Check many rows and delete in one go)
-      6. Single resource view
-      7. Single resource view with context
+DONE: 6. Single resource view
+DONE: 7. Single resource view with context
       8. Admin dashboard
 
 Authentication
 
-      1. Password recovery
+      1. Password reset
+      2. Token refresh
+      3. Social sign on
+
+Request Contract
+      1. Provide a API to convert contracts to UI forms.
