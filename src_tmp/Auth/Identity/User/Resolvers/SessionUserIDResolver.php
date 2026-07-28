@@ -28,7 +28,6 @@ class SessionUserIDResolver implements UserIDResolverInterface {
      }
 
      public function destroy() : void {
-         //destry jwt session
          session_unset();
          session_destroy();
      }

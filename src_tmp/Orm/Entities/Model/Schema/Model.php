@@ -523,7 +523,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
      }
 
      private function present_field(string $presenter, string $field){
-         $presenters = $this->table->get_presenters();
+         $presenters = $this->table->get_presenters  ();
 
          if(!array_key_exists($presenter, $presenters)){
              return $this->$field;

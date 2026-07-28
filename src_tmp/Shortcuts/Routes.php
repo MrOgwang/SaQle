@@ -4,8 +4,15 @@ use SaQle\Commons\Url;
 use SaQle\Routes\UrlGenerator;
 
 if(!function_exists('route')){
-     function route(string $name, array $params = []){
-         return UrlGenerator::route($name, $params);
+     function route(string $name, array $params = [], array $queries = []){
+         $url = UrlGenerator::route($name, $params);
+
+         foreach($queries as $q => $v){
+             $url = add_query_param($url, $q, $v);
+         }
+
+         return $url;
+
      }
 }
 

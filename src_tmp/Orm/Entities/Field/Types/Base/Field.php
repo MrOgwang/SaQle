@@ -282,7 +282,7 @@ class Field implements IField {
 	 	 }
      }
 
-     protected function get_validation_rules() : array {
+     public function get_validation_rules() : array {
      	 $is_field = $this instanceof VirtualField || ($this instanceof RelationField && $this->navigation) ? false : true;
 	     if (!$is_field){
 	         return [];

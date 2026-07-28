@@ -5,6 +5,11 @@ namespace SaQle\Core\Support;
 use ReflectionClass;
 use SaQle\Auth\Exceptions\AuthorizationException;
 use SaQle\Core\Exceptions\ValidationException;
+use SaQle\Core\Ui\Forms\{
+     Form,
+     FormFieldsCompiler,
+     FormContext
+};
 
 abstract class RequestContract {
 
@@ -24,7 +29,7 @@ abstract class RequestContract {
 
      final public function validated(): array {
          return $this->validated_data;
-     }
+     } 
 
      abstract protected function authorize(): bool;
 
@@ -35,27 +40,61 @@ abstract class RequestContract {
 
          $reflection = new ReflectionClass($this);
 
-         foreach ($reflection->getProperties() as $property){
+         foreach($reflection->getProperties() as $property){
+
              $type = $property->getType();
-             $attributes = $property->getAttributes(BindFrom::class);
 
-             if(!$attributes){
+             $validation_attr = $property->getAttributes(Validation::class);
+             $mapping_attr = $property->getAttributes(MapTo::class);
+
+             if(!$validation_attr && $mapping_attr){
                  continue;
-             }
+             } 
 
-             $bind_instance = $attributes[0]->newInstance();
+             $validation_instance = $validation_attr ? $validation_attr[0]->newInstance() : null;
+             $mapping_instance    = $mapping_attr ? $mapping_attr[0]->newInstance() : null;
+
              $property_name = $property->getName();
-
              $value         = $this->$property_name ?? null;
              $optional      = $type?->allowsNull() ?? false;
+
+             //combine custom and inherited rules:
+
+             $mapping_rules = [];
+             $custom_rules  = [];
+
+             if($mapping_instance){
+                 
+                 if(!$mapping_instance->field){
+                     $mapping_instance->field($property_name);
+                 }
+
+                 $mapping_rules = $mapping_instance->get_validation_rules();
+                 
+             }
+
+             if($validation_instance){
+
+                 $custom_rules = RuleParser::parse($validation_instance->rules ?? []);
+
+                 if(!$validation_instance->inherit){
+                     $mapping_rules = [];
+                 }else{
+                     if(!empty($validation_instance->only)){
+                         $mapping_rules = array_intersect_key($mapping_rules, array_flip($validation_instance->only));
+                     }elseif(!empty($validation_instance->except)){
+                         $mapping_rules = array_diff_key($mapping_rules, array_flip($validation_instance->except));
+                     }
+                 }
+             }
+
+             $rules = array_merge($mapping_rules, $custom_rules);
              
              /**
               * Validate only non optional properties or
               * optional properties for which values have been provided
               * */
              if(!$optional || ($optional && !is_null($value))){
-
-                 $rules = RuleParser::parse($bind_instance->rules ?? []);
 
                  $validator = new FieldValidator(rules: $rules, array: false);
 
@@ -89,5 +128,30 @@ abstract class RequestContract {
      //called after is validated
      protected function after_validation(){
          //do nothing
+     }
+
+     public function get_fields(){
+        
+         return FieldExtractor::extract($this::class);
+
+     }
+
+     public function form(string $form_name, ?object $model = null){
+
+         $form_fields = FormFieldsCompiler::compile($this::class);
+         
+         $form = new Form($form_name, $this::class, $form_fields);
+         $form->fill_all();
+
+         if($model){
+             $form->for_update();
+             $form->bind(FormContext::make($model));
+         }else{
+             $form->for_create();
+             $form->bind(FormContext::make());
+         }
+
+         return $form;
+
      }
 }

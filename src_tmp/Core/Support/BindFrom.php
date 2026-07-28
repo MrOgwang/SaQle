@@ -2,7 +2,7 @@
 namespace SaQle\Core\Support;
 
 /**
- * The BindFrom attribute is used on controller method parameters.
+ * The BindFrom attribute is used on controller method parameters and request contract properties.
  * 
  * During controller method execution, parameters are automatically injected into the method.
  * 
@@ -75,24 +75,10 @@ class BindFrom {
 	 	 get => $this->embedded;
 	 }
 
-	 /**
-	  * The validation rules to be used for valiadtion
-	  * 
-	  * @var array<string>
-	  * */
-	 public array $rules = [] {
-	 	 set(array $value){
-	 	 	 $this->rules = $value;
-	 	 }
-
-	 	 get => $this->rules;
-	 }
-
-	 public function __construct(string $source, string $key = '', array $rules = [], ?bool $embedded = null){
+	 public function __construct(string $source, string $key = '', ?bool $embedded = null){
 	 	 $this->from     = $source;
 	 	 $this->key      = $key;
 	 	 $this->embedded = $embedded;
-	 	 $this->rules = $rules; 
 	 }
 
 	 public function set_key(string $key, bool $update = false){

@@ -15,6 +15,7 @@ use SaQle\Orm\Entities\Field\Types\{
      ImageField
 };
 use SaQle\Orm\Entities\Field\Types\Base\RelationField;
+use SaQle\Core\Support\RequestContract;
 use RuntimeException;
 
 final class FormFieldsCompiler {
@@ -46,6 +47,64 @@ final class FormFieldsCompiler {
 
      public static function compile(string $model_class, bool $include_audit = false) : array {
 
+         if(is_a($model_class, Model::class, true)){
+             return self::compile_model($model_class, $include_audit);
+         }elseif(is_a($model_class, RequestContract::class, true)){
+             return self::compile_contract($model_class);
+         }
+
+     }
+
+     public static function compile_contract(string $contract_class) : array {
+
+         $contract = new $contract_class();
+
+         $contract_fields = $contract->get_fields();
+
+         $fields = [];
+
+         foreach($contract_fields as $field){
+
+             $name = $field->get_name();
+
+             $field_attrs = array_filter($field->get_form_field_attrs(), fn($v) => $v !== null);
+
+             if(!$field_attrs){
+                 continue;
+             }
+             
+             $field_attrs['id'] = $field_attrs['name'];
+             $field_attrs['label'] = Label::make($field_attrs['name']);
+             $field_attrs['helper_text'] = $field_attrs['description'] ?? '';
+             $field_attrs['value'] = '';
+             $field_attrs['errors'] = [];
+
+             $ui_type = $field instanceof ImageField ? 'image' : 'normal';
+
+             $source = null;
+             if($field instanceof OneToOne){
+                 $source = [
+                     'model'         => $model_class,
+                     'related_model' => $field->get_related_model()
+                 ];
+
+                 $field_attrs['choices'] = [];
+                 $field_attrs['type'] = "select";
+             }
+                 
+             $form_field = new FormField($field_attrs, $ui_type);
+             $form_field->class(self::get_field_classes($field_attrs));
+             $form_field->data(self::get_field_data($field_attrs));
+             $form_field->source($source);
+
+             $fields[$name] = $form_field;
+         }
+
+         return $fields;
+     }
+
+     public static function compile_model(string $model_class, bool $include_audit = false) : array {
+
          $model = $model_class::make();
 
          $model_fields = $model->table->get_clean_fields();
@@ -61,7 +120,7 @@ final class FormFieldsCompiler {
          }
 
          $pk_name = $model->get_pk_name();
-
+ 
          $fields = [];
 
          foreach($model_fields as $field){
