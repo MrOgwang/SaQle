@@ -16,7 +16,8 @@ use SaQle\Core\Services\Providers\{
      AuthenticationProvider,
      ValidationServiceProvider,
      StorageServiceProvider,
-     TemplateServiceProvider
+     TemplateServiceProvider,
+     AdminNavigationProvider
 };
 use SaQle\Console\CommandRegistry;
 use SaQle\Http\Cors\CorsConfig;
@@ -41,6 +42,7 @@ use SaQle\Auth\Middleware\{
 };
 use SaQle\Auth\Providers\PlatformAuthorizationProvider;
 use SaQle\Console\Providers\FrameworkCommandsProvider;
+use SaQle\Auth\Context\ActorContext;
 
 final class App {
 
@@ -121,6 +123,12 @@ final class App {
          }
 
          $this->load_environment();
+
+         $uri = $_SERVER['REQUEST_URI'] ?? '/';
+
+         if(str_starts_with($uri, '/saqle/')){
+             ActorContext::to_platform();
+         }
      }
 
      private function expose_configs(array $config){
@@ -141,7 +149,8 @@ final class App {
              StorageServiceProvider::class,
              TemplateServiceProvider::class,
              PlatformAuthorizationProvider::class,
-             FrameworkCommandsProvider::class
+             FrameworkCommandsProvider::class,
+             AdminNavigationProvider::class
          ];
 
          foreach(array_merge($framework_providers, $this->setup->providers) as $provider){

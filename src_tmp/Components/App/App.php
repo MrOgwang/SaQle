@@ -6,6 +6,7 @@ use SaQle\Http\Response\Message;
 use SaQle\Routes\Resources\ResourceRouteUtils;
 use SaQle\Core\Support\Index;
 use SaQle\Auth\Context\ActorContext;
+use SaQle\Admin\Admin;
 
 class App {
 
@@ -43,11 +44,14 @@ class App {
 
          $current_resource = $resources[$model_class] ?? null;
 
+         $is_platform = ActorContext::is_platform();
+
          return Message::ok([
              'resources' => $resources,
              'current_resource' => $current_resource,
              'tenant_slug' => $this->tenant_slug,
-             'is_platform' => ActorContext::is_platform()
+             'is_platform' => $is_platform,
+             'navigation' => Admin::navigation_registry()
          ]);
      }
 }

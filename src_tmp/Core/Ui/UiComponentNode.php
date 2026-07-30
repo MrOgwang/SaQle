@@ -107,6 +107,7 @@ class UiComponentNode {
          $js_loaded_components = [];
          $css = $this->def->css($css_loaded_components, $template_path);
          $js = $this->def->js($js_loaded_components , $template_path);
+
          AssetManager::add_css($css);
          AssetManager::add_js($js);
 

@@ -12,63 +12,33 @@
          </div>
          <!-- ================= NAVIGATION ================= -->
          <div class="sidebar-nav">
+             @let($action = $navigation->get_primary_action())
+             @if($action)
+             <a href="{{ $action->url }}" class="nav-item active">
+                 <span><i data-lucide="{{ $action->icon }}"></i></span>
+                 {{ $action->label }}
+             </a>
+             @endif
+
+             @foreach($navigation->groups() as $group)
+             <!-- {{ $group->label() }} -->
              <div class="nav-group">
                  <button class="nav-group-header expanded">
-                     <span>Main</span>
+                     <span>{{ $group->label() }}</span>
                      <svg class="chevron" viewBox="0 0 24 24">
                          <path d="M8 10l4 4 4-4"/>
                      </svg>
                  </button>
                  <div class="nav-items">
-                     @let(
-                         $multitenant = config('tenancy.enabled'),
-                         $route_name = $is_platform ? 'saqle.admin.dashboard' : 
-                         ($multitenant ? 'tenant.admin.dashboard' : 'admin.dashboard')
-                     )   
-                     <a href="{{ route($route_name) }}" class="nav-item active">
-                         <svg viewBox="0 0 24 24">
-                             <path d="M3 11L12 3l9 8"/>
-                             <path d="M5 10v10h14V10"/>
-                         </svg>
-                         Dashboard
-                     </a>
-                 </div>
-             </div>
-
-             <!-- RESOURCES -->
-             <div class="nav-group">
-                 <button class="nav-group-header expanded">
-                     <span>Resources</span>
-                     <svg class="chevron" viewBox="0 0 24 24">
-                         <path d="M8 10l4 4 4-4"/>
-                     </svg>
-                 </button>
-                 <div class="nav-items">
-                     @foreach($resources as $r)
-                     @if($r->url === $current_resource?->url)
-                     <a href="{{ $r->url }}" class="nav-item">
-                     @else
-                     <a href="{{ $r->url }}" class="nav-item">
-                     @endif
-                         <svg class="icon" viewBox="0 0 24 24"
-                             fill="none"
-                             stroke="currentColor"
-                             stroke-width="2"
-                             stroke-linecap="round"
-                             stroke-linejoin="round">
-
-                            <rect x="4" y="5" width="7" height="7" rx="1"></rect>
-                            <rect x="13" y="5" width="7" height="7" rx="1"></rect>
-
-                            <rect x="4" y="14" width="7" height="7" rx="1"></rect>
-                            <rect x="13" y="14" width="7" height="7" rx="1"></rect>
-
-                         </svg>
-                         {{ $r->ui_label }}
+                     @foreach($group->links() as $link)
+                     <a href="{{ $link->url }}" class="nav-item">
+                         <span><i data-lucide="{{ $link->icon }}"></i></span>
+                         {{ $link->label }}
                      </a>
                      @endforeach
                  </div>
              </div>
+             @endforeach
          </div>
 
          <!-- ================= FOOTER ================= -->

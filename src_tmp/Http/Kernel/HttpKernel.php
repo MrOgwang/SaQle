@@ -144,10 +144,6 @@ class HttpKernel extends Kernel {
          //create the request
          $request = RequestFactory::make();
 
-         if(str_starts_with($request->uri(), '/saqle/')){
-             ActorContext::to_platform();
-         }
-
          try{
 
              //start session

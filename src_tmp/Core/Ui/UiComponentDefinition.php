@@ -148,7 +148,21 @@ class UiComponentDefinition {
              }
          }
 
-         return array_unique($files);
+         $assets = [];
+         $listed = [];
+
+         foreach($files as $f){
+
+             $fn = strtolower($f);
+
+             if(!in_array($fn, $listed)){
+                 $assets[] = $f;
+                 $listed[] = $fn;
+             }
+
+         }
+
+         return $assets;
      }
 
      public function js(array &$loaded_components = [], string $template_path = "") : array {

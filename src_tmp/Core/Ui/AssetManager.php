@@ -22,7 +22,7 @@ class AssetManager {
 
          if($type === "css"){
              return array_map(function($a){
-                return "<link rel='stylesheet' href='{$a}'>"; $n * 2;
+                return "<link rel='stylesheet' href='{$a}'>";
              }, $assets);
          }
 
@@ -54,12 +54,21 @@ class AssetManager {
          $assets = [];
 
          foreach($files as $file){
-             $hash = md5($file).time();
+
+             if(str_starts_with($file, '~')){
+                 $assets[] = ltrim($file, '~');
+
+                 continue;
+             }
+
+             $hash = md5($file);
              $filename = pathinfo($file, PATHINFO_FILENAME);
              $output_filename = "{$filename}_{$hash}";
              $output_path = path_join([$path, $output_filename.".{$type}"]);
 
-             if(!file_exists($output_path)){
+             $environment = config('environment', 'development');
+
+             if($environment === 'development' || !file_exists($output_path)){
                  $content = self::minify(file_get_contents($file));
                  file_put_contents($output_path, $content);
              }

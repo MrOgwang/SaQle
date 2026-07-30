@@ -27,11 +27,13 @@ if(!function_exists('admin_route_name')){
 
          $route_name_prefix = $is_platform ? 'saqle' : config('admin.routes.name_prefix', "admin");
 
-         return implode(".", [
-             $route_name_prefix, 
-             strtolower($model_label), 
-             $action
-         ]);
+         return implode(".", 
+             array_filter([
+                 trim($route_name_prefix), 
+                 trim(strtolower($model_label)), 
+                 trim($action)
+             ], fn($r) => $r !== "")
+         );
 
      }
 }
