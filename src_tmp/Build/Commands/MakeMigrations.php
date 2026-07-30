@@ -231,6 +231,7 @@ class MakeMigrations extends Command {
              $constraints = $mi::get_fk_constraints();
              $updated_constraints = [];
              foreach($constraints as $col_name => $cons_items){
+                
                  $updated_constraints[$col_name] = [
                      'ref_table'       => $schema_instance->get_table_for_model($cons_items['ref_model']),
                      'ref_col'         => $cons_items['ref_col'],

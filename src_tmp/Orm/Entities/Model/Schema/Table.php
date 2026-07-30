@@ -9,7 +9,8 @@ use SaQle\Orm\Entities\Field\Types\{
      TimeField, TextField, SlugField, PhoneField, PasswordField, JsonField,
      IpAddressField, IntegerField, FloatField, FileField, EmailField,
      DecimalField, DateTimeField, DateField, ChoiceField, CharField, 
-     BooleanField, OneToOne, ManyRelation, CharChoiceField, IntegerChoiceField
+     BooleanField, OneToOne, ManyRelation, CharChoiceField, IntegerChoiceField,
+     ColorField
 };
 use SaQle\Orm\Entities\Field\Types\Base\RelationField;
 use RuntimeException;
@@ -390,7 +391,6 @@ final class Table {
          $this->connection_name = $connection_name;
      }
 
-
      public function primary_key(string $name, ?string $type = null){
          $this->pk_name = $name;
          $this->pk_type = $type ?? config('model.pk_type');
@@ -563,6 +563,10 @@ final class Table {
          return new CharField(...$kwargs);
      }
 
+     public static function color_field(...$kwargs): IField {
+         return new ColorField(...$kwargs);
+     }
+
      /*public static function choice_field(...$kwargs): IField {
          return new ChoiceField(...$kwargs);
      }*/
@@ -673,18 +677,31 @@ final class Table {
      }
 
      public static function author_field() : IField {
-         $auth_model = self::assert_auth_model_exists('author');
-         return self::one_of($auth_model, foreign_key: $auth_model::get_pk_name())->column(config('model.author_column'));
+
+         /*$auth_model = self::assert_auth_model_exists('author');
+         return self::one_of($auth_model, foreign_key: $auth_model::get_pk_name())->column(config('model.author_column'));*/
+
+         return $this->pk_type === 'UUID' ? 
+         self::char_field()->column(config('model.author_column')) : 
+         self::integer_field()->column(config('model.author_column'));
      }
 
      public static function modifier_field() : IField {
-         $auth_model = self::assert_auth_model_exists('modifier');
-         return self::one_of($auth_model, foreign_key: $auth_model::get_pk_name())->column(config('model.modifier_column'));
+         /*$auth_model = self::assert_auth_model_exists('modifier');
+         return self::one_of($auth_model, foreign_key: $auth_model::get_pk_name())->column(config('model.modifier_column'));*/
+
+         return $this->pk_type === 'UUID' ? 
+         self::char_field()->column(config('model.modifier_column')) : 
+         self::integer_field()->column(config('model.modifier_column'));
      }
 
      public static function remover_field() : IField {
-         $auth_model = self::assert_auth_model_exists('remover');
-         return self::one_of($auth_model, foreign_key: $auth_model::get_pk_name())->column(config('model.remover_column'));
+         /*$auth_model = self::assert_auth_model_exists('remover');
+         return self::one_of($auth_model, foreign_key: $auth_model::get_pk_name())->column(config('model.remover_column'));*/
+
+         return $this->pk_type === 'UUID' ? 
+         self::char_field()->column(config('model.remover_column')) : 
+         self::integer_field()->column(config('model.remover_column'));
      }
 
      public static function created_at_field() : IField {

@@ -1,0 +1,9 @@
+1. Create the model
+
+2. a. Create a database schema if it doesnt already exist
+   b. Add the model to a database schema. 
+
+3. Add the schema to connection configurations in db.config file.
+
+
+Note: We have to find a way to shorten this.
