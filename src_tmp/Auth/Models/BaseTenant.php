@@ -17,14 +17,12 @@ class BaseTenant extends Model implements ISystemModel, TenantInterface {
 
 		 $table->fields([ 
 		     'tenant_name' => Table::char_field()->required()->unique(),
-		     'slug'        => Table::slug_field()->compute(function($model){
+		     'slug' => Table::slug_field()->compute(function($model){
 		     	  return slugify($model->tenant_name);
 		     })->required(),
-		     'url' => Table::url_field()->compute(function($model){
-		     	 return config('tenancy.enabled', false) ? 
-		     	 config('app.domain.root').'/'.slugify($model->tenant_name).'/_admin/dashboard' : 
-		     	 config('app.domain.root').'/_admin/dashboard';
-		     })->required()->require_tld(false)->schemes([parse_url(config('app.domain.root'), PHP_URL_SCHEME)]),
+		     'url' => Table::char_field()->compute(function($model){
+		     	 return '/saqle/tenants/'.slugify($model->tenant_name).'/manage';
+		     })->required(),
 		 ]);
 
 		 $table->with_user_audit(false); 

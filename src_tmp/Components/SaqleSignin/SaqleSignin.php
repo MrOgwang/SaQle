@@ -22,7 +22,7 @@ class SaqleSignin {
 		 	 throw authorization_exception("Invalid credentials!");
 		 }
 
-		 return Message::redirect(route('saqle.admin.dashboard'));
+		 return Message::redirect(route(admin_route_name('overview', '', true)));
 	 }
 
 	 public function get(){

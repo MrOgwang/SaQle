@@ -45,12 +45,8 @@ class TenantMiddleware implements RequestMiddleware {
              $request->session->remove($tenant_key);
              return null;
          }
-         
-         /**
-          * There is always a tenant, even when multi tenancy is turned off. In
-          * such a case the tenant id is the name of the app, slugified
-          * */
-         $tenant_id = config('tenancy.enabled') ? $this->id_resolver->resolve() : slugify(config('app.name'));
+
+         $tenant_id = $this->id_resolver->resolve();
 
          if(!$tenant_id){
              return Message::bad_request(message: "Failed to resolve tenant id!");
@@ -58,7 +54,7 @@ class TenantMiddleware implements RequestMiddleware {
 
          $tenant = $request->session->get($tenant_key, null);
          
-         if($tenant && ($tenant->get_id() === $tenant_id || strtolower($tenant->get_name()) === strtolower($tenant_id))){
+         if($tenant && ($tenant->get_id() === $tenant_id || $tenant->slug === $tenant_id)){
              return null;
          }
 
@@ -68,7 +64,7 @@ class TenantMiddleware implements RequestMiddleware {
              return Message::bad_request(message: "Failed to resolve tenant. Tenant Id - {$tenant_id}!");
          }
 
-         $request->session->set('__tenant', $tenant, true);
+         $request->session->set($tenant_key, $tenant, true);
 
          return null;
      }

@@ -319,6 +319,8 @@ class Field implements IField {
      /**
       * Provide a callback that computes a field 
       * value from the rest of model fields
+      * 
+      * When a field is set to compute, turn required off.
       * */
      public function compute(callable $callback){
      	 $this->compute_callback = $callback;

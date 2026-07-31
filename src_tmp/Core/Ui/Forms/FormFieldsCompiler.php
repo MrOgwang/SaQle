@@ -25,7 +25,12 @@ final class FormFieldsCompiler {
      }*/
 
      private static function skip_field(object $field): bool{
-         return $field instanceof VirtualField || $field instanceof Pk || $field instanceof ManyToMany || $field instanceof OneToMany;
+         return 
+         $field instanceof VirtualField || 
+         $field instanceof Pk || 
+         $field instanceof ManyToMany || 
+         $field instanceof OneToMany ||
+         $field->get_compute() !== null;
      }
 
      private static function get_field_classes(array $attrs) : string {

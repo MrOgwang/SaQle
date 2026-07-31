@@ -36,11 +36,15 @@ class Migrate extends Command {
          $tenancy_enabled = config('tenancy.enabled', false);
          $tenant_model = config('tenancy.model_class');
 
+         Cli::print("Migrating system databases!");
          $this->migrate('system', $tenancy_enabled, $tenant_model);
+         Cli::print("System databases migrated!\n");
+         Cli::print("Migrating tenant databases");
          $this->migrate('tenant', $tenancy_enabled, $tenant_model);
+         Cli::print("Tenant databases migrated!");
 
          return 0;
-     }
+     } 
 
      private function create_system_database() : array {
          $system_db = Db::get_system_db(); 
@@ -122,6 +126,50 @@ class Migrate extends Command {
          );
      }
 
+     private function process_tenant_migration_file($type, $file, $tenant){
+         $file_name = pathinfo($file, PATHINFO_FILENAME);
+         $file_path =  path_join([$this->migrations_folder, $type, $file]);
+         
+         if(!file_exists($file_path)){
+             return;
+         }
+
+         require_once $file_path;
+
+         $class_instance = new $file_name();
+
+         $migration_name = $class_instance->get_migration_name();
+         $migration_timestamp = $class_instance->get_migration_timestamp();
+
+         $touched_snapshots = $class_instance->snapshots();
+         if(!$touched_snapshots){
+             return;
+         }
+
+         //record this migration in db
+         $migration_record = $this->get_migration_record($type, $migration_name, $migration_timestamp, $tenant->tenant_id);
+         
+         if($migration_record->is_migrated === 1)
+             return;
+
+         $up_operations = $class_instance->up();
+
+         foreach($touched_snapshots as $snapshot_name => $snapshot_location){
+             $this->process_snapshot(
+                 $snapshot_name, 
+                 $snapshot_location, 
+                 $migration_name,
+                 $migration_timestamp,
+                 $up_operations,
+                 $tenant
+             );
+         }
+
+         //update tenant migration record
+         $this->update_migration_record($migration_record->migration_id, $tenant->tenant_id);
+
+     }
+
      private function process_migration_file($type, $file, array $tenants = [], bool $tenancy_enabled = false){
          
          $file_name = pathinfo($file, PATHINFO_FILENAME);
@@ -166,7 +214,7 @@ class Migrate extends Command {
 
          $up_operations = $class_instance->up();
 
-         if(!$tenants){
+         if(!$tenancy_enabled || $type === 'system'){
 
              foreach($touched_snapshots as $snapshot_name => $snapshot_location){
                  $this->process_snapshot(
@@ -185,6 +233,9 @@ class Migrate extends Command {
                  //record tenant migration in db
                  $migration_record = $this->get_migration_record($type, $migration_name, $migration_timestamp, $tenant->tenant_id);
 
+                 if($migration_record->is_migrated === 1)
+                     continue;
+
                  foreach($touched_snapshots as $snapshot_name => $snapshot_location){
                      $this->process_snapshot(
                          $snapshot_name, 
@@ -198,7 +249,7 @@ class Migrate extends Command {
 
                  //update tenant migration record
                  $this->update_migration_record($migration_record->migration_id, $tenant->tenant_id);
-
+ 
              }
          }
 
@@ -360,6 +411,20 @@ class Migrate extends Command {
          $fn($files);
          return $files;
      }
+
+     public function migrate_tenant(mixed $tenant, mixed $migrations){
+
+         $type = 'tenant';
+
+         foreach($migrations as $m){
+
+             $migration_file = ucfirst($type).'_Migration_'.$m->migration_timestamp.'_'.$m->migration_name.'.php';
+
+             $this->process_tenant_migration_file($type, $migration_file, $tenant);
+
+         }
+
+     }
      
      private function migrate($type, $tenancy_enabled, $tenant_model){
 
@@ -369,7 +434,7 @@ class Migrate extends Command {
          $migration_file_names = array_values($files);
 
          Cli::print("Starting migrations!\n");
-
+ 
          $tenants = $type === 'tenant' ? $tenant_model::get()->all()->items() : [];
          foreach($migration_file_names as $migration_file){
              $this->process_migration_file($type, $migration_file, $tenants, $tenancy_enabled);

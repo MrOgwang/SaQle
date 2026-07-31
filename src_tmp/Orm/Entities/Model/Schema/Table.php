@@ -225,12 +225,12 @@ final class Table {
      private function get_user_audit_fields(bool $switch = true) : array {
          if($this->_with_user_audit){
              $fields = [
-                 'author' => self::author_field()->column($this->get_author_column()),
-                 'modifier' => self::modifier_field()->column($this->get_modifier_column())
+                 'author' => self::author_field($this->pk_type)->column($this->get_author_column()),
+                 'modifier' => self::modifier_field($this->pk_type)->column($this->get_modifier_column())
              ];
 
              if($this->_with_soft_delete){
-                 $fields['remover'] = self::remover_field()->column($this->get_remover_column());
+                 $fields['remover'] = self::remover_field($this->pk_type)->column($this->get_remover_column());
              }
 
              return $fields;
@@ -676,12 +676,14 @@ final class Table {
          throw new RuntimeException("Cannot creat {$field} field. The user model has not been defined!");
      }
 
-     public static function author_field() : IField {
+     public static function author_field(?string $pk_type = null) : IField {
 
          /*$auth_model = self::assert_auth_model_exists('author');
          return self::one_of($auth_model, foreign_key: $auth_model::get_pk_name())->column(config('model.author_column'));*/
 
-         return $this->pk_type === 'UUID' ? 
+         $pk_type ??= config('model.pk_type');
+
+         return $pk_type === 'UUID' ? 
          self::char_field()->column(config('model.author_column')) : 
          self::integer_field()->column(config('model.author_column'));
      }
@@ -690,7 +692,9 @@ final class Table {
          /*$auth_model = self::assert_auth_model_exists('modifier');
          return self::one_of($auth_model, foreign_key: $auth_model::get_pk_name())->column(config('model.modifier_column'));*/
 
-         return $this->pk_type === 'UUID' ? 
+         $pk_type ??= config('model.pk_type');
+
+         return $pk_type === 'UUID' ? 
          self::char_field()->column(config('model.modifier_column')) : 
          self::integer_field()->column(config('model.modifier_column'));
      }
@@ -699,7 +703,9 @@ final class Table {
          /*$auth_model = self::assert_auth_model_exists('remover');
          return self::one_of($auth_model, foreign_key: $auth_model::get_pk_name())->column(config('model.remover_column'));*/
 
-         return $this->pk_type === 'UUID' ? 
+         $pk_type ??= config('model.pk_type');
+
+         return $pk_type === 'UUID' ? 
          self::char_field()->column(config('model.remover_column')) : 
          self::integer_field()->column(config('model.remover_column'));
      }

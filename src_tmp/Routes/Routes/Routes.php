@@ -25,6 +25,12 @@ Router::route("/saqle/signin", 'saqle.saqlesignin')->name("saqle.login")->method
 	 Router::method("POST", "post")->name('submit');
 });
 
+Router::get("/saqle/tenants/:slug/manage", 'saqle.managetenant')
+->authorize('__authenticated__ && __super_admin__')
+->middleware(['__authentication__', '__authorization__'])
+->layout(['saqle.app'])
+->name('saqle.managetenant');
+
 Router::get("/saqle/resources/overview/", 'saqle.dashboard')
 ->authorize('__authenticated__ && __super_admin__')
 ->middleware(['__authentication__', '__authorization__'])

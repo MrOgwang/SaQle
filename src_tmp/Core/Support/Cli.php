@@ -4,7 +4,9 @@ namespace SaQle\Core\Support;
 
 class Cli {
 	 public static function print(string $message){
-         fwrite(STDERR, $message.PHP_EOL);
+         if(PHP_SAPI === 'cli'){
+             fwrite(STDERR, $message.PHP_EOL);
+         }
      }
 
      public static function read(string $label) : string {

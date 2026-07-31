@@ -1,4 +1,5 @@
 <?php
+
 namespace SaQle\Listeners\Model;
 
 use SaQle\Auth\Middleware\AuthenticationMiddleware;
@@ -26,7 +27,7 @@ class UpdateSessionUser {
              }) : ($result->user_id === $session_user->user_id ? $result : null);
 
              if($user){
-                 $this->auth_middleware->handle($this->request);
+                 $this->auth_middleware->before($this->request);
              }
          }
      }
