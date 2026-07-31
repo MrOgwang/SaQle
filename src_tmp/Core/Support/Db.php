@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types = 1);
 
 namespace SaQle\Core\Support;
@@ -32,7 +33,7 @@ class Db {
      public static function register_tenant_db($connection_key, $tenant){
 
          $listed_connections = config('db.connections', []);
-
+        
          if(!$listed_connections){
              return;
          }
@@ -45,9 +46,14 @@ class Db {
          $tenant_database_name = $database_name."_".strtolower(str_replace(" ", "_", $tenant->tenant_name));
          $tenant_database_schema = $listed_connections[$connection_name]['databases'][$database_name];
 
-         $listed_connections[$connection_name]['databases'] = [
-             $tenant_database_name => $tenant_database_schema
-         ];
+         $updated_databases = array_merge(
+             $listed_connections[$connection_name]['databases'],
+             [
+                 $tenant_database_name => $tenant_database_schema
+             ]
+         );
+
+         $listed_connections[$connection_name]['databases'] = $updated_databases;
 
          config()->set('db.connections', $listed_connections); 
 
@@ -79,6 +85,11 @@ class Db {
          [config('framework_connection').".".config('framework_database'), SystemSchema::class];
      }
 
+     /**
+      * This method is defective: It assumes that a model will be tied to only
+      * one database schema. In practice, especially the way the db.config file is setup,
+      * the same model may find itself in several database schemas.
+      * */
      public static function get_connection_schema(?string $connection_key = null, bool $is_system = false){
          
          $connection_key = self::get_connection_key($connection_key);
