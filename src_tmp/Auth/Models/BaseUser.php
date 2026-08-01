@@ -1,9 +1,14 @@
 <?php
 namespace SaQle\Auth\Models;
 
-use SaQle\Orm\Entities\Model\Schema\{Model, Table};
+use SaQle\Orm\Entities\Model\Schema\{
+	 Model, 
+	 Table,
+	 NamedForm
+};
 use SaQle\Auth\Guards\Guard;
 use SaQle\Auth\Identity\User\Interfaces\UserInterface;
+use SaQle\Core\Ui\Forms\Form;
 
 class BaseUser extends Model implements UserInterface {
 
@@ -60,4 +65,16 @@ class BaseUser extends Model implements UserInterface {
 	 public function is_guest() : bool {
 	 	 return false;
 	 }
+
+	 #[NamedForm('default_create')]
+	 public function create_form(Form $form) : Form {
+	 	 $form = parent::create_form($form);
+
+	 	 $tenant_id_field = $form->field('tenant_id');
+	 	 if($tenant_id_field){
+	 	 	 $tenant_id_field->type('hidden');
+	 	 }
+
+         return $form;
+     }
 }
