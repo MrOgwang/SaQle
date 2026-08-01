@@ -20,10 +20,6 @@ use RuntimeException;
 
 final class FormFieldsCompiler {
 
-     /*private static function skip_field(object $field): bool{
-         return $field instanceof OneToOne || $field instanceof OneToMany || $field instanceof ManyToMany || $field instanceof VirtualField || $field instanceof Pk;
-     }*/
-
      private static function skip_field(object $field): bool{
          return 
          $field instanceof VirtualField || 

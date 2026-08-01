@@ -149,7 +149,7 @@ class AutoResource {
 	 	 $incoming = request()->data->get_all();
 	 	
 	 	 $form = $this->create_auto_form(FormMode::CREATE, $__props);
-	 	 $form->bind(FormContext::make());
+	 	 $form->bind(FormContext::make(), request());
 
 	 	 if(!$form){
 	 	 	 throw new RuntimeException("Unknown resource form requested!");
@@ -207,7 +207,7 @@ class AutoResource {
 	 	 }
 
 	 	 $object = $model_class::get()->where($model_class::get_pk_name()."__eq", $id)->first_or_fail();
-	 	 $form->bind(FormContext::make($object));
+	 	 $form->bind(FormContext::make($object), request());
 
 		 return Message::ok([
 		 	 'form' => $form,

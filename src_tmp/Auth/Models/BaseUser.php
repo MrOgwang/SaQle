@@ -72,7 +72,9 @@ class BaseUser extends Model implements UserInterface {
 
 	 	 $tenant_id_field = $form->field('tenant_id');
 	 	 if($tenant_id_field){
-	 	 	 $tenant_id_field->type('hidden');
+	 	 	 $tenant_id_field->type('hidden')->value(function($request){
+	 	 	 	 return $request->tenant ? $request->tenant->tenant_id : "";
+	 	 	 });
 	 	 }
 
          return $form;

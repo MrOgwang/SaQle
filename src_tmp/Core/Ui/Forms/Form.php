@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace SaQle\Core\Ui\Forms;
  
 use SaQle\Core\Registries\ModelRegistry;
+use SaQle\Http\Request\Request;
 
 final class Form {
 
@@ -63,18 +64,37 @@ final class Form {
      }
 
      //runtime context api
-     public function bind(FormContext $context){
+     public function bind(FormContext $context, Request $request){
 
          $model_data = $context->model ? $context->model->get_data() : [];
 
          foreach($this->fields as $field){
-
-             $value = $field->default;
-
+             /**
+              * Field value is prioritized in this manner:
+              * 
+              * 1. The value the user is currently actively editing takes top priority. This comes
+              *    from the context input.
+              * 2. If this is an edit form and the above is absent, the value that comes
+              *    from the object being edited.
+              * 3. If the above two are absent, the value that was originally set for this field. This may
+              *    have been done in the form or model definition.
+              * 4. If all the above are missing, the value becomes the default value that was
+              *   specified in model definition
+              * 
+              * */
              if(is_array($context->input) && array_key_exists($field->name, $context->input)){
                  $value = $context->input[$field->name];
              }elseif(array_key_exists($field->name, $model_data)){
                  $value = $model_data[$field->name];
+             }elseif($field->value){
+                 if(is_callable($field->value)){
+                    $callback = $field->value;
+                    $value = $callback($request);
+                 }else{
+                     $value = $field->value;
+                 }
+             }else{
+                 $value = $field->default;
              }
 
              $field->value($value);

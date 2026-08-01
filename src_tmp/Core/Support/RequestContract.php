@@ -145,10 +145,10 @@ abstract class RequestContract {
 
          if($model){
              $form->for_update();
-             $form->bind(FormContext::make($model));
+             $form->bind(FormContext::make($model), request());
          }else{
              $form->for_create();
-             $form->bind(FormContext::make());
+             $form->bind(FormContext::make(), request());
          }
 
          return $form;

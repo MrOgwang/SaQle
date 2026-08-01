@@ -233,4 +233,10 @@ class FormField {
      public function is_searchable() : bool {
          return array_key_exists('searchable', $this->attributes);
      }
+
+     public function value(mixed $val){
+         $this->attributes['value'] = $val;
+
+         return $this;
+     }
 }
