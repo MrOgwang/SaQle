@@ -118,4 +118,10 @@ abstract class Schema {
 
          return array_values($models)[$index];
      }
+
+     public function model_exists(string $model_class){
+     	 $models = $this->get_models();
+         $model_classes = array_values($models);
+         return array_search($model_class, $model_classes, true);
+     }
 }

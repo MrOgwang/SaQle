@@ -23,7 +23,7 @@ class Db {
      private string $connection_key;
 
      private function __construct(?string $connection_key = null){
-         $this->connection_key = self::get_connection_key($connection_key);
+         $this->connection_key = self::get_connection_key(connection_key: $connection_key);
      }
 
      public static function get_system_db() : array {
@@ -90,9 +90,12 @@ class Db {
       * one database schema. In practice, especially the way the db.config file is setup,
       * the same model may find itself in several database schemas.
       * */
-     public static function get_connection_schema(?string $connection_key = null, bool $is_system = false){
-         
-         $connection_key = self::get_connection_key($connection_key);
+     public static function get_connection_schema(
+         ?string $model_class = null,
+         ?string $connection_key = null, 
+         bool $is_system = false
+     ){
+         $connection_key = self::get_connection_key($model_class, $connection_key);
          
          if($is_system || ActorContext::is_platform()){
              $system_db = self::get_system_db();
@@ -112,7 +115,11 @@ class Db {
          return [$connection_key, $schema];
      }
 
-     public static function get_connection_key(?string $connection_key = null){
+     public static function get_connection_key(
+         ?string $model_class = null, 
+         ?string $connection_key = null
+     ){
+
          $connection = trim(config('db.default_connection', ''));
          $database = trim(config('db.default_database', ''));
 
@@ -121,7 +128,33 @@ class Db {
          }
 
          if(is_null($connection_key) || trim($connection_key) === ""){
-             $connection_key = $connection.".".$database;
+
+             if(!$model_class){
+                 $connection_key = $connection.".".$database;
+             }else{
+                 /**
+                  * if the $connection_key is not provided and the $model_class is, 
+                  * we will search through the list of connections
+                  * until we find the first one where the model is registered
+                  * */
+                 $connections = config('db.connections');
+
+                 foreach($connections as $n => $props){
+                     foreach($props['databases'] as $d => $schema){
+                         $index = (new $schema())->model_exists($model_class);
+
+                         if($index !== false){
+                             $connection_key = $n.".".$d;
+                             break 2;
+                         }
+                     }
+                 }
+
+                 if(!$connection_key){
+                     throw new Exception("The model: {$model_class} is not registsred with any schemas!");
+                 }
+
+             }
          }else{
 
              $key_parts = explode(".", $connection_key);

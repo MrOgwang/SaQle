@@ -35,15 +35,20 @@ class TenantMiddleware implements RequestMiddleware {
 
          //register tenant connections.
 
-         $connections = config('db.connections', []);
-
          $default_connection_key = config('db.default_connection').".".config('db.default_database');
 
          $new_default_connection_key = null;
 
-         foreach($connections as $name => $props){
+         $to_remove = [];
+
+         foreach(config('db.connections', []) as $name => $props){
+
+             if($name === config('framework_connection')){
+                 continue;
+             }
+
              foreach($props['databases'] as $db => $schema){
-                
+
                  $connection_key = $name.".".$db;
 
                  [$tenant_connection_key,] = Db::register_tenant_db($connection_key, $tenant);
@@ -51,7 +56,21 @@ class TenantMiddleware implements RequestMiddleware {
                  if($default_connection_key === $connection_key){
                      $new_default_connection_key = $tenant_connection_key;
                  }
+
+                 $to_remove[] = $connection_key;
              }
+         }
+
+         foreach($to_remove as $key){
+
+             [$name, $db] = explode('.', $key, 2);
+
+             $connections = config('db.connections', []);
+
+             unset($connections[$name]['databases'][$db]);
+
+             config()->set('db.connections', $connections); 
+
          }
 
          //change the default database to a tenant database

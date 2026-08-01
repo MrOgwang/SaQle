@@ -368,7 +368,7 @@ class Migrate extends Command {
          Cli::print("Confirming connection: {$snapshot_name} is defined!\n");
 
          //confirm associated connection schema is defined
-         Db::get_connection_schema($snapshot_name);
+         Db::get_connection_schema(connection_key: $snapshot_name);
 
          require_once $snapshot_path;
          $snapshot = new $snapshot_class();

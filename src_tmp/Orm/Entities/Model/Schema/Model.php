@@ -271,7 +271,11 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
 
 	 public static function get_table_and_connection(?string $connection = null){
 
-         [$connection, $schema] = Db::get_connection_schema($connection, self::is_system_model());
+         [$connection, $schema] = Db::get_connection_schema(
+            static::class, 
+            $connection, 
+            self::is_system_model()
+         );
 
          $table_name = new $schema()->get_table_for_model(static::class);
 
@@ -1095,7 +1099,12 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
 
      //get all the models that belong to the same schema as this one
 	 public function get_sibling_models(){
-         [$con, $schema] = Db::get_connection_schema($this->table->get_connection_name());
+         [$con, $schema] = Db::get_connection_schema(
+             $this::class, 
+             $this->table->get_connection_name(), 
+             static::is_system_model()
+         );
+
 	 	 return new $schema()->get_models();
 	 }
 
