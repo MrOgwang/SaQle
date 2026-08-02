@@ -13,6 +13,8 @@ use SaQle\Orm\Entities\Field\Types\{
      ColorField
 };
 use SaQle\Orm\Entities\Field\Types\Base\RelationField;
+use BackedEnum;
+use UnitEnum;
 use RuntimeException;
 
 final class Table {
@@ -567,11 +569,51 @@ final class Table {
          return new ColorField(...$kwargs);
      }
 
-     /*public static function choice_field(...$kwargs): IField {
-         return new ChoiceField(...$kwargs);
-     }*/
+     /**
+     * Converts an enum class into the same array format used by choice fields.
+     *
+     * Backed enum:
+     * [
+     *     'HIGH'   => 'high',
+     *     'MEDIUM' => 'medium',
+     *     'LOW'    => 'low',
+     * ]
+     *
+     * Pure enum:
+     * [
+     *     'HIGH'   => 'HIGH',
+     *     'MEDIUM' => 'MEDIUM',
+     *     'LOW'    => 'LOW',
+     * ]
+     */
+     private static function normalize_enum_choices(string $enum): array {
+         
+         $choices = [];
 
-     public static function choice_field(array $choices, bool $use_keys = false): IField {
+         foreach($enum::cases() as $case){
+
+             if($case instanceof BackedEnum){
+
+                 $choices[$case->value] = $case->name;
+
+                 continue;
+             }
+
+             $choices[strtolower($case->name)] = $case->name;
+         }
+
+         return $choices;
+     }
+
+     public static function choice_field(array | string $choices, bool $use_keys = false): IField {
+
+         //normalize enums into arrays
+         if(is_string($choices) && enum_exists($choices)){
+
+             $choices = self::normalize_enum_choices($choices);
+             
+             $use_keys = true;
+         }
          
          $choice_type = "integer";
          $items = $use_keys ? array_keys($choices) : array_values($choices);
