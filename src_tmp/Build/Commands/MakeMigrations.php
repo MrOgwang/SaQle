@@ -450,6 +450,7 @@ class MakeMigrations extends Command {
                  $added_models = $models;
                  $removed_models = [];
                  $maintained_models = [];
+                 $last_models = [];
 
                  $added_columns = [];
                  $removed_columns = [];
@@ -467,42 +468,32 @@ class MakeMigrations extends Command {
                          if($last_migration){
 
                              [$last_models, $last_model_fields, $last_unique_constraints, $last_fk_constraints] = $this->get_snapshot(
-                                $last_migration->migration_name, 
-                                $last_migration->migration_timestamp, 
-                                $schema_class,
-                                $type
+                                 $last_migration->migration_name, 
+                                 $last_migration->migration_timestamp, 
+                                 $schema_class,
+                                 $type
                              );
 
-                             echo "Current models!\n";
-                             print_r($models);
-                             print_r($last_models);
+                             $flipped_last_models = array_flip($last_models);
 
                              //Which new models have been added.
                              $added_models = array_diff($models, $last_models);
 
-                             echo "\nAdded models!\n";
-                             print_r($added_models);
-
                              //Which models have been removed
                              $removed_models = array_diff($last_models, $models);
 
-                             echo "\nRemoved models!\n";
-                             print_r($removed_models);
-                    
                              //Which models have been maintained.
                              $maintained_models = array_intersect($models, $last_models);
-
-                             echo "\nKept models!\n";
-                             print_r($maintained_models);
-
-                             echo "\n-----------------------------\n";
                              
                              $all_model_fields = $model_fields;
                              $all_last_model_fields = $last_model_fields;
 
                              foreach($maintained_models as $table_name => $model_name){
+
+                                 $prev_table_name = $flipped_last_models[$model_name];
+
                                  $current_column_keys  = array_keys($all_model_fields[$table_name]);
-                                 $previous_column_keys = array_keys($all_last_model_fields[$table_name]);
+                                 $previous_column_keys = array_keys($all_last_model_fields[$prev_table_name]);
  
                                  $added_column_keys = array_diff($current_column_keys, $previous_column_keys);
                                  $removed_column_keys = array_diff($previous_column_keys, $current_column_keys);
@@ -517,12 +508,11 @@ class MakeMigrations extends Command {
                                  if($removed_column_keys){
                                      $removed_settings = ['name' => $table_name, 'model' => $model_name, 'columns' => []];
                                      foreach($removed_column_keys as $rck){
-                                         $removed_settings['columns'][$rck] = $all_last_model_fields[$table_name][$rck]['def'];
+                                         $removed_settings['columns'][$rck] = $all_last_model_fields[$prev_table_name][$rck]['def'];
                                      }
                                      $removed_columns[] = $removed_settings;
                                  }
                              }
-
                          }
                      }
                  }catch(Exception $ignore){
@@ -533,6 +523,7 @@ class MakeMigrations extends Command {
                  $schema_snapshot[$connection_key]['columns'] = [$added_columns, $removed_columns];
                  $schema_snapshot[$connection_key]['unique'] = [$unique_constraints, $last_unique_constraints];
                  $schema_snapshot[$connection_key]['fk'] = [$fk_constraints, $last_fk_constraints];
+                 $schema_snapshot[$connection_key]['table_names'] = [$models, $last_models];
              }
 
          }
