@@ -91,20 +91,32 @@ class MakeMigrations extends Command {
          $up = "";
          $down = "";
          foreach($snapshot as $sk => $sv){
+
+             $name_changes = $sv['table_names'];
+
              $added_models = $sv['tables'][0];
              $removed_models = $sv['tables'][1];
              $maintained_models = $sv['tables'][2];
+
              $added_columns = $sv['columns'][0] ?? [];
              $removed_columns = $sv['columns'][1] ?? [];
+
              $unique_constraints = $sv['unique'][0];
              $last_unique_constraints = $sv['unique'][1];
 
              $up .= "\t\t\t'".$sk."' => [\n";
              $down .= "\t\t\t'".$sk."' => [\n";
+
+             foreach($name_changes as $m => $names){
+                 $up .= "\t\t\t\t['action' => 'rename_table', 'params' => ['old' => '".$names['from']."', 'new' => '".$names['to']."', 'model' => '".$m."']],\n";
+                 $down .= "\t\t\t\t['action' => 'rename_table', 'params' => ['old' => '".$names['to']."', 'new' => '".$names['from']."', 'model' => '".$m."']],\n";
+             }
+
              foreach($added_models as $an => $am){
                  $up .= "\t\t\t\t['action' => 'create_table', 'params' => ['name' => '".$an."', 'model' => '".$am."']],\n";
                  $down .= "\t\t\t\t['action' => 'drop_table', 'params' => ['name' => '".$an."', 'model' => '".$am."']],\n";
              }
+
              foreach($added_columns as $ac => $acv){
                  $columns_def = "";
                  foreach($acv['columns'] as $acdef_key => $acdef_val){
@@ -113,10 +125,12 @@ class MakeMigrations extends Command {
                  $up .= "\t\t\t\t['action' => 'add_columns', 'params' => ['name' => '".$acv['name']."', 'model' => '".$acv['model']."', 'columns' => [\n".$columns_def."\t\t\t\t]]],\n";
                  $down .= "\t\t\t\t['action' => 'drop_columns', 'params' => ['name' => '".$acv['name']."', 'model' => '".$acv['model']."', 'columns' => [\n".$columns_def."\t\t\t\t]]],\n";
              }
+
              foreach($removed_models as $rn => $rm){
                  $up .= "\t\t\t\t['action' => 'drop_table', 'params' => ['name' => '".$rn."', 'model' => '".$rm."']],\n";
                  $down .= "\t\t\t\t['action' => 'create_table', 'params' => ['name' => '".$rn."', 'model' => '".$rm."']],\n";
              }
+
              foreach($removed_columns as $rc => $rcv){
                  $columns_def = "";
                  foreach($rcv['columns'] as $rcdef_key => $rcdef_val){
@@ -153,7 +167,6 @@ class MakeMigrations extends Command {
                          $up .= "\t\t\t\t\t],\n";
                      }
                      $up .= "\t\t\t\t]],\n";
-
 
                      $down .= "\t\t\t\t['action' => 'update_unique', 'params' => ['name' => '".$an."', 'model' => '".$am."'], ";
                      $down .= "'prev_unique' => [\n";
@@ -401,6 +414,34 @@ class MakeMigrations extends Command {
          return [$clean_models, $clean_fields, $unique_constraints, $fk_constraints];
      }
 
+     private function table_name_changes($current, $previous) : array {
+        
+         //model => table
+         $current_by_model = array_flip($current);
+         $previous_by_model = array_flip($previous);
+
+         $renamed = [];
+
+         foreach($current_by_model as $model => $current_table){
+
+             //only models that existed previously
+             if(!isset($previous_by_model[$model])) {
+                 continue;
+             }
+
+             $previous_table = $previous_by_model[$model];
+
+             if($previous_table !== $current_table){
+                 $renamed[$model] = [
+                     'from' => $previous_table,
+                     'to'   => $current_table,
+                 ];
+             }
+         }
+
+         return $renamed;
+     }
+
      private function get_schema_snapshot($connections, $timestamp, $migration_name, $type){
 
          $schema_snapshot = [];
@@ -450,10 +491,11 @@ class MakeMigrations extends Command {
                  $added_models = $models;
                  $removed_models = [];
                  $maintained_models = [];
-                 $last_models = [];
 
                  $added_columns = [];
                  $removed_columns = [];
+
+                 $table_name_changes = [];
 
                  try{
                      if(MigrationUtils::check_system_database(with_database: true)){
@@ -473,6 +515,8 @@ class MakeMigrations extends Command {
                                  $schema_class,
                                  $type
                              );
+
+                             $table_name_changes = $this->table_name_changes($models, $last_models);
 
                              $flipped_last_models = array_flip($last_models);
 
@@ -523,7 +567,7 @@ class MakeMigrations extends Command {
                  $schema_snapshot[$connection_key]['columns'] = [$added_columns, $removed_columns];
                  $schema_snapshot[$connection_key]['unique'] = [$unique_constraints, $last_unique_constraints];
                  $schema_snapshot[$connection_key]['fk'] = [$fk_constraints, $last_fk_constraints];
-                 $schema_snapshot[$connection_key]['table_names'] = [$models, $last_models];
+                 $schema_snapshot[$connection_key]['table_names'] = $table_name_changes;
              }
 
          }

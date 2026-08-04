@@ -196,6 +196,7 @@ abstract class DbDriver {
     abstract public function check_database_exists() : bool;
     abstract public function create_database();
     abstract public function drop_table(string $table);
+    abstract public function rename_table(string $old_name, string $new_name);
     abstract protected function check_column_exists(string $table, string $column) : bool;
     abstract public function add_columns(string $table, array $columns);
     abstract public function drop_columns(string $table, array $columns);

@@ -7,8 +7,11 @@ use SaQle\Orm\Connection\{
 };
 use SaQle\Orm\Database\ColumnType;
 use SaQle\Orm\Entities\Model\Manager\QueryManager;
-use SaQle\Core\Exceptions\Model\TableDropOperationFailedException;
-use SaQle\Core\Exceptions\Model\TableCreateOperationFailedException;
+use SaQle\Core\Exceptions\Model\{
+     TableDropOperationFailedException,
+     TableRenameOperationFailedException,
+     TableCreateOperationFailedException
+};
 use PDO;
 
 class MySqlDriver extends DbDriver {
@@ -34,6 +37,23 @@ class MySqlDriver extends DbDriver {
 
 		 return $this->execute($sql)['response'];
 	 }
+
+     public function rename_table(string $old_name, string $new_name){
+
+         $sql = "ALTER TABLE {$old_name} RENAME TO {$new_name}";
+         [$statement, $response] = array_values($this->execute($sql));
+         $error_code = $statement->errorCode();
+
+         if($response === false || $error_code !== "00000"){
+             throw new TableRenameOperationFailedException([
+                 'table' => $old_name,
+                 'statement_error_code' => $error_code
+             ]);
+         }
+
+         return true;
+
+     }
 
 	 public function drop_table(string $table, bool $temporary = false){
          

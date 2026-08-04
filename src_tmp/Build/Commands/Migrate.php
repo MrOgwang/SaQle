@@ -292,6 +292,22 @@ class Migrate extends Command {
          return;
      }
 
+     private function rename_table($op, $dbdriver){
+         $old_name = $op['params']['old'];
+         $new_name = $op['params']['new'];
+         
+         Cli::print("Attempting to rename table: {$old_name} to: {$new_name}!\n");
+         $tblrenamed = $dbdriver->rename_table($old_name, $new_name);
+
+         if(!$tblrenamed){
+             Cli::print("Table {$old_name} rename failed!\n");
+             return;
+         }
+
+         Cli::print("Table {$old_name} renamed to {$new_name}!\n");
+         return;
+     }
+
      private function add_columns($op, $dbdriver){
          $table_name = $op['params']['name'];
          
@@ -337,7 +353,8 @@ class Migrate extends Command {
              'drop_table'    => $this->drop_table($op, $dbdriver),
              'add_columns'   => $this->add_columns($op, $dbdriver),
              'drop_columns'  => $this->drop_columns($op, $dbdriver),
-             'update_unique' => $this->update_unique($op, $dbdriver)
+             'update_unique' => $this->update_unique($op, $dbdriver),
+             'rename_table'  => $this->rename_table($op, $dbdriver)
          };
      }
 
