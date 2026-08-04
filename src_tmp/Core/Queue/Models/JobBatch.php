@@ -7,6 +7,8 @@ use SaQle\Orm\Entities\Model\Interfaces\ISystemModel;
 class JobBatch extends Model implements ISystemModel {
 
 	 protected function table_schema(Table $table) : void {
+
+	 	 $table->name('queue_job_batches');
 	 	 
 	 	 $table->fields([
 		     'total_jobs' => Table::integer_field()->size('medium'),

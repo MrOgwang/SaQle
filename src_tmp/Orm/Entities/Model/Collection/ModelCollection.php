@@ -44,7 +44,7 @@ abstract class ModelCollection extends TypedCollection implements IModel, JsonSe
         
          foreach($elements as $object){
              $model = new $type(...$object);
-             $model->set_table_and_connection($this->connection);
+             $model->set_connection($this->connection);
              $this->add($model);
          }
      }
@@ -66,7 +66,7 @@ abstract class ModelCollection extends TypedCollection implements IModel, JsonSe
          self::assert_valid_data($data);
 
          foreach($data as $d){
-             $d->set_table_and_connection();
+             $d->set_connection();
          }
 
          return new CreateManager(new static($data));

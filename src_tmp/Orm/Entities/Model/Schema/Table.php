@@ -388,8 +388,7 @@ final class Table {
          $this->fk_constraints = $fk_constraints;
      }
 
-     public function set_table_and_connection(string $table_name, string $connection_name){
-         $this->table_name = $table_name;
+     public function set_connection(string $connection_name){
          $this->connection_name = $connection_name;
      }
 
@@ -404,6 +403,10 @@ final class Table {
 
      public function is_temporary(){
          return $this->_temporary;
+     }
+
+     public function name(string $name){
+         $this->table_name = $name;
      }
 
      public function get_pk_name(){

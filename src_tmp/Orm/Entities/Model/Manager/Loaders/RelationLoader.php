@@ -34,7 +34,7 @@ final class RelationLoader {
 
      private function get_model_instance(string $connection, string $modelclass){
          $model_instance = $modelclass::make();
-         $model_instance->set_table_and_connection($connection);
+         $model_instance->set_connection($connection);
          return $model_instance;
      }
 

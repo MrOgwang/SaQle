@@ -219,7 +219,7 @@ final class RouteCompiler {
          
          $multitenancy = (bool)config('tenancy.enabled');
          $system_schema = new SystemSchema();
-         $system_models = $system_schema->get_admin_models();
+         $system_models = $system_schema->get_defined_models();
 
          foreach($system_models as $model_label => $model_class){
              self::register_resource_routes(true, $model_label, $model_class, $multitenancy);
@@ -229,7 +229,7 @@ final class RouteCompiler {
          $db_schemas = Db::get_developer_schemas();
 
          foreach($db_schemas as $schema_name => $schema_class){
-             $models = new $schema_class()->get_admin_models();
+             $models = new $schema_class()->get_defined_models();
              
              foreach($models as $model_label => $model_class){
                  self::register_resource_routes(false, $model_label, $model_class, $multitenancy);

@@ -10,7 +10,12 @@ abstract class TempModel extends Model implements ITempModel{
 	 abstract protected function table_schema(Table $table): void;
 
 	 private static function get_db_driver(?string $connection = null){
-	 	 [$connection, $table] = get_called_class()::get_table_and_connection($connection);
+	 	 
+	 	 $model = get_called_class()::make();
+
+	 	 $connection = $model::get_connection($connection);
+	 	 $table = $model->get_table_name();
+	 	 
 	 	 $dbdriver = Db::using($connection)->driver();
  	 	 $dbdriver->connect_with_database();
 

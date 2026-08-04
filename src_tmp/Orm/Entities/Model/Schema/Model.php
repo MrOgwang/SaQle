@@ -163,9 +163,9 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
          $table->set_forms($this->extract_forms());
      }
 
-     public function set_table_and_connection(?string $connection = null){
-     	 [$connection_name, $table_name] = self::get_table_and_connection($connection);
-         $this->table->set_table_and_connection($table_name, $connection_name);
+     public function set_connection(?string $connection = null){
+     	 $connection_name = self::get_connection($connection);
+         $this->table->set_connection($connection_name);
      }
 
      //method to ensure shared meta per class
@@ -269,7 +269,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
          return false;
      }
 
-	 public static function get_table_and_connection(?string $connection = null){
+	 public static function get_connection(?string $connection = null){
 
          [$connection, $schema] = Db::get_connection_schema(
             static::class, 
@@ -277,9 +277,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
             self::is_system_model()
          );
 
-         $table_name = new $schema()->get_table_for_model(static::class);
-
-         return [$connection, $table_name];
+         return $connection;
 	 }
 
 	 protected function save_model_files(array &$kwargs){
@@ -861,14 +859,14 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
      //change the connection right before an operation
 	 public static function using(string $connection){
 	 	 $model_instance = self::make();
-	 	 $model_instance->set_table_and_connection($connection);
+	 	 $model_instance->set_connection($connection);
          return new ModelProxy($model_instance);
      }
 
      //add new row(s) to database or batch create new instances
 	 public static function create(array $data) : CreateManager {
 	 	 $model_instance = new static(...$data);
-	 	 $model_instance->set_table_and_connection();
+	 	 $model_instance->set_connection();
 	 	 return new CreateManager($model_instance);
 	 }
 
@@ -885,14 +883,14 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
          foreach($data as $d){
 
              if($d instanceof Model){
-                 $d->set_table_and_connection();
+                 $d->set_connection();
                  $converted_data[] = $d;
                  continue;
              }
 
              if(is_array($d) || is_object($d)){
                  $model_instance = is_array($d) ? new $model_class(...$d) : new $model_class(...(array)$d);
-                 $model_instance->set_table_and_connection();
+                 $model_instance->set_connection();
                  $converted_data[] = $model_instance;
              }
          }
@@ -909,14 +907,14 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
 	 //update exisitng rows (s)
 	 public static function update(array $data){
 	 	 $model_instance = self::make();
-	 	 $model_instance->set_table_and_connection();
+	 	 $model_instance->set_connection();
 	 	 return new UpdateManager($model_instance, $data);
 	 }
 
 	 //delete one or more rows
      public static function delete(?bool $permanently = null){
          $model = self::make();
-         $model->set_table_and_connection();
+         $model->set_connection();
 
          $permanently ??= !$model->table->has_soft_delete();
 
@@ -926,21 +924,21 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
 	 //empty the entire table
 	 public static function empty(){
 	 	 $model_instance = self::make();
-	 	 $model_instance->set_table_and_connection();
+	 	 $model_instance->set_connection();
 	 	 return new TruncateManager($model_instance);
 	 }
 
 	 //get one or more rows
 	 public static function get($tablealiase = null, $tableref = null){
 	 	 $model_instance = self::make();
-	 	 $model_instance->set_table_and_connection();
+	 	 $model_instance->set_connection();
 	 	 return new ReadManager($model_instance, $tablealiase, $tableref);
 	 }
 
 	 //run custom sql and data
 	 public static function run(string $sql, string $operation, ?array $data = null, bool $multiple = true){
 	 	 $model_instance = self::make();
-         $model_instance->set_table_and_connection();
+         $model_instance->set_connection();
 	 	 return new RunManager($model_instance, $sql, $operation, $data, $multiple);
 	 }
 

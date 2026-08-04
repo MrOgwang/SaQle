@@ -17,26 +17,20 @@ use SaQle\Core\Queue\Models\{
 use SaQle\Auth\Models\PlatformUser;
 
 class SystemSchema extends Schema {
-	
+	 
 	 public function __construct(){
 
-	 	 $tenant_model = config('tenancy.model_class');
- 
 	 	 $this->models = [
-		 	 'users'    => config('auth.model_class'), //PlatformUser::class,
-		 	 'tenants'           => $tenant_model,
-		 	 'migrations'        => Migration::class,
-		 	 'tenant_migrations' => TenantMigration::class,
-		 	 'sessions'          => Session::class,
-		 	 'queue_failed_jobs' => FailedJob::class,
-		 	 'queue_jobs'        => Job::class,
-		 	 'queue_job_batches' => JobBatch::class
+	 	 	 config('auth.model_class'),
+	 	 	 config('tenancy.model_class'),
+	 	 	 Migration::class,
+	 	 	 TenantMigration::class,
+	 	 	 Session::class,
+	 	 	 FailedJob::class,
+	 	 	 Job::class,
+	 	 	 JobBatch::class
 		 ];
 
-		 $this->admin_models = [
-		 	 'users',
-		 	 'tenants'
-		 ];
 	 }
 
 }

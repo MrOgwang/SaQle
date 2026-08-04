@@ -13,6 +13,8 @@ class BaseTenant extends Model implements ISystemModel, TenantInterface {
 
 	 protected function table_schema(Table $table) : void {
 
+	 	 $table->name('tenants');
+
 	 	 $table->primary_key('tenant_id');
 
 		 $table->fields([ 

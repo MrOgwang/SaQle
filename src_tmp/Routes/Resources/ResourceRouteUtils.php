@@ -42,7 +42,7 @@ trait ResourceRouteUtils {
 
          if(ActorContext::is_platform()){
              $system_schema = new SystemSchema();
-             $system_models = $system_schema->get_admin_models();
+             $system_models = $system_schema->get_defined_models();
 
              foreach($system_models as $model_label => $model_class){
                  $links[$model_class] = $this->list_route_def($model_label, $model_class, true);
@@ -52,7 +52,7 @@ trait ResourceRouteUtils {
              $db_schemas = Db::get_developer_schemas();
 
              foreach($db_schemas as $schema_name => $schema_class){
-                 $models = new $schema_class()->get_admin_models();
+                 $models = new $schema_class()->get_defined_models();
 
                  foreach($models as $model_label => $model_class){
                      $links[$model_class] = $this->list_route_def($model_label, $model_class, false);

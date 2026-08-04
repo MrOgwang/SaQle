@@ -8,6 +8,8 @@ use SaQle\Orm\Entities\Model\Schema\Table;
 class TempId extends TempModel {
 	 protected function table_schema(Table $table) : void {
 
+	 	 $table->name('model_temp_ids');
+
 	 	 $table->fields([
 		     'id_value' => strtolower(config('model.pk_type')) === 'auto' ? 
 		      Table::integer_field()->required()->unsigned()->min(1) : 

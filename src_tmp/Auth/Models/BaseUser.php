@@ -27,6 +27,8 @@ class BaseUser extends Model implements UserInterface {
 	 	 ->resize(['max_width' => 500, 'max_height' => 500])
 		 ->storage('local'); 
 
+		 $table->name('users');
+
 	 	 $table->primary_key('user_id');
 
 		 $table->fields([ 

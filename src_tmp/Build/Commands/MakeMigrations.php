@@ -231,9 +231,11 @@ class MakeMigrations extends Command {
              $constraints = $mi::get_fk_constraints();
              $updated_constraints = [];
              foreach($constraints as $col_name => $cons_items){
-                
+
+                 $ref_model = $cons_items['ref_model'];
+
                  $updated_constraints[$col_name] = [
-                     'ref_table'       => $schema_instance->get_table_for_model($cons_items['ref_model']),
+                     'ref_table'       => $ref_model::make()->get_table_name(),
                      'ref_col'         => $cons_items['ref_col'],
                      'delete_action'   => $cons_items['delete_action'],
                      'update_action'   => $cons_items['update_action'],
@@ -456,7 +458,7 @@ class MakeMigrations extends Command {
                      if(MigrationUtils::check_system_database(with_database: true)){
                          Cli::print("System database exists!");
 
-                         //Database exists, acquire the timestamp for the last snapshot.
+                         //Database exists, get last migration
                          $last_migration = Migration::get()
                          ->order(fields: ['migration_timestamp'], direction: 'DESC')
                          ->limit(1)
@@ -471,14 +473,29 @@ class MakeMigrations extends Command {
                                 $type
                              );
 
+                             echo "Current models!\n";
+                             print_r($models);
+                             print_r($last_models);
+
                              //Which new models have been added.
                              $added_models = array_diff($models, $last_models);
 
+                             echo "\nAdded models!\n";
+                             print_r($added_models);
+
                              //Which models have been removed
                              $removed_models = array_diff($last_models, $models);
+
+                             echo "\nRemoved models!\n";
+                             print_r($removed_models);
                     
                              //Which models have been maintained.
                              $maintained_models = array_intersect($models, $last_models);
+
+                             echo "\nKept models!\n";
+                             print_r($maintained_models);
+
+                             echo "\n-----------------------------\n";
                              
                              $all_model_fields = $model_fields;
                              $all_last_model_fields = $last_model_fields;

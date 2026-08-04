@@ -11,6 +11,8 @@ use SaQle\Orm\Entities\Model\Interfaces\ISystemModel;
 class TenantMigration extends Model implements ISystemModel {
 
 	 protected function table_schema(Table $table) : void {
+
+	 	 $table->name('tenant_migrations');
 		
 		 $table->primary_key("migration_id");
 

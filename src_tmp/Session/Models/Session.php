@@ -7,6 +7,8 @@ use SaQle\Orm\Entities\Model\Interfaces\ISystemModel;
 class Session extends Model implements ISystemModel {
 
 	 protected function table_schema(Table $table) : void {
+
+	 	 $table->name('sessions');
 	 	 
 	 	 $table->fields([
 		     'session_id' => Table::char_field()->max_length(100)->required(),

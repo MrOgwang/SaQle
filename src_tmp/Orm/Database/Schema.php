@@ -15,40 +15,27 @@ abstract class Schema {
 	 //all the models registered in schema
 	 protected array $models = [];
 
-	 protected array $admin_models = [];
-
 	 public function get_defined_models() : array {
+
 	 	 $resolved = [];
-         foreach($this->models as $key => $model_class){
-             $table = is_numeric($key) ? $this->infer_table_name($model_class) : $key;
-             $resolved[$table] = $model_class;
+
+         foreach($this->models as $model_class){
+         	 $model = $model_class::make();
+             $resolved[$model->get_table_name()] = $model_class;
          }
 
          return $resolved;
 	 }
 
-	 public function get_admin_models() : array {
-	 	 $models = [];
+	 public function get_models() : array { 
 
-	 	 $defined_models = $this->get_defined_models();
+	 	 $temp_model = TempId::make();
 
-	 	 if(!$this->admin_models){
-	 	 	 return $defined_models;
-	 	 }
-
-	 	 foreach($defined_models as $model_label => $model_class){
-	 	 	 if(in_array($model_label, $this->admin_models)){
-	 	 	 	 $models[$model_label] = $model_class;
-	 	 	 }
-	 	 }
-
-	 	 return $models;
-	 }
-
-	 public function get_models() : array {
          return array_merge(
          	 $this->get_defined_models(),
-         	 ['model_temp_ids' => TempId::class]
+         	 [
+         	 	 $temp_model->get_table_name() => TempId::class
+         	 ]
          );
 	 }
 
@@ -87,37 +74,6 @@ abstract class Schema {
 
 	 	 return $models;
 	 }
-
-	 protected function infer_table_name(string $model_class): string {
-         $basename = basename(str_replace('\\', '/', $model_class));
-         return str_plural(snake_case($basename));
-     }
-
-     public function get_table_for_model(string $model_class) : string {
-         
-         $models = $this->get_models();
-         $model_classes = array_values($models);
-         $index = array_search($model_class, $model_classes, true);
-         
-         if($index === false){
-             throw new RuntimeException($model_class. ": Not registered in '{".static::class."}' schema.");
-         }
-
-         return array_keys($models)[$index];
-     }
-
-     public function get_model_for_table(string $table_name) : string {
-         
-         $models = $this->get_models();
-     	 $table_names = array_keys($models);
-         $index = array_search($table_name, $table_names, true);
-         
-         if($index === false){
-             throw new RuntimeException($table_name. ": Not registered in '{".static::class."}' schema.");
-         }
-
-         return array_values($models)[$index];
-     }
 
      public function model_exists(string $model_class){
      	 $models = $this->get_models();

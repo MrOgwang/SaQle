@@ -7,6 +7,8 @@ use SaQle\Orm\Entities\Model\Interfaces\ISystemModel;
 class Migration extends Model implements ISystemModel {
 
 	protected function table_schema(Table $table) : void {
+
+		 $table->name('migrations');
 		
 		 $table->primary_key("migration_id");
 

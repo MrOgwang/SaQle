@@ -7,6 +7,8 @@ use SaQle\Orm\Entities\Model\Interfaces\ISystemModel;
 class Job extends Model implements ISystemModel {
 
 	 protected function table_schema(Table $table) : void {
+
+	 	 $table->name('queue_jobs');
 	 	 
 	 	 $table->fields([
 		     'queue' => Table::char_field()->max_length(50)->required()->default('default'),
