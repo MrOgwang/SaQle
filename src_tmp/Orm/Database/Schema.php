@@ -80,4 +80,11 @@ abstract class Schema {
          $model_classes = array_values($models);
          return array_search($model_class, $model_classes, true);
      }
+
+     public function is_sibling(string $model1, string $model2){
+     	
+     	 $models = $this->get_models();
+
+     	 return in_array($model1, $models) && in_array($model2, $models);
+     }
 }

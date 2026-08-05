@@ -723,8 +723,12 @@ final class Table {
 
      public static function author_field(?string $pk_type = null) : IField {
 
-         /*$auth_model = self::assert_auth_model_exists('author');
-         return self::one_of($auth_model, foreign_key: $auth_model::get_pk_name())->column(config('model.author_column'));*/
+         $auth_model = self::assert_auth_model_exists('author');
+         
+         return self::one_of($auth_model, foreign_key: $auth_model::get_pk_name())->column(config('model.author_column'));
+     }
+
+     public static function author_field2(?string $pk_type = null) : IField {
 
          $pk_type ??= config('model.pk_type');
 
@@ -734,9 +738,14 @@ final class Table {
      }
 
      public static function modifier_field() : IField {
-         /*$auth_model = self::assert_auth_model_exists('modifier');
-         return self::one_of($auth_model, foreign_key: $auth_model::get_pk_name())->column(config('model.modifier_column'));*/
 
+         $auth_model = self::assert_auth_model_exists('modifier');
+
+         return self::one_of($auth_model, foreign_key: $auth_model::get_pk_name())->column(config('model.modifier_column'));
+     }
+
+     public static function modifier_field2() : IField {
+         
          $pk_type ??= config('model.pk_type');
 
          return $pk_type === 'UUID' ? 
@@ -745,8 +754,14 @@ final class Table {
      }
 
      public static function remover_field() : IField {
-         /*$auth_model = self::assert_auth_model_exists('remover');
-         return self::one_of($auth_model, foreign_key: $auth_model::get_pk_name())->column(config('model.remover_column'));*/
+
+         $auth_model = self::assert_auth_model_exists('remover');
+
+         return self::one_of($auth_model, foreign_key: $auth_model::get_pk_name())->column(config('model.remover_column'));
+
+     }
+
+     public static function remover_field2() : IField {
 
          $pk_type ??= config('model.pk_type');
 

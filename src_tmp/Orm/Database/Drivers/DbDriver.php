@@ -176,6 +176,12 @@ abstract class DbDriver {
          
          foreach($fk_snapshot as $col_name => $fk_settings){
 
+             $db_enforcement = (int)$fk_settings['db_enforcement'];
+
+             if($db_enforcement === 0){
+                continue;
+             }
+
              $delete_action = $this->get_fk_action($fk_settings['delete_action']);
              $update_action = $this->get_fk_action($fk_settings['update_action']);
 

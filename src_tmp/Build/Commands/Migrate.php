@@ -266,7 +266,9 @@ class Migrate extends Command {
          Cli::print("Attempting to create table: {$table_name}!\n");
          $migration_field_defs = $this->extract_snapshot_field_definitions($snapshot->get_model_fields(), $table_name);
          $unique_constraint_defs = $dbdriver->get_unique_constraint_sqls($snapshot->get_unique_constraints()[$table_name] ?? []);
+         
          $fk_constraint_defs = $dbdriver->get_fk_constraint_sqls($snapshot->get_fk_constraints()[$table_name] ?? []);
+         
          $tblcreated = $dbdriver->create_table_from_migration($table_name, $migration_field_defs, $unique_constraint_defs, $fk_constraint_defs);
 
          if(!$tblcreated){

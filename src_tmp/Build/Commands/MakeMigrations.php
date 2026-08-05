@@ -253,7 +253,8 @@ class MakeMigrations extends Command {
                      'delete_action'   => $cons_items['delete_action'],
                      'update_action'   => $cons_items['update_action'],
                      'local_field'     => $cons_items['local_field'],
-                     'constraint_name' => "fk_{$n}_{$cons_items['local_field']}"
+                     'constraint_name' => "fk_{$n}_{$cons_items['local_field']}",
+                     'db_enforcement'  => $schema_instance->is_sibling($m, $ref_model) ? 1 : 0
                  ];
              }
 
