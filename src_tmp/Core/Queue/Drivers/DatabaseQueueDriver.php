@@ -9,7 +9,7 @@ class DatabaseQueueDriver implements QueueDriverInterface {
      protected $visibility_timeout = 60;
 
      public function push($queue, $payload, $priority = 0, $delay = 0){
-         $job = Job::create([
+         $job = Job::using(system_connection())->create([
              'queue' => $queue,
              'payload' => json_encode($payload),
              'priority' => $priority,
@@ -26,7 +26,7 @@ class DatabaseQueueDriver implements QueueDriverInterface {
 
              $timeout = $this->visibility_timeout;
 
-             $query = Job::get()->where('queue', $queue)->where('available_at__lte', time())
+             $query = Job::using(system_connection())->get()->where('queue', $queue)->where('available_at__lte', time())
                     ->gwhere(function($q) use ($timeout) {
                          return $q->where('reserved_at', null)->or_where('reserved_at__lte', time() - $timeout);
                     })
@@ -36,7 +36,7 @@ class DatabaseQueueDriver implements QueueDriverInterface {
              $job = $query->first_or_null();
 
              if($job){
-                 Job::update([
+                 Job::using(system_connection())->update([
                     'reserved_at' => time(),
                     'attempts' => $job->attempts + 1
                  ])->where('id', $job->id)->now();
@@ -47,18 +47,18 @@ class DatabaseQueueDriver implements QueueDriverInterface {
      }
 
      public function delete($job_id){
-         Job::delete(true)->where('id', $job_id)->now();
+         Job::using(system_connection())->delete(true)->where('id', $job_id)->now();
      }
 
      public function release($job_id, $delay = 0){
-         Job::update([
+         Job::using(system_connection())->update([
             'reserved_at' => null,
             'available_at' => time() + $delay
          ])->where('id', $job_id)->now();
      }
 
      public function fail($job_id, $exception){
-         $job = FailedJob::create([
+         $job = FailedJob::using(system_connection())->create([
              'job_id' => $job_id,
              'exception' => $exception,
              'failed_at' => time()

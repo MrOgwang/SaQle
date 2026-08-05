@@ -6,7 +6,7 @@ use SaQle\Orm\Entities\Field\Types\{Pk, TextField, OneToOne, OneToMany, FloatFie
 use SaQle\Core\Exceptions\ValidationException;
 use SaQle\Commons\Str;
 use SaQle\Orm\Entities\Model\Manager\{CreateManager, UpdateManager, DeleteManager, TruncateManager, ReadManager, RunManager};
-use SaQle\Orm\Entities\Model\Interfaces\{IModel, ITableSchema, ISystemModel};
+use SaQle\Orm\Entities\Model\Interfaces\{IModel, ITableSchema};
 use SaQle\Orm\Entities\Model\Collection\GenericModelCollection;
 use SaQle\Core\Exceptions\Model\{UndefinedFieldException, MissingRequiredFieldsException};
 use SaQle\Build\Utils\MigrationUtils;
@@ -260,21 +260,11 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
  	 	 return $collection;
      }
 
-     public static function is_system_model(){
-         $interfaces = class_implements(static::class);
-         if(in_array(ISystemModel::class, $interfaces)){
-             return true;
-         }
-
-         return false;
-     }
-
 	 public static function get_connection(?string $connection = null){
 
          [$connection, $schema] = Db::get_connection_schema(
             static::class, 
-            $connection, 
-            self::is_system_model()
+            $connection
          );
 
          return $connection;
@@ -1099,8 +1089,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
 	 public function get_sibling_models(){
          [$con, $schema] = Db::get_connection_schema(
              $this::class, 
-             $this->table->get_connection_name(), 
-             static::is_system_model()
+             $this->table->get_connection_name()
          );
 
 	 	 return new $schema()->get_models();

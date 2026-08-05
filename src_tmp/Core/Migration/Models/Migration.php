@@ -1,10 +1,12 @@
 <?php
 namespace SaQle\Core\Migration\Models;
 
-use SaQle\Orm\Entities\Model\Schema\{Model, Table};
-use SaQle\Orm\Entities\Model\Interfaces\ISystemModel;
+use SaQle\Orm\Entities\Model\Schema\{
+	 Model, 
+	 Table
+};
 
-class Migration extends Model implements ISystemModel {
+class Migration extends Model {
 
 	protected function table_schema(Table $table) : void {
 

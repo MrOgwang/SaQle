@@ -6,9 +6,7 @@ use SaQle\Orm\Entities\Model\Schema\{
 	 Table
 };
 
-use SaQle\Orm\Entities\Model\Interfaces\ISystemModel;
-
-class TenantMigration extends Model implements ISystemModel {
+class TenantMigration extends Model {
 
 	 protected function table_schema(Table $table) : void {
 

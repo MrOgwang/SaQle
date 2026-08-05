@@ -3,11 +3,11 @@ declare(strict_types = 1);
 
 namespace SaQle\Orm\Database;
 
-use SaQle\Orm\Entities\Model\Interfaces\{IThroughModel, ITempModel};
-use SaQle\Core\Migration\Models\Migration;
-use SaQle\Session\Models\Session;
+use SaQle\Orm\Entities\Model\Interfaces\{
+	 IThroughModel, 
+	 ITempModel
+};
 use SaQle\Orm\Entities\Model\TempId;
-use SaQle\Core\Queue\Models\{FailedJob, Job, JobBatch};
 use RuntimeException;
 
 abstract class Schema {

@@ -49,7 +49,7 @@ class MySqlDriver extends DbDriver {
                  'table' => $old_name,
                  'statement_error_code' => $error_code
              ]);
-         }
+         } 
 
          return true;
 

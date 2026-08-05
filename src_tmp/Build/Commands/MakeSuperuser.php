@@ -28,7 +28,7 @@ class MakeSuperuser extends Command {
 
              $data = $this->collect_user_data($model_class);
 
-             $model_class::create($data)->now();
+             $model_class::using(system_connection())->create($data)->now();
 
              Cli::print("Super user was created successfully!");
          }catch(Exception $e){

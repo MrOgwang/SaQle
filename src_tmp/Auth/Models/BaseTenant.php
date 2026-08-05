@@ -7,9 +7,8 @@ use SaQle\Orm\Entities\Model\Schema\{
 	 Presenter
 };
 use SaQle\Auth\Identity\Tenant\Interfaces\TenantInterface;
-use SaQle\Orm\Entities\Model\Interfaces\ISystemModel;
 
-class BaseTenant extends Model implements ISystemModel, TenantInterface {
+class BaseTenant extends Model implements TenantInterface {
 
 	 protected function table_schema(Table $table) : void {
 

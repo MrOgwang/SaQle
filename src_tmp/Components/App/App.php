@@ -19,7 +19,7 @@ class App {
      }
 
      private function import(){
-         $model_class = Candidate::class; //config('auth.model_class');
+         $model_class = Candidate::class;
 
          $old = $model_class::using('main.acek_older')->get()->order(['created_at'], 'DESC')->all();
          $added = [];

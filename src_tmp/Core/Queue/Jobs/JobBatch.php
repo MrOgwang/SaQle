@@ -15,7 +15,7 @@ class JobBatch {
 
          $total = count($jobs);
 
-         JobBatchModel::create([
+         JobBatchModel::using(system_connection())->create([
              'id' => $this->id,
              'total_jobs' => $total,
              'pending_jobs' => $total,

@@ -11,7 +11,7 @@ class ManageTenant {
 
 	 	 $tenant_model = config('tenancy.model_class');
 
-	 	 $tenant = $tenant_model::get()->where('slug__eq', $slug)->limit(1)->first_or_null();
+	 	 $tenant = $tenant_model::using(system_connection())->get()->where('slug__eq', $slug)->limit(1)->first_or_null();
 
 	 	 if(!$tenant){
 	 	 	 throw bad_request_exception("Invalid tenant identification!");

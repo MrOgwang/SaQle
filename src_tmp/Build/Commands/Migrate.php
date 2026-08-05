@@ -64,7 +64,7 @@ class Migrate extends Command {
          
          $migrations_model = $tenant_id ? TenantMigration::class : Migration::class;
          
-         $manager = $migrations_model::get()
+         $manager = $migrations_model::using(system_connection())->get()
          ->where('migration_name__eq', $migration_name)
          ->where('migration_timestamp__eq', $migration_timestamp)
          ->where('type__eq', $type);
@@ -87,7 +87,7 @@ class Migrate extends Command {
                  $migration_props['tenant_id'] = $tenant_id;
              }
 
-             $record = $migrations_model::create($migration_props)->now();
+             $record = $migrations_model::using(system_connection())->create($migration_props)->now();
          }
 
          return $record;
@@ -97,7 +97,7 @@ class Migrate extends Command {
 
          $migrations_model = $tenant_id ? TenantMigration::class : Migration::class;
 
-         $migrations_model::update(['is_migrated' => 1])->where('migration_id', $migration_id)->now();
+         $migrations_model::using(system_connection())->update(['is_migrated' => 1])->where('migration_id', $migration_id)->now();
 
      }
 
@@ -452,19 +452,19 @@ class Migrate extends Command {
 
          Cli::print("Starting migrations!\n");
  
-         $tenants = $type === 'tenant' ? $tenant_model::get()->all()->items() : [];
+         $tenants = $type === 'tenant' ? $tenant_model::using(system_connection())->get()->all()->items() : [];
          foreach($migration_file_names as $migration_file){
              $this->process_migration_file($type, $migration_file, $tenants, $tenancy_enabled);
          }
  
          if($type === 'system' && !$tenancy_enabled){
-             $latest_tenant = $tenant_model::get()
+             $latest_tenant = $tenant_model::using(system_connection())->get()
              ->order(fields: ['created_at'], direction: 'DESC')
              ->limit(1)
              ->first_or_null();
 
              if(!$latest_tenant){
-                 $tenant_model::create([
+                 $tenant_model::using(system_connection())->create([
                      'tenant_name' => config('app.name')
                  ])->now();
              }

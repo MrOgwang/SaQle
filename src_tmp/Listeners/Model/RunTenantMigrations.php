@@ -13,7 +13,7 @@ class RunTenantMigrations {
          $tenant = $event->context->result();
 
          //get tenant migration history
-         $migrations = Migration::get()
+         $migrations = Migration::using(system_connection())->get()
          ->where('type__eq', 'tenant')
          ->where('is_migrated__eq', 1)
          ->all();

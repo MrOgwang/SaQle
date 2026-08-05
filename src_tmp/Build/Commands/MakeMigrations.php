@@ -502,7 +502,7 @@ class MakeMigrations extends Command {
                          Cli::print("System database exists!");
 
                          //Database exists, get last migration
-                         $last_migration = Migration::get()
+                         $last_migration = Migration::using(system_connection())->get()
                          ->order(fields: ['migration_timestamp'], direction: 'DESC')
                          ->limit(1)
                          ->first_or_null();

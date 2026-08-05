@@ -1,10 +1,12 @@
 <?php
 namespace SaQle\Core\Queue\Models;
 
-use SaQle\Orm\Entities\Model\Schema\{Model, Table};
-use SaQle\Orm\Entities\Model\Interfaces\ISystemModel;
+use SaQle\Orm\Entities\Model\Schema\{
+	 Model, 
+	 Table
+};
 
-class JobBatch extends Model implements ISystemModel {
+class JobBatch extends Model {
 
 	 protected function table_schema(Table $table) : void {
 

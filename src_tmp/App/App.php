@@ -115,7 +115,8 @@ final class App {
              'Dates',
              'Arrays',
              'Exceptions',
-             'Session'
+             'Session',
+             'Db'
          ];
 
          foreach($shortcuts as $s){

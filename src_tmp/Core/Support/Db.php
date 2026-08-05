@@ -92,15 +92,11 @@ class Db {
       * */
      public static function get_connection_schema(
          ?string $model_class = null,
-         ?string $connection_key = null, 
-         bool $is_system = false
+         ?string $connection_key = null
      ){
-         $connection_key = self::get_connection_key($model_class, $connection_key);
-         
-         if($is_system || ActorContext::is_platform()){
-             $system_db = self::get_system_db();
-             $connection_key = $system_db[0].".".$system_db[1];
-         }
+         $connection_key = ActorContext::is_platform() ? 
+         system_connection() :
+         self::get_connection_key($model_class, $connection_key);
 
          $key_parts = explode(".", $connection_key);
 
