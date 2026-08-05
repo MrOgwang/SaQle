@@ -1,4 +1,5 @@
 <?php
+
 namespace SaQle\Orm\Entities\Model;
 
 use SaQle\Orm\Entities\Model\Schema\TempModel;

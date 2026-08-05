@@ -1,8 +1,9 @@
 <div class="file-upload">
+     @let($accept = $field->accept ?: [])
      @if($field->multiple)
-     <input type="file" name='{{ $field->name }}[]' id='{{ $field->id }}' class="file-upload-input" accept="{{ implode(',', $field->accept) }}" multiple/>
+     <input type="file" name='{{ $field->name }}[]' id='{{ $field->id }}' class="file-upload-input" accept="{{ implode(',', $accept) }}" multiple/> 
      @else
-     <input type="file" name='{{ $field->name }}' id='{{ $field->id }}' class="file-upload-input" accept="{{ implode(',', $field->accept) }}"/>
+     <input type="file" name='{{ $field->name }}' id='{{ $field->id }}' class="file-upload-input" accept="{{ implode(',', $accept) }}"/>
      @endif
      <div class="file-upload-dropzone">
          <div class="file-upload-content">

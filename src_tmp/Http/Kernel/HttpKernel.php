@@ -77,7 +77,7 @@ class HttpKernel extends Kernel {
 
      private function build_http_message(Throwable $e, ErrorContext $ctx, Request $request) {
          if($ctx->should_redirect){
-             return new RedirectMessage($request->uri());
+             //return new RedirectMessage($request->uri());
          }
 
          if($e instanceof FrameworkException){

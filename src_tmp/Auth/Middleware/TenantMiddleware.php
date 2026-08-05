@@ -22,6 +22,7 @@ use SaQle\Auth\Identity\Tenant\Resolvers\TenantIDResolver;
 use SaQle\Http\Response\Message;
 use SaQle\Auth\Context\ActorContext;
 use SaQle\Core\Support\Db;
+use SaQle\Http\Kernel\Session;
 use RuntimeException;
 
 class TenantMiddleware implements RequestMiddleware {
@@ -127,6 +128,24 @@ class TenantMiddleware implements RequestMiddleware {
 
          $this->register_tenant_databases($tenant);
 
+         if(Session::has('__manage_tenant__')){
+
+             $auth_model = config('auth.model_class');
+
+             $user = $auth_model::get()->where('user_id', $request->user->user_id)->first_or_null();
+
+             if(!$user){
+                 $request->user->save();
+             }
+
+         }
+
          return null;
+     }
+
+     public function after($request, $response) : ?Message {
+         if(Session::has('__manage_tenant__')){
+             Session::remove('__manage_tenant__');
+         }
      }
 }

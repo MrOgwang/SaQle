@@ -55,15 +55,19 @@ class EagerLoader {
              $include_data = $loader->load($connection, $parents, $relation, $nested, $tuning, $relation_stack);
 
              //atach to parents
-             if($include_data){
+             if($include_data && $include_data['mapped']){
                  foreach($parents as $p){
+
                      $assign_to = $include_data['assign_to'];
                      $local_key = $include_data['local_key'];
                      $local_key_value = $p->$local_key;
-                     if($include_data['multiple']){
-                         $p->$assign_to = $model_class::hydrate_collection($include_data['mapped'][$local_key_value] ?? []);
-                     }else{
-                         $p->$assign_to = $model_class::from_db(...get_object_vars($include_data['mapped'][$local_key_value][0]));
+
+                     if($local_key_value){
+                         if($include_data['multiple']){
+                             $p->$assign_to = $model_class::hydrate_collection($include_data['mapped'][$local_key_value] ?? []);
+                         }else{
+                             $p->$assign_to = $model_class::from_db(...get_object_vars($include_data['mapped'][$local_key_value][0]));
+                         }
                      }
                  }
              }

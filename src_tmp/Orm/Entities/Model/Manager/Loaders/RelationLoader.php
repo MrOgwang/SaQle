@@ -60,17 +60,19 @@ final class RelationLoader {
 
      public function load(string $connection, array | ModelCollection $parents, RelationField $relation, mixed $nested, mixed $tuning, RelationStack $relation_stack){
 
+         $conn_props = explode(".", $connection);
+
+         $schema = config('db.connections')[$conn_props[0]]['databases'][$conn_props[1]];
+
          $driver = Db::using($connection)->driver();
 
-         if($driver->supports_window_functions()){
+         $is_sibling = new $schema()->is_sibling($relation->get_local_model(), $relation->get_related_model());
+
+         if($driver->supports_window_functions() && $is_sibling){
              return $this->load_with_window_function($connection, $parents, $relation, $nested, $tuning, $relation_stack);
          }
 
-         /*if($tuning){
-             $this->load_with_fallback($connection, $parents, $relation, $nested, $tuning, $relation_stack);
-             return;
-         }*/
-         return $this->load_without_limit($connection, $parents, $relation, $nested, $relation_stack);
+         return $this->load_without_limit($connection, $parents, $relation, $nested, $relation_stack, $is_sibling);
      }
      
      private function window_function_fetch($connection, $foreign_model, $foreign_key, $pkey_values, $field_name, $with, $tuning, $through, $relation_stack){
@@ -254,13 +256,8 @@ final class RelationLoader {
          ];
      }
 
-     protected function load_with_fallback(string $connection, array | ModelCollection $parents, RelationField $relation, 
-        mixed $nested, mixed $tuning, RelationStack $relation_stack) : void {
-
-     }
-
      protected function load_without_limit(string $connection, array | ModelCollection $parents, RelationField $relation,
-      mixed $nested, RelationStack $relation_stack){
+      mixed $nested, RelationStack $relation_stack, bool $is_sibling){
          $local_key = $relation->get_local_key();
          $foreign_key = $relation->get_foreign_key();
          $related_model = $relation->get_related_model();
@@ -280,7 +277,9 @@ final class RelationLoader {
                  as: 'r'
              )->where('t.'.$local_key.'__in', $ids);
          }else{
-             $query = $related_model::using($connection)->get()->where($foreign_key.'__in', $ids);
+             $query = $is_sibling ? 
+             $related_model::using($connection)->get()->where($foreign_key.'__in', $ids) :
+             $related_model::get()->where($foreign_key.'__in', $ids);
          }
 
          $this->attach_nested($nested, $query);
@@ -289,6 +288,7 @@ final class RelationLoader {
 
          //Index by key
          $map = [];
+
          if($relation instanceof ManyToMany){
              foreach($related as $row) {
                  $map[$row->$local_key][] = $row;

@@ -128,13 +128,13 @@ class ModelCompiler {
          return $classes;
      }
 
-     private static function cache_models(array $items): void {
+     private static function cache_models(array $items, string $type): void {
          $caching_folder = path_join([config('base_path'), config('class_mappings_dir')]);
          if(!file_exists($caching_folder)){
              mkdir($caching_folder, 0777, true);
          }
 
-         $caching_file = path_join([$caching_folder, "models.php"]);
+         $caching_file = path_join([$caching_folder, $type.".php"]);
 
          $export = var_export($items, true);
          $export = preg_replace('/^/m', '    ', $export); // indent
@@ -187,6 +187,7 @@ class ModelCompiler {
           * model name to full namespaced class name
           * */
          $models = [];
+         $tables = [];
 
          foreach($models_dirs as $dir){
 
@@ -206,12 +207,21 @@ class ModelCompiler {
                      $declared_models = self::get_model_classes_from_file($path);
 
                      if($declared_models){
-                         $models[$model_name] = $declared_models[0];
+
+                         $model_class = $declared_models[0];
+
+                         $model = $model_class::make();
+
+                         $models[$model_name] = $model_class;
+
+                         $tables[$model->get_table_name()] = $model_class;
                      }
                  }
              }
          }
 
-         self::cache_models($models);
+         self::cache_models($models, "models");
+
+         self::cache_models($tables, "tables");
      }
 }

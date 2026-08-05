@@ -5,6 +5,7 @@ namespace SaQle\Core\Registries;
 use InvalidArgumentException;
 
 final class ModelRegistry {
+
      private static ?array $models = null;
 
      public static function all(): array {

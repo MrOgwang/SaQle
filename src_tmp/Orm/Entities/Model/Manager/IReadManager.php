@@ -8,6 +8,7 @@
  use SaQle\Orm\Entities\Model\Manager\Modes\FetchMode;
  use SaQle\Orm\Query\Helpers\{JoinManager, FilterManager, LimitManager, OrderManager, SelectManager, GroupManager};
  use SaQle\Orm\Entities\Model\Schema\Model;
+ use SaQle\Core\Registries\TableRegistry;
  use Closure;
      
 class IReadManager extends QueryManager {
@@ -105,13 +106,6 @@ class IReadManager extends QueryManager {
 	 	 return $this->query_reference_map;
 	 }
 
-     //get a single model object from name
-     protected function model_from_table(string $name) : ITableSchema {
-     	 $sibling_models = $this->model->get_sibling_models();
-     	 $model_class = $sibling_models[$name];
-     	 return $model_class::make();
-     }
-
      /**
      * Register to context tracker
      * @param string $table_name
@@ -136,7 +130,10 @@ class IReadManager extends QueryManager {
 	 * @param string $as:    the aliase name of the joining table.
 	 */
 	 public function register_joining_model(string $table, ?string $tblref = null, ?string $as = null){
-	 	 $model = $this->model_from_table($table);
+	 	 
+	 	 $model_class = TableRegistry::get_table_model($table);
+	 	 $model = $model_class::make();
+
 	 	 $connection_key = $this->model->table->get_connection_name();
 		 $this->register_to_context_tracker(
 		 	 table_name:    $table,

@@ -691,10 +691,8 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
          $user_id = null;
 
          if(!ActorContext::is_system()){
-             $user_id =  ActorContext::actor()?->user_id;
+             $user_id = ActorContext::actor()?->user_id;
          }
-
-     	 
 
      	 //inject creator and modifier fields, created and modified date time fields and deleted fields
 	 	 if($this->table->has_user_audit()){
@@ -851,6 +849,13 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
 	 	 $model_instance = self::make();
 	 	 $model_instance->set_connection($connection);
          return new ModelProxy($model_instance);
+     }
+
+     public function save(){
+
+         $called_class = get_called_class();
+         
+         return $called_class::create($this->data)->now();
      }
 
      //add new row(s) to database or batch create new instances
@@ -1129,7 +1134,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
          $form->auto_wire();
          $form->fill_all();
          return $form;
-     }
+     } 
 
      #[NamedForm('default_update')]
      public function update_form(Form $form) : Form {

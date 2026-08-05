@@ -5,8 +5,9 @@ namespace SaQle\Orm\Query\Helpers;
 
 use SaQle\Orm\Query\Join\JoinBuilder;
 use SaQle\Orm\Query\Helpers\Q;
+use SaQle\Core\Registries\TableRegistry;
 
-trait JoinManager{
+trait JoinManager {
 	 /**
      * The group query builder
      * */
@@ -49,7 +50,8 @@ trait JoinManager{
 
      	 $database = $database ?: $this->query_reference_map->find_database_name(0);
          $ptable   = $this->query_reference_map->find_table_name(0);
-     	 $model    = $this->model_from_table($ptable);
+     	 $model_class = TableRegistry::get_table_model($ptable);
+	 	 $model = $model_class::make();
 		 $pkname   = $model->get_pk_name();
      	 $from     = $from ?: $pkname;
      	 $to       = $to   ?: $pkname;
@@ -143,9 +145,13 @@ trait JoinManager{
       * @param string $model: the class name of model
       * */
      private function get_table_n_database(string $model){
-     	 [$db_class, $table_name] = $model::get_table_and_connection();
+
+     	 $table_name = $model::make()->get_table_name();
+
      	 $connection_key = $this->model->table->get_connection_name();
+
 	 	 $database_name = explode('.', $connection_key, 2)[1] ?? '';
+
 	 	 return [$table_name, $database_name];
      }
 
