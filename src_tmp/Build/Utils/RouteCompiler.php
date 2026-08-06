@@ -129,7 +129,7 @@ final class RouteCompiler {
              method: 'get', 
              url: admin_route_url($model_label, [], $is_platform),
              authorize: $authorize,
-             layout: ['saqle.app'],
+             layout: ['saqle.app', 'saqle.resourcewrapper'],
              model: $model_class,
              middleware: $middleware
          );
@@ -142,7 +142,7 @@ final class RouteCompiler {
              method: 'get', 
              url: admin_route_url($model_label, ['create'], $is_platform),
              authorize: $authorize,
-             layout: ['saqle.app'],
+             layout: ['saqle.app', 'saqle.resourcewrapper'],
              model: $model_class,
              middleware: $middleware
          );
@@ -155,7 +155,7 @@ final class RouteCompiler {
              method: 'post', 
              url: admin_route_url($model_label, ['create'], $is_platform),
              authorize: $authorize,
-             layout: ['saqle.app'],
+             layout: ['saqle.app', 'saqle.resourcewrapper'],
              model: $model_class,
              middleware: $middleware
          );
@@ -168,7 +168,7 @@ final class RouteCompiler {
              method: 'get', 
              url: admin_route_url($model_label, [':id'], $is_platform),
              authorize: $authorize,
-             layout: ['saqle.app'],
+             layout: ['saqle.app', 'saqle.resourcewrapper'],
              model: $model_class,
              middleware: $middleware
          );
@@ -181,7 +181,7 @@ final class RouteCompiler {
              method: 'get',  
              url: admin_route_url($model_label, [':id', 'edit'], $is_platform),
              authorize: $authorize,
-             layout: ['saqle.app'],
+             layout: ['saqle.app', 'saqle.resourcewrapper'],
              model: $model_class,
              middleware: $middleware
          );
@@ -194,7 +194,7 @@ final class RouteCompiler {
              method: 'patch',  
              url: admin_route_url($model_label, [':id', 'edit'], $is_platform),
              authorize: $authorize,
-             layout: ['saqle.app'],
+             layout: ['saqle.app', 'saqle.resourcewrapper'],
              model: $model_class,
              middleware: $middleware
          );
@@ -207,7 +207,7 @@ final class RouteCompiler {
              method: 'delete', 
              url: admin_route_url($model_label, [':id'], $is_platform),
              authorize: $authorize,
-             layout: ['saqle.app'],
+             layout: ['saqle.app', 'saqle.resourcewrapper'],
              model: $model_class, 
              middleware: $middleware
          );
