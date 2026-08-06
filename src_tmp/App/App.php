@@ -154,8 +154,14 @@ final class App {
              AdminNavigationProvider::class
          ];
 
-         foreach(array_merge($framework_providers, $this->setup->providers) as $provider){
-             (new $provider($this))->register();
+         //register framework providers
+         foreach($framework_providers as $p){
+             (new $p($this))->register();
+         }
+
+         //register developer providers
+         foreach($this->setup->providers as $p2){
+             (new $p2($this))->register();
          }
 
          Db::register_system_db();

@@ -51,7 +51,7 @@ class App {
              'current_resource' => $current_resource,
              'tenant_slug' => $this->tenant_slug,
              'is_platform' => $is_platform,
-             'navigation' => Admin::navigation_registry(),
+             'navigation' => Admin::navigation(),
              'tenant_name' => config('tenancy.enabled') && request()->tenant ? request()->tenant->tenant_name : ""
          ]);
      }

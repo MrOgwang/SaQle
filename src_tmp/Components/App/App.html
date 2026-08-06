@@ -22,11 +22,11 @@
              </a>
              @endif
 
-             @foreach($navigation->groups() as $group)
-             <!-- {{ $group->label() }} -->
+             @foreach($navigation->tree() as $group)
+             <!-- {{ $group->label }} -->
              <div class="nav-group">
                  <button class="nav-group-header expanded">
-                     <span>{{ $group->label() }}</span>
+                     <span>{{ $group->label }}</span>
                      <svg class="chevron" viewBox="0 0 24 24">
                          <path d="M8 10l4 4 4-4"/>
                      </svg>

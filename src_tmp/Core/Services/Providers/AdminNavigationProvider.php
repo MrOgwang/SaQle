@@ -23,27 +23,32 @@ class AdminNavigationProvider extends ServiceProvider {
 
          $resources = $this->get_resource_links();
 
-         Admin::__navigation(function($nav) use ($resources) {
+         Admin::navigation(function($nav) use ($resources){
 
-             $nav->group("Resources", function($group) use ($resources) {
+             $nav->groups->add(
+                 name:  'resources',
+                 label: 'Resources',
+                 icon: ''
+             );
 
-                 $group->link(
-                     label: 'Overview', 
-                     url:    ActorContext::is_platform() ? 
-                             '/saqle/resources/overview' : '/'.config('admin.routes.prefix', "_admin").'/resources/overview/',
-                     icon:   'grid-2x2'
+             $nav->links->add(
+                 name:  'overview',
+                 label: 'Overview',
+                 url:   ActorContext::is_platform() ? 
+                       '/saqle/resources/overview' : '/'.config('admin.routes.prefix', "_admin").'/resources/overview/',
+                 icon:  'grid-2x2',
+                 group: 'resources'
+             );
+
+             foreach($resources as $r){
+                 $nav->links->add(
+                     name:  strtolower($r->ui_label),
+                     label: $r->ui_label,
+                     url:   $r->url,
+                     icon:  'boxes',
+                     group: 'resources'
                  );
-
-                 foreach($resources as $r){
-                     $group->link(
-                         label: $r->ui_label, 
-                         url:   $r->url,
-                         icon: 'boxes'
-                     );
-                 }
-
-
-             });
+             }
 
          });
      }
