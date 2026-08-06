@@ -133,7 +133,7 @@ final class RouteCompiler {
              model: $model_class,
              middleware: $middleware
          );
-         $list_resource_route->set_target("saqle.autoresource@list_resources");
+         $list_resource_route->set_target("saqle.resourcelist");
          $list_resource_route->initialize();
 
          //create form route
@@ -146,7 +146,7 @@ final class RouteCompiler {
              model: $model_class,
              middleware: $middleware
          );
-         $create_form_route->set_target("saqle.autoresource@show_create_form");
+         $create_form_route->set_target("saqle.resourcecreate");
          $create_form_route->initialize();
 
          //submit create resource route
@@ -159,7 +159,7 @@ final class RouteCompiler {
              model: $model_class,
              middleware: $middleware
          );
-         $create_resource_route->set_target("saqle.autoresource@create_resource");
+         $create_resource_route->set_target("saqle.resourcecreate");
          $create_resource_route->initialize();
 
          //show a single resource route
@@ -172,7 +172,7 @@ final class RouteCompiler {
              model: $model_class,
              middleware: $middleware
          );
-         $show_resource_route->set_target("saqle.autoresource@show_resource");
+         $show_resource_route->set_target("saqle.resourceview");
          $show_resource_route->initialize();
 
          //show edit resource form
@@ -185,7 +185,7 @@ final class RouteCompiler {
              model: $model_class,
              middleware: $middleware
          );
-         $edit_form_route->set_target("saqle.autoresource@show_edit_form");
+         $edit_form_route->set_target("saqle.resourceedit");
          $edit_form_route->initialize();
 
          //edit resource route
@@ -198,7 +198,7 @@ final class RouteCompiler {
              model: $model_class,
              middleware: $middleware
          );
-         $edit_resource_route->set_target("saqle.autoresource@edit_resource");
+         $edit_resource_route->set_target("saqle.resourceedit");
          $edit_resource_route->initialize();
 
          //delete resource route
@@ -208,10 +208,10 @@ final class RouteCompiler {
              url: admin_route_url($model_label, [':id'], $is_platform),
              authorize: $authorize,
              layout: ['saqle.app'],
-             model: $model_class,
+             model: $model_class, 
              middleware: $middleware
          );
-         $del_resource_route->set_target("saqle.autoresource@delete_resource");
+         $del_resource_route->set_target("saqle.resourcedelete");
          $del_resource_route->initialize();
      }
 
