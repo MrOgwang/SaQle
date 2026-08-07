@@ -21,6 +21,7 @@ namespace SaQle\Build\Utils;
 use SaQle\Orm\Entities\Model\Schema\Model;
 use RecursiveIteratorIterator;
 use RecursiveDirectoryIterator;
+use ReflectionClass;
 
 class ModelCompiler {
 
@@ -214,7 +215,9 @@ class ModelCompiler {
 
                          $models[$model_name] = $model_class;
 
-                         $tables[$model->get_table_name()] = $model_class;
+                         $table_name = $model->get_table_name() ?? strtolower((new ReflectionClass($model_class))->getShortName());
+
+                         $tables[$table_name] = $model_class;
                      }
                  }
              }

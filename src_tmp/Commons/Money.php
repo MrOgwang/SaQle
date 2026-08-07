@@ -3,32 +3,65 @@
 namespace SaQle\Commons;
 
 final class Money {
+     /**
+     * Number of fraction digits for common currencies.
+     * Unknown currencies default to 2.
+     */
+     private const FRACTION_DIGITS = [
+         'JPY' => 0,
+         'KRW' => 0,
+         'VND' => 0,
 
-	 static public function format_money($amount = 10000.457){
-		 if(is_numeric($amount)){
-			 $amount = round($amount, 2);
-			 $amount_array = explode(".", $amount);
-			 if(count($amount_array) == 1){
-				 array_push($amount_array, "00");
-			 }
-			 if(count($amount_array) == 2){
-			     $right = $amount_array[1];
-			     $count = strlen($right);
-			     if($count == 1){
-				     $right = $right ."0";
-			     }
-			     unset($amount_array[count($amount_array)-1]);
-			     $array = array_values($amount_array);
-			     array_push($amount_array, $right);
-			 }
-             $string = join('.', $amount_array);
-			 $string = self::format_shillings($string);
-			 return $string;
-	     }
-	 }
+         'BHD' => 3,
+         'IQD' => 3,
+         'JOD' => 3,
+         'KWD' => 3,
+         'LYD' => 3,
+         'OMR' => 3,
+         'TND' => 3,
 
-	 static function format_shillings($amount, $currency = "KSH"){
-         $formatted = $currency.".&nbsp;" . number_format(sprintf('%0.2f', preg_replace("/[^0-9.]/", "", $amount)), 2, ".", "&nbsp;");
-         return $amount < 0 ? "({$formatted})" : "{$formatted}";
+         // Defaults to 2:
+         'USD' => 2,
+         'EUR' => 2,
+         'GBP' => 2,
+         'KES' => 2,
+         'ZAR' => 2,
+         'NGN' => 2,
+         'CAD' => 2,
+         'AUD' => 2,
+     ];
+
+     /**
+     * Format a numeric amount.
+     */
+     public static function format(
+         float|int $amount,
+         ?string $currency = null,
+         bool $with_symbol = true,
+         bool $parentheses_for_negative = false,
+         string $thousands_separator = ',',
+         string $decimal_separator = '.'
+     ) : string {
+
+         $currency = $currency ? strtoupper($currency) : null;
+
+         $decimals = self::FRACTION_DIGITS[$currency] ?? 2;
+
+         $formatted = number_format(
+             abs($amount),
+             $decimals,
+             $decimal_separator,
+             $thousands_separator
+         );
+
+         if($with_symbol && $currency){
+             $formatted = "{$currency} {$formatted}";
+         }
+
+         if($amount < 0){
+             return $parentheses_for_negative ? "({$formatted})" : "-{$formatted}";
+         }
+
+         return $formatted;
      }
 }

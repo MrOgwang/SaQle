@@ -16,6 +16,7 @@ use SaQle\Orm\Entities\Field\Types\Base\RelationField;
 use BackedEnum;
 use UnitEnum;
 use RuntimeException;
+use ReflectionClass;
 
 final class Table {
      
@@ -292,6 +293,7 @@ final class Table {
 
      public function set_table_defaults($model_class){
          $this->model_class = $model_class;
+         $this->table_name = strtolower((new ReflectionClass($model_class))->getShortName());
          $this->_with_user_audit = config('model.with_user_audit');
          $this->_with_timestamps = config('model.with_timestamps');
          $this->_with_soft_delete = config('model.with_soft_delete');
