@@ -17,7 +17,7 @@ use SaQle\Core\Services\Providers\{
      ValidationServiceProvider,
      StorageServiceProvider,
      TemplateServiceProvider,
-     AdminNavigationProvider
+     AdminProvider
 };
 use SaQle\Console\CommandRegistry;
 use SaQle\Http\Cors\CorsConfig;
@@ -151,7 +151,7 @@ final class App {
              TemplateServiceProvider::class,
              PlatformAuthorizationProvider::class,
              FrameworkCommandsProvider::class,
-             AdminNavigationProvider::class
+             AdminProvider::class
          ];
 
          //register framework providers

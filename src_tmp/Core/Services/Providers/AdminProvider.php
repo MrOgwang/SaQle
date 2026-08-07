@@ -7,8 +7,9 @@ use SaQle\Admin\Admin;
 use SaQle\Routes\Resources\ResourceRouteUtils;
 use SaQle\App\App;
 use SaQle\Auth\Context\ActorContext;
+use SaQle\Admin\Resources\ResourceDefinition;
 
-class AdminNavigationProvider extends ServiceProvider {
+class AdminProvider extends ServiceProvider {
 
      use ResourceRouteUtils {
          ResourceRouteUtils::__construct as private __utilsConstruct;
@@ -51,6 +52,29 @@ class AdminNavigationProvider extends ServiceProvider {
              }
 
          });
+         
+         Admin::resources(function($res) use ($resources){
+
+             foreach($resources as $model => $resource){
+ 
+                 $definition = new ResourceDefinition($model);
+
+                 $definition->list()->component("saqle.resourcelist");
+
+                 $definition->show()->component("saqle.resourceview");
+
+                 $definition->create()->component("saqle.resourcecreate");
+
+                 $definition->edit()->component("saqle.resourceedit");
+
+                 $definition->delete()->component("saqle.resourcedelete");
+
+                 $res->add($definition);
+
+             }
+
+         });
+
      }
 }
 

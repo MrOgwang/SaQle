@@ -10,7 +10,8 @@ final class ModelRegistry {
 
      public static function all(): array {
          if(self::$models === null) {
-             self::$models = require path_join([config('base_path'), config('class_mappings_dir'), 'models.php']);
+             $file = path_join([config('base_path'), config('class_mappings_dir'), 'models.php']);
+             self::$models = file_exists($file) ? require $file : [];
          }
 
          return self::$models;

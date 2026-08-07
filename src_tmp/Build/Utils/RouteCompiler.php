@@ -16,6 +16,7 @@ use SaQle\Core\Registries\ComponentRegistry;
 use ReflectionClass;
 use ReflectionMethod;
 use SaQle\Orm\Database\SystemSchema;
+use SaQle\Admin\Admin;
 use RuntimeException;
 
 final class RouteCompiler {
@@ -116,6 +117,10 @@ final class RouteCompiler {
      }
 
      private static function register_resource_routes($is_platform, $model_label, $model_class, $multitenancy){
+
+         $resource_def = Admin::resources()->get($model_class);
+
+         //print_r($resource_def);
          
          $authorize = $is_platform ? '__authenticated__ && __super_admin__' : 
          self::construct_route_authorization($model_label, $model_class);
@@ -133,10 +138,16 @@ final class RouteCompiler {
              model: $model_class,
              middleware: $middleware
          );
-         $list_resource_route->set_target("saqle.resourcelist");
+         $list_operation = $resource_def?->list();
+         $list_resource_route->set_target($list_operation ? $list_operation->get_component() : "saqle.resourcelist");
          $list_resource_route->initialize();
 
-         //create form route
+         /**
+          * Create form and submit create routes.
+          * */
+         $create_operation = $resource_def?->create();
+         $create_component = $create_operation ? $create_operation->get_component() : "saqle.resourcecreate";
+
          $create_form_route = new RouteAttribute(
              name: admin_route_name($model_label, 'create.form', $is_platform),
              method: 'get', 
@@ -146,10 +157,10 @@ final class RouteCompiler {
              model: $model_class,
              middleware: $middleware
          );
-         $create_form_route->set_target("saqle.resourcecreate");
+         $create_form_route->set_target($create_component);
          $create_form_route->initialize();
 
-         //submit create resource route
+         //create resource route
          $create_resource_route = new RouteAttribute(
              name: admin_route_name($model_label, 'create', $is_platform),
              method: 'post', 
@@ -159,23 +170,15 @@ final class RouteCompiler {
              model: $model_class,
              middleware: $middleware
          );
-         $create_resource_route->set_target("saqle.resourcecreate");
+         $create_resource_route->set_target($create_component);
          $create_resource_route->initialize();
 
-         //show a single resource route
-         $show_resource_route = new RouteAttribute(
-             name: admin_route_name($model_label, 'view', $is_platform),
-             method: 'get', 
-             url: admin_route_url($model_label, [':id'], $is_platform),
-             authorize: $authorize,
-             layout: ['saqle.app', 'saqle.resourcewrapper'],
-             model: $model_class,
-             middleware: $middleware
-         );
-         $show_resource_route->set_target("saqle.resourceview");
-         $show_resource_route->initialize();
+         /**
+          * Edit form and submit edit routes
+          * */
+         $edit_operation = $resource_def?->edit();
+         $edit_component = $edit_operation ? $edit_operation->get_component() : "saqle.resourceedit";
 
-         //show edit resource form
          $edit_form_route = new RouteAttribute(
              name: admin_route_name($model_label, 'edit.form', $is_platform),
              method: 'get',  
@@ -185,7 +188,7 @@ final class RouteCompiler {
              model: $model_class,
              middleware: $middleware
          );
-         $edit_form_route->set_target("saqle.resourceedit");
+         $edit_form_route->set_target($edit_component);
          $edit_form_route->initialize();
 
          //edit resource route
@@ -198,8 +201,22 @@ final class RouteCompiler {
              model: $model_class,
              middleware: $middleware
          );
-         $edit_resource_route->set_target("saqle.resourceedit");
+         $edit_resource_route->set_target($edit_component);
          $edit_resource_route->initialize();
+
+         //show a single resource route
+         $show_resource_route = new RouteAttribute(
+             name: admin_route_name($model_label, 'view', $is_platform),
+             method: 'get', 
+             url: admin_route_url($model_label, [':id'], $is_platform),
+             authorize: $authorize,
+             layout: ['saqle.app', 'saqle.resourcewrapper'],
+             model: $model_class,
+             middleware: $middleware
+         );
+         $show_operation = $resource_def?->show();
+         $show_resource_route->set_target($show_operation ? $show_operation->get_component() : "saqle.resourceview");
+         $show_resource_route->initialize();
 
          //delete resource route
          $del_resource_route = new RouteAttribute(
@@ -211,12 +228,13 @@ final class RouteCompiler {
              model: $model_class, 
              middleware: $middleware
          );
-         $del_resource_route->set_target("saqle.resourcedelete");
+         $del_operation = $resource_def?->delete();
+         $del_resource_route->set_target($del_operation ? $del_operation->get_component() : "saqle.resourcedelete");
          $del_resource_route->initialize();
      }
 
      private static function load_resource_routes(){
-         
+
          $multitenancy = (bool)config('tenancy.enabled');
          $system_schema = new SystemSchema();
          $system_models = $system_schema->get_defined_models();
