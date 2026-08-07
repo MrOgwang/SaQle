@@ -1,6 +1,9 @@
 <?php
+
 namespace SaQle\Commons;
-trait MoneyUtils{
+
+final class Money {
+
 	 static public function format_money($amount = 10000.457){
 		 if(is_numeric($amount)){
 			 $amount = round($amount, 2);
@@ -23,6 +26,7 @@ trait MoneyUtils{
 			 return $string;
 	     }
 	 }
+
 	 static function format_shillings($amount, $currency = "KSH"){
          $formatted = $currency.".&nbsp;" . number_format(sprintf('%0.2f', preg_replace("/[^0-9.]/", "", $amount)), 2, ".", "&nbsp;");
          return $amount < 0 ? "({$formatted})" : "{$formatted}";

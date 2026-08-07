@@ -4,7 +4,6 @@
  use SaQle\Core\Exceptions\Model\SelectOperationFailedException;
  use SaQle\Core\Exceptions\Model\NullObjectException;
  use SaQle\Orm\Entities\Model\Schema\Model;
- use SaQle\Commons\DateUtils;
  use SaQle\Core\Assert\Assert;
  use SaQle\Orm\Entities\Model\TempId;
  use SaQle\Orm\Entities\Model\Manager\Utils\EventUtils;
@@ -17,7 +16,7 @@
  use PDO;
 
 final class ReadManager extends IReadManager {
-	 use DateUtils, EventUtils;
+	 use EventUtils;
 
 	 public function __construct(Model $model, ?string $tablealiase = null, ?string $tableref = null){
 	 	 parent::__construct($model, $tablealiase, $tableref);

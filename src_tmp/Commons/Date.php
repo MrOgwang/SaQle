@@ -1,25 +1,30 @@
 <?php
+
 namespace SaQle\Commons;
 
-trait DateUtils {
+final class Date {
+
 	 public static function current_date(){
 		 date_default_timezone_set(config('app.timezone'));
          $current_date_time = new \DateTime();
          $current_date = date(config('app.system_date_format'), $current_date_time->getTimestamp());
          return $current_date;
 	 }
+
 	 public static function current_time(){
          date_default_timezone_set(config('app.timezone'));
          $current_date_time =  new \DateTime();
          $current_time = date('h:i:s a', $current_date_time->getTimestamp());
          return $current_time;
 	 }
+
 	 private static function get_separator(){
 	 	return match(config('app.system_date_format')){
 	 		'Y-m-d', 'Y-d-m', 'd-Y-m', 'd-m-Y', 'm-d-Y', 'm-Y-d' => '-',
 	 		'Y/m/d', 'Y/d/m', 'd/Y/m', 'd/m/Y', 'm/d/Y', 'm/Y/d' => '/'
 	 	};
 	 }
+
 	 private static function get_d_value($name, $current_date = null){
 	 	$current_date      = $current_date ?? self::current_date();
 	 	$date_parts        = explode(self::get_separator(), $current_date);
@@ -27,32 +32,40 @@ trait DateUtils {
 	 	$index             = array_search($name, $date_format_parts);
 	 	return $date_parts[$index];
 	 }
+
 	 public static function current_day($date = null){
 	 	return self::get_d_value(name: 'd', current_date: $date);
 	 }
+
 	 public static function current_month($date = null){
 		 return self::get_d_value(name: 'm', current_date: $date);
 	 }
+
 	 public static function current_year($date = null){
 	 	 return self::get_d_value(name: 'Y', current_date: $date);
 	 }
+
 	 public static function current_hour($time = null){
 		 $current_time = $time ?? self::current_time();
 		 return explode(":", $current_time)[0];
 	 }
+
 	 public static function current_mins($time = null){
 		 $current_time = $time ?? self::current_time();
 		 return explode(":", $current_time)[1];
 	 }
+
 	 public static function current_secends($time = null){
 		 $current_time = $time ?? self::current_time();
 		 return explode(":", $current_time)[2];
 	 }
+
 	 public static function convert_date_2_format(string $date, string $format, string $nformat = ""){
 	 	 $nformat = $nformat ? $nformat : config('app.system_date_format');
          $res = date_create_from_format($format, $date);
          return date_format($res, $nformat);
      }
+
 	 public static function format_date($date = null, $format = null){
 	     date_default_timezone_set(config('app.timezone'));
 		 $format = $format ?? config('app.date_added_format');
@@ -61,6 +74,7 @@ trait DateUtils {
 		 $timestamp = is_string($date) ? mktime(0, 0 , 0, self::current_month($date), self::current_day($date), self::current_year($date)) : $date;
 		 return date($format, $timestamp);
 	 }
+
      public static function time_diff($time_one, $time_two){
          date_default_timezone_set(config('app.timezone'));
 		 $first = new \DateTime("@".$time_one);
@@ -107,6 +121,7 @@ trait DateUtils {
 		 }
 		 return $clean_parts;
      }
+
 	 static public function get_yesterday($ctime){
 		 $current_date = self::current_date($ctime);
          $current_date_array = explode("-", $current_date);
@@ -136,6 +151,7 @@ trait DateUtils {
 		 }	
          return $yesterdayDate;		
 	 }
+
 	 static public function time_diff_string($time_parts){
 		 $diff_string = "";
 		 if(count($time_parts) > 0){
@@ -149,9 +165,11 @@ trait DateUtils {
 		 }
 		 return  $diff_string;
 	 }
+
 	 static public function time_to_24($time){ //time here is in the format hh:mm:ss am/pm
 		 return date("H:i:s", strtotime($time));
 	 }
+
 	 static public function to_timestamp($string_date = "", $string_time = ""){
 		 if(!$string_date && !$string_time) return time();
 		 if($string_date && !$string_time) $string_time = self::current_time();
@@ -166,6 +184,7 @@ trait DateUtils {
 			 (int)self::current_year($string_date)
 		 );
 	 }
+
 	 /*
 	     - this function constructs a date picker calendar widget.
 		 @param string $current_date: the current date, either as set by the user or server current date.
@@ -285,6 +304,7 @@ trait DateUtils {
 		 </div>";
 	     return $date_picker;
      }
+
 	 /*the following functions gets the number of years to be included after or before the current year
 	  depending on the current date set by the user or system.
 	  - @param string $current_date: the current date in the format dd-mm-yyyy.
@@ -315,6 +335,7 @@ trait DateUtils {
 	     }
 		 return $years_options;
 	 }
+
 	 //this function gets the date for today depending on the current time set by the user:
 	 static function get_today($ctime){
 		 $today = "";
@@ -341,6 +362,7 @@ trait DateUtils {
 		 }
 		 return $today;
 	 }
+
 	 static public function current_date_details(){
 	     date_default_timezone_set(config('app.timezone'));
 		 $date_details = new \stdClass();
@@ -354,6 +376,7 @@ trait DateUtils {
 		 $date_details->week_number = date('W', $current_date->getTimestamp());
 		 return $date_details;
 	 }
+
 	 static public function express_datetime_relativetonow($string_date, $string_time){
 	     date_default_timezone_set(config('app.timezone'));
 		 $expressed_time = self::format_date($string_date) ." ".$string_time;
@@ -402,6 +425,7 @@ trait DateUtils {
 		 }
          return $expressed_time;
 	 }
+
 	 public function get_date_for_today($day_number, $year){
 		 $jan_stops = 31;
 		 $feb_stops = ( $this->is_leap($year) ) ? 60 : 59;
@@ -443,9 +467,11 @@ trait DateUtils {
 		 $return_val->day = $day;
 		 return $return_val;
      }
+
 	 public function is_leap($year){
 		 return ( $year % 4 == 0 ) ? true : false;
 	 }
+
      public function get_weeks_in_year($year){
 		 $days_in_year = ($this->is_leap($year)) ? 366 : 365;
 		 $weeks = array();
@@ -469,6 +495,5 @@ trait DateUtils {
 		 }
 	     return $weeks;
 	 }
-	 
 	 
 }

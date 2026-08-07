@@ -1,6 +1,9 @@
 <?php
+
 namespace SaQle\Commons;
-trait PolygonUtils{
+
+final class Polygon {
+
 	 public static function point_in_polygon($point, $polygon, $point_on_vertex = true){
 		 // Transform string coordinates into arrays with x and y values
          $point = (new class { use \SaQle\Commons\Commons; })::point_string_to_coordinates($point);
@@ -34,6 +37,7 @@ trait PolygonUtils{
          //If the number of edges we passed through is odd, then it's in the polygon. 
 		 return $intersections % 2 != 0 ? "inside" : "outside";
 	 }
+
 	 public static function point_on_vertex($point, $vertices){
          foreach($vertices as $vertex){
              if($point == $vertex){
@@ -41,6 +45,7 @@ trait PolygonUtils{
              }
          }
      }
+     
      public static function point_string_to_coordinates($point_string){
         $coordinates = explode(",", $point_string);
         return ["x" => (float)$coordinates[0], "y" => (float)$coordinates[1]];

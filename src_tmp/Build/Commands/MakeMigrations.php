@@ -2,7 +2,6 @@
 namespace SaQle\Build\Commands;
 
 use SaQle\Core\Migration\Tracker\MigrationTracker;
-use SaQle\Commons\FileUtils;
 use SaQle\Core\Migration\Models\Migration;
 use SaQle\Build\Utils\MigrationUtils;
 use SaQle\Core\Support\{
@@ -18,8 +17,6 @@ use ReflectionClass;
 use Exception;
 
 class MakeMigrations extends Command {
-
-     use FileUtils;
 
      private string $migrations_folder;
      private string $snapshots_folder;

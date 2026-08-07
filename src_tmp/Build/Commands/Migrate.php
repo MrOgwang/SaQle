@@ -2,7 +2,7 @@
 namespace SaQle\Build\Commands;
 
 use SaQle\Core\Support\Db;
-use SaQle\Commons\FileUtils;
+use SaQle\Commons\File;
 use SaQle\Core\Migration\Models\{
      Migration,
      TenantMigration
@@ -17,7 +17,6 @@ use SaQle\Console\{
 use SaQle\Console\Signature\Signature;
 
 class Migrate extends Command {
-     use FileUtils;
 
      private string $migrations_folder;
     
@@ -448,7 +447,7 @@ class Migrate extends Command {
      private function migrate($type, $tenancy_enabled, $tenant_model){
 
          $destination_folder = path_join([$this->migrations_folder, $type]);
-         $files = $this->scandir(path: $destination_folder, exts: ['php']);
+         $files = File::scandir(path: $destination_folder, exts: ['php']);
          $files = $this->order_migration_filenames($files);
          $migration_file_names = array_values($files);
 

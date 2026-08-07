@@ -1,13 +1,15 @@
 <?php
+
 namespace SaQle\Commons;
-trait FileUtils{
+
+final class File {
 	 /*
 	     - given a csv file, this function parses the rows and columns into data objects.
 		 @param object $file: the file to parse.
 		 @param array $columns: an array of string column names for parsed data.
 		 @param boolean $ignore_header: whether to ignore the header columns for the file or not.
 	 */
-	 public function parse_csv_file($file, $columns, $ignore_header = false, $associative_column_indexes = false, $data_separator = ",", $start = 0, $stop = 1000000){
+	 public static function parse_csv_file($file, $columns, $ignore_header = false, $associative_column_indexes = false, $data_separator = ",", $start = 0, $stop = 1000000){
 		 $parsed_data = array();
 		 $file_name = $file["tmp_name"];
 		 if ($file["size"] > 0){
@@ -47,7 +49,7 @@ trait FileUtils{
 		 @param array $columns: an array of string column names for parsed data.
 		 @param boolean $ignore_header: whether to ignore the header columns for the file or not.
 	 */
-	 public function parse_csv_file2($file_path, $columns, $ignore_header = false, $associative_column_indexes = false, $data_separator = ",", $start = 0, $stop = 1000000){
+	 public static function parse_csv_file2($file_path, $columns, $ignore_header = false, $associative_column_indexes = false, $data_separator = ",", $start = 0, $stop = 1000000){
 		 $parsed_data = array();
 		 $file_handle = fopen($file_path, "r");
 		 $row_counter = 0;
@@ -79,7 +81,7 @@ trait FileUtils{
 		 return $parsed_data;
 	 }
 
-	 public function export_csv_file(){
+	 public static function export_csv_file(){
 		 if(isset($_POST["Export"])){
 			 header('Content-Type: text/csv; charset=utf-8');  
 			 header('Content-Disposition: attachment; filename=data.csv');  
