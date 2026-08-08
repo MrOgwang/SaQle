@@ -22,6 +22,8 @@ namespace SaQle\Build\Utils;
 use SaQle\Core\Support\ResolverComponent;
 use RecursiveIteratorIterator;
 use RecursiveDirectoryIterator;
+use SaQle\Core\Support\Cli;
+use ReflectionClass;
 
 class ComponentCompiler {
 
@@ -101,6 +103,8 @@ class ComponentCompiler {
 
      public static function compile(){
 
+         Cli::print("Compiling components...");
+
          $components_dirs = [];
 
          /**
@@ -123,7 +127,7 @@ class ComponentCompiler {
           * They have no prefix to their names
           * */
          $components_dirs[] = [ 
-             'path'   => path_join([config('base_path'), 'components']),
+             'path'   => path_join([config('base_path'), 'Components']),
              'prefix' => ''
          ];
 
@@ -132,9 +136,12 @@ class ComponentCompiler {
           * Module component names are prefixed with module name
           * */
          foreach(config('app.modules') as $f){
+
+             $module = new $f();
+
              $components_dirs[] = [
-                 'path'   => path_join([config('base_path'), 'modules', $f, 'components']),
-                 'prefix' => strtolower($f)
+                 'path'   => $module->path('Components'),
+                 'prefix' => strtolower((new ReflectionClass($f))->getShortName())
              ];
          }
 
@@ -309,5 +316,7 @@ class ComponentCompiler {
          }
 
          self::cache_components($components);
+
+         Cli::print("Components compiled and cached\n");
      }
 }

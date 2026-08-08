@@ -9,8 +9,9 @@ final class MakeResources {
      public static function execute(string $projectroot){
 
          $model_dirs = [$projectroot.'/models'];
+
          foreach(config('app.modules') as $f){
-             $model_dirs[] = $projectroot."/modules/".$f."/models";
+             $model_dirs[] = (new $f())->path("Models");
          }
          
          $generated_models = [];

@@ -22,6 +22,7 @@ use SaQle\Orm\Entities\Model\Schema\Model;
 use RecursiveIteratorIterator;
 use RecursiveDirectoryIterator;
 use ReflectionClass;
+use SaQle\Core\Support\Cli;
 
 class ModelCompiler {
 
@@ -146,6 +147,9 @@ class ModelCompiler {
      }
 
      public static function compile(){
+
+         Cli::print("Compiling models and tables...");
+
          /**
           * Get all directories where models live
           * 
@@ -163,9 +167,12 @@ class ModelCompiler {
          ];
 
          foreach(config('app.modules') as $f){
+
+             $module = new $f();
+
              $models_dirs[] = [
-                'path' => path_join([config('base_path'), 'modules', $f, 'models']),
-                'prefix' => strtolower($f)
+                 'path'   => $module->path("Models"),
+                 'prefix' => strtolower((new ReflectionClass($f))->getShortName())
              ];
          }
 
@@ -226,5 +233,7 @@ class ModelCompiler {
          self::cache_models($models, "models");
 
          self::cache_models($tables, "tables");
+
+         Cli::print("Models/tables compiled and cached\n");
      }
 }

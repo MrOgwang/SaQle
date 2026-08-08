@@ -3,10 +3,14 @@ namespace SaQle\Build\Utils;
 
 use SaQle\Core\Registries\ComponentRegistry;
 use RuntimeException;
+use SaQle\Core\Support\Cli;
 
 class TemplateCompiler {
 
      public static function compile(){
+
+         Cli::print("Compiling templates...");
+
          $components = ComponentRegistry::all();
          $updated_components = [];
 
@@ -34,6 +38,8 @@ class TemplateCompiler {
          }
          
          ComponentCompiler::cache_components($updated_components);
+
+         Cli::print("Templates compiled and cached\n");
      }
 
      private static function cache_path(){

@@ -4,7 +4,7 @@ namespace SaQle\Components\ManageTenant;
 
 use SaQle\Http\Response\Message;
 use SaQle\Http\Kernel\Session;
-
+ 
 class ManageTenant {
 
 	 public function get(string $slug) : Message {

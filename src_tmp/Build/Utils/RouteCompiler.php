@@ -18,6 +18,7 @@ use ReflectionMethod;
 use SaQle\Orm\Database\SystemSchema;
 use SaQle\Admin\Admin;
 use RuntimeException;
+use SaQle\Core\Support\Cli;
 
 final class RouteCompiler {
 
@@ -34,7 +35,7 @@ final class RouteCompiler {
          $routes_dirs = [path_join([config('base_path'), 'routes'])];
 
          foreach(config('app.modules', []) as $f){
-             $routes_dirs[] = path_join([config('base_path'), 'modules', $f, 'routes']);
+             $routes_dirs[] = (new $f())->path('Routes');
          }
 
          foreach(config('app.extra_routes_dirs', []) as $d){
@@ -267,6 +268,9 @@ final class RouteCompiler {
      }
 
      public static function compile(){
+
+         Cli::print("Compiling routes...");
+
          //load route files
          self::load_routes();
         
@@ -296,6 +300,8 @@ final class RouteCompiler {
          }
 
          RouteRegistry::cache_routes_mapping($compiled, config('base_path'));
+
+         Cli::print("Routes compiled and cached\n");
      }
 
      private static function get_route_variants(DeferedRoute $route) : array {

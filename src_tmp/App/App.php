@@ -43,6 +43,7 @@ use SaQle\Auth\Middleware\{
 use SaQle\Auth\Providers\PlatformAuthorizationProvider;
 use SaQle\Console\Providers\FrameworkCommandsProvider;
 use SaQle\Auth\Context\ActorContext;
+use SaQle\Core\Modules\ModuleManager;
 
 final class App {
 
@@ -66,6 +67,8 @@ final class App {
 
      public StorageRegistry $disks;
 
+     public ModuleManager $modules;
+
      public function __construct(private AppSetup $setup){
 
          $this->set_stage(AppStage::INITIALIZING);
@@ -88,8 +91,68 @@ final class App {
          $config = $setup->get_framework_configs();
          $this->expose_configs($config);
 
-         //4. Load environment & helpers
-         $this->initialize();
+         //4. Load environment & shortcuts
+         $this->load_shortcuts();
+         $this->load_environment();
+
+         //5. Load project configurations
+         $config = array_merge($config, $setup->get_project_configs());
+         $this->expose_configs($config);
+
+         //6. Remaining services
+         $this->cors   = new CorsConfig($setup->cors);
+         $this->events = new CachedEventRegistry();
+
+         //7. Module system
+         $this->modules = new ModuleManager($this);
+
+         //Load the modules
+         $this->modules->load(
+             config('app.modules', [])
+         );
+
+         //Module service registration
+         $this->modules->register();
+
+         //8. register middleware
+         $this->register_http_middleware();
+         $this->register_console_middleware();
+
+         //9. unpack framework + app providers
+         $this->unpack_providers();
+
+         //10. Module contributions
+         $this->modules->contribute();
+
+         //11. Runtime initialization
+         $this->modules->boot();
+     }
+
+     /*public function __construct(private AppSetup $setup){
+
+         $this->set_stage(AppStage::INITIALIZING);
+
+         // 1. Expose app early
+         AppContext::set($this);
+
+         // 2. Initialize CORE infrastructure FIRST
+         $this->container = new Container();
+         $this->http_middleware = new HttpMiddlewareRegistry();
+         $this->console_middleware = new ConsoleMiddlewareRegistry();
+         $this->commands = new CommandRegistry();
+         $this->guards = new GuardManager();
+         $this->rules = new RuleHandlerRegistry();
+         $this->disks = new StorageRegistry();
+
+         $this->container->singleton(ConfigRepository::class, fn() => new ConfigRepository([]));
+
+         //2. load framework configurations
+         $config = $setup->get_framework_configs();
+         $this->expose_configs($config);
+
+         //4. Load environment & shortcuts
+         $this->load_shortcuts();
+         $this->load_environment();
 
          //5. Load project configurations
          $config = array_merge($config, $setup->get_project_configs());
@@ -105,9 +168,10 @@ final class App {
 
          //8. unpack framework + app providers
          $this->unpack_providers();
-     }
+     }*/
 
-     private function initialize() : void {
+     private function load_shortcuts() : void {
+
          $shortcuts = [
              'Helpers',
              'Strings',
@@ -123,13 +187,6 @@ final class App {
              require_once __DIR__.'/../Shortcuts/'.$s.'.php';
          }
 
-         $this->load_environment();
-
-         $uri = $_SERVER['REQUEST_URI'] ?? '/';
-
-         if(str_starts_with($uri, '/saqle/')){
-             ActorContext::to_platform();
-         }
      }
 
      private function expose_configs(array $config){
@@ -204,6 +261,12 @@ final class App {
          ($this->setup->environment_loader && is_callable($this->setup->environment_loader)) ? (
              ($this->setup->environment_loader)($this->setup->environment)
          ) : null;
+
+         $uri = $_SERVER['REQUEST_URI'] ?? '/';
+
+         if(str_starts_with($uri, '/saqle/')){
+             ActorContext::to_platform();
+         }
      }
 
      public function set_stage(AppStage $stage): void {
