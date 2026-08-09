@@ -3,7 +3,7 @@
 namespace SaQle\Components\App;
 
 use SaQle\Http\Response\Message;
-use SaQle\Routes\Resources\ResourceRouteUtils;
+use SaQle\Routing\Resources\ResourceRouteUtils;
 use SaQle\Core\Support\Index;
 use SaQle\Auth\Context\ActorContext;
 use SaQle\Admin\Admin;

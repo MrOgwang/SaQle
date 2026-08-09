@@ -52,7 +52,8 @@ abstract class Module {
      public function manifest(): ModuleManifest {
 
          return new ModuleManifest(
-             name: static::class,
+             name: strtolower((new ReflectionClass(static::class))->getShortName()),
+             class: static::class,
              description: "Base module class",
              version: '1.0.0',
              author: "SaQle",

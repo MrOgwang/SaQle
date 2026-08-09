@@ -1,6 +1,6 @@
 <?php
 
-use SaQle\Routes\Router;
+use SaQle\Routing\Router;
 
 /**
  * Media routes

@@ -2,7 +2,7 @@
 namespace SaQle\Build\Commands;
 
 use SaQle\Core\Support\Cli;
-use SaQle\Core\Registries\RouteRegistry;
+use SaQle\Routing\RouteRegistry;
 use SaQle\Console\{
      Command, 
      CommandContext

@@ -2,7 +2,7 @@
 namespace SaQle\Resource\Components\ResourceDelete;
 
 use SaQle\Http\Response\Message;
-use SaQle\Routes\Resources\ResourceRouteUtils;
+use SaQle\Routing\Resources\ResourceRouteUtils;
 
 class ResourceDelete {
 

@@ -14,7 +14,7 @@ use SaQle\Core\Ui\Details\DetailView;
 use SaQle\Http\Request\Request;
 use SaQle\Core\Support\Route;
 use SaQle\Core\Registries\ModelRegistry;
-use SaQle\Routes\Resources\ResourceRouteUtils;
+use SaQle\Routing\Resources\ResourceRouteUtils;
 use RuntimeException;
 use Throwable;
 

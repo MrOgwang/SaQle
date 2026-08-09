@@ -4,7 +4,7 @@ namespace SaQle\Core\Services\Providers;
 
 use SaQle\Core\Services\Providers\ServiceProvider;
 use SaQle\Admin\Admin;
-use SaQle\Routes\Resources\ResourceRouteUtils;
+use SaQle\Routing\Resources\ResourceRouteUtils;
 use SaQle\App\App;
 use SaQle\Auth\Context\ActorContext;
 use SaQle\Admin\Resources\ResourceDefinition;

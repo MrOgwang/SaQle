@@ -1,6 +1,6 @@
 <?php
 
-namespace SaQle\Routes\Canonical;
+namespace SaQle\Routing\Canonical;
 
 use SaQle\Http\Request\Request;
 

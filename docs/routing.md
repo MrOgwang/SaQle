@@ -176,7 +176,7 @@ declare(strict_types = 1);
 
 namespace YourAppName\Routes;
 
-use SaQle\Routes\Router;
+use SaQle\Routing\Router;
 use YourAppName\Apps\Account\Controllers\{Signin, Signup}; //require your controllers
 
 //the framework will not attach the api url prefix here
@@ -266,7 +266,7 @@ declare(strict_types = 1);
 
 namespace SchoolPortal\Routes;
 
-use SaQle\Routes\Router;
+use SaQle\Routing\Router;
 
 //require the controllers
 use SchoolPortal\Controllers\{Home, Teachers, Students, SupportStaff, Workhours};

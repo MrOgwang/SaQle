@@ -1,6 +1,6 @@
 <?php
 
-namespace SaQle\Routes\Canonical;
+namespace SaQle\Routing\Canonical;
 
 final class CanonicalRedirect{
      public function __construct(

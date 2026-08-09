@@ -128,48 +128,6 @@ final class App {
          $this->modules->boot();
      }
 
-     /*public function __construct(private AppSetup $setup){
-
-         $this->set_stage(AppStage::INITIALIZING);
-
-         // 1. Expose app early
-         AppContext::set($this);
-
-         // 2. Initialize CORE infrastructure FIRST
-         $this->container = new Container();
-         $this->http_middleware = new HttpMiddlewareRegistry();
-         $this->console_middleware = new ConsoleMiddlewareRegistry();
-         $this->commands = new CommandRegistry();
-         $this->guards = new GuardManager();
-         $this->rules = new RuleHandlerRegistry();
-         $this->disks = new StorageRegistry();
-
-         $this->container->singleton(ConfigRepository::class, fn() => new ConfigRepository([]));
-
-         //2. load framework configurations
-         $config = $setup->get_framework_configs();
-         $this->expose_configs($config);
-
-         //4. Load environment & shortcuts
-         $this->load_shortcuts();
-         $this->load_environment();
-
-         //5. Load project configurations
-         $config = array_merge($config, $setup->get_project_configs());
-         $this->expose_configs($config);
-
-         //6. Remaining services
-         $this->cors   = new CorsConfig($setup->cors);
-         $this->events = new CachedEventRegistry();
-
-         //7. register middleware
-         $this->register_http_middleware();
-         $this->register_console_middleware();
-
-         //8. unpack framework + app providers
-         $this->unpack_providers();
-     }*/
-
      private function load_shortcuts() : void {
 
          $shortcuts = [

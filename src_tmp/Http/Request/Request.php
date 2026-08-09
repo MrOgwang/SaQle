@@ -17,7 +17,7 @@
 namespace SaQle\Http\Request;
 
 use SaQle\Http\Request\Data\{Session, Data};
-use SaQle\Routes\MatchedRoute;
+use SaQle\Routing\MatchedRoute;
 use SaQle\Auth\Models\{BaseUser, BaseTenant};
 use SaQle\Http\Response\ResponseType;
 use SaQle\Middleware\Pipeable;

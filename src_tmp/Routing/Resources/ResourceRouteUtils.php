@@ -1,5 +1,5 @@
 <?php
-namespace SaQle\Routes\Resources;
+namespace SaQle\Routing\Resources;
 
 use SaQle\Orm\Database\SystemSchema;
 use SaQle\Core\Support\Db;

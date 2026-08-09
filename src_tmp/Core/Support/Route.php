@@ -4,7 +4,7 @@ namespace SaQle\Core\Support;
 
 use Attribute;
 use SaQle\Http\Response\ResponseType;
-use SaQle\Routes\Router;
+use SaQle\Routing\Router;
 use RuntimeException;
 
 #[Attribute(Attribute::TARGET_METHOD)]

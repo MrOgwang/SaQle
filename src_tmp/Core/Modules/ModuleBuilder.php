@@ -3,8 +3,10 @@
 namespace SaQle\Core\Modules;
 
 use SaQle\App\App;
+use RuntimeException;
 
 final class ModuleBuilder {
+
      public function __construct(
      	 private Module $module,
          private App $app
@@ -35,6 +37,11 @@ final class ModuleBuilder {
      }
 
      public function admin(): AdminModuleBuilder {
-         return new AdminModuleBuilder($this->module, $this->app);
+
+     	 if(!$this->module instanceof AdminModule){
+     	 	 throw new RuntimeException('This is not an admin module!');
+     	 }
+
+         return new AdminModuleBuilder($this->module);
      }
 }

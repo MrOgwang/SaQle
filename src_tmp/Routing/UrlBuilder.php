@@ -1,6 +1,6 @@
 <?php
 
-namespace SaQle\Routes;
+namespace SaQle\Routing;
 
 class UrlBuilder {
 

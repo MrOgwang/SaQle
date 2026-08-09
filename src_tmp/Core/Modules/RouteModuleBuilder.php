@@ -2,72 +2,67 @@
 
 namespace SaQle\Core\Modules;
 
+use ReflectionClass;
+use SaQle\Routing\RouteRegistry;
+
 final class RouteModuleBuilder {
-
-     private ?string $prefix = null;
-
-     private ?string $name = null;
-
-     private array $middleware = [];
-
-     private array $layout = [];
-
-     private ?string $authorize = null;
 
      public function __construct(
          private Module $module
-     ){}
+     ){
+         //set some defaults
+         self::to_registry('name', $module->manifest()->name);
+
+         self::to_registry('prefix', $module->manifest()->name);
+     }
 
      public function prefix(string $prefix) : static {
 
-        $this->prefix = $prefix;
+         self::to_registry('prefix', $prefix);
 
-        return $this;
+         return $this;
      }
 
      public function name(string $name) : static {
 
-         $this->name = $name;
+         self::to_registry('name', $name);
 
          return $this;
      }
 
      public function middleware(string|array ...$middleware) : static {
          
-         $this->middleware = array_merge(
-             $this->middleware,
-             $middleware
-         );
+         self::to_registry('middleware', $middleware);
 
          return $this;
      }
 
      public function layout(array $layout) : static {
 
-         $this->layout = $layout;
+         self::to_registry('layout', $layout);
 
          return $this;
      }
 
      public function authorize(string $authorize) : static {
 
-         $this->authorize = $authorize;
+         self::to_registry('authorize', $authorize);
 
          return $this;
      }
 
-     public function path(): string {
-         return $this->module->path() . '/Routes';
-     }
+     protected function to_registry(string $entry, mixed $value){
 
-     public function config(): array {
-         return [
-             'path'       => $this->path(),
-             'prefix'     => $this->prefix,
-             'name'       => $this->name,
-             'middleware' => $this->middleware,
-             'domain'     => $this->domain,
-             'scope'      => $this->scope,
-         ];
+         $name = $module->manifest()->name;
+
+         $modules = RouteRegistry::get_modules() ?? [];
+
+         if(array_key_exists($name, $modules)){
+             $modules[$name][$entry] = $value;
+         }else{
+             $modules[$name] = [$entry => $value];
+         } 
+
+         RouteRegistry::modules($modules);
      }
 }

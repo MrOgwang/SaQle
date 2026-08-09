@@ -20,10 +20,10 @@ declare(strict_types = 1);
 
 namespace SaQle\Http\Kernel;
 
-use SaQle\Core\Registries\RouteRegistry;
+use SaQle\Routing\RouteRegistry;
 use SaQle\Core\Support\RouteResolver;
 use SaQle\Http\Request\Request;
-use SaQle\Routes\MatchedRoute;
+use SaQle\Routing\MatchedRoute;
 use SaQle\Core\Exceptions\Route\RouteNotFoundException;
 use SaQle\Core\Ui\UiComponentDefinition;
 use RuntimeException;

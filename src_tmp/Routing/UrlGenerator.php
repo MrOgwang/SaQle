@@ -1,8 +1,8 @@
 <?php
 
-namespace SaQle\Routes;
+namespace SaQle\Routing;
 
-use SaQle\Core\Registries\RouteRegistry;
+use SaQle\Routing\RouteRegistry;
 use Exception;
 
 class UrlGenerator {

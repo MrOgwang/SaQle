@@ -17,7 +17,7 @@
  * */
 declare(strict_types = 1);
 
-namespace SaQle\Routes;
+namespace SaQle\Routing;
 
 use RuntimeException;
 

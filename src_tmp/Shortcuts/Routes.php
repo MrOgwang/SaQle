@@ -1,7 +1,7 @@
 <?php
 
 use SaQle\Commons\Url;
-use SaQle\Routes\UrlGenerator;
+use SaQle\Routing\UrlGenerator;
 
 if(!function_exists('route')){
      function route(string $name, array $params = [], array $queries = []){

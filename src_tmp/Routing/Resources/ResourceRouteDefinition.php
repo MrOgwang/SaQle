@@ -1,6 +1,6 @@
 <?php
 
-namespace SaQle\Routes\Resources;
+namespace SaQle\Routing\Resources;
 
 final class ResourceRouteDefinition {
 

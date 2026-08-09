@@ -7,8 +7,8 @@ use SaQle\Core\Ui\Utils\{
      Panel,
      Label
 };
-use SaQle\Routes\Resources\ResourceRouteUtils;
-use SaQle\Routes\UrlBuilder;
+use SaQle\Routing\Resources\ResourceRouteUtils;
+use SaQle\Routing\UrlBuilder;
 
 final class DetailView {
 

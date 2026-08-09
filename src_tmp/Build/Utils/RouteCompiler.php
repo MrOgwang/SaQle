@@ -2,7 +2,7 @@
 
 namespace SaQle\Build\Utils;
 
-use SaQle\Routes\{
+use SaQle\Routing\{
      DeferedRoute, 
      Route, 
      Router
@@ -11,7 +11,7 @@ use SaQle\Core\Support\{
      Route as RouteAttribute,
      Db
 };
-use SaQle\Core\Registries\RouteRegistry;
+use SaQle\Routing\RouteRegistry;
 use SaQle\Core\Registries\ComponentRegistry;
 use ReflectionClass;
 use ReflectionMethod;
@@ -51,7 +51,7 @@ final class RouteCompiler {
              if(file_exists($file)){
                  require_once $file;
              }
-         }
+         }  
      }
 
      private static function load_component_routes(){
@@ -59,6 +59,7 @@ final class RouteCompiler {
          $components = ComponentRegistry::all();
 
          foreach($components as $component_name => $component_config){
+            
              if($component_config['controller'] && class_exists($component_config['controller'])){
 
                  $class_name = $component_config['controller'];
@@ -120,8 +121,6 @@ final class RouteCompiler {
      private static function register_resource_routes($is_platform, $model_label, $model_class, $multitenancy){
 
          $resource_def = Admin::resources()->get($model_class);
-
-         //print_r($resource_def);
          
          $authorize = $is_platform ? '__authenticated__ && __super_admin__' : 
          self::construct_route_authorization($model_label, $model_class);

@@ -6,7 +6,7 @@ use SaQle\Core\Ui\Forms\{
 	 FormMode, 
 	 FormContext
 };
-use SaQle\Routes\Resources\ResourceRouteUtils;
+use SaQle\Routing\Resources\ResourceRouteUtils;
 use RuntimeException;
 
 class ResourceCreate {

@@ -14,10 +14,10 @@
  * @pacakge SaQle
  * @author  Wycliffe Omondi Otieno <wycliffomondiotieno@gmail.com>
  * */
-namespace SaQle\Routes\Middleware;
+namespace SaQle\Routing\Middleware;
 
 use SaQle\Middleware\RequestMiddleware;
-use SaQle\Routes\Canonical\CanonicalUrlPolicy;
+use SaQle\Routing\Canonical\CanonicalUrlPolicy;
 use SaQle\Http\Response\Message;
 
 final class CanonicalUrlMiddleware implements RequestMiddleware {

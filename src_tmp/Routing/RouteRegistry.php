@@ -1,11 +1,14 @@
 <?php
 
-namespace SaQle\Core\Registries;
+namespace SaQle\Routing;
 
 use InvalidArgumentException;
 
 final class RouteRegistry {
+
      private static ?array $routes = null;
+
+     private static ?array $modules = null;
 
      public static function all(): array {
          if(self::$routes === null) {
@@ -60,5 +63,13 @@ final class RouteRegistry {
 
          $mappings_file = path_join([$mappings_folder, "routes.php"]);
          file_put_contents($mappings_file, $php);
+     }
+
+     public static function get_modules() : ? array {
+         return self::$modules;
+     }
+
+     public static function modules(array $modules){
+         self::$modules = $modules;
      }
 }

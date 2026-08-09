@@ -12,8 +12,8 @@ use SaQle\Core\Registries\{
      LoginStrategyRegistry
 };
 use SaQle\Core\Events\EventBus;
-use SaQle\Routes\Canonical\CanonicalUrlPolicy;
-use SaQle\Routes\Canonical\TrailingSlashPolicy;
+use SaQle\Routing\Canonical\CanonicalUrlPolicy;
+use SaQle\Routing\Canonical\TrailingSlashPolicy;
 use SaQle\Auth\Interfaces\StrategyRegistryInterface;
 use SaQle\Auth\Identity\User\Interfaces\UserIDResolverInterface;
 use SaQle\Auth\Identity\User\Factories\UserIDResolverFactory;
