@@ -5,13 +5,13 @@ namespace SaQle\Build\Utils;
 use SaQle\Routing\{
      DeferedRoute, 
      Route, 
-     Router
+     Router,
+     RouteRegistry
 };
 use SaQle\Core\Support\{
      Route as RouteAttribute,
      Db
 };
-use SaQle\Routing\RouteRegistry;
 use SaQle\Core\Registries\ComponentRegistry;
 use ReflectionClass;
 use ReflectionMethod;
@@ -32,23 +32,53 @@ final class RouteCompiler {
           * 4. Other routes as listed in extra_routes_dirs config
           * 
           * */
-         $routes_dirs = [path_join([config('base_path'), 'routes'])];
+         $routes_dirs = [
+             [
+                 'path' => path_join([config('base_path'), 'routes']),
+                 'module' => null
+             ]
+         ];
 
          foreach(config('app.modules', []) as $f){
-             $routes_dirs[] = (new $f())->path('Routes');
+
+             $module = new $f();
+
+             $routes_dirs[] = [
+                 'path' => $module->path('Routes'),
+                 'module' => $module->manifest()->name
+             ];
          }
 
          foreach(config('app.extra_routes_dirs', []) as $d){
-             $routes_dirs[] = path_join([config('base_path'), $d]);
+             $routes_dirs[] = [
+                 'path' => path_join([config('base_path'), $d]),
+                 'module' => null
+             ];
          }
 
          foreach(config('saqle_routes_dirs', []) as $d){
-             $routes_dirs[] = $d;
+             $routes_dirs[] = [
+                 'path' => $d,
+                 'module' => null
+             ];
          }
 
          foreach($routes_dirs as $dir){
-             $file = path_join([$dir, "routes.php"]);
-             if(file_exists($file)){
+
+             $file = path_join([$dir['path'], "routes.php"]);
+             if(!file_exists($file)){
+                 continue;
+             }
+
+             if($dir['module']){
+
+                 $module_config = RouteRegistry::get_modules($dir['module']);
+
+                 Router::context($module_config)->routes(function() use ($file){
+                     require_once $file;
+                 });
+
+             }else{
                  require_once $file;
              }
          }  
@@ -59,7 +89,7 @@ final class RouteCompiler {
          $components = ComponentRegistry::all();
 
          foreach($components as $component_name => $component_config){
-            
+
              if($component_config['controller'] && class_exists($component_config['controller'])){
 
                  $class_name = $component_config['controller'];

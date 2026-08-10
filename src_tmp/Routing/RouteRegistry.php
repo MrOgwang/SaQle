@@ -65,8 +65,13 @@ final class RouteRegistry {
          file_put_contents($mappings_file, $php);
      }
 
-     public static function get_modules() : ? array {
-         return self::$modules;
+     public static function get_modules(?string $module = null) : ? array {
+
+         if($module){
+             return self::$modules[$module] ?? [];
+         }
+
+         return self::$modules ?? [];
      }
 
      public static function modules(array $modules){

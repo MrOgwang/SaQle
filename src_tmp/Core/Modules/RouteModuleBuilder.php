@@ -13,7 +13,7 @@ final class RouteModuleBuilder {
          //set some defaults
          self::to_registry('name', $module->manifest()->name);
 
-         self::to_registry('prefix', $module->manifest()->name);
+         self::to_registry('prefix', "/".$module->manifest()->name);
      }
 
      public function prefix(string $prefix) : static {
@@ -30,7 +30,7 @@ final class RouteModuleBuilder {
          return $this;
      }
 
-     public function middleware(string|array ...$middleware) : static {
+     public function middleware(array $middleware) : static {
          
          self::to_registry('middleware', $middleware);
 
@@ -53,7 +53,7 @@ final class RouteModuleBuilder {
 
      protected function to_registry(string $entry, mixed $value){
 
-         $name = $module->manifest()->name;
+         $name = $this->module->manifest()->name;
 
          $modules = RouteRegistry::get_modules() ?? [];
 

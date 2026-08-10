@@ -245,8 +245,21 @@ final class Router {
      }
 
      //create shared route context for two or more routes
-     public static function context(){
-         return new RouteContext(is_group: true);
+     public static function context(?array $config = null){
+
+         $context = new RouteContext(is_group: true);
+
+         if(!$config){
+             return $context;
+         }
+
+         foreach($config as $key => $value){
+             if(method_exists($context, $key)){
+                 $context->$key($value);
+             }
+         }
+
+         return $context;
      }
 
      public static function route(string $url, string $target){

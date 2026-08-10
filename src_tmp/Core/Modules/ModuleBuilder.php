@@ -10,7 +10,9 @@ final class ModuleBuilder {
      public function __construct(
      	 private Module $module,
          private App $app
-     ){}
+     ){
+         $this->routes();
+     }
 
      public function path(): string {
          return $this->module->path();
