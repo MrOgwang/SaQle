@@ -15,9 +15,9 @@ class NavigationBuilder {
          $this->links  = new LinkCollection();
      }
 
-     public function primary_action(string $name, string $label, string $url, string $icon = ""){
+     public function primary_action(string $name, string $label, string $route, string $icon = ""){
 
-         $this->_primary_action = new NavigationLink($name, $label, $url, $icon);
+         $this->_primary_action = new NavigationLink($name, $label, $route, $icon);
 
      }
 

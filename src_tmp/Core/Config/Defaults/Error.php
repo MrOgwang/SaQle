@@ -9,7 +9,7 @@ return [
       * This is the component or the controller class name
       * that is targetted by the error route
       * */
-     'component' => 'saqle.error',
+     'component' => 'saqle.lib.error',
 
      /**
       * This is the route that will display an error page

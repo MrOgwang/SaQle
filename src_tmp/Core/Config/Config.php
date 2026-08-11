@@ -5,6 +5,10 @@ namespace SaQle\Core\Config;
 use SaQle\Core\Assert\Assert;
 use RecursiveIteratorIterator;
 use RecursiveDirectoryIterator;
+use SaQle\Modules\Asset\Asset;
+use SaQle\Modules\Admin\Admin;
+use SaQle\Modules\Platform\Platform;
+use SaQle\Lib\Lib;
 
 final class Config {
 
@@ -51,7 +55,7 @@ final class Config {
      }
 
      private static function defaults(): array {
-         $config_dir = __DIR__."/defaults";
+         $config_dir = __DIR__."/Defaults";
 
          return self::load_configurations($config_dir);
      }
@@ -98,25 +102,25 @@ final class Config {
              * */
              'forms_cache_dir' => '/storage/framework/build/cache/forms/',
 
-             'saqle_components_dirs' => [
-                 realpath(__DIR__.'/../../components'),
-                 realpath(__DIR__.'/../../resource/components')
-             ],
-
-             'saqle_routes_dirs' => [realpath(__DIR__.'/../../routes/routes')],
-
              'saqle_models_dirs' => [
-                 realpath(__DIR__.'/../../core/migration/models'),
-                 realpath(__DIR__.'/../../core/queue/models'),
-                 realpath(__DIR__.'/../../session/models'),
-                 realpath(__DIR__.'/../../auth/models')
+                 realpath(__DIR__.'/../../Core/Migration/Models'),
+                 realpath(__DIR__.'/../../Core/Queue/Models'),
+                 realpath(__DIR__.'/../../Session/Models'),
+                 realpath(__DIR__.'/../../Auth/Models')
              ],
 
              'static_assets_route' => '/private-asset',
 
-             'protected_file_component' => 'saqle.protectedfile',
+             'protected_file_component' => 'saqle.asset.protectedfile',
 
-             'static_assets_component' => 'saqle.staticfile',
+             'static_assets_component' => 'saqle.asset.staticfile',
+
+             'framework_modules' => [
+                 Lib::class,
+                 Asset::class,
+                 Admin::class,
+                 Platform::class
+             ],
 
              //Default frame work connection.
              'framework_connection' => 'framework',

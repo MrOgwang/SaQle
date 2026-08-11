@@ -108,40 +108,39 @@ class ComponentCompiler {
          $components_dirs = [];
 
          /**
-          * Framework components
-          * They are prefixed with the name saqle.
-          * 
-          * IMPORTANT
-          * Framework components are listed first here to provide
-          * the developer an easy way to override them when needed
+          * Project level components
+          * They have an app prefix to their names
           * */
-         foreach(config('saqle_components_dirs') as $d){
+         $components_dirs[] = [ 
+             'path'   => path_join([config('base_path'), 'Components']),
+             'prefix' => "app"
+         ];
+
+         /**
+          * Framework module components
+          * Module component names are prefixed with module name
+          * */
+         foreach(config('framework_modules') as $fm){
+
+             $module = new $fm();
+
              $components_dirs[] = [
-                 'path'   => $d,
-                 'prefix' => 'saqle'
+                 'path'   => $module->path('Components'),
+                 'prefix' => "saqle.".strtolower((new ReflectionClass($fm))->getShortName())
              ];
          }
 
          /**
-          * Project level components
-          * They have no prefix to their names
-          * */
-         $components_dirs[] = [ 
-             'path'   => path_join([config('base_path'), 'Components']),
-             'prefix' => ''
-         ];
-
-         /**
-          * Module components
+          * App module components
           * Module component names are prefixed with module name
           * */
-         foreach(config('app.modules') as $f){
+         foreach(config('app.modules') as $am){
 
-             $module = new $f();
+             $module = new $am();
 
              $components_dirs[] = [
                  'path'   => $module->path('Components'),
-                 'prefix' => strtolower((new ReflectionClass($f))->getShortName())
+                 'prefix' => "app.".strtolower((new ReflectionClass($am))->getShortName())
              ];
          }
 
@@ -151,13 +150,13 @@ class ComponentCompiler {
           * directories will be listed in extra_components_dirs
           * so that they can be compiled as well.
           * 
-          * These components have no prefix to their names and are treated
+          * These components have an app prefix to their names and are treated
           * as project level components
           * */
          foreach(config('app.extra_components_dirs') as $d){
              $components_dirs[] = [
                  'path'   => path_join([config('base_path'), $d]),
-                 'prefix' => ''
+                 'prefix' => "app"
              ];
          }
 

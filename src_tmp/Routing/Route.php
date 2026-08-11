@@ -241,7 +241,7 @@ final class Route {
          $guard = trim($guard);
 
          if(!$guard){
-             throw new RuntimeException("Guard cannot be an empty!");
+             return $this;
          }
 
          if(!str_starts_with($guard, "(")){

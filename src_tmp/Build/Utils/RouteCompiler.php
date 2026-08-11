@@ -8,17 +8,12 @@ use SaQle\Routing\{
      Router,
      RouteRegistry
 };
-use SaQle\Core\Support\{
-     Route as RouteAttribute,
-     Db
-};
+use SaQle\Core\Support\Route as RouteAttribute;
 use SaQle\Core\Registries\ComponentRegistry;
+use SaQle\Core\Support\Cli;
 use ReflectionClass;
 use ReflectionMethod;
-use SaQle\Orm\Database\SystemSchema;
-use SaQle\Admin\Admin;
 use RuntimeException;
-use SaQle\Core\Support\Cli;
 
 final class RouteCompiler {
 
@@ -28,20 +23,21 @@ final class RouteCompiler {
           * 
           * 1. Top level routes in project root
           * 2. Module level routes inside module directories
-          * 3. Saqle routes in saqle_routes_dirs config
-          * 4. Other routes as listed in extra_routes_dirs config
+          * 3. Other routes as listed in extra_routes_dirs config
           * 
           * */
          $routes_dirs = [
              [
-                 'path' => path_join([config('base_path'), 'routes']),
+                 'path' => path_join([config('base_path'), 'Routes']),
                  'module' => null
              ]
          ];
 
-         foreach(config('app.modules', []) as $f){
+         foreach(array_merge(
+             config('framework_modules', []), 
+             config('app.modules', []))  as $fm){
 
-             $module = new $f();
+             $module = new $fm();
 
              $routes_dirs[] = [
                  'path' => $module->path('Routes'),
@@ -56,16 +52,9 @@ final class RouteCompiler {
              ];
          }
 
-         foreach(config('saqle_routes_dirs', []) as $d){
-             $routes_dirs[] = [
-                 'path' => $d,
-                 'module' => null
-             ];
-         }
-
          foreach($routes_dirs as $dir){
 
-             $file = path_join([$dir['path'], "routes.php"]);
+             $file = path_join([$dir['path'], "Routes.php"]);
              if(!file_exists($file)){
                  continue;
              }
@@ -116,184 +105,14 @@ final class RouteCompiler {
 
      }
 
-     private static function construct_route_authorization($model_label, $model_class){
-
-         $global = trim(config('admin.authorization.global', ""));
-         $route  = trim(config('admin.authorization.resources', [])[$model_label] ?? "");
-
-         if($global && $route){
-             return $global." && ".$route;
-         }
-
-         if($global && !$route){
-             return $global;
-         }
-
-         return $route;
-     }
-
-     private static function construct_route_middleware($model_label, $model_class){
-
-         $global = config('admin.middleware.global', []);
-         $route  = config('admin.middleware.resources', [])[$model_label] ?? [];
-
-         if($global && $route){
-             return array_merge($global, $route);
-         }
-
-         if($global && !$route){
-             return $global;
-         }
-
-         return $route;
-     }
-
-     private static function register_resource_routes($is_platform, $model_label, $model_class, $multitenancy){
-
-         $resource_def = Admin::resources()->get($model_class);
-         
-         $authorize = $is_platform ? '__authenticated__ && __super_admin__' : 
-         self::construct_route_authorization($model_label, $model_class);
-
-         $middleware = $is_platform ? ['__authentication__', '__authorization__'] : 
-         self::construct_route_middleware($model_label, $model_class);
-
-         //list resources route
-         $list_resource_route = new RouteAttribute(  
-             name: admin_route_name($model_label, 'list', $is_platform),
-             method: 'get', 
-             url: admin_route_url($model_label, [], $is_platform),
-             authorize: $authorize,
-             layout: ['saqle.app', 'saqle.resourcewrapper'],
-             model: $model_class,
-             middleware: $middleware
-         );
-         $list_operation = $resource_def?->list();
-         $list_resource_route->set_target($list_operation ? $list_operation->get_component() : "saqle.resourcelist");
-         $list_resource_route->initialize();
-
-         /**
-          * Create form and submit create routes.
-          * */
-         $create_operation = $resource_def?->create();
-         $create_component = $create_operation ? $create_operation->get_component() : "saqle.resourcecreate";
-
-         $create_form_route = new RouteAttribute(
-             name: admin_route_name($model_label, 'create.form', $is_platform),
-             method: 'get', 
-             url: admin_route_url($model_label, ['create'], $is_platform),
-             authorize: $authorize,
-             layout: ['saqle.app', 'saqle.resourcewrapper'],
-             model: $model_class,
-             middleware: $middleware
-         );
-         $create_form_route->set_target($create_component);
-         $create_form_route->initialize();
-
-         //create resource route
-         $create_resource_route = new RouteAttribute(
-             name: admin_route_name($model_label, 'create', $is_platform),
-             method: 'post', 
-             url: admin_route_url($model_label, ['create'], $is_platform),
-             authorize: $authorize,
-             layout: ['saqle.app', 'saqle.resourcewrapper'],
-             model: $model_class,
-             middleware: $middleware
-         );
-         $create_resource_route->set_target($create_component);
-         $create_resource_route->initialize();
-
-         /**
-          * Edit form and submit edit routes
-          * */
-         $edit_operation = $resource_def?->edit();
-         $edit_component = $edit_operation ? $edit_operation->get_component() : "saqle.resourceedit";
-
-         $edit_form_route = new RouteAttribute(
-             name: admin_route_name($model_label, 'edit.form', $is_platform),
-             method: 'get',  
-             url: admin_route_url($model_label, [':id', 'edit'], $is_platform),
-             authorize: $authorize,
-             layout: ['saqle.app', 'saqle.resourcewrapper'],
-             model: $model_class,
-             middleware: $middleware
-         );
-         $edit_form_route->set_target($edit_component);
-         $edit_form_route->initialize();
-
-         //edit resource route
-         $edit_resource_route = new RouteAttribute(
-             name: admin_route_name($model_label, 'edit', $is_platform),
-             method: 'patch',  
-             url: admin_route_url($model_label, [':id', 'edit'], $is_platform),
-             authorize: $authorize,
-             layout: ['saqle.app', 'saqle.resourcewrapper'],
-             model: $model_class,
-             middleware: $middleware
-         );
-         $edit_resource_route->set_target($edit_component);
-         $edit_resource_route->initialize();
-
-         //show a single resource route
-         $show_resource_route = new RouteAttribute(
-             name: admin_route_name($model_label, 'view', $is_platform),
-             method: 'get', 
-             url: admin_route_url($model_label, [':id'], $is_platform),
-             authorize: $authorize,
-             layout: ['saqle.app', 'saqle.resourcewrapper'],
-             model: $model_class,
-             middleware: $middleware
-         );
-         $show_operation = $resource_def?->show();
-         $show_resource_route->set_target($show_operation ? $show_operation->get_component() : "saqle.resourceview");
-         $show_resource_route->initialize();
-
-         //delete resource route
-         $del_resource_route = new RouteAttribute(
-             name: admin_route_name($model_label, 'delete', $is_platform),
-             method: 'delete', 
-             url: admin_route_url($model_label, [':id'], $is_platform),
-             authorize: $authorize,
-             layout: ['saqle.app', 'saqle.resourcewrapper'],
-             model: $model_class, 
-             middleware: $middleware
-         );
-         $del_operation = $resource_def?->delete();
-         $del_resource_route->set_target($del_operation ? $del_operation->get_component() : "saqle.resourcedelete");
-         $del_resource_route->initialize();
-     }
-
-     private static function load_resource_routes(){
-
-         $multitenancy = (bool)config('tenancy.enabled');
-         $system_schema = new SystemSchema();
-         $system_models = $system_schema->get_defined_models();
-
-         foreach($system_models as $model_label => $model_class){
-             self::register_resource_routes(true, $model_label, $model_class, $multitenancy);
-         }
-
-         //get developer defined db schemas
-         $db_schemas = Db::get_developer_schemas();
-
-         foreach($db_schemas as $schema_name => $schema_class){
-             $models = new $schema_class()->get_defined_models();
-             
-             foreach($models as $model_label => $model_class){
-                 self::register_resource_routes(false, $model_label, $model_class, $multitenancy);
-             }
-         }
-     }  
-
      private static function load_routes(){
+
          //load routes from files
          self::load_file_routes();
 
          //load routes defined in components via Route attribute
          self::load_component_routes();
 
-         //load automatic resource routes
-         self::load_resource_routes();
      }
 
      public static function compile(){

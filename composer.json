@@ -6,7 +6,17 @@
      "autoload": {
          "psr-4": {
              "SaQle\\": "src_tmp/"
-         }
+         },
+         "files": [
+             "src_tmp/Shortcuts/Helpers.php",
+             "src_tmp/Shortcuts/Strings.php",
+             "src_tmp/Shortcuts/Routes.php",
+             "src_tmp/Shortcuts/Dates.php",
+             "src_tmp/Shortcuts/Arrays.php",
+             "src_tmp/Shortcuts/Exceptions.php",
+             "src_tmp/Shortcuts/Session.php",
+             "src_tmp/Shortcuts/Db.php"
+         ]
      },
      "require": {
          "php": ">=8.4",

@@ -16,8 +16,7 @@ use SaQle\Core\Services\Providers\{
      AuthenticationProvider,
      ValidationServiceProvider,
      StorageServiceProvider,
-     TemplateServiceProvider,
-     AdminProvider
+     TemplateServiceProvider
 };
 use SaQle\Console\CommandRegistry;
 use SaQle\Http\Cors\CorsConfig;
@@ -44,6 +43,7 @@ use SaQle\Auth\Providers\PlatformAuthorizationProvider;
 use SaQle\Console\Providers\FrameworkCommandsProvider;
 use SaQle\Auth\Context\ActorContext;
 use SaQle\Core\Modules\ModuleManager;
+
 
 final class App {
 
@@ -91,8 +91,8 @@ final class App {
          $config = $setup->get_framework_configs();
          $this->expose_configs($config);
 
-         //4. Load environment & shortcuts
-         $this->load_shortcuts();
+         //4. Load environment
+         //$this->load_shortcuts();
          $this->load_environment();
 
          //5. Load project configurations
@@ -165,8 +165,7 @@ final class App {
              StorageServiceProvider::class,
              TemplateServiceProvider::class,
              PlatformAuthorizationProvider::class,
-             FrameworkCommandsProvider::class,
-             AdminProvider::class
+             FrameworkCommandsProvider::class
          ];
 
          //register framework providers

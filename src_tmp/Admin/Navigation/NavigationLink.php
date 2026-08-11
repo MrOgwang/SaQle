@@ -13,12 +13,12 @@ class NavigationLink {
      public function __construct(
          public string $name,
          public string $label,
-         public string $url,
+         public string $route,
          public string $icon,
          public string $group = "",
          public bool   $visible = true,
          public int    $weight = -1
-     ) {}
+     ){}
 
      public function label(string $label): static {
 
@@ -27,9 +27,9 @@ class NavigationLink {
          return $this;
      }
 
-     public function url(string $url): static {
+     public function route(string $route): static {
 
-         $this->url = $url;
+         $this->route = $route;
 
          return $this;
      }

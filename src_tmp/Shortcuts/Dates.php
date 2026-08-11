@@ -1,4 +1,7 @@
 <?php
+
+use DateTime;
+
 if(!function_exists('format_date')){
      function format_date(mixed $input, string $format) : string {
          if(is_numeric($input)){

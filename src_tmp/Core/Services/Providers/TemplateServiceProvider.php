@@ -21,22 +21,6 @@ class TemplateServiceProvider extends ServiceProvider {
                  default                                          => 'formcontrol'
              };
          });
-
-         Template::resolver('saqle.autoresource', function(Request $request, array $props){
-
-             if($request->route->compiled_target->name === 'saqle.autoresource'){
-                 $method = $request->route->compiled_target->method;
-
-                 return match($method){
-                     'list_resources'   => 'autoresource.table',
-                     'show_create_form' => 'autoresource.form',
-                     'show_resource'    => 'autoresource.view',
-                     'show_edit_form'   => 'autoresource.form',
-                     default            => 'autoresource'
-                 };
-             }
-
-             return 'autoresource.form';
-         });
+         
      }
 }
