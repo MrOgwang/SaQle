@@ -23,7 +23,14 @@ class ManageTenant {
 
 	 	 Session::set('__manage_tenant__', true);
 
-		 return Message::redirect(route(admin_route_name('overview', '', false)) );
+		 return Message::redirect(
+		 	 route(
+		 	 	 resource_route_name(
+		 	 	 	action: 'overview', 
+		 	 	 	is_platform: false
+		 	 	 )
+		 	 ) 
+		 );
 	 }
 
 }

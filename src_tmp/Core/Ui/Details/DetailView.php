@@ -7,16 +7,12 @@ use SaQle\Core\Ui\Utils\{
      Panel,
      Label
 };
-use SaQle\Routing\Resources\ResourceRouteUtils;
 use SaQle\Routing\UrlBuilder;
 
 final class DetailView {
 
      use Panel {
          Panel::__construct as private __panelConstruct;
-     }
-     use ResourceRouteUtils {
-         ResourceRouteUtils::__construct as private __utilsConstruct;
      }
 
      public private(set) array $meta = [] {
@@ -53,7 +49,6 @@ final class DetailView {
 
      public function __construct(string $model, array $props = []){
          $this->__panelConstruct($model, $props, 'detail');
-         $this->__utilsConstruct();
          $this->fetch_model_data();
          $this->form_data_groups();
          $this->fetch_relations();
@@ -89,8 +84,6 @@ final class DetailView {
 
          $relations = [];
 
-         $resources = $this->get_resource_links();
-
          foreach($nav_field_names as $name){
 
              $field = $model_fields[$name];
@@ -103,13 +96,7 @@ final class DetailView {
 
              $count = $related_model::get()->where($foreign_key."__eq", $local_key_value)->count();
 
-             $current_resource = $resources[$related_model] ?? null;
-
-             $url = "#";
-             if($current_resource){
-                 $url = new UrlBuilder($current_resource->url)
-                 ->filter($foreign_key, $local_key_value);
-             }
+             $url = new UrlBuilder(route(resource_route_name('list', $related_model)))->filter($foreign_key, $local_key_value);
 
              $relations[$name] = (Object)[
                  'label' => Label::make($name),

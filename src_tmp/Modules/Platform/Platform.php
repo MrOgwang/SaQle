@@ -7,27 +7,19 @@ use SaQle\Core\Modules\{
 	 ModuleBuilder,
 	 AdminModule
 };
-use SaQle\Routing\Resources\ResourceRouteUtils;
-use SaQle\Auth\Context\ActorContext;
+use SaQle\Orm\Database\SystemSchema;
+use SaQle\Core\Ui\Utils\Label;
 use SaQle\Admin\Resources\ResourceDefinition;
 
 class Platform extends Module implements AdminModule {
 
-     use ResourceRouteUtils {
-         ResourceRouteUtils::__construct as private __utilsConstruct;
-     }
-
-     public function __construct(){
-         $this->__utilsConstruct();
-     }
-
 	 public function contribute(ModuleBuilder $module): void {
 
-         $resources = $this->get_resource_links();
+         $schema = new SystemSchema();
 
-	 	 $module->admin()->navigation(function($nav) use ($resources) {
+         $models = $schema->get_defined_models();
 
-             $is_platform = ActorContext::is_platform();
+	 	 $module->admin()->navigation(function($nav) use ($models) {
 
              $nav->groups->add(
                  name:  'resources',
@@ -38,27 +30,28 @@ class Platform extends Module implements AdminModule {
              $nav->links->add(
                  name:  'overview',
                  label: 'Overview',
-                 route:  $is_platform ? "saqle.overview" : config('admin.routes.name_prefix', "admin").'.overview',
+                 route: "saqle.overview",
                  icon:  'grid-2x2',
                  group: 'resources'
              );
 
-             foreach($resources as $r){
+             foreach($models as $table => $model){
+
                  $nav->links->add(
-                     name:  strtolower($r->ui_label),
-                     label: $r->ui_label,
-                     route:  admin_route_name($r->plural_label, 'list', $is_platform),
+                     name:   strtolower($table),
+                     label:  Label::make($table),
+                     route:  implode(".", ["saqle", $table, "list"]),
                      icon:  'boxes',
                      group: 'resources'
                  );
-             }
 
+             }
 	 	 });
 
-	 	 /*$module->admin()->resources(function($res) use ($resources) {
+         $module->admin()->resources(function($res) use ($models){
 
-             foreach($resources as $model => $resource){
- 
+             foreach($models as $table => $model){
+
                  $definition = new ResourceDefinition($model);
 
                  $definition->list()->component("saqle.lib.resourcelist");
@@ -72,11 +65,8 @@ class Platform extends Module implements AdminModule {
                  $definition->delete()->component("saqle.lib.resourcedelete");
 
                  $res->add($definition);
-
              }
 
-	 	 });*/
-
+         });
      }
-
 }

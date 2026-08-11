@@ -30,7 +30,8 @@ final class RouteContext {
          'prefix'     => '',
          'name'       => '',
          'url'        => '',
-         'target'     => ''
+         'target'     => '',
+         'model'      => ''
      ];
 
      public function __construct(
@@ -63,6 +64,11 @@ final class RouteContext {
 
      public function name(string $name): self {
          $this->attributes['name'] = $name;
+         return $this;
+     }
+
+     public function model(string $model): self {
+         $this->attributes['model'] = $model;
          return $this;
      }
 

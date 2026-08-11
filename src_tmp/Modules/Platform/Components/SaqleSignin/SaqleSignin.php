@@ -21,8 +21,15 @@ class SaqleSignin {
 		 if(!$auth_result->success){
 		 	 throw authorization_exception("Invalid credentials!");
 		 }
-
-		 return Message::redirect(route(admin_route_name('overview', '', true)));
+		 
+		 return Message::redirect(
+		 	 route(
+		 	 	 resource_route_name(
+		 	 	 	action: 'overview', 
+		 	 	 	is_platform: true
+		 	 	 )
+		 	 ) 
+		 );
 	 }
 
 	 public function get(){

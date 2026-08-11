@@ -2,17 +2,8 @@
 namespace SaQle\Lib\Components\ResourceDelete;
 
 use SaQle\Http\Response\Message;
-use SaQle\Routing\Resources\ResourceRouteUtils;
 
 class ResourceDelete {
-
-	 use ResourceRouteUtils {
-         ResourceRouteUtils::__construct as private __utilsConstruct;
-     }
-
-     public function __construct(){
-         $this->__utilsConstruct();
-     }
 
 	 public function delete(int | string $id) : Message {
 
@@ -21,10 +12,7 @@ class ResourceDelete {
 
          $deleted = $model_class::delete()->where($model_class::get_pk_name()."__eq", $id)->now();
 
-         $resources = $this->get_resource_links();
-	 	 $current_resource = $resources[$model_class] ?? null;
-
-		 return Message::redirect($current_resource ? $current_resource->url : null)
+		 return Message::redirect(route(resource_route_name('list', $model_class)))
 		 ->with_message('success', 'Deleted successfully!');
 	 }
 }

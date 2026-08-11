@@ -55,7 +55,7 @@
 	 </div>
 	 <div class='datapanel-body'>
 	 	 <!-------------->
-	 	  <table id='table-{{ str_replace(" ", "_", $current_resource->singular_label ?? "") }}'>
+	 	  <table id='table-{{ str_replace(" ", "_", $resource->singular_label ?? "") }}'>
  	 	 	 <thead>
  	 	 	 	<tr>
  	 	 	 		 <th><span class='flex center'><i class="fa-solid fa-grip-vertical"></i></span></th>
@@ -66,7 +66,7 @@
 	 	 	 	 		 	 <span title='Sort By {!! $column->label !!}' 
 	 	 	 	 		 	 	data-column="{!! $column->index !!}" 
 	 	 	 	 		 	 	data-order="asc" 
-	 	 	 	 		 	 	data-table='table-{{ str_replace(" ", "_", $current_resource->singular_label ?? "") }}'
+	 	 	 	 		 	 	data-table='table-{{ str_replace(" ", "_", $resource->singular_label ?? "") }}'
 	 	 	 	 		 	 	class="sort-but flex center icon">
 						         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 20 20">
 								    <line x1="8" y1="4" x2="8" y2="20"/>
@@ -87,14 +87,9 @@
  	 	 	 	 <!--the table rows go here-->
  	 	 	 	 @foreach($panel->data as $row)
  	 	 	 	 @let(
- 	 	 	 	     $edit_form_route_name = admin_route_name($current_resource?->plural_label, "edit.form", $is_platform),
-                     $edit_form_url = route($edit_form_route_name, ['id' => $row->{$current_resource->pk_column}]),
-
-                     $view_route_name = admin_route_name($current_resource?->plural_label, "view", $is_platform),
-                     $view_url = route($view_route_name, ['id' => $row->{$current_resource->pk_column}]),
-
-                     $del_route_name = admin_route_name($current_resource?->plural_label, "delete", $is_platform),
-                     $del_url = route($del_route_name, ['id' => $row->{$current_resource->pk_column}])
+                     $edit_form_url = route($resource->edit_form_route, ['id' => $row->{$resource->pk}]),
+                     $view_url = route($resource->show_route, ['id' => $row->{$resource->pk}]),
+                     $del_url = route($resource->del_route, ['id' => $row->{$resource->pk}])
  	 	 	 	 )
  	 	 	 	 <tr>
  	 	 	 	 	 <td><span class='flex center'><i class="fa-solid fa-grip-vertical"></i></span></td>
@@ -124,7 +119,7 @@
  	 	 	 	     <td title='Delete'>
  	 	 	 	     	 <form method='POST' action="{{ $del_url }}">
  	 	 	 	     		 <input type='hidden' name='_method' value='DELETE'/>
- 	 	 	 	     		 <input type='hidden' name='pk' value='{{ $row->{$current_resource->pk_column} }}'/>
+ 	 	 	 	     		 <input type='hidden' name='pk' value='{{ $row->{$resource->pk} }}'/>
  	 	 	 	     		 {!! $csrf_token !!}
 	 	 	 	 	     	 <button type='submit' class='dp-action del'>
 	 	 	 	 	     		 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">

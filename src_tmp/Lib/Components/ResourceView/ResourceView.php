@@ -3,8 +3,11 @@ namespace SaQle\Lib\Components\ResourceView;
 
 use SaQle\Http\Response\Message;
 use SaQle\Core\Ui\Details\DetailView;
+use SaQle\Routing\Resources\ResourceRouteUtils;
 
 class ResourceView {
+
+	 use ResourceRouteUtils;
 
 	 public function get(int | string $id) : Message {
 
@@ -20,7 +23,8 @@ class ResourceView {
          );
 
 		 return Message::ok([
-		 	 'panel' => $panel
+		 	 'panel' => $panel,
+		 	 'resource' => $this->resource()
 		 ]);
 	 }
 }

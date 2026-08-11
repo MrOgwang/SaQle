@@ -170,6 +170,18 @@ final class Router {
      }
 
      /**
+      * For a resource route, specify a model class
+      * */
+     public function model(string $model_class){
+
+         $route = array_values(self::$routes[count(self::$routes) - 1])[0];
+
+         $route->model($model_class);
+
+         return $this;
+     }
+
+     /**
       * Provide a custom route prefix
       * 
       * @var string prefix 

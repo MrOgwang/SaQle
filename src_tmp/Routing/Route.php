@@ -330,4 +330,11 @@ final class Route {
 
          return $this;
      }
+
+     public function model(string $model_class) : self {
+
+         $this->model_class = $model_class;
+
+         return $this;
+     }
 }

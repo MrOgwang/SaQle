@@ -1,35 +1,17 @@
- @if($form->is_for_create())
- @let(
-     $create_route_name = admin_route_name($current_resource?->plural_label, "create", $is_platform),
-     $create_url = route($create_route_name)
- )
  <form 
      method='POST' 
-     action="{{ $create_url }}" 
+     action="{{ route($rosource->create_route) }}" 
      enctype='multipart/form-data' 
      class='resourcelist'
  >
      <input type='hidden' name='_method' value='POST'/>
- @else
- @let(
-     $edit_route_name = admin_route_name($current_resource?->plural_label, "edit", $is_platform),
-     $edit_url = route($edit_route_name, ['id' => $object->{$current_resource->pk_column}])
- )
- <form 
-     method='POST' 
-     action="{{ $edit_url }}" enctype='multipart/form-data' 
-     class='resourcelist'
- >
-     <input type='hidden' name='_method' value='PATCH'/>
-     <input type='hidden' name='pk' value='{{ $object->{$current_resource->pk_column} }}'/>
- @endif
      {!! $csrf_token !!}
      <div class='resourcelist-header'>
          <div class='breadcramb'>
-             <a class='flex center' href='{{ $current_resource?->url }}'>
+             <a class='flex center' href='{{ route($resource->list_route) }}'>
                  < Back
              </a>
-             &nbsp;|&nbsp;Resources&nbsp;>&nbsp;{{ ucwords($current_resource?->plural_label) }}&nbsp;>&nbsp;
+             &nbsp;|&nbsp;Resources&nbsp;>&nbsp;{{ ucwords($resource->plural_label) }}&nbsp;>&nbsp;
              {{ ucwords($form->get_mode() ) }}
          </div>
          <div class='title'>
@@ -44,7 +26,7 @@
                  <button type="submit" class="btn-primary">
                      Save
                  </button>
-                 <a class='flex center form-action-btn btn-cancel' href="{{ $current_resource?->url }}">Cancel</a>
+                 <a class='flex center form-action-btn btn-cancel' href="{{ route($resource->list_route) }}">Cancel</a>
              </div>
          </div>
      </div>

@@ -2,6 +2,8 @@
 
 use SaQle\Commons\Url;
 use SaQle\Routing\UrlGenerator;
+use SaQle\Core\Registries\TableRegistry;
+use SaQle\Auth\Context\ActorContext;
 
 if(!function_exists('route')){
      function route(string $name, array $params = [], array $queries = []){
@@ -22,45 +24,21 @@ if(!function_exists('add_query_param')){
      }
 }
 
-if(!function_exists('admin_route_name')){
-     function admin_route_name(string $model_label, string $action = "", bool $is_platform = false){
+if(!function_exists('resource_route_name')){
+     function resource_route_name(string $action, ?string $model = null, ?bool $is_platform = null){
 
-         $route_name_prefix = $is_platform ? 'saqle' : config('admin.routes.name_prefix', "admin");
+         $is_platform ??= ActorContext::is_platform();
 
-         return implode(".", 
-             array_filter([
-                 trim($route_name_prefix), 
-                 trim(strtolower($model_label)), 
-                 trim($action)
-             ], fn($r) => $r !== "")
-         );
+         $prefix = $is_platform ? 'saqle' : trim(config('admin.routes.name_prefix', "admin"));
 
-     }
-}
+         if($model){
 
-if(!function_exists('admin_route_url')){
-     function admin_route_url(string $model_label, array $parts = [], bool $is_platform = false){
+             $table = TableRegistry::get_model_table($model);
 
-         $model_label = strtolower($model_label);
-
-         $url_parts = [];
-
-         if($is_platform){
-             $url_parts = array_merge(
-                 ['/saqle', $model_label],
-                 $parts
-             );
-         }else{
-
-             $prefix = config('admin.routes.prefix', "_admin");
-
-             $url_parts = array_merge(
-                 ["/".$prefix, $model_label],
-                 $parts
-             );
+             return implode(".", [$prefix, $table, $action]);
          }
 
-         return url_join($url_parts);
+         return implode(".", [$prefix, $action]);
 
      }
 }

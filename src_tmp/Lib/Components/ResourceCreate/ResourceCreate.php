@@ -11,13 +11,7 @@ use RuntimeException;
 
 class ResourceCreate {
 
-	 use ResourceRouteUtils {
-         ResourceRouteUtils::__construct as private __utilsConstruct;
-     }
-
-     public function __construct(){
-         $this->__utilsConstruct();
-     }
+	 use ResourceRouteUtils;
 
 	 public function get(array $__props) : Message {
 	 	 $incoming = request()->data->get_all();
@@ -30,7 +24,8 @@ class ResourceCreate {
 	 	 }
 
 		 return Message::ok([
-		 	 'form' => $form
+		 	 'form' => $form,
+		 	 'resource' => $this->resource()
 		 ]);
 	 }
 

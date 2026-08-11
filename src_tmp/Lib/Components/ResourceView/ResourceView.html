@@ -3,24 +3,21 @@
      <div class="resource-header">
          <div>
              <div class="flex v_center breadcrumbs">
-                 <a class='flex v_center' href='{{ $current_resource?->url }}'>
-                     < {{ ucwords($current_resource->ui_label) }}
+                 <a class='flex v_center' href='{{ route($resource->list_route) }}'>
+                     < {{ ucwords($resource->plural_label) }}
                  </a>
              </div>
              <h2>{{ (string)$panel->data }}</h2>
          </div>
          <div class="resource-actions">
              @let(
-                 $edit_form_route_name = admin_route_name($current_resource?->plural_label, "edit.form", $is_platform),
-                 $edit_form_url = route($edit_form_route_name, ['id' => $panel->data->{$current_resource->pk_column}]),
-
-                 $del_route_name = admin_route_name($current_resource?->plural_label, "delete", $is_platform),
-                 $del_url = route($del_route_name, ['id' => $panel->data->{$current_resource->pk_column}])
+                 $edit_form_url = route($resource->edit_form_route, ['id' => $panel->data->{$resource->pk}]),
+                 $del_url = route($resource->del_route, ['id' => $panel->data->{$resource->pk}])
              )
              <a class='flex center' href='{{ $edit_form_url }}'>Edit</a>
              <form method='POST' action="{{ $del_url }}">
                  <input type='hidden' name='_method' value='DELETE'/>
-                 <input type='hidden' name='pk' value='{{ $panel->data->{$current_resource->pk_column} }}'/>
+                 <input type='hidden' name='pk' value='{{ $panel->data->{$resource->pk} }}'/>
                  {!! $csrf_token !!}
                  <button type='submit'>
                      Delete

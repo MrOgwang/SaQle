@@ -11,13 +11,7 @@ use RuntimeException;
 
 class ResourceEdit {
 
-	 use ResourceRouteUtils {
-         ResourceRouteUtils::__construct as private __utilsConstruct;
-     }
-
-     public function __construct(){
-         $this->__utilsConstruct();
-     }
+	 use ResourceRouteUtils;
 
 	 public function get(int | string $id, array $__props) : Message {
 
@@ -35,7 +29,8 @@ class ResourceEdit {
 
 		 return Message::ok([
 		 	 'form' => $form,
-		 	 'object' => $object
+		 	 'object' => $object,
+		 	 'resource' => $this->resource()
 		 ]);
 	 }
 
@@ -54,10 +49,7 @@ class ResourceEdit {
 	 	 
 	 	 $saved = $model_class::update($data)->where($model_class::get_pk_name()."__eq", $id)->now();
 
-	 	 $resources = $this->get_resource_links();
-	 	 $current_resource = $resources[$model_class] ?? null;
-
-		 return Message::redirect($current_resource ? $current_resource->url : null)
+		 return Message::redirect(route(resource_route_name("list", $model_class)))
 		 ->with_message('success', 'Updated successfully!');
 	 }
 }

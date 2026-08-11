@@ -36,105 +36,64 @@
      return $route;
  }
 
- function register_resource_routes($is_platform, $model_label, $model_class){
+ function register_resource_routes($is_platform, $res_ref, $res_class){ 
 
-     $resource_def = Admin::resources()->get($model_class);
-     
+     $def = Admin::resources()->get($res_class);
+
+     echo "Ref: $res_ref, Class: $res_class\n";
+     print_r(Admin::resources());
+     echo "\n---------------------\n";
+
      $authorize = $is_platform ? '__authenticated__ && __super_admin__' : 
-     construct_route_authorization($model_label, $model_class);
+     construct_route_authorization($res_ref, $res_class);
 
      $middleware = $is_platform ? ['__authentication__', '__authorization__'] : 
-     construct_route_middleware($model_label, $model_class);
+     construct_route_middleware($res_ref, $res_class);
 
-     //list resources route
-     $list_operation = $resource_def?->list();
-     Router::get(
-     	 url:    admin_route_url($model_label, [], $is_platform),
-     	 target: $list_operation ? $list_operation->get_component() : "saqle.lib.resourcelist",
-     	 model_class:  $model_class
-     )
-     ->authorize($authorize)
-     ->layout(["saqle.admin.admin", "saqle.admin.resourcewrapper"])
-     ->middleware($middleware)
-     ->name(admin_route_name($model_label, 'list', $is_platform));
+     /*Router::context([
+         'middleware' => $middleware,
+         'authorize'  => $authorize,
+         'layout'     => ["saqle.admin.admin", "saqle.admin.resourcewrapper"],
+         'prefix'     => $is_platform ? "/saqle" : config('admin.routes.prefix', "/_admin"),
+         'model'      => $res_class,
+         'name'       => $is_platform ? "saqle" : config('admin.routes.name_prefix', "admin"),
+     ])->routes(function() use ($def, $res_ref, $res_class){
 
-     /**
-      * Create form and submit create routes.
-      * */
-     $create_operation = $resource_def?->create();
-     $create_component = $create_operation ? $create_operation->get_component() : "saqle.lib.resourcecreate";
+         //listing
+         Router::get(
+             url:    url_join(["/".$res_ref]),
+             target: $def->list()->get_component(),
+         )->name($res_ref.".list");
 
-     Router::get(
-     	 url:    admin_route_url($model_label, ['create'], $is_platform),
-     	 target: $create_component,
-     	 model_class:  $model_class
-     )
-     ->authorize($authorize)
-     ->layout(["saqle.admin.admin", "saqle.admin.resourcewrapper"])
-     ->middleware($middleware)
-     ->name(admin_route_name($model_label, 'create.form', $is_platform));
+         //creating
+         Router::route(
+             url:    url_join(["/".$res_ref, "create"]),
+             target: $def->create()->get_component()
+         )->methods(function(){
+             Router::method("GET", "get")->name($res_ref.".create.form");
+             Router::method("POST", "post")->name($res_ref.".create");
+         });
 
-     //create resource route
-     Router::post(
-     	 url:    admin_route_url($model_label, ['create'], $is_platform),
-     	 target: $create_component,
-     	 model_class:  $model_class
-     )
-     ->authorize($authorize)
-     ->layout(["saqle.admin.admin", "saqle.admin.resourcewrapper"])
-     ->middleware($middleware)
-     ->name(admin_route_name($model_label, 'create', $is_platform));
+         //editing
+         Router::route(
+             url:    url_join(["/".$res_ref, ":id", "edit"]),
+             target: $def->edit()->get_component()
+         )->methods(function(){
+             Router::method("GET", "get")->name($res_ref.".edit.form");
+             Router::method("PATCH", "patch")->name($res_ref.".edit");
+         });
 
-     /**
-      * Edit form and submit edit routes
-      * */
-     $edit_operation = $resource_def?->edit();
-     $edit_component = $edit_operation ? $edit_operation->get_component() : "saqle.lib.resourceedit";
+         //showing
+         Router::get(
+             url:    url_join(["/".$res_ref, ":id"]),
+             target: $def->show()->get_component(),
+         )->name($res_ref.".show");
+ 
+         //deleting
+         Router::delete(
+             url:    url_join(["/".$res_ref, ":id"]),
+             target: $def->delete()->get_component(),
+         )->name($res_ref.".delete");
 
-     Router::get(
-     	 url:    admin_route_url($model_label, [':id', 'edit'], $is_platform),
-     	 target: $edit_component,
-     	 model_class:  $model_class
-     )
-     ->authorize($authorize)
-     ->layout(["saqle.admin.admin", "saqle.admin.resourcewrapper"])
-     ->middleware($middleware)
-     ->name(admin_route_name($model_label, 'edit.form', $is_platform));
-
-     //edit resource route
-     Router::patch(
-     	 url:    admin_route_url($model_label, [':id', 'edit'], $is_platform),
-     	 target: $edit_component,
-     	 model_class:  $model_class
-     )
-     ->authorize($authorize)
-     ->layout(["saqle.admin.admin", "saqle.admin.resourcewrapper"])
-     ->middleware($middleware)
-     ->name(admin_route_name($model_label, 'edit', $is_platform));
-
-     //show a single resource route
-     $show_operation = $resource_def?->show();
-
-     Router::get(
-     	 url:    admin_route_url($model_label, [':id'], $is_platform),
-     	 target: $show_operation ? $show_operation->get_component() : "saqle.lib.resourceview",
-     	 model_class:  $model_class
-     )
-     ->authorize($authorize)
-     ->layout(["saqle.admin.admin", "saqle.admin.resourcewrapper"])
-     ->middleware($middleware)
-     ->name(admin_route_name($model_label, 'view', $is_platform));
-
-     //delete resource route
-     $del_operation = $resource_def?->delete();
-
-     Router::delete(
-     	 url:    admin_route_url($model_label, [':id'], $is_platform),
-     	 target: $del_operation ? $del_operation->get_component() : "saqle.lib.resourcedelete",
-     	 model_class:  $model_class
-     )
-     ->authorize($authorize)
-     ->layout(["saqle.admin.admin", "saqle.admin.resourcewrapper"])
-     ->middleware($middleware)
-     ->name(admin_route_name($model_label, 'delete', $is_platform));
+     });*/
  }
