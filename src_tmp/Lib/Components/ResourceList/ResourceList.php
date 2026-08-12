@@ -16,7 +16,7 @@ class ResourceList {
 	 	 string $search  = "",
 	 	 array  $filter  = []
 	 ) : Message {
-
+	 	
 	 	 $panel = new TableView(
 	 	 	 request()->route->model_class,
 	 	 	 [
@@ -33,7 +33,7 @@ class ResourceList {
 
 		 return Message::ok([
 		 	 'panel' => $panel,
-		 	 'resource' => $this->resource()
+		 	 'resource' => $this->resource(request()->route->model_class)
 		 ]);
 	 }
 }

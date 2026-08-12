@@ -1,11 +1,11 @@
 {
      "dependencies": {
          "css": [
-             "@saqle.autoform"
+             "@saqle.lib.autoform"
          ],
 
          "js": [
-             "@saqle.autoform"
+             "@saqle.lib.autoform"
          ]
      }
 }

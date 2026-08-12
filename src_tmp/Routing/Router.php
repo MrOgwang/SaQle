@@ -337,6 +337,10 @@ final class Router {
              if(!empty($context['name'])){
                  $route->name($context['name']); 
              } 
+
+             if(!empty($context['model'])){
+                 $route->model($context['model']); 
+             } 
          }
      }
 }

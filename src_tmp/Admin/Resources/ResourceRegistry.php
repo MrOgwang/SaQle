@@ -34,7 +34,7 @@ class ResourceRegistry {
      /**
      * @return ResourceDefinition[]
      */
-     public function all(): array {
-         return array_values($this->resources);
+     public function all() : array {
+         return $this->resources;
      }
 }

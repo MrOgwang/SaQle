@@ -19,7 +19,7 @@ class Platform extends Module implements AdminModule {
 
          $models = $schema->get_defined_models();
 
-	 	 $module->admin()->navigation(function($nav) use ($models) {
+	 	 $module->platform()->navigation(function($nav) use ($models) {
 
              $nav->groups->add(
                  name:  'resources',
@@ -48,7 +48,7 @@ class Platform extends Module implements AdminModule {
              }
 	 	 });
 
-         $module->admin()->resources(function($res) use ($models){
+         $module->platform()->resources(function($res) use ($models){
 
              foreach($models as $table => $model){
 
@@ -68,5 +68,9 @@ class Platform extends Module implements AdminModule {
              }
 
          });
+
+         $module->routes()
+         ->prefix("/saqle")
+         ->name("saqle");
      }
 }

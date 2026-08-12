@@ -17,21 +17,21 @@
      register_resource_routes(true, $model_label, $model_class);
  }
 
- Router::route("/saqle/signin", 'saqle.admin.saqlesignin')
- ->name("saqle.login")
+ Router::route("/signin", 'saqle.platform.saqlesignin')
+ ->name("login")
  ->methods(function(){
 	 Router::method("GET", "get")->name('form');
 	 Router::method("POST", "post")->name('submit');
  });
 
- Router::get("/saqle/tenants/:slug/manage", 'saqle.platform.managetenant')
+ Router::get("/tenants/:slug/manage", 'saqle.platform.managetenant')
  ->authorize('__authenticated__ && __super_admin__')
  ->middleware(['__authentication__', '__authorization__'])
  ->layout(['saqle.admin.admin'])
- ->name('saqle.managetenant');
+ ->name('managetenant');
 
- Router::get("/saqle/resources/overview/", 'saqle.admin.dashboard')
+ Router::get("/resources/overview/", 'saqle.admin.dashboard')
  ->authorize('__authenticated__ && __super_admin__')
  ->middleware(['__authentication__', '__authorization__'])
  ->layout(['saqle.admin.admin'])
- ->name('saqle.overview');
+ ->name('overview');

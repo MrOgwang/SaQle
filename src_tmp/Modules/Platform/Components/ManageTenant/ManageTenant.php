@@ -1,6 +1,6 @@
 <?php
 
-namespace SaQle\Modules\Admin\Components\ManageTenant;
+namespace SaQle\Modules\Platform\Components\ManageTenant;
 
 use SaQle\Http\Response\Message;
 use SaQle\Http\Kernel\Session;

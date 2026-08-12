@@ -25,7 +25,7 @@ class ResourceCreate {
 
 		 return Message::ok([
 		 	 'form' => $form,
-		 	 'resource' => $this->resource()
+		 	 'resource' => $this->resource(request()->route->model_class)
 		 ]);
 	 }
 

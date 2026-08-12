@@ -75,5 +75,9 @@ class Admin extends Module implements AdminModule {
              }
 
          });
+
+         $module->routes()
+         ->prefix(config('admin.routes.prefix', "/_admin"))
+         ->name(config('admin.routes.name_prefix', "admin"));
      } 
 }

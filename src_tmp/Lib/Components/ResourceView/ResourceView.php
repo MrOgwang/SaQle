@@ -21,10 +21,10 @@ class ResourceView {
          	 	 'with_audit' => true
          	 ]
          );
-
+         
 		 return Message::ok([
 		 	 'panel' => $panel,
-		 	 'resource' => $this->resource()
+		 	 'resource' => $this->resource($model)
 		 ]);
 	 }
 }

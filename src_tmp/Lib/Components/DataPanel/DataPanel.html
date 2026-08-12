@@ -1,4 +1,4 @@
-<div class='datapanel'>
+ <div class='datapanel'>
 	 <div class='datapanel-header'>
 	 	 <div class='flex v_center datapanel-header-left'>
 	 	 	 <div class='flex v_center search-line'>
@@ -141,7 +141,7 @@
 	 </div>
 	 @if($panel->paginator)
 	 <div class='datapanel-footer'>
-	 	 <ui:component name='saqle.lib.paginator' :paginator='$panel->data'/>
+	 	 <ui:component :resource='$resource' name='saqle.lib.paginator' :paginator='$panel->data'/>
 	 </div>
 	 @endif
  </div>

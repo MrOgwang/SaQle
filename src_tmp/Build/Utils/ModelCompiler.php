@@ -161,7 +161,7 @@ class ModelCompiler {
           * */
          $models_dirs = [ 
              [
-                 'path' => path_join([config('base_path'), 'models']),
+                 'path' => path_join([config('base_path'), 'Models']),
                  'prefix' => ""
              ]
          ];
@@ -207,7 +207,9 @@ class ModelCompiler {
 
              $dir_iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($path));
              foreach($dir_iterator as $file){
+
                  if($file->isFile() && $file->getExtension() === 'php'){
+
                      $model_name = strtolower(str_replace(".php", "", $file->getFilename()));
                      $model_name = $prefix ? $prefix.".".$model_name : $model_name;
                      $path       = $file->getRealPath();
@@ -217,13 +219,16 @@ class ModelCompiler {
                      if($declared_models){
 
                          $model_class = $declared_models[0];
-
                          $model = $model_class::make();
 
+                         $table_name = $model->get_table_name() ?? 
+                         strtolower((new ReflectionClass($model_class))->getShortName());
+
+                         if(array_key_exists($table_name, $tables)){
+                             continue;
+                         }
+
                          $models[$model_name] = $model_class;
-
-                         $table_name = $model->get_table_name() ?? strtolower((new ReflectionClass($model_class))->getShortName());
-
                          $tables[$table_name] = $model_class;
                      }
                  }

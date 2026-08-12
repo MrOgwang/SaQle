@@ -1,6 +1,6 @@
 <?php
 
-namespace SaQle\Modules\Admin\Components\SaqleSignin;
+namespace SaQle\Modules\Platform\Components\SaqleSignin;
 
 use SaQle\Auth\Services\{AuthenticationService, PasswordHashService};
 use SaQle\Http\Response\Message;

@@ -107,7 +107,7 @@ class UiComponentRenderer {
      public function wrap_root(string $html){
          $assets = AssetManager::output();
 
-         $page_component = ComponentRegistry::resolve_component('page', 'GET', 'layout');
+         $page_component = ComponentRegistry::resolve_component('app.page', 'GET', 'layout');
          $page = new View($page_component->compiled_template_path);
          $page->set_context([
              'content' => $html,

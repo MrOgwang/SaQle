@@ -30,7 +30,7 @@ class ResourceEdit {
 		 return Message::ok([
 		 	 'form' => $form,
 		 	 'object' => $object,
-		 	 'resource' => $this->resource()
+		 	 'resource' => $this->resource($model_class)
 		 ]);
 	 }
 

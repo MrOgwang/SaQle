@@ -35,13 +35,11 @@ final class RouteCompiler {
 
          foreach(array_merge(
              config('framework_modules', []), 
-             config('app.modules', []))  as $fm){
-
-             $module = new $fm();
+             config('app.modules', []))  as $m){
 
              $routes_dirs[] = [
-                 'path' => $module->path('Routes'),
-                 'module' => $module->manifest()->name
+                 'path' => "",
+                 'module' => $m
              ];
          }
 
@@ -54,20 +52,30 @@ final class RouteCompiler {
 
          foreach($routes_dirs as $dir){
 
-             $file = path_join([$dir['path'], "Routes.php"]);
-             if(!file_exists($file)){
-                 continue;
-             }
-
              if($dir['module']){
 
-                 $module_config = RouteRegistry::get_modules($dir['module']);
+                 $module = new $dir['module']();
+
+                 $file = path_join([$module->path('Routes'), "Routes.php"]); 
+
+                 if(!file_exists($file)){
+                     continue;
+                 }
+                 
+                 $module_config = RouteRegistry::get_modules($module->manifest()->name);
 
                  Router::context($module_config)->routes(function() use ($file){
                      require_once $file;
                  });
 
              }else{
+
+                 $file = path_join([$dir['path'], "Routes.php"]);
+
+                 if(!file_exists($file)){
+                     continue;
+                 }
+
                  require_once $file;
              }
          }  

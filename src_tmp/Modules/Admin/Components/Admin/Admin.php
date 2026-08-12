@@ -4,7 +4,11 @@ namespace SaQle\Modules\Admin\Components\Admin;
 
 use SaQle\Http\Response\Message;
 use SaQle\Core\Support\Index;
-use SaQle\Admin\Admin as AdminProvider;
+use SaQle\Admin\{
+     Admin as AdminProvider,
+     Platform
+};
+use SaQle\Auth\Context\ActorContext;
 
 class Admin { 
 
@@ -12,7 +16,7 @@ class Admin {
      public function get() : Message {
 
          return Message::ok([
-             'navigation' => AdminProvider::navigation(),
+             'navigation' => ActorContext::is_platform() ? Platform::navigation() : AdminProvider::navigation(),
              'tenant_name' => config('tenancy.enabled') && request()->tenant ? request()->tenant->tenant_name : ""
          ]); 
      }

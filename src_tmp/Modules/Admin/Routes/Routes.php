@@ -19,6 +19,6 @@
      }
  }
  
- Router::get("/_admin/resources/overview/", 'saqle.admin.dashboard')
+ Router::get("/resources/overview/", 'saqle.admin.dashboard')
  ->layout(['saqle.admin.admin'])
- ->name(config('admin.routes.name_prefix', "admin").'.overview');
+ ->name('overview');

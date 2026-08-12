@@ -46,4 +46,13 @@ final class ModuleBuilder {
 
          return new AdminModuleBuilder($this->module);
      }
+
+     public function platform(): PlatformModuleBuilder {
+
+         if(!$this->module instanceof AdminModule){
+             throw new RuntimeException('This is not an admin module!');
+         }
+
+         return new PlatformModuleBuilder($this->module);
+     }
 }

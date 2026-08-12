@@ -30,23 +30,24 @@ final class ModuleManager {
      }
 
      public function register() : void {
-         foreach($this->modules as $module){
-             $module->register($this->app);
-         }
+         foreach($this->modules as $class => $instance){
+             $instance->register($this->app);
+         } 
      }
 
      public function contribute() : void {
-         foreach($this->modules as $module){
+         foreach($this->modules as $class => $instance){
+            
+             $builder = new ModuleBuilder($instance, $this->app);
 
-             $builder = new ModuleBuilder($module, $this->app);
-
-             $module->contribute($builder);
+             $instance->contribute($builder);
          }
      }
 
      public function boot(): void {
-         foreach($this->modules as $module){
-             $module->boot($this->app);
+         foreach($this->modules as $class => $instance){
+
+             $instance->boot($this->app);
          }
      }
 

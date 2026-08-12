@@ -92,7 +92,6 @@ final class App {
          $this->expose_configs($config);
 
          //4. Load environment
-         //$this->load_shortcuts();
          $this->load_environment();
 
          //5. Load project configurations
@@ -108,7 +107,7 @@ final class App {
 
          //Load the modules
          $this->modules->load(
-             config('app.modules', [])
+             array_merge(config('framework_modules', []), config('app.modules', []))
          );
 
          //Module service registration
@@ -126,25 +125,6 @@ final class App {
 
          //11. Runtime initialization
          $this->modules->boot();
-     }
-
-     private function load_shortcuts() : void {
-
-         $shortcuts = [
-             'Helpers',
-             'Strings',
-             'Routes',
-             'Dates',
-             'Arrays',
-             'Exceptions',
-             'Session',
-             'Db'
-         ];
-
-         foreach($shortcuts as $s){
-             require_once __DIR__.'/../Shortcuts/'.$s.'.php';
-         }
-
      }
 
      private function expose_configs(array $config){
