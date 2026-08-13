@@ -23,7 +23,7 @@ final class ComponentRegistry {
      public static function all(bool $reload = false): array {
 
          if(self::$components === null || $reload === true || self::$_reload === true){
-             self::$components = require path_join([config('base_path'), config('class_mappings_dir'), 'components.php']);
+             self::$components = require path_join([config('base_path'), config('class_mappings_dir'), 'Components.php']);
          }
 
          return self::$components;
@@ -99,6 +99,7 @@ final class ComponentRegistry {
           * otherwise it can have both a template and a controller.
           * */
          $component = self::get($component_name);
+         $component_def->definition = $component['definition'];
          $component_def->proxy = $component['proxy'];
          $component_def->has_many_templates = $component['has_many_templates'];
          $component_def->template_variations = $component['template_variations'];

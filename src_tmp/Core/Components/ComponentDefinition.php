@@ -30,4 +30,8 @@ abstract class ComponentDefinition {
      public function template(Request $request, ...$args): ?string {
          return null;
      }
+
+     public function dependencies() : array {
+         return [];
+     }
 }

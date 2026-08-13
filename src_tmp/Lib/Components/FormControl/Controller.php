@@ -5,7 +5,7 @@ namespace SaQle\Lib\Components\FormControl;
 use SaQle\Http\Response\Message;
 use SaQle\Core\Ui\Forms\Form;
 
-class FormControl {
+class Controller {
 	 
 	 public function get(array $__props) : Message {
 

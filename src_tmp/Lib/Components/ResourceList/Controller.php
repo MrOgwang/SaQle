@@ -6,7 +6,7 @@ use SaQle\Http\Response\Message;
 use SaQle\Core\Ui\Panels\TableView;
 use SaQle\Routing\Resources\ResourceRouteUtils;
 
-class ResourceList {
+class Controller {
 
 	 use ResourceRouteUtils;
 	 

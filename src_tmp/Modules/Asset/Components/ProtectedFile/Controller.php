@@ -4,7 +4,7 @@ namespace SaQle\Modules\Asset\Components\ProtectedFile;
 use SaQle\Core\Files\Storage\StorageFactory;
 use SaQle\Http\Response\Message;
 
-class ProtectedFile {
+class Controller {
 
      protected function authorize(array $meta) : bool {
          return true;

@@ -5,7 +5,7 @@ namespace SaQle\Modules\Platform\Components\ManageTenant;
 use SaQle\Http\Response\Message;
 use SaQle\Http\Kernel\Session;
  
-class ManageTenant {
+class Controller {
 
 	 public function get(string $slug) : Message {
 

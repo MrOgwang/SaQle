@@ -9,7 +9,7 @@ use SaQle\Core\Registries\ModelRegistry;
 use RuntimeException;
 use Throwable;
 
-class AutoResource {
+class Controller {
 
      private function acquire_auto_form(string $model, string $form_name){
      	 $model_class = ModelRegistry::all()[$model] ?? null;

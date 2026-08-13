@@ -9,7 +9,7 @@ use SaQle\Core\Ui\Forms\{
 use SaQle\Routing\Resources\ResourceRouteUtils;
 use RuntimeException;
 
-class ResourceCreate {
+class Controller {
 
 	 use ResourceRouteUtils;
 

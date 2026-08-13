@@ -3,7 +3,7 @@ namespace SaQle\Lib\Components\ResourceDelete;
 
 use SaQle\Http\Response\Message;
 
-class ResourceDelete {
+class Controller {
 
 	 public function delete(int | string $id) : Message {
 

@@ -5,7 +5,6 @@ use SaQle\Build\Utils\{
      ComponentCompiler,
      RouteCompiler, 
      EventCompiler,
-     TemplateCompiler,
      ModelCompiler
 };
 use SaQle\Core\Support\Cli;
@@ -37,9 +36,6 @@ class BuildProject extends Command {
              case "routes":
                  RouteCompiler::compile();
              break;
-             case "templates":
-                 TemplateCompiler::compile();
-             break;
              case "components":
                  ComponentCompiler::compile();
              break;
@@ -54,9 +50,6 @@ class BuildProject extends Command {
                 
                  //compile components
                  ComponentCompiler::compile();
-
-                 //compile templates
-                 TemplateCompiler::compile();
 
                  //compile models
                  ModelCompiler::compile();

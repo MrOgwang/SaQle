@@ -21,6 +21,9 @@ class UiComponentDefinition {
          //the controller class name
          public ?string $controller = null,
 
+         //the component definition
+         public ?string $definition = null,
+
          //the controller method to execute
          public ?string $method = null,
 
@@ -49,6 +52,7 @@ class UiComponentDefinition {
              'template_path' => $this->template_path,
              'compiled_template_path' => $this->compiled_template_path,
              'controller' => $this->controller,
+             'definition' => $this->definition,
              'method' => $this->method,
              'proxy' => $this->proxy,
              'has_many_templates' => $this->has_many_templates,
@@ -71,19 +75,19 @@ class UiComponentDefinition {
 
      private function get_dependencies() : array {
 
-         $name = $this->get_name_from_ref($this->name);
-
-         $json_file = "{$this->path}/{$name}.json";
-
-         if(!file_exists($json_file)){
+         if(!$this->definition){
              return ['css' => [], 'js' => []];
          }
 
-         $json = json_decode(file_get_contents($json_file), true);
+         $defclass = $this->definition;
+
+         $def = new $defclass();
+
+         $dependencies = $def->dependencies();
 
          return [
-             'css' => $json['dependencies']['css'] ?? [],
-             'js'  => $json['dependencies']['js'] ?? [],
+             'css' => $dependencies['styles'] ?? [],
+             'js'  => $dependencies['scripts'] ?? [],
          ];
      }
 
@@ -133,21 +137,13 @@ class UiComponentDefinition {
          }
  
          //2. Add this component's own assets
-         $name = $this->get_name_from_ref($this->name);
+         $name = $type === "css" ? "Style" : "Script";
          $file = "{$this->path}/{$name}.{$type}";
 
          if(file_exists($file)){
              $files[] = $file;
          }
-  
-         //if a template other than the default one was selected
-         if($file !== $template_name){
-             $file2 = "{$this->path}/{$template_name}.{$type}";
-             if(file_exists($file2)){
-                 $files[] = $file2;
-             }
-         }
-
+         
          $assets = [];
          $listed = [];
 

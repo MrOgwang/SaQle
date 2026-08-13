@@ -5,7 +5,7 @@ use SaQle\Http\Response\Message;
 use SaQle\Core\FeedBack\FeedBack;
 use SaQle\Core\Support\ErrorComponent;
 
-class Error implements ErrorComponent {
+class Controller implements ErrorComponent {
 
 	 public function get(
 	 	 int $code = FeedBack::INTERNAL_SERVER_ERROR, 

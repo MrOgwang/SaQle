@@ -1,10 +1,11 @@
 <?php
+
 namespace SaQle\Modules\Asset\Components\StaticFile;
 
 use SaQle\Core\Files\Storage\StorageFactory;
 use SaQle\Http\Response\Message;
 
-class StaticFile {
+class Controller {
 
      public function get(string $type, string $file) {
          $allowed_types = [

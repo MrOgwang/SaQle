@@ -3,7 +3,7 @@ namespace SaQle\Lib\Components\Picker;
 
 use SaQle\Http\Response\Message;
 
-class Picker {
+class Controller {
 	 
 	 public function get(array $__props) : Message {
 

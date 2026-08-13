@@ -1,8 +1,0 @@
-{
-     "dependencies": {
-         "css": [],
-         "js": [
-             "~https://unpkg.com/lucide@latest"
-         ]
-     }
-}

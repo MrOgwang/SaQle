@@ -5,7 +5,7 @@ namespace SaQle\Modules\Platform\Components\SaqleSignin;
 use SaQle\Auth\Services\{AuthenticationService, PasswordHashService};
 use SaQle\Http\Response\Message;
 
-class SaqleSignin {
+class Controller {
 	 private $auth_service;
     
      public function __construct(){

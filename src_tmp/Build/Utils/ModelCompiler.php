@@ -26,8 +26,6 @@ use SaQle\Core\Support\Cli;
 
 class ModelCompiler {
 
-     use CompileUtils;
-     
      private static function get_model_classes_from_file(string $file) : array {
          $classes = self::get_classes_declared_in_file($file);
 

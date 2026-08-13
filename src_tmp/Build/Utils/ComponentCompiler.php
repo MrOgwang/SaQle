@@ -1,321 +1,401 @@
 <?php
-/**
- * This file is part of SaQle framework.
- * 
- * (c) 2018 SaQle
- * 
- * For the full copyright and license information, please view the LICENSE file
- * that was ditributed with the source code
- * */
-
-/**
- * The component compiler maps controller names to fully 
- * namespaced controller classes and view names to view paths
- * and caches the result
- * 
- * @pacakge SaQle
- * @author  Wycliffe Omondi Otieno <wycliffomondiotieno@gmail.com>
- * */
 
 namespace SaQle\Build\Utils;
 
-use SaQle\Core\Support\ResolverComponent;
-use RecursiveIteratorIterator;
-use RecursiveDirectoryIterator;
 use SaQle\Core\Support\Cli;
+use SaQle\Core\Support\ResolverComponent;
+use SaQle\Core\Registries\ComponentRegistry;
 use ReflectionClass;
+use RuntimeException;
 
 class ComponentCompiler {
 
-     use CompileUtils;
+     private static array $components_dirs = [];
 
-     private static array $asset_file_extensions = ['json', 'css', 'js'];
+     protected static function normalize_path(string $path){
+        
+         $owner = "project";
 
-     private static function is_asset(string $ext){
-         return in_array($ext, self::$asset_file_extensions);
-     }
-
-     /**
-      * Extract component name and variation name from template file.
-      * 
-      * Examples:
-      * users.html         => ['users', 'users']
-      * users.table.html   => ['users', 'users.table']
-      * users.grid.html    => ['users', 'users.grid']
-      * 
-      * Returns:
-      * [
-      *    component => users,
-      *    variation => users.table
-      * ]
-      * */
-     private static function extract_template_parts(string $filename): array {
-
-         $ext = config('app.component_template_ext');
-
-         //remove extension
-         $name = preg_replace('/\.'.$ext.'$/', '', $filename);
-
-         $parts = explode('.', $name);
-
-         //first segment is always the component name
-         $component = $parts[0];
-
-         return [
-             'component' => $component,
-             'variation' => $name
-         ];
-     }
-
-     private static function initialize_component(string $owner): array {
-
-         return [
-             'controller'                 => '',
-             'controller_path'            => '',
-             'template_path'              => '',
-             'compiled_template_path'     => '',
-             'owner'                      => $owner,
-             'proxy'                      => false,
-
-             //new keys
-             'has_many_templates'         => false,
-             'template_variations'        => []
-         ];
-     }
-
-     public static function cache_components(array $items): void {
+         if(str_starts_with($path, config('base_path'))){
+             $path = str_replace(config('base_path').DIRECTORY_SEPARATOR, '', $path);
+             $owner = "project";
+         }elseif(str_starts_with($path, config('framework_path'))){
+             $path = str_replace(config('framework_path').DIRECTORY_SEPARATOR, '', $path);
+             $owner = "framework";
+         }
          
+         $path = str_replace('\\', '/', $path); // normalize slashes
+
+         return [$path, $owner];
+     }
+
+     private static function initialize_component(): array {
+
+         return [
+             'controller'             => '',
+             'controller_path'        => '',
+
+             'definition'             => null,
+             'definition_path'        => null,
+
+             'template_path'          => '',
+             'compiled_template_path' => '',
+
+             'style_path'             => null,
+             'script_path'            => null,
+
+             'owner'                  => null,
+             'proxy'                  => false,
+
+             'has_many_templates'     => false,
+             'template_variations'    => [],
+         ];
+     }
+
+     private static function cache_components(array $components): void {
+
          $caching_folder = path_join([config('base_path'), config('class_mappings_dir')]);
 
-         if(!file_exists($caching_folder)){
+         if(!is_dir($caching_folder)){
              mkdir($caching_folder, 0777, true);
          }
 
-         $caching_file = path_join([$caching_folder, "components.php"]);
+         $caching_file = path_join([$caching_folder, 'components.php']);
 
-         $export = var_export($items, true);
-         $export = preg_replace('/^/m', '    ', $export); // indent
+         $export = var_export($components, true);
 
-         $php_content ="<?php\n\n"."return ".$export.";\n";
+         $export = preg_replace('/^/m', '    ', $export);
+
+         $php_content ="<?php\n\n"."return " .$export.";\n";
 
          file_put_contents($caching_file, $php_content);
      }
 
-     public static function compile(){
+     /**
+     * Add a component source directory.
+     *
+     * Every direct child directory is considered a component.
+     */
+     private static function add_components_dir(string $path, string $prefix) : void {
+         self::$components_dirs[] = [
+             'path'   => $path,
+             'prefix' => $prefix
+         ];
+     }
+
+     /**
+     * Build all component source directories.
+     */
+     private static function initialize_sources() : void {
+
+         self::$components_dirs = [];
+
+         // Project components.
+         self::add_components_dir(
+             path_join([config('base_path'), 'Components']),
+             'app'
+         );
+
+         // Framework module components.
+         foreach (config('framework_modules') as $fm){
+             $module = new $fm();
+
+             self::add_components_dir(
+                 $module->path('Components'),
+                 'saqle.'.strtolower((new ReflectionClass($fm))->getShortName())
+             );
+         }
+
+         // Application module components.
+         foreach (config('app.modules') as $am){
+             $module = new $am();
+
+             self::add_components_dir(
+                 $module->path('Components'),
+                 'app.'.strtolower((new ReflectionClass($am))->getShortName())
+             );
+         }
+
+         //Additional component directories.
+         foreach (config('app.extra_components_dirs') as $directory) {
+             self::add_components_dir(
+                 path_join([config('base_path'), $directory]),
+                 'app'
+             );
+         }
+     }
+
+     /**
+     * Compile components.
+     */
+     public static function compile(): void {
 
          Cli::print("Compiling components...");
 
-         $components_dirs = [];
+         self::initialize_sources();
 
-         /**
-          * Project level components
-          * They have an app prefix to their names
-          * */
-         $components_dirs[] = [ 
-             'path'   => path_join([config('base_path'), 'Components']),
-             'prefix' => "app"
-         ];
-
-         /**
-          * Framework module components
-          * Module component names are prefixed with module name
-          * */
-         foreach(config('framework_modules') as $fm){
-
-             $module = new $fm();
-
-             $components_dirs[] = [
-                 'path'   => $module->path('Components'),
-                 'prefix' => "saqle.".strtolower((new ReflectionClass($fm))->getShortName())
-             ];
-         }
-
-         /**
-          * App module components
-          * Module component names are prefixed with module name
-          * */
-         foreach(config('app.modules') as $am){
-
-             $module = new $am();
-
-             $components_dirs[] = [
-                 'path'   => $module->path('Components'),
-                 'prefix' => "app.".strtolower((new ReflectionClass($am))->getShortName())
-             ];
-         }
-
-         /**
-          * The developer may define components in folders
-          * not standard to the framework. In this case, those 
-          * directories will be listed in extra_components_dirs
-          * so that they can be compiled as well.
-          * 
-          * These components have an app prefix to their names and are treated
-          * as project level components
-          * */
-         foreach(config('app.extra_components_dirs') as $d){
-             $components_dirs[] = [
-                 'path'   => path_join([config('base_path'), $d]),
-                 'prefix' => "app"
-             ];
-         }
-
-         /**
-          * Iterate through each components directory, mapping 
-          * components controllers and templates to componets names
-          * */
          $components = [];
 
-         foreach($components_dirs as $dir){
+         foreach (self::$components_dirs as $source){
 
-             $path   = $dir['path'];
-             $prefix = $dir['prefix'];
+             $path   = $source['path'];
+             $prefix = $source['prefix'];
 
              if(!is_dir($path)){
                  continue;
              }
-             
-             $dir_iterator = new RecursiveIteratorIterator(
-                 new RecursiveDirectoryIterator($path)
-             );
 
-             foreach($dir_iterator as $file){
+             //Every direct directory is a component.
+             foreach(self::component_directories($path) as $component_path){
 
-                 if(!$file->isFile()){
-                     continue;
+                 $component = self::compile_component($component_path, $prefix);
+
+                 $component_name = strtolower($prefix.'.'.basename($component_path));
+
+                 if(isset($components[$component_name])){
+                     throw new RuntimeException("Duplicate component: {$component_name}");
                  }
 
-                 $extension = $file->getExtension();
-
-                 if(self::is_asset($extension)){
-                     continue;
-                 }
-
-                 $real_path = $file->getRealPath();
-
-                 [$compile_path, $owner] = self::normalize_path($real_path);
-
-                 /**
-                  * ==========================
-                  * TEMPLATE FILES
-                  * ==========================
-                  * */
-                 if($extension === config('app.component_template_ext')){
-
-                     $parts = self::extract_template_parts(
-                         $file->getFilename()
-                     );
-
-                     $base_component_name = $parts['component'];
-                     $variation_name      = $parts['variation'];
-
-                     $component_name = $prefix
-                         ? $prefix.'.'.$base_component_name
-                         : $base_component_name;
-                     $component_name = strtolower($component_name);
-
-                     if(!isset($components[$component_name])){
-                         $components[$component_name] = self::initialize_component($owner);
-                     }
-
-                     /**
-                      * Store variation
-                      * */
-                     $components[$component_name]['template_variations'][strtolower($variation_name)] = [
-                         'template_path'          => $compile_path,
-                         'compiled_template_path' => ''
-                     ];
-
-                     /**
-                      * Default template:
-                      * users.html
-                      * */
-                     $default_variation_name = $base_component_name;
-
-                     if($variation_name === $default_variation_name){
-
-                         $components[$component_name]['template_path'] = $compile_path;
-                     }
-
-                     continue;
-                 }
-
-                 /**
-                  * ==========================
-                  * CONTROLLER FILES
-                  * ==========================
-                  * */
-                 if($extension === 'php'){
-
-                     $component_name = str_replace(
-                         ".php",
-                         "",
-                         $file->getFilename()
-                     );
-
-                     $component_name = $prefix
-                         ? $prefix.'.'.$component_name
-                         : $component_name;
-                     $component_name = strtolower($component_name);
-
-                     if(!isset($components[$component_name])){
-                         $components[$component_name] = self::initialize_component($owner);
-                     }
-
-                     $components[$component_name]['controller_path'] = $compile_path;
-
-                     //read file contents
-                     $content = file_get_contents($real_path);
-
-                     //extract namespace
-                     preg_match('/namespace\s+([^;]+);/', $content, $namespace_match);
-                     $namespace = $namespace_match[1] ?? null;
-
-                     //extract class name
-                     preg_match('/class\s+(\w+)/', $content, $class_match);
-                     $class_name = $class_match[1] ?? null;
-
-                     if($namespace && $class_name){
-
-                         $namespaced_class_name = $namespace.'\\'.$class_name;
-
-                         if(is_a($namespaced_class_name, ResolverComponent::class, true)){
-                             $components[$component_name]['proxy'] = true;
-                         }
-
-                         $components[$component_name]['controller'] = $namespaced_class_name;
-                     }
-                 }
-             }
-         }
-
-         /**
-          * Finalize template metadata
-          * */
-         foreach($components as $component_name => &$component){
-
-             $templates_count = count($component['template_variations']);
-
-             $component['has_many_templates'] = $templates_count > 1;
-
-             /**
-              * If there is only one template variation,
-              * set it as the default template automatically.
-              * */
-             if(
-                 !$component['template_path']
-                 && $templates_count === 1
-             ){
-                 $first = array_values(
-                     $component['template_variations']
-                 )[0];
-
-                 $component['template_path'] = $first['template_path'];
+                 $components[$component_name] = $component;
              }
          }
 
          self::cache_components($components);
 
          Cli::print("Components compiled and cached\n");
+     }
+
+     /**
+     * Get direct component directories.
+     */
+     private static function component_directories(string $path) : array {
+
+         $directories = [];
+
+         foreach(scandir($path) ?: [] as $directory){
+
+             if($directory === '.' || $directory === '..'){
+                 continue;
+             }
+
+             $component_path = path_join([$path, $directory]);
+
+             if(is_dir($component_path)){
+                 $directories[] = $component_path;
+             }
+         }
+
+         return $directories;
+     }
+
+     /**
+     * Compile one component directory.
+     */
+     private static function compile_component(string $component_path, string $owner): array {
+
+         $component_name = basename(rtrim($component_path, DIRECTORY_SEPARATOR));
+
+         Cli::print("\nComponent: $component_name");
+
+         $component = self::initialize_component();
+
+         $component_owner = "project";
+
+         //controller
+         $controller_path = path_join([$component_path, 'Controller.php']);
+
+         if(is_file($controller_path)){
+
+             [$compile_path, $file_owner] = self::normalize_path(realpath($controller_path));
+
+             $component_owner = $file_owner;
+
+             $component['controller_path'] = $compile_path;
+
+             //Extract class information.
+             $content = file_get_contents($controller_path);
+
+             preg_match('/namespace\s+([^;]+);/', $content, $namespace_match);
+
+             preg_match('/class\s+(\w+)/', $content, $class_match);
+
+             $namespace = $namespace_match[1] ?? null;
+
+             $class_name = $class_match[1] ?? null;
+
+             if($namespace && $class_name){
+
+                 $fqcn = $namespace.'\\'.$class_name;
+
+                 $component['controller'] = $fqcn;
+
+                 if(is_a($fqcn, ResolverComponent::class, true)){
+                     $component['proxy'] = true;
+                 }
+
+                 Cli::print("Controller: $fqcn");
+             }
+         }
+
+         //Definition
+         $definition_path = path_join([$component_path, 'Definition.php']);
+
+         if(is_file($definition_path)){
+
+             [$compile_path, $file_owner] = self::normalize_path(realpath($definition_path));
+
+             $component_owner = $file_owner;
+
+             $component['definition_path'] = $compile_path;
+
+             $content = file_get_contents($definition_path);
+
+             preg_match('/namespace\s+([^;]+);/', $content, $namespace_match);
+
+             preg_match('/class\s+(\w+)/', $content, $class_match);
+
+             $namespace = $namespace_match[1] ?? null;
+
+             $class_name = $class_match[1] ?? null;
+
+             if($namespace && $class_name){
+
+                 $def = $namespace.'\\'.$class_name;
+
+                 $component['definition'] = $def;
+
+                 Cli::print("Definition: $def");
+             }
+         }
+
+         //Default template
+         $template_path = path_join([$component_path, 'Template.html']);
+
+         if(is_file($template_path)){
+
+             [$compile_path, $file_owner] = self::normalize_path(realpath($template_path));
+
+             $component_owner = $file_owner;
+
+             $component['template_path'] = $compile_path;
+
+             $component['compiled_template_path'] = self::compile_template($template_path, $file_owner);
+
+             /*
+             * The default template is also
+             * available as the component variation.
+             */
+             $component['template_variations'][strtolower($component_name)] = [
+                 'template_path' => $compile_path,
+                 'compiled_template_path' => $component['compiled_template_path']
+             ];
+
+             Cli::print("Template: $compile_path");
+         }
+
+         //css
+         $style_path = path_join([$component_path, 'Style.css']);
+
+         if(is_file($style_path)){
+             [$compile_path, $file_owner] = self::normalize_path(realpath($style_path));
+
+             $component_owner = $file_owner;
+
+             $component['style_path'] = $compile_path;
+
+             Cli::print("Style: $compile_path");
+         }
+
+         //JavaScript
+         $script_path = path_join([$component_path, 'Script.js']);
+
+         if(is_file($script_path)){
+
+             [$compile_path, $file_owner] = self::normalize_path(realpath($script_path));
+
+             $component_owner = $file_owner;
+
+             $component['script_path'] = $compile_path;
+
+             Cli::print("Script: $compile_path");
+         }
+
+         //Template variations
+         $templates_path = path_join([$component_path, 'Templates']);
+
+         if(is_dir($templates_path)){
+
+             Cli::print("Templates: $compile_path");
+
+             foreach(self::template_files($templates_path) as $variation => $variation_path){
+
+                 [$compile_path, $file_owner] = self::normalize_path(realpath($variation_path));
+
+                 $component_owner = $file_owner;
+
+                 $component['template_variations'][strtolower($variation)] = [
+                     'template_path' => $compile_path,
+                     'compiled_template_path' => self::compile_template($variation_path, $file_owner)
+                 ];
+
+                 Cli::print("$variation: $compile_path");
+             }
+         }
+
+         //Finalize
+         $variation_count = count($component['template_variations']);
+
+         /*
+         * A component has many templates when
+         * it has more than one template available.
+         */
+         $component['has_many_templates'] = $variation_count > 1;
+
+         $component['owner'] = $component_owner;
+
+         Cli::print("Component compilation successful!\n");
+
+         return $component;
+     }
+
+     /**
+     * Find templates inside Templates/.
+     *
+     * FileOne.html -> FileOne
+     * FileTwo.html -> FileTwo
+     */
+     private static function template_files(string $path) : array {
+
+         $templates = [];
+
+         foreach (scandir($path) ?: [] as $filename){
+
+             if($filename === '.' || $filename === '..'){
+                 continue;
+             }
+
+             $template_path = path_join([$path, $filename]);
+
+             if(!is_file($template_path)){
+                 continue;
+             }
+
+             if(strtolower(pathinfo($filename, PATHINFO_EXTENSION)) !== 'html'){
+                 continue;
+             }
+
+             $variation = pathinfo($filename, PATHINFO_FILENAME);
+
+             $templates[strtolower($variation)] = $template_path;
+         }
+
+         return $templates;
+     }
+
+     /**
+     * Compile a template.
+     */
+     private static function compile_template(string $template_path, string $owner): string {
+         return TemplateCompiler::compile_template($template_path);
      }
 }

@@ -7,41 +7,7 @@ use SaQle\Core\Support\Cli;
 
 class TemplateCompiler {
 
-     public static function compile(){
-
-         Cli::print("Compiling templates...");
-
-         $components = ComponentRegistry::all();
-         $updated_components = [];
-
-         foreach($components as $name => $c){
-
-             $name_parts = explode(".", $name);
-             $main_name = end($name_parts);
-
-             $real_template_path = ComponentRegistry::real_template_path($c['template_path'], $c['owner']);
-             $c['compiled_template_path'] = $real_template_path ? self::compile_template($real_template_path) : "";
-
-             foreach($c['template_variations'] as $template_name => $template_config){
-                 if($template_name == $main_name){
-                     $c['template_variations'][$template_name]['compiled_template_path'] = $c['compiled_template_path'];
-                 }else{
-                     $var_real_template_path = ComponentRegistry::real_template_path(
-                         $c['template_variations'][$template_name]['template_path'], 
-                         $c['owner']
-                     );
-                     $c['template_variations'][$template_name]['compiled_template_path'] = $var_real_template_path ? self::compile_template($var_real_template_path) : "";
-                 }
-             }
-
-             $updated_components[$name] = $c;
-         }
-         
-         ComponentCompiler::cache_components($updated_components);
-
-         Cli::print("Templates compiled and cached\n");
-     }
-
+ 
      private static function cache_path(){
          $path = path_join([config('base_path'), config('templates_cache_dir')]);
 
@@ -52,7 +18,7 @@ class TemplateCompiler {
          return $path;
      }
 
-     private static function compile_template(
+     public static function compile_template(
          string $template_path = "", 
          string $content = "", 
          string $type = ""

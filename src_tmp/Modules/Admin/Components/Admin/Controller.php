@@ -10,11 +10,11 @@ use SaQle\Admin\{
 };
 use SaQle\Auth\Context\ActorContext;
 
-class Admin { 
+class Controller { 
 
      #[Index]
      public function get() : Message {
-
+ 
          return Message::ok([
              'navigation' => ActorContext::is_platform() ? Platform::navigation() : AdminProvider::navigation(),
              'tenant_name' => config('tenancy.enabled') && request()->tenant ? request()->tenant->tenant_name : ""

@@ -41,10 +41,10 @@ final class MakeComponent extends Command {
          $module_slug = $module ? self::slug($module, "Module") : "";
 
          if($module){
-             $base_path = base_path("modules", strtolower($module_slug), "components");
+             $base_path = base_path("modules", $module_slug, "Components");
              $namespace = "App\\Modules\\".ucwords($module_slug)."\\Components\\".ucwords($name_slug);
          }else{
-             $base_path = base_path("components");
+             $base_path = base_path("Components");
              $namespace = "App\\Components\\".ucwords($name_slug);
          }
 
@@ -58,11 +58,12 @@ final class MakeComponent extends Command {
          mkdir($component_path, 0777, true);
 
          self::create_php($component_path, $name_slug, $namespace, $proxy);
+
          if(!$proxy){
              self::create_html($component_path, $name_slug);
              self::create_css($component_path, $name_slug);
              self::create_js($component_path, $name_slug);
-             self::create_json($component_path, $name_slug);
+             self::create_definition($component_path, $namespace);
          }
 
          Cli::print("Component {$name} created successfully.\n");
@@ -75,7 +76,7 @@ final class MakeComponent extends Command {
              throw new Exception("{$type} name can only contain letters and underscore.");
          }
 
-         return strtolower($name);
+         return $name;
      }
 
      private static function create_php($path, $slug, $namespace, $proxy){
@@ -89,7 +90,7 @@ namespace {$namespace};
 
 use SaQle\Http\Response\Message;
 
-class {$class} {
+class Controller {
      public function get() {
         return Message::ok();
      }
@@ -104,7 +105,7 @@ namespace {$namespace};
 
 use SaQle\Core\Support\ResolverComponent;
 
-class {$class} extends ResolverComponent {
+class Controller extends ResolverComponent {
      public function get_component() : string {
         return "";
      }
@@ -113,7 +114,7 @@ class {$class} extends ResolverComponent {
 PHP;
      }
 
-         file_put_contents("{$path}/{$slug}.php", $content);
+         file_put_contents("{$path}/Controller.php", $content);
      }
 
      private static function create_html($path, $slug){
@@ -123,7 +124,7 @@ PHP;
 </div>
 HTML;
 
-         file_put_contents("{$path}/{$slug}.html", $content);
+         file_put_contents("{$path}/Template.html", $content);
      }
 
      private static function create_css($path, $slug) {
@@ -133,7 +134,7 @@ HTML;
 }
 CSS;
 
-         file_put_contents("{$path}/{$slug}.css", $content);
+         file_put_contents("{$path}/Style.css", $content);
      }
 
      private static function create_js($path, $slug){
@@ -143,19 +144,32 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 JS;
 
-         file_put_contents("{$path}/{$slug}.js", $content);
+         file_put_contents("{$path}/Style.js", $content);
      }
 
-     private static function create_json($path, $slug){
-         $content = <<<JSON
-{
-    "dependencies": {
-        "css": [],
-        "js": []
-    }
-}
-JSON;
+     private static function create_definition($path, $namespace){
+         $content = <<<PHP
+<?php
 
-         file_put_contents("{$path}/{$slug}.json", $content);
+namespace {$namespace};
+
+use SaQle\Core\Components\ComponentDefinition;
+use SaQle\Http\Request\Request;
+
+class Definition {
+
+     public function template(Request \$request, ...\$args): ?string {
+         return null;
+     }
+
+     public function dependencies() : array {
+         return [];
+     }
+
+}
+
+PHP;
+
+         file_put_contents("{$path}/Definition.php", $content);
      }
 }

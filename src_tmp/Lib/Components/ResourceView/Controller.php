@@ -5,7 +5,7 @@ use SaQle\Http\Response\Message;
 use SaQle\Core\Ui\Details\DetailView;
 use SaQle\Routing\Resources\ResourceRouteUtils;
 
-class ResourceView {
+class Controller {
 
 	 use ResourceRouteUtils;
 

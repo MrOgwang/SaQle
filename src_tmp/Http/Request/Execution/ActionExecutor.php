@@ -28,6 +28,7 @@ final class ActionExecutor {
 
          if(!$controller || !$method){
              $controller = $request->route->compiled_target->controller;
+
              $method = $request->route->compiled_target->method;
              if(!$controller || !$method){
                  return Message::ok();
