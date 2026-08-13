@@ -1,4 +1,5 @@
 <?php
+
 namespace SaQle\Lib\Components\FormControl;
 
 use SaQle\Http\Response\Message;
