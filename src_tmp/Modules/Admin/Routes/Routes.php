@@ -13,7 +13,7 @@
 
  foreach($db_schemas as $schema_name => $schema_class){
      $models = new $schema_class()->get_defined_models();
-     
+
      foreach($models as $model_label => $model_class){
          register_resource_routes(false, $model_label, $model_class);
      }

@@ -55,8 +55,8 @@
          'authorize'  => $authorize,
          'layout'     => ["saqle.admin.admin", "saqle.admin.resourcewrapper"],
          'model'      => $res_class,
-     ])->routes(function() use ($def, $res_ref, $res_class){
-
+     ])->routes(function() use ($def, $res_ref, $res_class, $is_platform){
+        
          //listing
          Router::get(
              url:    url_join(["/".$res_ref]),
