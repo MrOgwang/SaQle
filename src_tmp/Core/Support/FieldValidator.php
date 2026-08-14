@@ -18,9 +18,11 @@ class FieldValidator {
      ){}
 
 	 public function validate(string $field, mixed $value) : FieldValidationResult {
+
          $errors = [];
 
          if($this->array){
+
              if(!is_array($value)){
                  throw new RuntimeException("The value provided is not an array!");
              }

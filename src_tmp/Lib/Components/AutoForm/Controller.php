@@ -1,6 +1,6 @@
 <?php
 
-namespace SaQle\Lib\Components\AutoResource;
+namespace SaQle\Lib\Components\AutoForm;
 
 use SaQle\Http\Response\Message;
 use SaQle\Core\Ui\Forms\FormField;
@@ -10,6 +10,10 @@ use RuntimeException;
 use Throwable;
 
 class Controller {
+
+	 public function get() : Message {
+	 	 return Message::ok();
+	 }
 
      private function acquire_auto_form(string $model, string $form_name){
      	 $model_class = ModelRegistry::all()[$model] ?? null;

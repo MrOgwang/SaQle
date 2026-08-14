@@ -31,8 +31,17 @@ class StoredFileFactory {
              return self::default_or_null($default_url);
          }
 
-         return $is_multiple ? 
-         new StoredFileCollection($meta, $default_url) : 
-         new StoredFile(isset($meta['name']) ? $meta : $meta[0], $default_url);
+         if(!$is_multiple){
+             return new StoredFile(isset($meta['name']) ? $meta : $meta[0], $default_url);
+         }
+
+         $files = [];
+
+         foreach($meta as $file_meta){
+             $files[] = new StoredFile($file_meta, $default_url);
+         }
+
+         return new StoredFileCollection($files, $default_url);
+         
      }
 }
