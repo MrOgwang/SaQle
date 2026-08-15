@@ -24,7 +24,7 @@ class BooleanField extends IntegerField {
 		 $this->type = ColumnType::BOOLEAN;
 
 		 if(!$this->control_type){
-	 	 	 $this->control_type = "radio";
+	 	 	 $this->control_type = "switch";
 	 	 }
 
 		 parent::initialize_defaults();

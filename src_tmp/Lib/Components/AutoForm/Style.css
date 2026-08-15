@@ -1,10 +1,10 @@
 .autoform {
     overflow-y:auto;
     height:100%;
-    padding:16px;
+    padding:2em;
 }
 .autoform > div{
-     max-width: 500px;
+     max-width: 100%;
      width:100%;
 }
 .autoform h2{
@@ -29,6 +29,17 @@
 }
 .form-group-controls{
     margin-top: 6px;
+}
+.form-footer{
+    border-top:1px solid var(--steel_gray_200);
+    margin-top:2em;
+    padding-top:1em;
+    display: flex;
+    flex-direction: row-reverse;
+}
+.form-footer > button{
+    margin-left:1em;
+    width:90px;
 }
 
 /* =========================
@@ -209,6 +220,9 @@ input[type="week"]{
     align-items:center;
     gap:14px;
 }
+.switch-info{
+    flex:1;
+}
 
 .switch input{
     display:none;
@@ -289,7 +303,6 @@ button,
         transform var(--transition),
         opacity var(--transition),
         background var(--transition);
-    margin-left:1em;
 }
 
 button:hover{

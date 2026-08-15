@@ -83,6 +83,10 @@ class Field implements IField {
 	 #[FieldDefinition()]
 	 protected bool $primary = false;
 
+	 //field description
+	 #[FormControl()]
+	 protected string $description = "";
+
 	 //the render callback is used to change how the value is presented
 	 protected ?Closure $render_callback = null;
 
@@ -191,6 +195,15 @@ class Field implements IField {
 	 	 return $this->primary;
 	 }
 
+	 public function description(string $desc){
+	 	 $this->description = $desc;
+	 	 return $this;
+	 }
+
+	 public function get_description() : string {
+	 	 return $this->description;
+	 }
+
 	 public function get_native_type(){
 	 	 return $this->native_type;
 	 }
@@ -292,7 +305,9 @@ class Field implements IField {
      }
 
      public function validator(){
+
      	 $rules = $this->get_validation_rules();
+
      	 return new FieldValidator(
      	 	 rules: array_filter($rules, fn($r) => $r !== null),
      	 	 array: $this->multiple ?? false

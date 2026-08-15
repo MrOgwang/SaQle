@@ -22,12 +22,6 @@
                  <h2>{{ ucwords($form->get_mode()." ".$form->get_model_name()) }} : {{ (string)$object }}</h2>
                  @endif
              </div>
-             <div class='titleo'>
-                 <button type="submit" class="btn-primary">
-                     Save
-                 </button>
-                 <a class='flex center form-action-btn btn-cancel' href="{{ route($resource->list_route) }}">Cancel</a>
-             </div>
          </div>
      </div>
      @let($context = $form->get_context())
@@ -41,6 +35,6 @@
      <div></div>
      @endif
      <div class='resourcelist-body'>
-         <ui:component name='saqle.lib.autoform' :form='$form'/>
+         <ui:component name='saqle.lib.autoform' :resource='$resource' :form='$form'/>
      </div>
  </form>

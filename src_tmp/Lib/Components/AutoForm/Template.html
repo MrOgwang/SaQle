@@ -10,5 +10,11 @@
     	     <ui:component name="saqle.lib.formfield" :field="$field"/>
     	     @endforeach 
          </div>
+         <div class="form-footer">
+             <button type="submit" class="btn-primary">
+                 Save
+             </button>
+             <a class='flex center form-action-btn btn-cancel' href="{{ route($resource->list_route) }}">Cancel</a>
+         </div>
      </div>
 </div>

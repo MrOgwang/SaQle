@@ -62,23 +62,26 @@ final class RequestDataBag {
          }
 
          //5. Inject into request data bag
-         foreach ($data as $key => $value) {
+         foreach($data as $key => $value){
              $request->data->set($key, $value);
          }
      }
 
      //Normalize $_FILES into a predictable structure
      private static function normalize_files(array $files): array {
+        
          $normalized = [];
 
-         foreach ($files as $field => $file){
+         foreach($files as $field => $file){
 
              if(is_array($file['name'])){ //multiple files were uploaded
 
-                 $normalized[$field] = [];
+                 $clean_files = [];
+                 
                  foreach($file['name'] as $i => $name){
+
                      if($file['error'][$i] !== UPLOAD_ERR_NO_FILE){
-                         $normalized[$field][] = new UploadedFile(
+                         $clean_files[] = new UploadedFile(
                              name:     $name,
                              tmp_name: $file['tmp_name'][$i],
                              size:     $file['size'][$i],
@@ -87,7 +90,11 @@ final class RequestDataBag {
                          );
                      }
                  }
+
+                 $normalized[$field] = !empty($clean_files) ? $clean_files : null;
+
              }else{ //a single file was uploaded
+                 
                  if($file['error'] !== UPLOAD_ERR_NO_FILE){
                      $normalized[$field] = new UploadedFile(
                          name:     $file['name'],
@@ -96,7 +103,10 @@ final class RequestDataBag {
                          error:    $file['error'],
                          type:     $file['type']
                      );
+                 }else{
+                    $normalized[$field] = null;
                  }
+
              }
          }
 
