@@ -24,6 +24,11 @@ final class ModelRegistry {
          return $flipped[$model_class] ?? null;
      }
 
+     public static function get_model_class(string $model_key) : ?string {
+         $all_models = self::all();
+         return $all_models[$model_key] ?? null;
+     }
+
      public static function get_model_name(string $model_class) : ?string {
          $long_model_name = self::get_long_model_name($model_class);
          if(!$long_model_name){

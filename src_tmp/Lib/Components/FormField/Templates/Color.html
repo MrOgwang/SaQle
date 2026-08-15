@@ -1,0 +1,37 @@
+<div class="form-group">
+     <label>{{ $field->label }}
+         @if($field->required)
+         <span class="required">*</span>
+         @endif
+     </label>
+     <div class='form-group-controls'>
+         @if($field->helper_text)
+         <div class="help-text">
+             {{ $field->helper_text }}
+         </div>
+         @endif
+         <div>
+             <div class="color-input">
+                 <input type="color" name="{{ $field->name }}" value="{{ $field->value }}" id='{{ $field->id }}'>
+                 <div class="color-preview"></div>
+                 <span class="color-hex">{{ $field->value }}</span>
+                 <span class="color-chevron">
+                     <svg viewBox="0 0 20 20" fill="none">
+                         <path
+                            d="M5 7.5L10 12.5L15 7.5"
+                            stroke="currentColor"
+                            stroke-width="1.5"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                         />
+                     </svg>
+                 </span>
+             </div>
+             @if($field->errors)
+             <div class="field-error">
+                 {{ implode(',', $field->errors) }}
+             </div>
+             @endif
+         </div>
+     </div>
+ </div>

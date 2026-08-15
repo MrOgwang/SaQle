@@ -23,7 +23,7 @@ final class ActionExecutor {
           * Am not sure this is the right place for this, but for now,
           * we do it this way
           * */
-         array $props = []
+         array &$props = []
      ) : Message {
 
          if(!$controller || !$method){

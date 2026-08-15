@@ -1,4 +1,4 @@
- <div class="form-group">
+<div class="form-group">
      <label>{{ $field->label }}
          @if($field->required)
          <span class="required">*</span>
@@ -11,8 +11,8 @@
          </div>
          @endif
          <div>
-             @let($error_class = $field->errors ? "input_error" : "")
-             <input class="{{ $error_class }}" type='text' value='{{ $field->value }}' placeholder='{{ $field->placeholder }}' name='{{ $field->name }}' id='{{ $field->id }}'/>
+         	 @let($error_class = $field->errors ? "input_error" : "")
+         	 <input class="{{ $error_class }}" type='datetime-local' name='{{ $field->name }}' id='{{ $field->id }}' value='{{ $field->value }}'/>
              @if($field->errors)
              <div class="field-error">
                  {{ implode(',', $field->errors) }}

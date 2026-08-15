@@ -191,9 +191,11 @@ class ComponentCompiler {
      /**
      * Compile one component directory.
      */
-     private static function compile_component(string $component_path, string $owner): array {
+     private static function compile_component(string $component_path, string $prefix): array {
 
          $component_name = basename(rtrim($component_path, DIRECTORY_SEPARATOR));
+
+         $compiled_template_name = strtolower($prefix.".".$component_name);
 
          Cli::print("\nComponent: $component_name");
 
@@ -279,7 +281,7 @@ class ComponentCompiler {
 
              $component['template_path'] = $compile_path;
 
-             $component['compiled_template_path'] = self::compile_template($template_path, $file_owner);
+             $component['compiled_template_path'] = self::compile_template($template_path, $compiled_template_name);
 
              /*
              * The default template is also
@@ -335,7 +337,10 @@ class ComponentCompiler {
 
                  $component['template_variations'][strtolower($variation)] = [
                      'template_path' => $compile_path,
-                     'compiled_template_path' => self::compile_template($variation_path, $file_owner)
+                     'compiled_template_path' => self::compile_template(
+                         $variation_path, 
+                         $compiled_template_name."_".strtolower($variation)
+                     )
                  ];
 
                  Cli::print("$variation: $compile_path");
@@ -395,7 +400,10 @@ class ComponentCompiler {
      /**
      * Compile a template.
      */
-     private static function compile_template(string $template_path, string $owner): string {
-         return TemplateCompiler::compile_template($template_path);
+     private static function compile_template(string $template_path, string $template_name): string {
+         return TemplateCompiler::compile_template(
+             template_path: $template_path, 
+             template_name: $template_name
+         );
      }
 }

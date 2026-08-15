@@ -92,6 +92,7 @@ class UiComponentDefinition {
      }
 
      private function get_assets(string $type, array &$loaded_components = [], string $template_path = "") : array {
+         
          if(isset($loaded_components[$this->name])) {
              return [];
          }
@@ -99,9 +100,6 @@ class UiComponentDefinition {
          $loaded_components[$this->name] = true;
 
          $files = [];
-
-         // 0. get the name of template selected
-         $template_name = $template_path ? pathinfo($template_path, PATHINFO_FILENAME) : "";
 
          // 1. Resolve dependencies first
          $deps = $this->get_dependencies()[$type];

@@ -21,7 +21,8 @@ class TemplateCompiler {
      public static function compile_template(
          string $template_path = "", 
          string $content = "", 
-         string $type = ""
+         string $type = "",
+         string $template_name = ""
      ) : string {
 
          $template_path = trim($template_path);
@@ -35,15 +36,16 @@ class TemplateCompiler {
              throw new RuntimeException("The template file: {$template_path} doesn't exist!");
          }
 
+         $hash = "";
          if($template_path){
-             $hash = md5($template_path);
-             $filename = pathinfo($template_path, PATHINFO_FILENAME);
+             $hash = $template_name ? "" : md5($template_path);
+             $filename = $template_name ? $template_name : pathinfo($template_path, PATHINFO_FILENAME);
          }else{
              $hash = md5($content);
              $filename = "block";
-         }
+         } 
 
-         $compiled_filename = "{$filename}_{$hash}.php";
+         $compiled_filename = $hash ? "{$filename}.{$hash}.php" : "{$filename}.php";
          $compiled_absolute_path = path_join([self::cache_path(), $compiled_filename]);
          $compiled_relative_path = path_join([config('templates_cache_dir'), $compiled_filename]);
 

@@ -56,14 +56,18 @@ class UiComponentNode {
      public function render(Request $request, array $parent_context) : string {
 
          if($this->execute && $this->def->controller && $this->def->method){
+
              try{
-                $this_context = ActionExecutor::execute(
+
+                 $this_context = ActionExecutor::execute(
                      $request, 
                      $this->def->controller, 
                      $this->def->method,
                      $this->props
-                 )->data ?? [];
+                 )->data ?? []; 
+                 
                  $this->context = new UiComponentContext($this_context);
+
              }catch(Throwable $e){
                 
                  log_to_file($e);
@@ -132,7 +136,6 @@ class UiComponentNode {
                  '__props'    => $this->props,
                  '__renderer' => $renderer,
                  '__context'  => $parent_context
-                 //'__blocks'   => $this->blocks,
              ],
              $this->props
          ));

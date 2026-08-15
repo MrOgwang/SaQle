@@ -160,31 +160,41 @@ class ModelCompiler {
          $models_dirs = [ 
              [
                  'path' => path_join([config('base_path'), 'Models']),
-                 'prefix' => ""
+                 'prefix' => "app"
              ]
          ];
 
-         foreach(config('app.modules') as $f){
+         foreach(config('app.modules') as $am){
 
-             $module = new $f();
+             $module = new $am();
 
              $models_dirs[] = [
                  'path'   => $module->path("Models"),
-                 'prefix' => strtolower((new ReflectionClass($f))->getShortName())
+                 'prefix' => "app.".strtolower((new ReflectionClass($am))->getShortName())
+             ];
+         }
+
+         foreach(config('framework_modules') as $fm){
+
+             $module = new $fm();
+
+             $models_dirs[] = [
+                 'path'   => $module->path("Models"),
+                 'prefix' => "saqle.".strtolower((new ReflectionClass($fm))->getShortName())
              ];
          }
 
          foreach(config('app.extra_models_dirs') as $d){
              $models_dirs[] = [
                  'path' => path_join([config('base_path'), $d]),
-                 'prefix' => ""
+                 'prefix' => "app"
              ];
          }
 
          foreach(config('saqle_models_dirs') as $d){
              $models_dirs[] = [
                  'path' => $d,
-                 'prefix' => ""
+                 'prefix' => "saqle"
              ];
          }
 

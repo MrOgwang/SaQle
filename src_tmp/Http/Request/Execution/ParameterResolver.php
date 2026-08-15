@@ -24,7 +24,7 @@ final class ParameterResolver {
 
      public function __construct(private Request $request) {}
 
-     public function resolve(object $instance, string $method, array $props) : array {
+     public function resolve(object $instance, string $method, array &$props) : array {
          $reflection = new ReflectionMethod($instance, $method);
          $params     = [];
 
@@ -32,7 +32,7 @@ final class ParameterResolver {
              if($param->getName() !== "__props"){
                  $params = array_merge($params, $this->resolve_param($param));
              }else{
-                 $params = array_merge($params, ['__props' => $props]);
+                 $params = array_merge($params, ['__props' => &$props]);
              }
          }
 
