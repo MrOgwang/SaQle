@@ -30,12 +30,32 @@ class Controller {
 	 
 	 public function get(array &$__props) : Message {
 
-	 	 if(array_key_exists("field", $__props) && !$__props['field'] instanceof FormFieldContainer){
+	 	 /**
+	 	  * Either there is a 'field' property or a 'bind'
+	 	  * property
+	 	  * */
+	 	 if(array_key_exists("field", $__props) && $__props['field'] instanceof FormFieldContainer){
+	 	 	 return Message::ok();
+	 	 }
 
-	 	 	 $field = $this->construct_field($__props['field']);
+	 	 if(array_key_exists("bind", $__props)){
+
+	 	 	 $field = $this->construct_field($__props['bind']);
 
 	 	 	 if(!$field){
-	 	 	 	throw new RuntimeException("The field [".$__props['field']."] does not exist!");
+	 	 	 	throw new RuntimeException("The field [".$__props['bind']."] does not exist!");
+	 	 	 }
+
+	 	 	 /**
+	 	 	  * the __props array may have values that can override 
+	 	 	  * the default field attributes.
+	 	 	  * */
+	 	 	 $default_attrs = $field->get_attributes();
+
+	 	 	 foreach($default_attrs as $attr => $attr_val){
+	 	 	 	 if(array_key_exists($attr, $__props)){
+	 	 	 	 	 $field->$attr($__props[$attr]);
+	 	 	 	 }
 	 	 	 }
 
 	 	 	 $__props['field'] = $field;
