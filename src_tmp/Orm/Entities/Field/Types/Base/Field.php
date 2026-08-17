@@ -94,6 +94,8 @@ class Field implements IField {
 
 	 protected ?Closure $compute_callback = null;
 
+	 protected ?Closure $normalize_callback = null;
+
 	 //initialize a new field
 	 public function __construct(...$kwargs){
 	 	 foreach($kwargs as $k => $v){
@@ -342,12 +344,25 @@ class Field implements IField {
      	 return $this;
      }
 
+     /**
+      * Provide a callback that transforms a value
+      * into another form before validation
+      * */
+     public function normalize(callable $callback){
+     	 $this->normalize_callback = $callback;
+     	 return $this;
+     }
+
      public function get_transform(){
      	 return $this->transform_callback;
      }
 
      public function get_compute(){
      	 return $this->compute_callback;
+     }
+
+     public function get_normalize(){
+     	 return $this->normalize_callback;
      }
 
 }

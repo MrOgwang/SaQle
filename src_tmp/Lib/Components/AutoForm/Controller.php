@@ -4,7 +4,6 @@ namespace SaQle\Lib\Components\AutoForm;
 
 use SaQle\Http\Response\Message;
 use SaQle\Core\Ui\Forms\FormField;
-use SaQle\Core\Support\Route;
 use SaQle\Core\Registries\ModelRegistry;
 use RuntimeException;
 use Throwable;
@@ -89,11 +88,6 @@ class Controller {
          return $choices;
      }
 
-     #[Route(
-         name: 'select.options',
-         method: 'get', 
-         url: '/forms/options', 
-     )]
 	 public function select_field_options(
 	 	 string $fname, 
 	 	 string $model,
@@ -112,11 +106,6 @@ class Controller {
 	 	 }
 	 }
 
-	 #[Route(
-         name: 'select.cascade.options',
-         method: 'get', 
-         url: '/forms/options/cascade', 
-     )]
 	 public function select_cascade_options(
 	 	 string $fname, 
 	 	 string $model,
@@ -145,11 +134,6 @@ class Controller {
 	 	 }
 	 }
 
-	 #[Route(
-         name: 'select.search.options',
-         method: 'get', 
-         url: '/forms/options/search', 
-     )]
 	 public function select_search_options(
 	 	 string $fname, 
 	 	 string $model,

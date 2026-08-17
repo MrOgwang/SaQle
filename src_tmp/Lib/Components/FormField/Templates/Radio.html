@@ -14,11 +14,8 @@
              <div class="choice-group">
 				 @foreach($field->choices as $key => $value)
 				 <div class="choice radio">
-				 	 @if($field->value === $key)
-					 <input checked='checked' type='radio' name='{{ $field->name }}' id='{{ $field->id }}_{{ $key }}' value='{{ $key }}'/>
-					 @else
-					 <input type='radio' name='{{ $field->name }}' id='{{ $field->id }}_{{ $key }}' value='{{ $key }}'/>
-					 @endif
+                     @let($checked = $field->value === $key ? "checked='checked'" : "")
+                     <input {{ $checked }} class='{{ $field->class }}' type='radio' name='{{ $field->name }}' id='{{ $field->id }}_{{ $key }}' value='{{ $key }}'/>
 					 <label for="{{ $field->id }}_{{ $key }}">{{ $value }}</label>
 				 </div>
 			     @endforeach

@@ -1,14 +1,11 @@
 <?php
 
-namespace SaQle\Core\Support;
+namespace SaQle\Http\Attributes;
 
-use Attribute;
-use SaQle\Http\Response\ResponseType;
 use SaQle\Routing\Router;
 use RuntimeException;
 
-#[Attribute(Attribute::TARGET_METHOD)]
-class Route {
+abstract class HttpMethod {
 
 	 public private(set) string $name {
          set(string $value){
@@ -51,12 +48,12 @@ class Route {
      private ?string $model = null;
 
      public function __construct(
-     	 string $name,
-     	 string $method,
-     	 string $url,
-     	 string $authorize = "",
-         array  $middleware = [],
-     	 array $layout = [],
+     	 string  $name,
+     	 string  $method,
+     	 string  $url,
+     	 string  $authorize = "",
+         array   $middleware = [],
+     	 array   $layout = [],
          ?string $model = null
      ){
      	 $this->name = $name;

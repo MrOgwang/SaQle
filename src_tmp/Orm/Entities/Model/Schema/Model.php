@@ -125,6 +125,9 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
  	 	 //fill in defaults for all the fields that haven't been provided
          $this->fill_defaults($data);
 
+         //normalize values
+         $this->run_data_normalization($data);
+
          //run first validation on the data
          $this->run_data_validation($data, false);
 
@@ -739,6 +742,20 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
          }
      }
 
+     private function run_data_normalization(array &$data){
+         foreach($this->table->get_clean_fields() as $f){
+             if(!in_array($f->get_name(), $this->table->get_defined_field_names())){
+                 continue;
+             }
+
+             $normalize_callback = $f->get_normalize();
+             if($normalize_callback){
+                 $field_name = $f->get_name();
+                 $data[$field_name] = $normalize_callback($data[$field_name], (Object)$data);
+             }
+         }
+     }
+
      /**
       * Ensure that the keys of the data array are field names defined on the model.
       * Note: at this point even a column name instead of a field name will be disregarded.
@@ -853,9 +870,9 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
 
      public function save(){
 
-         $called_class = get_called_class();
-         
-         return $called_class::create($this->data)->now();
+         $this->set_connection();
+
+         return (new CreateManager($this))->now();
      }
 
      //add new row(s) to database or batch create new instances

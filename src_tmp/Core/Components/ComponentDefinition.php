@@ -34,4 +34,8 @@ abstract class ComponentDefinition {
      public function dependencies() : array {
          return [];
      }
+
+     public function routes() : array {
+         return [];
+     }
 }

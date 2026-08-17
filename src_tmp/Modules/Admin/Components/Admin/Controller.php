@@ -3,7 +3,6 @@
 namespace SaQle\Modules\Admin\Components\Admin;
 
 use SaQle\Http\Response\Message;
-use SaQle\Core\Support\Index;
 use SaQle\Admin\{
      Admin as AdminProvider,
      Platform
@@ -12,7 +11,6 @@ use SaQle\Auth\Context\ActorContext;
 
 class Controller { 
 
-     #[Index]
      public function get() : Message {
  
          return Message::ok([

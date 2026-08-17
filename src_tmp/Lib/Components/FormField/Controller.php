@@ -52,11 +52,16 @@ class Controller {
 	 	 	  * */
 	 	 	 $default_attrs = $field->get_attributes();
 
+             //do not override these attributes
+	 	 	 $unsafe_attrs = ['name', 'id'];
+
 	 	 	 foreach($default_attrs as $attr => $attr_val){
-	 	 	 	 if(array_key_exists($attr, $__props)){
+	 	 	 	 if(array_key_exists($attr, $__props) && !in_array($attr, $unsafe_attrs)){
 	 	 	 	 	 $field->$attr($__props[$attr]);
 	 	 	 	 }
 	 	 	 }
+
+	 	 	 $field->value($field->default);
 
 	 	 	 $__props['field'] = $field;
 

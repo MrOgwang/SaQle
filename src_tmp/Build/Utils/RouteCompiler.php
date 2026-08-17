@@ -8,7 +8,13 @@ use SaQle\Routing\{
      Router,
      RouteRegistry
 };
-use SaQle\Core\Support\Route as RouteAttribute;
+use SaQle\Http\Attributes\{
+     Get,
+     Post,
+     Patch,
+     Put,
+     Delete
+};
 use SaQle\Core\Registries\ComponentRegistry;
 use SaQle\Core\Support\Cli;
 use ReflectionClass;
@@ -87,27 +93,67 @@ final class RouteCompiler {
 
          foreach($components as $component_name => $component_config){
 
-             if($component_config['controller'] && class_exists($component_config['controller'])){
+             //only developer created components
+             if(!str_starts_with($component_name, "app") || $component_name === "app.page"){
+                 continue;
+             }
 
+             Cli::print("Component: $component_name\n");
+
+             if($component_config['controller'] && class_exists($component_config['controller'])){
+        
                  $class_name = $component_config['controller'];
                  $reflection = new ReflectionClass($class_name);
+
+                 $inspected_methods = [];
 
                  foreach($reflection->getMethods(ReflectionMethod::IS_PUBLIC) as $method){
 
                      //skip inherited public methods
-                     if($method->getDeclaringClass()->getName() !== $class_name) {
+                     if($method->getDeclaringClass()->getName() !== $class_name){
                          continue;
                      }
 
-                     //get route attribute
-                     $route_attr = $method->getAttributes(RouteAttribute::class)[0] ?? null;
+                     $method_name = $method->getName();
 
-                     if($route_attr){
-                         $route = $route_attr->newInstance();
-                         $route->set_target($component_name."@".$method->getName());
-                         $route->initialize();
+                     //get http method attributes
+                     $http_attrs = array_merge(
+                         $method->getAttributes(Get::class),
+                         $method->getAttributes(Post::class),
+                         $method->getAttributes(Put::class),
+                         $method->getAttributes(Patch::class),
+                         $method->getAttributes(Delete::class),
+                     );
+
+                     if(!empty($http_attrs)){
+                         foreach($http_attrs as $attr){
+                             $instance = $attr->newInstance();
+                             $instance->set_target($component_name."@".$method_name);
+                             $instance->initialize();
+                         }
+                     }else{
+
+                         $url = "/".str_replace(".", "/", $component_name);
+
+                         match($method_name){
+                             'get'    => Router::get($url, $component_name)->name($component_name.".get"),
+                             'post'   => Router::post($url, $component_name)->name($component_name.".post"),
+                             'put'    => Router::put($url, $component_name)->name($component_name.".put"),
+                             'patch'  => Router::patch($url, $component_name)->name($component_name.".patch"),
+                             'delete' => Router::delete($url, $component_name)->name($component_name.".delete"),
+                         }
                      }
-                 }
+                 } 
+
+             }else{
+                 /**
+                  * Components without controllers will have
+                  * one get route.
+                  * */
+                 $url = "/".str_replace(".", "/", $component_name);
+
+                 Router::get($url, $component_name)->name($component_name);
+
              }
          }
 
@@ -115,11 +161,11 @@ final class RouteCompiler {
 
      private static function load_routes(){
 
-         //load routes from files
-         self::load_file_routes();
-
          //load routes defined in components via Route attribute
          self::load_component_routes();
+
+         //load routes from files
+         self::load_file_routes();
 
      }
 

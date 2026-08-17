@@ -88,7 +88,7 @@ class FieldValidator {
              }
 
              return (new ArrayItemValidator())->validate($field, $value, $this->rules);
-         }
+         } 
 
          $ordered_rules = $this->rules;
 

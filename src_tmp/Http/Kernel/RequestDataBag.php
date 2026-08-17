@@ -65,6 +65,7 @@ final class RequestDataBag {
          foreach($data as $key => $value){
              $request->data->set($key, $value);
          }
+         
      }
 
      //Normalize $_FILES into a predictable structure

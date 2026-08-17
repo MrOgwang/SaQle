@@ -3,7 +3,14 @@
 namespace SaQle\Core\Registries;
 
 use SaQle\Core\Assert\Assert;
-use SaQle\Core\Support\{HttpMethod, Index};
+use SaQle\Core\Support\Index;
+use SaQle\Http\Attributes\{
+     Get,
+     Post,
+     Patch,
+     Put,
+     Delete
+};
 use SaQle\Core\Ui\UiComponentDefinition;
 use InvalidArgumentException;
 use ReflectionClass;
@@ -172,12 +179,22 @@ final class ComponentRegistry {
      private static function http_method_rule(): callable {
          return function(array $methods, string $verb){
              return array_values(array_filter($methods, function($method) use ($verb) {
-                 foreach ($method->getAttributes(HttpMethod::class) as $attr) {
+
+                 $http_attrs = array_merge(
+                     $method->getAttributes(Get::class),
+                     $method->getAttributes(Post::class),
+                     $method->getAttributes(Put::class),
+                     $method->getAttributes(Patch::class),
+                     $method->getAttributes(Delete::class),
+                 );
+
+                 foreach($http_attrs as $attr){
                      $instance = $attr->newInstance();
-                     if (in_array(strtoupper($verb), array_map('strtoupper', $instance->methods))) {
+                     if($instance->method === strtoupper($verb)){
                          return true;
                      }
                  }
+
                  return false;
              }));
          };
