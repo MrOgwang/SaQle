@@ -98,8 +98,6 @@ final class RouteCompiler {
                  continue;
              }
 
-             Cli::print("Component: $component_name\n");
-
              if($component_config['controller'] && class_exists($component_config['controller'])){
         
                  $class_name = $component_config['controller'];
@@ -133,7 +131,7 @@ final class RouteCompiler {
                          }
                      }else{
 
-                         $url = "/".str_replace(".", "/", $component_name);
+                         /*$url = "/".str_replace(".", "/", $component_name);
 
                          match($method_name){
                              'get'    => Router::get($url, $component_name)->name($component_name.".get"),
@@ -141,7 +139,8 @@ final class RouteCompiler {
                              'put'    => Router::put($url, $component_name)->name($component_name.".put"),
                              'patch'  => Router::patch($url, $component_name)->name($component_name.".patch"),
                              'delete' => Router::delete($url, $component_name)->name($component_name.".delete"),
-                         }
+                             default  => ""
+                         };*/
                      }
                  } 
 
@@ -150,10 +149,9 @@ final class RouteCompiler {
                   * Components without controllers will have
                   * one get route.
                   * */
-                 $url = "/".str_replace(".", "/", $component_name);
+                 /*$url = "/".str_replace(".", "/", $component_name);
 
-                 Router::get($url, $component_name)->name($component_name);
-
+                 Router::get($url, $component_name)->name($component_name);*/
              }
          }
 

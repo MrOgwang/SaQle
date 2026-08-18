@@ -10,10 +10,10 @@ final class RouteModuleBuilder {
      public function __construct(
          private Module $module
      ){
-         //set some defaults
+         /*/set some defaults
          self::to_registry('name', $module->manifest()->name);
 
-         self::to_registry('prefix', "/".$module->manifest()->name);
+         self::to_registry('prefix', "/".$module->manifest()->name);*/
      }
 
      public function prefix(string $prefix) : static {
