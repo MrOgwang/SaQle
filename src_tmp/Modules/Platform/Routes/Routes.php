@@ -24,6 +24,11 @@
 	 Router::method("POST", "post")->name('submit');
  });
 
+ Router::post("/signout", 'saqle.platform.saqlesignout')
+ ->authorize('__authenticated__ && __super_admin__')
+ ->middleware(['__authentication__', '__authorization__'])
+ ->name("logout");
+
  Router::get("/tenants/:slug/manage", 'saqle.platform.managetenant')
  ->authorize('__authenticated__ && __super_admin__')
  ->middleware(['__authentication__', '__authorization__'])

@@ -144,7 +144,7 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 JS;
 
-         file_put_contents("{$path}/Style.js", $content);
+         file_put_contents("{$path}/Script.js", $content);
      }
 
      private static function create_definition($path, $namespace){

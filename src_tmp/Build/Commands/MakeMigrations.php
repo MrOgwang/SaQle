@@ -440,6 +440,39 @@ class MakeMigrations extends Command {
          return $renamed;
      }
 
+     private function add_remove_column_changes(
+         $table_name, 
+         $prev_table_name,
+         $all_model_fields,
+         $all_last_model_fields,
+         $model_name
+     ){
+
+         $current_column_keys  = array_keys($all_model_fields[$table_name]);
+         $previous_column_keys = array_keys($all_last_model_fields[$prev_table_name]);
+
+         $added_column_keys = array_diff($current_column_keys, $previous_column_keys);
+         $removed_column_keys = array_diff($previous_column_keys, $current_column_keys);
+
+         $added_settings = null;
+         $removed_settings = null;
+
+         if($added_column_keys){
+             $added_settings = ['name' => $table_name, 'model' => $model_name, 'columns' => []];
+             foreach($added_column_keys as $ack){
+                 $added_settings['columns'][$ack] = $all_model_fields[$table_name][$ack]['def'];
+             }
+         }
+         if($removed_column_keys){
+             $removed_settings = ['name' => $table_name, 'model' => $model_name, 'columns' => []];
+             foreach($removed_column_keys as $rck){
+                 $removed_settings['columns'][$rck] = $all_last_model_fields[$prev_table_name][$rck]['def'];
+             }
+         }
+
+         return [$added_settings, $removed_settings];
+     }
+
      private function get_schema_snapshot($connections, $timestamp, $migration_name, $type){
 
          $schema_snapshot = [];
@@ -534,25 +567,53 @@ class MakeMigrations extends Command {
 
                                  $prev_table_name = $flipped_last_models[$model_name];
 
-                                 $current_column_keys  = array_keys($all_model_fields[$table_name]);
-                                 $previous_column_keys = array_keys($all_last_model_fields[$prev_table_name]);
- 
-                                 $added_column_keys = array_diff($current_column_keys, $previous_column_keys);
-                                 $removed_column_keys = array_diff($previous_column_keys, $current_column_keys);
+                                 [$added_settings, $removed_settings] = $this->add_remove_column_changes(
+                                     $table_name, 
+                                     $prev_table_name,
+                                     $all_model_fields,
+                                     $all_last_model_fields,
+                                     $model_name
+                                 );
 
-                                 if($added_column_keys){
-                                     $added_settings = ['name' => $table_name, 'model' => $model_name, 'columns' => []];
-                                     foreach($added_column_keys as $ack){
-                                         $added_settings['columns'][$ack] = $all_model_fields[$table_name][$ack]['def'];
-                                     }
+                                 if($added_settings){
                                      $added_columns[] = $added_settings;
                                  }
-                                 if($removed_column_keys){
-                                     $removed_settings = ['name' => $table_name, 'model' => $model_name, 'columns' => []];
-                                     foreach($removed_column_keys as $rck){
-                                         $removed_settings['columns'][$rck] = $all_last_model_fields[$prev_table_name][$rck]['def'];
-                                     }
+
+                                 if($removed_settings){
                                      $removed_columns[] = $removed_settings;
+                                 }
+
+                             }
+
+                             $maintained_tables = array_intersect(
+                                 array_keys($added_models),
+                                 array_keys($removed_models)
+                             );
+
+                             foreach($maintained_tables as $t){ 
+                                 $am = $added_models[$t];
+                                 $rm = $removed_models[$t];
+
+                                 if(is_a($am, $rm, true) || is_a($rm, $am, true)){
+                                     unset($added_models[$t]);
+                                     unset($removed_models[$t]);
+
+                                     //get column updates instead
+                                     [$added_settings, $removed_settings] = $this->add_remove_column_changes(
+                                         $t, 
+                                         $t,
+                                         $all_model_fields,
+                                         $all_last_model_fields,
+                                         $am
+                                     );
+
+                                     if($added_settings){
+                                         $added_columns[] = $added_settings;
+                                     }
+
+                                     if($removed_settings){
+                                         $removed_columns[] = $removed_settings;
+                                     }
                                  }
                              }
                          }

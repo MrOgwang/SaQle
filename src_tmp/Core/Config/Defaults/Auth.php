@@ -41,14 +41,25 @@ return [
 
      /**
       * -------------------------------------------------
-      * AUTH ROUTE
+      * LOG IN ROUTE
       * -------------------------------------------------
       * 
       * The name of the route responsible for signing in
       * users into your application
       * 
       * */
-	 'route' => null,
+	 'login_route' => null,
+
+	 /**
+      * -------------------------------------------------
+      * LOG OUT ROUTE
+      * -------------------------------------------------
+      * 
+      * The name of the route responsible for signing out
+      * users
+      * 
+      * */
+	 'logout_route' => null,
 
 	 /**
 	  * ------------------------------------------------

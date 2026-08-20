@@ -14,6 +14,7 @@ class Controller {
      public function get() : Message {
  
          return Message::ok([
+             'is_platform' => ActorContext::is_platform(),
              'navigation' => ActorContext::is_platform() ? Platform::navigation() : AdminProvider::navigation(),
              'tenant_name' => config('tenancy.enabled') && request()->tenant ? request()->tenant->tenant_name : ""
          ]); 

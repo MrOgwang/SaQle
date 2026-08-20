@@ -52,13 +52,20 @@
                      <div class="role">Administrator</div>
                  </div>
              </div>
-             <a href='/signout' class="flex center logout">
-                 <svg viewBox="0 0 24 24">
-                     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                     <path d="M16 17l5-5-5-5"/>
-                     <path d="M21 12H9"/>
-                 </svg>
-             </a>
+             @if($is_platform)
+             <form method='POST' action="/saqle/signout">
+             @else
+             <form method='POST' action="{{ route(config('auth.logout_route')) }}">
+             @endif
+                 {!! $csrf_token !!}
+                 <button type='submit' class="flex center logout">
+                     <svg viewBox="0 0 24 24">
+                         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                         <path d="M16 17l5-5-5-5"/>
+                         <path d="M21 12H9"/>
+                     </svg>
+                 </button>
+             </form>
          </div>
      </aside>
 
