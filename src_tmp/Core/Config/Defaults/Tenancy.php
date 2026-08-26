@@ -74,6 +74,17 @@ return [
              'enabled'  => false,
              'key'      => 'tenant',
              'priority' => 3
+         ],
+
+         /**
+          * Get tenant id from session
+          * 
+          * */
+         [
+             'resolver' => 'session',
+             'enabled'  => true,
+             'key'      => 'tenant_id',
+             'priority' => 5
          ]
      ],
 

@@ -7,7 +7,8 @@ use SaQle\Auth\Identity\Tenant\Resolvers\{
      PathTenantIDResolver,
      HeaderTenantIDResolver,
      DomainTenantIDResolver,
-     AuthUserTenantIDResolver
+     AuthUserTenantIDResolver,
+     SessionTenantIDResolver
 };
 use RuntimeException;
 
@@ -19,6 +20,7 @@ class TenantIDResolverFactory {
          //'domain'    => DomainTenantIDResolver::class,
          'header'    => HeaderTenantIDResolver::class,
          'path'      => PathTenantIDResolver::class,
+         'session'   => SessionTenantIDResolver::class
      ];
 
      public static function make() : array {

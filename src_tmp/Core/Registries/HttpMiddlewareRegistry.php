@@ -10,6 +10,7 @@ use SaQle\Middleware\{
      ResponseMiddleware
 };
 use SaQle\Middleware\Pipeable;
+use RuntimeException;
 
 class HttpMiddlewareRegistry extends MiddlewareRegistry {
 
@@ -29,14 +30,19 @@ class HttpMiddlewareRegistry extends MiddlewareRegistry {
 
      protected function filter_middleware(array $stack, Pipeable $pipeable) : array {
 
-         $route_middleware = $pipeable->route->middleware ?? [];
+         $route_middleware = array_merge($this->global, $pipeable->route->middleware ?? []);
 
          $shortlisted = [];
 
-         foreach($stack as $name){
+         foreach($route_middleware as $name){
 
-             //must either be a global middleware or a route middleware
-             if(!in_array($name, $this->global) && !in_array($name, $route_middleware)){
+             //middleware must be registered
+             if(!isset($this->stack[$name])){
+                 throw new RuntimeException("The middleware: {$name} not defined!");
+             }
+
+             //run before or after stack only
+             if(!in_array($name, $stack)){
                  continue;
              }
 

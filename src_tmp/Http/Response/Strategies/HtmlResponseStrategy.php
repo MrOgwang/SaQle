@@ -97,7 +97,7 @@ final class HtmlResponseStrategy implements ResponseStrategy {
      public function build(Request $request, Message $result) : Response {
 
          $layout = $this->get_layout($request, $result);
-         
+
          $context = $this->prepare_context($request);
 
          $tree = new UiComponentTreeBuilder()->build($layout, $result->data ?? []);

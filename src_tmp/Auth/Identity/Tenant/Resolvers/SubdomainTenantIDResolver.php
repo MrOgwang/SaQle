@@ -38,7 +38,14 @@ class SubdomainTenantIDResolver implements TenantIDResolverInterface {
                  return null;
              }
 
-             return $subdomain;
+             //find the actual tenant id
+
+             $model_class = config('tenancy.model_class');
+
+             $tenant = $model_class::using(system_connection())
+             ->get()->select(['tenant_id'])->where('slug__eq', $subdomain)->first_or_null();
+
+             return $tenant ? $tenant->tenant_id : null;
          }
 
          return null;

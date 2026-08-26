@@ -87,7 +87,7 @@ class HttpKernel extends Kernel {
          return new Message(Message::INTERNAL_SERVER_ERROR, $e->getTrace(), $e->getMessage());
      }
 
-     private function apply_flash(Request $request, Message $msg, ?ErrorContext $ctx = null) : void { 
+     private function apply_flash(Message $msg, ?ErrorContext $ctx = null) : void { 
 
          $should_flash_input = $ctx && $ctx->should_flash_input ? true : $msg->should_flash();
          $should_flash_errors = $ctx && $ctx->should_flash_errors ? true : $msg->should_flash();
@@ -105,11 +105,13 @@ class HttpKernel extends Kernel {
      }
 
      private function apply_request_attributes(Request $request, Message $msg){
-         if($request->is_safe()){
-             $request->attributes->set('error.code', $msg->code);
-             $request->attributes->set('error.message', $msg->message);
-             $request->attributes->set('error.context', $msg->data);
-         }
+         
+         $request->attributes->set('error.code', $msg->code);
+
+         $request->attributes->set('error.message', $msg->message);
+
+         $request->attributes->set('error.context', $msg->data);
+
      }
 
      private function handle_exception(Throwable $e, Request $request): void {
@@ -120,7 +122,7 @@ class HttpKernel extends Kernel {
 
          $message = $this->build_http_message($e, $context, $request);
 
-         $this->apply_flash($request, $message, $context);
+         $this->apply_flash($message, $context);
 
          $this->apply_request_attributes($request, $message);
 
@@ -134,7 +136,10 @@ class HttpKernel extends Kernel {
          $this->apply_request_attributes($request, $http_message);
 
          $response = $this->resolve_response($request, $http_message);
+
          $response->send();
+
+         Session::close($request);
      }
 
      public function process(mixed $options = null){
@@ -152,7 +157,7 @@ class HttpKernel extends Kernel {
              //run middleware pipeline
              $req_bootstrap_msg = $this->bootstrap_request($request);
              if($req_bootstrap_msg){
-                 $this->apply_flash($request, $req_bootstrap_msg);
+                 $this->apply_flash($req_bootstrap_msg);
                  $this->short_circuit_response($request, $req_bootstrap_msg);
                  return;
              }
@@ -181,13 +186,13 @@ class HttpKernel extends Kernel {
               * properly weighed!
               * */
              if($res_bootstrap_msg){
-                 $this->apply_flash($request, $res_bootstrap_msg);
+                 $this->apply_flash($res_bootstrap_msg);
                  $this->short_circuit_response($request, $res_bootstrap_msg);
                  return;
              }
 
              //step 4: send the response from normal flow
-             $this->apply_flash($request, $act_exec_msg);
+             $this->apply_flash($act_exec_msg);
              $response->send(); 
 
              $this->app()->set_stage(AppStage::TERMINATED);

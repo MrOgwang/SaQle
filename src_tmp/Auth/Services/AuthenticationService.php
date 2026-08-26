@@ -68,7 +68,7 @@ class AuthenticationService implements IService {
              //event(new LoginSucceeded($user));
              return new AuthResult(true, $user, $identity_token, "Login successful");
          }catch(Throwable $e){
-             //log internally
+             log_to_file($e);
              event(new LoginFailed($strategy_name, $credentials));
              return new AuthResult(false, null, null, "Authentication failed");
          }

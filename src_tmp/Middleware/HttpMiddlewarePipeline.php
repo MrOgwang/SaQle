@@ -13,7 +13,7 @@ class HttpMiddlewarePipeline {
      public static function run(string $phase, Request $request, ?Response $response = null): ?Message {
 
          $middleware = app()->http_middleware->get($phase, $request);
-
+         
          return self::run_middlewares($phase, $middleware, $request, $response);
 
      }

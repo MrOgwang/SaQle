@@ -88,7 +88,7 @@ class TenantMiddleware implements RequestMiddleware {
      }
 
      public function before($request) : ?Message {
-
+        
          $tenant_key = config('session_tenant_key');
 
          if(
