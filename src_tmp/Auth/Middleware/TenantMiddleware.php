@@ -88,7 +88,7 @@ class TenantMiddleware implements RequestMiddleware {
      }
 
      public function before($request) : ?Message {
-        
+
          $tenant_key = config('session_tenant_key');
 
          if(
@@ -106,7 +106,8 @@ class TenantMiddleware implements RequestMiddleware {
          $tenant_id = $this->id_resolver->resolve();
 
          if(!$tenant_id){
-             return Message::bad_request(message: "Failed to resolve tenant id!");
+             //return Message::bad_request(message: "Failed to resolve tenant id!");
+             return null;
          }
 
          $tenant = $request->session->get($tenant_key, null);
