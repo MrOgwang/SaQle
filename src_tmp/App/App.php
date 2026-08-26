@@ -219,6 +219,7 @@ final class App {
      }
      
      public function run($args = null) : void {
+        
          if(PHP_SAPI === 'cli'){
              new CliKernel()->process($args);
              exit();

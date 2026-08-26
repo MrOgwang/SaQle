@@ -7,7 +7,9 @@ use SaQle\Auth\Identity\User\Interfaces\{
 };
 
 class JwtUserIDResolver implements UserIDResolverInterface {
-     public function create(UserInterface $user): string{
+
+     public function create(UserInterface $user): string {
+
          $issuer     = config('auth.jwt_iss') ?? config('app.domains.root'); //the domain issuing the token
          $issued_at  = time();                          //the time issued in secends
          $not_before = time();                          //the time in seconds before which token is not valid
@@ -24,6 +26,7 @@ class JwtUserIDResolver implements UserIDResolverInterface {
          ];
 
          $token = $this->encode($payload);
+         
          return $token;
      }
 

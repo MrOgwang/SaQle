@@ -24,6 +24,7 @@ class HttpMiddlewarePipeline {
          Request $request, 
          ?Response $response = null
      ) : ?Message {
+
          if(!$middlewares){
              return null;
          }

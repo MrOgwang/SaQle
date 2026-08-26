@@ -13,9 +13,17 @@ class SessionUserIDResolver implements UserIDResolverInterface {
          }
      }
 
-     public function create(UserInterface $user): string{
+     public function create(UserInterface $user): string {
+         
          session_regenerate_id();
+
          $_SESSION['user_id'] = $user->user_id;
+
+         //if multitenancy is set, store the tenant id as well.
+         if(config('tenancy.enabled')){
+             $_SESSION['tenant_id'] = $user->tenant_id;
+         }
+
          return session_id();
      }
 
@@ -23,12 +31,17 @@ class SessionUserIDResolver implements UserIDResolverInterface {
     
      }
 
-     public function resolve(): ?string{
+     public function resolve(): ? string {
+
          return $_SESSION['user_id'] ?? null;
+
      }
 
      public function destroy() : void {
+
          session_unset();
+
          session_destroy();
+
      }
 }
