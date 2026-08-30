@@ -174,7 +174,11 @@ final class App {
 
          if($this->setup->http_middleware){
              foreach($this->setup->http_middleware->all() as $n => $m){
-                 $this->http_middleware->add($n, $m['middleware'], $m['is_global'], $m['is_global']);
+
+                 $is_global = $m['is_global'] === 'true' ? true : false;
+                 $is_api = $m['is_api'] === 'null' ? null : ($m['is_api'] === 'true' ? true : false);
+
+                 $this->http_middleware->add($n, $m['middleware'], $is_global, $is_api);
              }
          }
      }
@@ -183,7 +187,11 @@ final class App {
 
          if($this->setup->console_middleware){
              foreach($this->setup->console_middleware->all() as $n => $m){
-                 $this->console_middleware->add($n, $m['middleware'], $m['is_global'], $m['is_global']);
+
+                 $is_global = $m['is_global'] === 'true' ? true : false;
+                 $is_api = $m['is_api'] === 'null' ? null : ($m['is_api'] === 'true' ? true : false);
+
+                 $this->console_middleware->add($n, $m['middleware'], $is_global, $is_api);
              }
          }
      }

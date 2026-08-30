@@ -47,7 +47,7 @@ abstract class MiddlewareRegistry {
              $after_class  = AfterCommandMiddleware::class;
          }
 
-         $scope = is_null($is_api) ? RequestScope::ALL : ($is_api ? RequestScope::API : RequestScope::WEB );
+         $scope = is_null($is_api) ? RequestScope::ALL : ($is_api ? RequestScope::API : RequestScope::WEB);
 
          $this->stack[$name] = [
              'scope' => $scope->value,

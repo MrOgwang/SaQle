@@ -13,8 +13,8 @@ final class MiddlewareBuilder {
          ?bool  $is_api = null
      ) : void {
          $this->middleware[$name] = [
-             'is_global'  => $is_global,
-             'is_api'     => $is_api,
+             'is_global'  => $is_global ? 'true' : 'false',
+             'is_api'     => is_null($is_api) ? 'null' : ($is_api ? 'true' : 'false'),
              'middleware' => $class
          ];
      }

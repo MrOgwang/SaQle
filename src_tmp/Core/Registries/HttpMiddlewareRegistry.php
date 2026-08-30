@@ -38,7 +38,7 @@ class HttpMiddlewareRegistry extends MiddlewareRegistry {
              $record = $this->stack[$name];
 
              //middleware is either api or web middleware
-             if($record['scope'] && $record['scope'] !== $pipeable->scope()){
+             if($record['scope'] !== "all" && $record['scope'] !== $pipeable->scope()){
                  continue;
              }
 
