@@ -2,10 +2,18 @@
 namespace SaQle\Core\Registries;
 
 use SaQle\Http\Request\{
-     Request, 
+     Request,
      RequestScope
 };
 use SaQle\Middleware\Pipeable;
+use SaQle\Console\Middleware\{
+     BeforeCommandMiddleware,
+     AfterCommandMiddleware
+};
+use SaQle\Middleware\{
+     RequestMiddleware,
+     ResponseMiddleware
+};
 
 abstract class MiddlewareRegistry {
 
@@ -17,7 +25,45 @@ abstract class MiddlewareRegistry {
 
      protected array $after_stack = []; 
 
-     abstract public function add(string $name, string $middleware, ?RequestScope $scope = null) : void;
+     abstract public function add(
+         string $name, 
+         string $class, 
+         bool   $is_global = true, 
+         ?bool  $is_api = null
+     ) : void;
+
+     protected function register_middleware(
+         string $name, 
+         string $class, 
+         bool   $is_global = true, 
+         ?bool  $is_api = null,
+         string $type = "http"
+     ){
+         $before_class = RequestMiddleware::class;
+         $after_class  = ResponseMiddleware::class;
+
+         if($type === 'console'){
+             $before_class = BeforeCommandMiddleware::class;
+             $after_class  = AfterCommandMiddleware::class;
+         }
+
+         $scope = is_null($is_api) ? RequestScope::ALL : ($is_api ? RequestScope::API : RequestScope::WEB );
+
+         $this->stack[$name] = [
+             'scope' => $scope->value,
+             'middleware' => $class
+         ];
+
+         if(is_a($class, $before_class, true)){
+             $this->before_stack[] = $name;
+         }elseif(is_a($class, $after_class, true)){
+             $this->after_stack[] = $name;
+         }
+
+         if($is_global){
+             $this->global[] = $name;
+         }
+     }
 
      abstract protected function filter_middleware(array $stack, Pipeable $pipeable) : array;
 
@@ -35,9 +81,5 @@ abstract class MiddlewareRegistry {
          }
 
          return $this->get_after($pipeable);
-     }
-
-     public function set_global(array $global){
-         $this->global = $global;
      }
 }

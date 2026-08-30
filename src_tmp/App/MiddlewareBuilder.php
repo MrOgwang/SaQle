@@ -2,30 +2,24 @@
 
 namespace SaQle\App;
 
-use SaQle\Http\Request\RequestScope;
-
 final class MiddlewareBuilder {
 
      private array $middleware = [];
 
-     private array $global = [];
-
-     public function add(string $name, string $middleware, ?RequestScope $scope = null) : void {
+     public function add(
+         string $name, 
+         string $class, 
+         bool   $is_global = true, 
+         ?bool  $is_api = null
+     ) : void {
          $this->middleware[$name] = [
-             'scope' => $scope ? $scope->value : null,
-             'middleware' => $middleware
+             'is_global'  => $is_global,
+             'is_api'     => $is_api,
+             'middleware' => $class
          ];
-     }
-
-     public function global(array $middleware){
-         $this->global = $middleware;
      }
 
      public function all(): array {
          return $this->middleware;
-     }
-
-     public function get_global(): array {
-         return $this->global;
      }
 }

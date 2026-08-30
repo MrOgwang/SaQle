@@ -11,7 +11,7 @@ use SaQle\Console\{
 };
 use SaQle\Console\Signature\Signature;
 
-class MigrateStructure {
+class MigrateProject {
 
      public function signature(): Signature {
          return Signature::make();
@@ -19,29 +19,23 @@ class MigrateStructure {
 
      public function handle(CommandContext $context) : int {
 
-         $root = path_join([config('framework_path'), 'src']);
+         $root = path_join([config('base_path'), 'src_tmp']);
 
-         $destination_root = path_join([config('framework_path'), 'src_tmp']);
+         $destination_root = path_join([config('base_path'), 'src']);
 
          $core_dirs = [
-             'apis',
-             'auth',
-             'build',
-             'commons',
+             'authorization',
+             'bootstrap',
              'components',
-             'compression',
-             'core',
-             'http',
-             'image',
-             'listeners',
-             'middleware',
-             'orm',
+             'config',
+             'databases',
+             'env',
+             'logs',
+             'middlewares',
+             'modules',
+             'public',
              'routes',
-             'security',
-             'session',
-             'shortcuts',
-             'templates',
-             'log'
+             'services'
          ];
 
          if(!is_dir($destination_root)){

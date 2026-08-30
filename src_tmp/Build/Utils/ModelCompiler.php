@@ -26,6 +26,8 @@ use SaQle\Core\Support\Cli;
 
 class ModelCompiler {
 
+     private static array $models_dirs = [];
+
      private static function get_model_classes_from_file(string $file) : array {
          $classes = self::get_classes_declared_in_file($file);
 
@@ -144,59 +146,59 @@ class ModelCompiler {
          file_put_contents($caching_file, $php_content);
      }
 
+      //add models source directory
+     private static function add_models_dir(string $path, string $prefix) : void {
+         self::$models_dirs[] = [
+             'path'   => $path,
+             'prefix' => $prefix
+         ];
+     }
+
+     //build models source directories
+     private static function initialize_sources(){
+
+         //Project models
+         self::add_models_dir(path_join([config('base_path'), 'src', 'Models']), 'app');
+
+         //Framework module models
+         foreach(config('framework_modules', [])  as $fm){
+
+             $module = new $fm();
+
+             self::add_models_dir(
+                path: $module->path("Models"), 
+                prefix: "saqle.".strtolower((new ReflectionClass($fm))->getShortName())
+             );
+
+         }
+
+         //Application module routes
+         foreach(config('app.modules', [])  as $am){
+
+             $module = new $am();
+
+             self::add_models_dir(
+                path: $module->path("Models"), 
+                prefix: "app.".strtolower((new ReflectionClass($am))->getShortName())
+             );
+         }
+
+         //Additional app models directories
+         foreach(config('app.extra_models_dirs', []) as $d){
+             self::add_models_dir(path_join([config('base_path'), $d]), 'app');
+         }
+
+         //Additional framework models directories
+         foreach(config('saqle_models_dirs', []) as $d){
+             self::add_models_dir($d, 'saqle');
+         }
+     }
+
      public static function compile(){
 
          Cli::print("Compiling models and tables...");
 
-         /**
-          * Get all directories where models live
-          * 
-          * 1. Top level models in project root
-          * 2. Module level models inside module directories
-          * 2. Other models as listed in EXTRA_MODELS_DIRS setting
-          * 
-          * Module model names will be prefixed with module name
-          * */
-         $models_dirs = [ 
-             [
-                 'path' => path_join([config('base_path'), 'Models']),
-                 'prefix' => "app"
-             ]
-         ];
-
-         foreach(config('app.modules') as $am){
-
-             $module = new $am();
-
-             $models_dirs[] = [
-                 'path'   => $module->path("Models"),
-                 'prefix' => "app.".strtolower((new ReflectionClass($am))->getShortName())
-             ];
-         }
-
-         foreach(config('framework_modules') as $fm){
-
-             $module = new $fm();
-
-             $models_dirs[] = [
-                 'path'   => $module->path("Models"),
-                 'prefix' => "saqle.".strtolower((new ReflectionClass($fm))->getShortName())
-             ];
-         }
-
-         foreach(config('app.extra_models_dirs') as $d){
-             $models_dirs[] = [
-                 'path' => path_join([config('base_path'), $d]),
-                 'prefix' => "app"
-             ];
-         }
-
-         foreach(config('saqle_models_dirs') as $d){
-             $models_dirs[] = [
-                 'path' => $d,
-                 'prefix' => "saqle"
-             ];
-         }
+         self::initialize_sources();
 
          /**
           * Iterate through each models directory, mapping 
@@ -205,7 +207,7 @@ class ModelCompiler {
          $models = [];
          $tables = [];
 
-         foreach($models_dirs as $dir){
+         foreach(self::$models_dirs as $dir){
 
              $path = $dir['path'];
              $prefix = $dir['prefix'];

@@ -1,31 +1,20 @@
 <?php
 namespace SaQle\Core\Registries;
 
-use SaQle\Http\Request\{
-     Request, 
-     RequestScope
-};
-use SaQle\Middleware\{
-     RequestMiddleware,
-     ResponseMiddleware
-};
 use SaQle\Middleware\Pipeable;
 use RuntimeException;
 
-class HttpMiddlewareRegistry extends MiddlewareRegistry {
+class HttpMiddlewareRegistry extends MiddlewareRegistry { 
 
-     public function add(string $name, string $middleware, ?RequestScope $scope = null) : void {
+     public function add(
+         string $name, 
+         string $class, 
+         bool   $is_global = true, 
+         ?bool  $is_api = null
+     ) : void {
 
-         $this->stack[$name] = [
-             'scope' => $scope ? $scope->value : null,
-             'middleware' => $middleware
-         ];
+         $this->register_middleware($name, $class, $is_global, $is_api, 'http');
 
-         if(is_a($middleware, RequestMiddleware::class, true)){
-             $this->before_stack[] = $name;
-         }elseif(is_a($middleware, ResponseMiddleware::class, true)){
-             $this->after_stack[] = $name;
-         }
      }
 
      protected function filter_middleware(array $stack, Pipeable $pipeable) : array {

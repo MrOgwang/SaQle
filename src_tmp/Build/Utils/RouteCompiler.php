@@ -23,40 +23,43 @@ use RuntimeException;
 
 final class RouteCompiler {
 
-     private static function load_file_routes(){
-         /**
-          * Get all directories where routes live
-          * 
-          * 1. Top level routes in project root
-          * 2. Module level routes inside module directories
-          * 3. Other routes as listed in extra_routes_dirs config
-          * 
-          * */
-         $routes_dirs = [
-             [
-                 'path' => path_join([config('base_path'), 'Routes']),
-                 'module' => null
-             ]
+     private static array $routes_dirs = [];
+
+     //add route source directory
+     private static function add_routes_dir(string $path, ?string $module = null) : void {
+         self::$routes_dirs[] = [
+             'path'   => $path,
+             'module' => $module
          ];
+     }
 
-         foreach(array_merge(
-             config('framework_modules', []), 
-             config('app.modules', []))  as $m){
+     //build route source directories
+     private static function initialize_sources(){
 
-             $routes_dirs[] = [
-                 'path' => "",
-                 'module' => $m
-             ];
+         //Project routes
+         self::add_routes_dir(path_join([config('base_path'), 'src', 'Routes']));
+
+         //Framework module routes
+         foreach(config('framework_modules', [])  as $fm){
+             self::add_routes_dir("", $fm);
          }
 
+         //Application module routes
+         foreach(config('app.modules', [])  as $am){
+             self::add_routes_dir("", $am);
+         }
+
+         //Additional routes directories
          foreach(config('app.extra_routes_dirs', []) as $d){
-             $routes_dirs[] = [
-                 'path' => path_join([config('base_path'), $d]),
-                 'module' => null
-             ];
+             self::add_routes_dir(path_join([config('base_path'), $d]));
          }
+     }
 
-         foreach($routes_dirs as $dir){
+     private static function load_file_routes(){
+
+         self::initialize_sources();
+
+         foreach(self::$routes_dirs as $dir){
 
              if($dir['module']){
 

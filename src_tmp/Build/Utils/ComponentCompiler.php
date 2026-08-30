@@ -92,7 +92,7 @@ class ComponentCompiler {
 
          // Project components.
          self::add_components_dir(
-             path_join([config('base_path'), 'Components']),
+             path_join([config('base_path'), 'src', 'Components']),
              'app'
          );
 

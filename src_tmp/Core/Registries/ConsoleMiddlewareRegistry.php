@@ -1,30 +1,20 @@
 <?php
+
 namespace SaQle\Core\Registries;
 
-use SaQle\Http\Request\{
-     Request, 
-     RequestScope
-};
-use SaQle\Console\Middleware\{
-     BeforeCommandMiddleware,
-     AfterCommandMiddleware
-};
 use SaQle\Middleware\Pipeable;
 
 class ConsoleMiddlewareRegistry extends MiddlewareRegistry {
 
-     public function add(string $name, string $middleware, ?RequestScope $scope = null) : void {
+     public function add(
+         string $name, 
+         string $class, 
+         bool   $is_global = true, 
+         ?bool  $is_api = null
+     ) : void {
 
-         $this->stack[$name] = [
-             'scope' => $scope ? $scope->value : null,
-             'middleware' => $middleware
-         ];
+         $this->register_middleware($name, $middleware, $is_global, $is_api, 'console');
 
-         if(is_a($middleware, BeforeCommandMiddleware::class, true)){
-             $this->before_stack[] = $name;
-         }elseif(is_a($middleware, AfterCommandMiddleware::class, true)){
-             $this->after_stack[] = $name;
-         }
      }
 
      protected function filter_middleware(array $stack, Pipeable $pipeable) : array {

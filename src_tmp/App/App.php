@@ -174,11 +174,8 @@ final class App {
 
          if($this->setup->http_middleware){
              foreach($this->setup->http_middleware->all() as $n => $m){
-                 $scope = $m['scope'] !== null ? RequestScope::from($m['scope']) : null;
-                 $this->http_middleware->add($n, $m['middleware'], $scope);
+                 $this->http_middleware->add($n, $m['middleware'], $m['is_global'], $m['is_global']);
              }
-
-             $this->http_middleware->set_global($this->setup->http_middleware->get_global());
          }
      }
 
@@ -186,11 +183,8 @@ final class App {
 
          if($this->setup->console_middleware){
              foreach($this->setup->console_middleware->all() as $n => $m){
-                 $scope = $m['scope'] !== null ? RequestScope::from($m['scope']) : null;
-                 $this->console_middleware->add($n, $m['middleware'], $scope);
+                 $this->console_middleware->add($n, $m['middleware'], $m['is_global'], $m['is_global']);
              }
-
-             $this->console_middleware->set_global($this->setup->console_middleware->get_global());
          }
      }
 

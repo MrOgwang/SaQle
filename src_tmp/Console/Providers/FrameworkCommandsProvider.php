@@ -7,7 +7,8 @@ use SaQle\Console\CommandDefinition;
 use SaQle\Build\Commands\{MakeMigrations, Migrate, MakeCollections, MakeModels, 
     MakeThroughs, SeedDatabase, ResetDatabase, MakeSuperuser, StartProject, 
     StartApps, MakeResources, BuildProject, TestModel, RunCron, QueueCron,
-    MakeComponent, MakeUser, Install, MakeEnv, MigrateStructure, RouteList
+    MakeComponent, MakeUser, Install, MakeEnv, MigrateStructure, RouteList,
+    MigrateProject
 };
 use SaQle\Build\Middleware\SuperUserContextMiddleware;
 
@@ -100,6 +101,18 @@ class FrameworkCommandsProvider extends ServiceProvider {
              middleware: []
          );
 
+         $fmigrate = new CommandDefinition(
+             name: 'framework:migrate',
+             class: MigrateStructure::class,
+             middleware: []  
+         );
+
+         $pmigrate = new CommandDefinition(
+             name: 'project:migrate',
+             class: MigrateProject::class,
+             middleware: []  
+         );
+
          $this->app->commands->add($superuser);
          $this->app->commands->add($component);
          $this->app->commands->add($migration);
@@ -114,6 +127,8 @@ class FrameworkCommandsProvider extends ServiceProvider {
          $this->app->commands->add($install);
          $this->app->commands->add($env);
          $this->app->commands->add($routes);
+         $this->app->commands->add($fmigrate);
+         $this->app->commands->add($pmigrate);
          
      }
 }
