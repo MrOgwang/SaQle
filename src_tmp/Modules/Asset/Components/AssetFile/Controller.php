@@ -9,8 +9,6 @@ class Controller {
 
      public function serve(string $asset) {
 
-         log_to_file("I am serving!");
-
          //Separate payload from signature.
          $parts = explode('.', $asset, 2);
 
