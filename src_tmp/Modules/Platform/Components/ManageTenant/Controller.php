@@ -17,11 +17,14 @@ class Controller {
 	 	 	 throw bad_request_exception("Invalid tenant identification!");
 	 	 } 
 
-	 	 $tenant_key = config('session_tenant_key');
+	 	 $multitenant = config('tenancy.enabled');
 
-	 	 request()->user->tenant_id = $tenant->tenant_id;
+	 	 if($multitenant){
 
-	 	 Session::set('__manage_tenant__', true);
+	 	 	 request()->user->tenant_id = $tenant->tenant_id;
+
+	 	     Session::set('__manage_tenant__', true);
+	 	 }
 
 		 return Message::redirect(
 		 	 route(

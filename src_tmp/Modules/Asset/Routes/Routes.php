@@ -22,4 +22,6 @@ Router::get(config('static_assets_route')."/:type/:file", config('static_assets_
   
 Router::get("/saqle".config('static_assets_route')."/:type/:file", config('static_assets_component'))->name('saqle.static.asset');
 
-?>
+Router::get("/__asset/:asset", 'saqle.asset.assetfile@serve')->name('saqle.component.asset');
+
+?> 

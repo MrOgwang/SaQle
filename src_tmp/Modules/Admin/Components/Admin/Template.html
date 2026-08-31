@@ -42,15 +42,14 @@
              </div>
              @endforeach
          </div>
-
          <!-- ================= FOOTER ================= -->
          <div class="sidebar-footer">
              <div class="profile">
-                 <img src="https://i.pravatar.cc/80" alt="">
+                 <img src="{{ asset('profile.png', 'saqle.admin.admin') }}" alt="{{ $session_user->first_name }} profile's picture">
                  <div>
                      <div class="name">{{ $session_user->first_name }}&nbsp;{{ $session_user->last_name }}</div>
                      <div class="role">Administrator</div>
-                 </div>
+                 </div>  
              </div>
              @if($is_platform)
              <form method='POST' action="/saqle/signout">
@@ -68,7 +67,6 @@
              </form>
          </div>
      </aside>
-
      <div class='appright'>
          <div class='flex v_center row_reverse appheader'>
              <div class='flex center admininitials'>
@@ -86,7 +84,7 @@
                     <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
                 </svg>
              </a>
-         </div>
+         </div> 
          <div class='appbody'>
              <ui:slot/>
          </div>

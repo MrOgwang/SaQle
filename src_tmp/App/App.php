@@ -35,10 +35,6 @@ use SaQle\Console\Kernel\CliKernel;
 use SaQle\Session\Providers\SessionProvider;
 use SaQle\Auth\Guards\GuardManager;
 use SaQle\Http\Request\RequestScope;
-use SaQle\Auth\Middleware\{
-     PlatformAuthenticationMiddleware,
-     PlatformAuthorizationMiddleware
-};
 use SaQle\Auth\Providers\PlatformAuthorizationProvider;
 use SaQle\Console\Providers\FrameworkCommandsProvider;
 use SaQle\Auth\Context\ActorContext;
@@ -162,15 +158,6 @@ final class App {
      }
 
      private function register_http_middleware(){
-
-         /**
-          * Authentication and Authorization middlewares for the platform
-          * adminsitrator:
-          * 
-          * NOTE: This is probably a bad design. Should look into this further
-          * */
-         $this->http_middleware->add('__authentication__', PlatformAuthenticationMiddleware::class);
-         $this->http_middleware->add('__authorization__', PlatformAuthorizationMiddleware::class);
 
          if($this->setup->http_middleware){
              foreach($this->setup->http_middleware->all() as $n => $m){

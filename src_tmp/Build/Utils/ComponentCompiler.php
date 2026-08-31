@@ -34,21 +34,17 @@ class ComponentCompiler {
          return [
              'controller'             => '',
              'controller_path'        => '',
-
              'definition'             => null,
              'definition_path'        => null,
-
              'template_path'          => '',
              'compiled_template_path' => '',
-
              'style_path'             => null,
              'script_path'            => null,
-
              'owner'                  => null,
              'proxy'                  => false,
-
              'has_many_templates'     => false,
              'template_variations'    => [],
+             'base_path'              => ""
          ];
      }
 
@@ -136,7 +132,7 @@ class ComponentCompiler {
 
          $components = [];
 
-         foreach (self::$components_dirs as $source){
+         foreach(self::$components_dirs as $source){
 
              $path   = $source['path'];
              $prefix = $source['prefix'];
@@ -200,6 +196,10 @@ class ComponentCompiler {
          Cli::print("\nComponent: $component_name");
 
          $component = self::initialize_component();
+
+         [$base_path, ] = self::normalize_path(realpath($component_path));
+
+         $component['base_path'] = $base_path;
 
          $component_owner = "project";
 

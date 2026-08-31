@@ -8,6 +8,7 @@ use SaQle\Core\Config\ConfigRepository;
 use SaQle\Http\Request\Request;
 use SaQle\Core\Support\{Directory, AppContext};
 use SaQle\Core\Events\{EventBus, Event};
+use SaQle\Core\Registries\ComponentRegistry;
 use SaQle\App\App;
 
 if(!function_exists('app')){
@@ -298,20 +299,23 @@ if(!function_exists('encrypt')){
      }
 }
 
-if(!function_exists('base64_to_url')){
+if(!function_exists('base64_to_url')) {
      function base64_to_url(string $b64): string {
-        return rtrim(strtr($b64, '+/', '-_'), '=');
+         return rtrim(strtr($b64, '+/', '-_'), '=');
      }
 }
 
 if(!function_exists('url_to_base64')){
      function url_to_base64(string $url): string {
-        $b64 = strtr($url, '-_', '+/');
-        $padding = strlen($b64) % 4;
-        if ($padding > 0) {
+         $b64 = strtr($url, '-_', '+/');
+
+         $padding = strlen($b64) % 4;
+
+         if ($padding > 0) {
             $b64 .= str_repeat('=', 4 - $padding);
-        }
-        return $b64;
+         }
+
+         return $b64;
      }
 }
 
@@ -339,5 +343,46 @@ if(!function_exists('mask_phone')){
          $masked = str_repeat('*', strlen($phone) - 5);
 
          return $start.$masked.$end;
+     }
+}
+
+if(!function_exists('asset')){
+     function asset(string $path, ?string $component = null) : string {
+
+         //Public asset
+         if(!$component){
+             return url_join([config('app.domain.root'), $path]);
+         }
+
+         $c = ComponentRegistry::get_definition($component);
+
+         $component_path = $c->path;
+
+         //Make sure the requested asset actually exists
+         $asset_path = realpath(path_join([$component_path, 'Assets', $path]));
+
+         if($asset_path === false || !is_file($asset_path) || !is_readable($asset_path)){
+             throw new RuntimeException("Component asset [$path] does not exist.");
+         }
+
+         //Prevent ../ from escaping the component directory.
+         if(!str_starts_with($asset_path, $component_path.DIRECTORY_SEPARATOR)){
+             throw new RuntimeException('Invalid component asset path.');
+         }
+
+         /*
+         * The URL doesn't expose the filesystem path.
+         *
+         * We encode the component + relative path and sign it.
+         */
+         $payload = base64_to_url(
+             base64_encode(json_encode([
+             'component' => $component,
+             'path'      => $path,
+         ])));
+
+         $signature = hash_hmac('sha256', $payload, config('app.key'));
+
+         return url_join([config('app.domain.root'), '__asset', $payload.'.'.$signature]);
      }
 }

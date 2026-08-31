@@ -18,6 +18,7 @@
  }
 
  Router::route("/signin", 'saqle.platform.saqlesignin')
+ ->middleware(['__guestonly__'])
  ->name("login")
  ->methods(function(){
 	 Router::method("GET", "get")->name('form');

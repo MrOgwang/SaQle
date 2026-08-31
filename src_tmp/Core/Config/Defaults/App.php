@@ -5,6 +5,13 @@ return [
      //the name of the application.
      'name' => '',
 
+     /**
+      * Application's secret cryptographic key
+      * 
+      * This is used to sign component asset urls
+      * */
+     'key' => '',
+
      //whether to display errors
 	 'display_errors' => 0,
 

@@ -32,14 +32,16 @@ class PlatformAuthorizationProvider extends ServiceProvider {
              '__super_admin__', 
 
              function(?UserInterface $user = null){
-                 return $user->is_super_admin ? true : false;
+                 return $user->is_super_admin === "Yes" ? true : false;
              },
 
              function($request){ 
                  if($request->is_web_request()){
+                     
                      $auth_service = resolve(AuthenticationService::class);
                      $auth_service->logout();
                      redirect(route('saqle.login.form'));
+                     
                  }
 
                  throw new AuthorizationException('User not authorized to access this resource!');

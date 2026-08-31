@@ -2,6 +2,7 @@
 
 namespace SaQle\Modules\Platform;
 
+use SaQle\App\App;
 use SaQle\Core\Modules\{
 	 Module,
 	 ModuleBuilder,
@@ -10,6 +11,11 @@ use SaQle\Core\Modules\{
 use SaQle\Orm\Database\SystemSchema;
 use SaQle\Core\Ui\Utils\Label;
 use SaQle\Admin\Resources\ResourceDefinition;
+use SaQle\Auth\Middleware\{
+     PlatformAuthenticationMiddleware,
+     PlatformAuthorizationMiddleware
+};
+use SaQle\Modules\Platform\Middleware\GuestOnlyMiddleware;
 
 class Platform extends Module implements AdminModule {
 
@@ -73,4 +79,13 @@ class Platform extends Module implements AdminModule {
          ->prefix("/saqle")
          ->name("saqle");
      }
+
+     public function register(App $app): void {
+
+         //register http middleware
+         $app->http_middleware->add('__authentication__', PlatformAuthenticationMiddleware::class, false);
+         $app->http_middleware->add('__authorization__', PlatformAuthorizationMiddleware::class, false);
+         $app->http_middleware->add('__guestonly__', GuestOnlyMiddleware::class, false, false);
+         
+     } 
 }
