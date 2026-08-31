@@ -69,7 +69,7 @@ class MakeEnv extends Command {
          file_put_contents($destination_file, $contents);
 
          //reload the app
-         $app = require config('base_path').'/bootstrap/app.php';
+         $app = require config('base_path').'/src/Bootstrap/Console.php';
 
          Cli::print("Created a development .env file\n");
 
