@@ -23,7 +23,7 @@ class Migrate extends Command {
      public function __construct(){
          $base_path = config('base_path');
 
-         $this->migrations_folder = $base_path."/databases/migrations";
+         $this->migrations_folder = $base_path."/src/Databases/Migrations";
      }
 
      public function signature(): Signature {
@@ -36,10 +36,11 @@ class Migrate extends Command {
          $tenant_model = config('tenancy.model_class');
 
          Cli::print("Migrating system databases!");
-         $this->migrate('system', $tenancy_enabled, $tenant_model);
+         $this->migrate('System', $tenancy_enabled, $tenant_model);
          Cli::print("System databases migrated!\n");
+
          Cli::print("Migrating tenant databases");
-         $this->migrate('tenant', $tenancy_enabled, $tenant_model);
+         $this->migrate('Tenant', $tenancy_enabled, $tenant_model);
          Cli::print("Tenant databases migrated!");
 
          return 0;
@@ -201,7 +202,7 @@ class Migrate extends Command {
              return;
          }
 
-         if($type === 'system'){
+         if($type === 'System'){
              $this->create_migrations_table($touched_snapshots[$system_db_connection], $system_db_driver);
          }
 
@@ -213,7 +214,7 @@ class Migrate extends Command {
 
          $up_operations = $class_instance->up();
 
-         if(!$tenancy_enabled || $type === 'system'){
+         if(!$tenancy_enabled || $type === 'System'){
 
              foreach($touched_snapshots as $snapshot_name => $snapshot_location){
                  $this->process_snapshot(
@@ -432,7 +433,7 @@ class Migrate extends Command {
 
      public function migrate_tenant(mixed $tenant, mixed $migrations){
 
-         $type = 'tenant';
+         $type = 'Tenant';
 
          foreach($migrations as $m){
 
@@ -453,12 +454,12 @@ class Migrate extends Command {
 
          Cli::print("Starting migrations!\n");
  
-         $tenants = $type === 'tenant' ? $tenant_model::using(system_connection())->get()->all()->items() : [];
+         $tenants = $type === 'Tenant' ? $tenant_model::using(system_connection())->get()->all()->items() : [];
          foreach($migration_file_names as $migration_file){
              $this->process_migration_file($type, $migration_file, $tenants, $tenancy_enabled);
          }
  
-         if($type === 'system' && !$tenancy_enabled){
+         if($type === 'System' && !$tenancy_enabled){
              $latest_tenant = $tenant_model::using(system_connection())->get()
              ->order(fields: ['created_at'], direction: 'DESC')
              ->limit(1)

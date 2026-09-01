@@ -25,9 +25,9 @@ class MakeMigrations extends Command {
      public function __construct(){
          $base_path = config('base_path');
 
-         $this->migrations_folder = $base_path."/databases/migrations";
-         $this->snapshots_folder  = $base_path."/databases/snapshots";
-         $this->schemas_folder    = $base_path."/databases/schemas";
+         $this->migrations_folder = $base_path."/src/Databases/Migrations";
+         $this->snapshots_folder  = $base_path."/src/Databases/Snapshots";
+         $this->schemas_folder    = $base_path."/src/Databases/Schemas";
      }
 
      public function signature(): Signature {
@@ -53,8 +53,8 @@ class MakeMigrations extends Command {
 
          $tenant_connections = array_diff_key($connections, array_flip($system_connection_names));
 
-         $this->make_migrations('system', $timestamp, $migration_name, $system_connections);
-         $this->make_migrations('tenant', $timestamp, $migration_name, $tenant_connections);
+         $this->make_migrations('System', $timestamp, $migration_name, $system_connections);
+         $this->make_migrations('Tenant', $timestamp, $migration_name, $tenant_connections);
 
          return 0;
      }

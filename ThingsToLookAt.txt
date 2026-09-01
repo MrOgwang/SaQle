@@ -16,4 +16,20 @@ Authentication
       3. Social sign on
 
 Request Contract
-      1. Provide a API to convert contracts to UI forms.
+
+DONE: 1. Provide a API to convert contracts to UI forms.
+
+Migrations
+
+      1. - Migration fails where a table has foreign key constraints and the reference table
+         does not exist or hasn't already been created. 
+         - This means the developer has to order models a certain way when defining a schema so that referenced tables are created first. 
+         - Foreign key constraints should probably be created after all tables are created to avoid this.
+
+         * The temporary solution I am going to provide is this: Have a SchemaIndex attribute defined on the
+           model. When the Module::get_models is called, this will be used to order the resulting list of models.
+         * Later on the Migration code must be refactored to allow constraints be added after all tables are created instead of adding constraints on table creation.
+
+Databases
+
+       1. At the moment, a database schema maps one to one to a physical database in db.configuration. In the future a physicall database should probably be allowed to map to one or more schemas.

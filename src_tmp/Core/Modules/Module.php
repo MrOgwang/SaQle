@@ -3,6 +3,7 @@
 namespace SaQle\Core\Modules;
 
 use SaQle\App\App;
+use SaQle\Core\Registries\ModelRegistry;
 use ReflectionClass;
 
 abstract class Module {
@@ -60,6 +61,13 @@ abstract class Module {
              homepage: "",
              priority: 1
          );
+
+     }
+
+     //util methods
+     static public function get_models(bool $with_seeders = false) : array {
+
+         return ModelRegistry::get_module_models(get_called_class());
 
      }
 }

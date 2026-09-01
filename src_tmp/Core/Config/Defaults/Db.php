@@ -31,12 +31,6 @@ return [
      /**
       * Define all the database connections
       * */
-     'connections' => [],
-     
-	 /**
-	 * When you first setup the db, this class will be used to seed the database with
-	 * initial data
-	 */
- 	 'seeder' => '',
+     'connections' => []
 ]
 ?>

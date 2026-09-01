@@ -13,13 +13,19 @@ use RuntimeException;
 abstract class Schema {
 
 	 //all the models registered in schema
-	 protected array $models = [];
+	 private array $_models = [];
+
+	 abstract protected function models() : array;
+
+	 public function __construct(){
+	 	 $this->_models = $this->models();
+	 }
 
 	 public function get_defined_models() : array {
 
 	 	 $resolved = [];
 
-         foreach($this->models as $model_class){
+         foreach($this->_models as $model_class){
          	 $model = $model_class::make();
              $resolved[$model->get_table_name()] = $model_class;
          }
