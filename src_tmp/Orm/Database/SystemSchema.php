@@ -19,16 +19,29 @@ use SaQle\Auth\Models\PlatformUser;
 class SystemSchema extends Schema {
 
 	 protected function models() : array {
-	 	 return [
-	  	     config('auth.model_class'),
-	 	 	 config('tenancy.model_class'),
+
+	 	 /**
+	 	  * The order of these models listed here is important:
+	 	  * 
+	 	  * Migration and TenantMigration tables need to be created first
+	 	  * when running initial migrations
+	 	  * */
+
+	 	 $models = [
 	 	 	 Migration::class,
-	 	 	 TenantMigration::class,
+	  	     config('auth.model_class'),
 	 	 	 Session::class,
 	 	 	 FailedJob::class,
 	 	 	 Job::class,
 	 	 	 JobBatch::class
 	 	 ];
+
+	 	 if(config('tenancy.enabled')){
+	 	 	 $models[] = config('tenancy.model_class');
+	 	 	 $models[] = TenantMigration::class;
+	 	 }
+
+	 	 return $models;
 	 }
 
 }

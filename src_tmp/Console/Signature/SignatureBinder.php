@@ -41,11 +41,11 @@ class SignatureBinder {
              $options[$name] = $option->default;
          }
 
-         return new CommandContext(
+         return CommandContext::init(
              command: $parsed->command,
              arguments: $arguments,
              options: $options,
              raw: $parsed->raw
-         );
+         ); 
      }
 }

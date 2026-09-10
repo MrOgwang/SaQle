@@ -16,12 +16,13 @@ class TenantMigration extends Model {
 
 	 	 $table->fields([
 	 	 	 'tenant' => Table::one_of(config('tenancy.model_class'))->required(),
-		     'migration_name' => Table::text_field()->required(),
+		     'migration_name' => Table::char_field()->required()->max_length(200),
 		     'migration_timestamp' => Table::integer_field()->size('big')->required()->unsigned(),
-		     'prev_migration_name' => Table::text_field(),
+		     'prev_migration_name' => Table::char_field()->max_length(200),
 		     'prev_migration_timestamp' => Table::integer_field()->size('big')->unsigned(),
-		     'is_migrated' => Table::boolean_field()->required(),
-		     'type' => Table::text_field()->required(),
+		     'connection' => Table::char_field()->required()->max_length(200),
+		     'database' => Table::char_field()->required()->max_length(200),
+		     'is_migrated' => Table::boolean_field()->required()
 		 ]);
 
 		 $table->with_user_audit(false);

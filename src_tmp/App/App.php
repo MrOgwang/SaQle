@@ -153,8 +153,6 @@ final class App {
          foreach($this->setup->providers as $p2){
              (new $p2($this))->register();
          }
-
-         Db::register_system_db();
      }
 
      private function register_http_middleware(){

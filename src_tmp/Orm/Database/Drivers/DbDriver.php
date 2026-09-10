@@ -14,6 +14,7 @@ use SaQle\Core\Support\Cli;
 abstract class DbDriver {
 
     protected ConnectionConfig $config;
+    
     protected $connection = null;
 
     /**

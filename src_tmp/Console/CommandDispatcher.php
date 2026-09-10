@@ -23,6 +23,7 @@ class CommandDispatcher {
 
          $signature = $command->signature();
 
+         //this here is the http equivalent of a request
          $context = new SignatureBinder()->bind($parsed, $signature);
 
          ConsoleMiddlewarePipeline::run('before', $context, $definition->middleware);

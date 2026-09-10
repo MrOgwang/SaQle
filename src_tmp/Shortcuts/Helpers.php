@@ -9,6 +9,7 @@ use SaQle\Http\Request\Request;
 use SaQle\Core\Support\{Directory, AppContext};
 use SaQle\Core\Events\{EventBus, Event};
 use SaQle\Core\Registries\ComponentRegistry;
+use SaQle\Console\CommandContext;
 use SaQle\App\App;
 
 if(!function_exists('app')){
@@ -26,6 +27,17 @@ if(!function_exists('resolve')){
 if(!function_exists('request')){
      function request(){
          return Request::init();
+     }
+}
+
+if(!function_exists('command')){
+     function command(string $command = "", array $arguments = [], array $options = [], array $raw = []){
+         return CommandContext::init(
+             command: $command,
+             arguments: $arguments,
+             options: $options,
+             raw: $raw
+         );
      }
 }
 

@@ -62,7 +62,9 @@ final class RelationLoader {
 
          $conn_props = explode(".", $connection);
 
-         $schema = config('db.connections')[$conn_props[0]]['databases'][$conn_props[1]];
+         $db_config = config('db.connections')[$conn_props[0]]['databases'][$conn_props[1]];
+
+         $schema = $db_config['schema'];
 
          $driver = Db::using($connection)->driver();
 

@@ -9,6 +9,7 @@
  use SaQle\Orm\Query\Helpers\{JoinManager, FilterManager, LimitManager, OrderManager, SelectManager, GroupManager};
  use SaQle\Orm\Entities\Model\Schema\Model;
  use SaQle\Core\Registries\TableRegistry;
+ use SaQle\Orm\Connection\ConnectionTarget;
  use Closure;
      
 class IReadManager extends QueryManager {
@@ -135,10 +136,11 @@ class IReadManager extends QueryManager {
 	 	 $model = $model_class::make();
 
 	 	 $connection_key = $this->model->table->get_connection_name();
+		 
 		 $this->register_to_context_tracker(
 		 	 table_name:    $table,
 		 	 table_aliase:  !is_null($as) ? $as : "",
-		 	 database_name: explode('.', $connection_key, 2)[1] ?? '',
+		 	 database_name:  ConnectionTarget::make($connection_key),
 		 	 field_list:    $model->table->get_table_column_names(),
 		 	 ff_settings:   $model->table->get_file_required_fields(),
 		 	 table_ref:     $tblref

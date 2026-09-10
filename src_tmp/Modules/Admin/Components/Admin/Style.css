@@ -78,7 +78,7 @@
 .sidebar{
      width:100%;
      height:100vh;
-     background:#172B4D;
+     background:var(--sidebar-background);
      display:flex;
      flex-direction:column;
      border-right:1px solid var(--steel_gray_100);

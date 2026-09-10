@@ -11,7 +11,10 @@
 
  $db_schemas = Db::get_developer_schemas();
 
- foreach($db_schemas as $schema_name => $schema_class){
+ foreach($db_schemas as $schema_name => $schema_config){
+
+     $schema_class = $schema_config['schema'];
+
      $models = new $schema_class()->get_defined_models();
 
      foreach($models as $model_label => $model_class){

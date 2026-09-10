@@ -26,10 +26,6 @@ class Db {
          $this->connection_key = self::get_connection_key(connection_key: $connection_key);
      }
 
-     public static function get_system_db() : array {
-         return [config('framework_connection'), config('framework_database'), SystemSchema::class];
-     }
-
      public static function register_tenant_db($connection_key, $tenant){
 
          $listed_connections = config('db.connections', []);
@@ -60,31 +56,6 @@ class Db {
          return [$connection_name.".".$tenant_database_name, $tenant_database_schema];
      }
 
-     public static function register_system_db(){
-
-         $listed_connections = config('db.connections', []);
-
-         if(!$listed_connections){
-             return;
-         }
-
-         $default_connection_name = config('db.default_connection', '');
-
-         $default_connection = $listed_connections[$default_connection_name] ?? array_values($listed_connections)[0];
-         
-         $system_connection = $default_connection;
-
-         $system_connection['databases'] = [
-             config('framework_database') => SystemSchema::class
-         ];
-
-         $listed_connections[config('framework_connection')] = $system_connection;
-
-         config()->set('db.connections', $listed_connections); 
-
-         [config('framework_connection').".".config('framework_database'), SystemSchema::class];
-     }
-
      /**
       * This method is defective: It assumes that a model will be tied to only
       * one database schema. In practice, especially the way the db.config file is setup,
@@ -102,7 +73,9 @@ class Db {
 
          $config_key = "db.connections.".$key_parts[0].".databases.".$key_parts[1];
 
-         $schema = trim(config($config_key, ''));
+         $db_config = config($config_key, []);
+
+         $schema = trim($db_config['schema'] ?? "");
 
          if(!$schema || !class_exists($schema) || !is_subclass_of($schema, Schema::class)){
              throw new Exception('The connection or schema does not exist!');
@@ -116,27 +89,27 @@ class Db {
          ?string $connection_key = null
      ){
 
-         $connection = trim(config('db.default_connection', ''));
-         $database = trim(config('db.default_database', ''));
-
-         if(!$connection || !$database){
-             throw new Exception("Please provide both default_connection and default_database settings in db config!");
-         }
+         $default_connection = "default";
+         $default_database = "default";
 
          if(is_null($connection_key) || trim($connection_key) === ""){
-
              if(!$model_class){
-                 $connection_key = $connection.".".$database;
+
+                 $connection_key = $default_connection.".".$default_database;
+
              }else{
                  /**
                   * if the $connection_key is not provided and the $model_class is, 
                   * we will search through the list of connections
                   * until we find the first one where the model is registered
-                  * */
+                  * */ 
                  $connections = config('db.connections');
 
                  foreach($connections as $n => $props){
-                     foreach($props['databases'] as $d => $schema){
+                     foreach($props['databases'] as $d => $d_config){
+
+                         $schema = $d_config['schema'];
+
                          $index = (new $schema())->model_exists($model_class);
 
                          if($index !== false){
@@ -160,7 +133,7 @@ class Db {
              }
 
              if(count($key_parts) === 1){
-                 $connection_key = $key_parts[0].".".$database;
+                 $connection_key = $key_parts[0].".".$default_database;
              }
          }
 
@@ -202,7 +175,7 @@ class Db {
 
          foreach(config('db.connections') as $connection_name => $connection_config){
              foreach($connection_config['databases'] as $db_name => $db_schema){
-                 if(!is_a($db_schema, SystemSchema::class, true)){
+                 if($db_name !== "system"){
                      $schemas[$db_name] = $db_schema;
                  }
              }

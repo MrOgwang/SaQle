@@ -2,18 +2,21 @@
 
 namespace SaQle\Console;
 
-use SaQle\Core\Support\AttributeBag;
+use SaQle\Http\Request\Data\Data;
 use SaQle\Middleware\Pipeable;
 
 class CommandContext implements Pipeable {
-     public function __construct(
-         protected string $command,
+
+     private static $instance;
+     
+     private function __construct(
+         protected string $command = "",
          protected array $arguments = [],
          protected array $options = [],
          protected array $raw = [],
          protected Input $input = new Input(),
          protected Output $output = new Output(),
-         public AttributeBag $attributes = new AttributeBag()
+         public Data $attributes = new Data()
      ) {}
 
      public function command(): string {
@@ -50,5 +53,19 @@ class CommandContext implements Pipeable {
 
      public function output(): Output{
          return $this->output;
+     }
+
+     public static function init(
+         string $command = "",
+         array $arguments = [],
+         array $options = [],
+         array $raw = []
+     ) : CommandContext {
+         return self::$instance ??= new self(
+             command: $command,
+             arguments: $arguments,
+             options: $options,
+             raw: $raw
+         );
      }
 }

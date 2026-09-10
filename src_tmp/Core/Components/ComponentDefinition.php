@@ -38,4 +38,8 @@ abstract class ComponentDefinition {
      public function routes() : array {
          return [];
      }
+
+     public function theme() : string {
+         return "Default";
+     }
 }
