@@ -21,7 +21,18 @@
          register_resource_routes(false, $model_label, $model_class);
      }
  }
+
+ $authorize  = trim(config('admin.authorization.global', ""));
+ $middleware = config('admin.middleware.global', []);
  
- Router::get("/resources/overview/", 'saqle.admin.dashboard')
+ $overview = Router::get("/resources/overview/", 'saqle.admin.dashboard')
  ->layout(['saqle.admin.admin'])
  ->name('overview');
+
+ if($authorize){
+     $overview->authorize($authorize);
+ }
+
+ if($middleware){
+     $overview->middleware($middleware);
+ }

@@ -17,7 +17,7 @@ class OperationFactory {
              throw new RuntimeException( "Unknown migration operation: {$action}");
          }
 
-         $operation = new $class();
+         $operation = resolve($class);
 
          if(!$operation instanceof MigrationOperation){
              throw new RuntimeException("Migration operation {$class} must implement ".MigrationOperation::class);

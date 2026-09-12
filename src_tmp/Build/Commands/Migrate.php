@@ -40,7 +40,7 @@ class Migrate extends Command {
 
      private string $migrations_folder;
 
-     private ?bool $first_migration = null;
+     private ?bool $first_time_migration = null;
     
      public function __construct(){
          $base_path = config('base_path');
@@ -142,7 +142,7 @@ class Migrate extends Command {
          if(!$dbdriver->check_database_exists()){
 
              if($snapshot_key === "default.system"){
-                 $this->first_migration = true;
+                 $this->first_time_migration = true;
              }
 
              if(!$dbdriver->create_database()){
@@ -154,11 +154,17 @@ class Migrate extends Command {
          $dbdriver->connect_with_database();
 
          $record = null;
-         if(!$this->first_migration){
+         if(!$this->first_time_migration){
  
              $record = $this->fetch_migration(
                  $migration_name, $migration_timestamp, $connection, $database, $tenant ? $tenant->tenant_id : null
              );
+
+             if(!$record){
+                 $record = $this->add_migration(
+                     $migration_name, $migration_timestamp, $connection, $database, 0, $tenant ? $tenant->tenant_id : null
+                 );
+             }
          
              if($record->is_migrated === 1){
                  return;
@@ -172,7 +178,7 @@ class Migrate extends Command {
          }
 
          //update migration record
-         $record = $this->first_migration ? 
+         $record = $this->first_time_migration ? 
          $this->add_migration(
              $migration_name, $migration_timestamp, $connection, $database, 1, $tenant ? $tenant->tenant_id : null
          ) :

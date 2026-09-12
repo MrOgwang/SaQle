@@ -3,9 +3,13 @@
 namespace SaQle\Core\Migration\Operations;
 
 use SaQle\Core\Migration\Interfaces\MigrationOperation;
-use SaQle\Core\Support\Cli;
+use SaQle\Console\Cli;
 
 class CreateTable implements MigrationOperation {
+
+     public function __construct(private Cli $cli){
+
+     }
 
      private function extract_field_defs(array $schema, string $table): array {
          if (!isset($schema[$table])) {
@@ -19,7 +23,7 @@ class CreateTable implements MigrationOperation {
 
          $name = $operation['params']['name'];
          
-         Cli::print("Attempting to create table: {$name}!\n");
+         $this->cli->info("Attempting to create table: {$name}!\n");
 
          $field_defs = $this->extract_field_defs($snapshot->get_model_fields(), $name);
 
@@ -28,11 +32,13 @@ class CreateTable implements MigrationOperation {
          $fk_defs = $dbdriver->get_fk_constraint_sqls($snapshot->get_fk_constraints()[$name] ?? []);
          
          if(!$dbdriver->create_table_from_migration($name, $field_defs, $unique_defs, $fk_defs)){
-             Cli::print("Table {$name} creation failed!\n");
+
+             $this->cli->error("Table {$name} creation failed!\n");
+
              return false;
          }
 
-         Cli::print("Table {$name} created!\n");
+         $this->cli->success("Table {$name} created!\n");
 
          return true;
      }
