@@ -26,7 +26,7 @@ class Controller {
 		 return Message::ok([
 		 	 'form' => $form,
 		 	 'resource' => $this->resource(request()->route->model_class)
-		 ]);
+		 ]); 
 	 }
 
 	 public function post() : Message {

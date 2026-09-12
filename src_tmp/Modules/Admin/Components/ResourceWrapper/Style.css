@@ -42,8 +42,9 @@
     border-radius: 10px;
 }
 .resourcelist-body{
-     background:var(--surface);
-     border-radius:5px;
+     background:#fff;
+     box-shadow:0px 0px 5px #e0e0e0;
+     border-radius:10px;
 }
 .resourcelist-badge{
     margin-bottom: 1em;

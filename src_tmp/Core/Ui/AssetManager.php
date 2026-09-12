@@ -34,14 +34,18 @@ class AssetManager {
 
      public static function output(): array {
 
-         $cache_path = path_join([config('base_path'), config('assets_cache_dir')]);
+         $js_cache_path = path_join([config('base_path'), config('assets_cache_dir'), "js"]);
+         $css_cache_path = path_join([config('base_path'), config('assets_cache_dir'), "css"]);
 
-         if(!is_dir($cache_path)){
-             mkdir($cache_path, 0777, true);
+         if(!is_dir($js_cache_path)){
+             mkdir($js_cache_path, 0777, true);
+         }
+         if(!is_dir($css_cache_path)){
+             mkdir($css_cache_path, 0777, true);
          }
 
-         $css_files = self::build(self::$css, 'css', $cache_path);
-         $js_files  = self::build(self::$js, 'js', $cache_path);
+         $css_files = self::build(self::$css, 'css', $css_cache_path);
+         $js_files  = self::build(self::$js, 'js', $js_cache_path);
 
          return [
             'css' => $css_files ? implode("\n", self::assets_to_links($css_files, "css")) : '',
@@ -49,22 +53,23 @@ class AssetManager {
          ];
      }
 
-     private static function build(array $files, string $type, string $path): array {
+     private static function build(array $assets, string $type, string $path): array {
 
-         $assets = [];
+         $files = [];
 
-         foreach($files as $file){
+         foreach($assets as $asset){
+
+             $file = $asset->file;
+             $name = $asset->name;
 
              if(str_starts_with($file, '~')){
-                 $assets[] = ltrim($file, '~');
+                 $files[] = ltrim($file, '~');
 
                  continue;
              }
 
-             $hash = md5($file);
-             $filename = pathinfo($file, PATHINFO_FILENAME);
-             $output_filename = "{$filename}_{$hash}";
-             $output_path = path_join([$path, $output_filename.".{$type}"]);
+             $filename = $name ? pathinfo($name, PATHINFO_FILENAME) : pathinfo($file, PATHINFO_FILENAME);
+             $output_path = path_join([$path, $filename.".{$type}"]);
 
              $environment = config('environment', 'development');
 
@@ -75,10 +80,10 @@ class AssetManager {
 
              $prefix = ActorContext::is_platform() ? '/saqle' : '';
              
-             $assets[] = $prefix.config("static_assets_route")."/{$type}/{$output_filename}";
+             $files[] = $prefix.config("static_assets_route")."/{$type}/{$filename}";
          }
 
-         return $assets;
+         return $files;
      }
 
      private static function minify($content){

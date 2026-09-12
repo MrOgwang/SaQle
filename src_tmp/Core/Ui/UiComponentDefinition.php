@@ -3,6 +3,7 @@
 namespace SaQle\Core\Ui;
 
 use SaQle\Core\Registries\ComponentRegistry;
+use SaQle\Core\Components\ComponentDefinition;
 
 class UiComponentDefinition {
      public function __construct(
@@ -73,15 +74,11 @@ class UiComponentDefinition {
          return trim(end($name_array));
      }
 
-     private function get_dependencies() : array {
+     private function get_dependencies(?ComponentDefinition $def = null) : array {
 
-         if(!$this->definition){
+         if(!$def){
              return ['css' => [], 'js' => []];
          }
-
-         $defclass = $this->definition;
-
-         $def = new $defclass();
 
          $dependencies = $def->dependencies();
 
@@ -97,12 +94,19 @@ class UiComponentDefinition {
              return [];
          }
 
+         $def = null;
+
+         if($this->definition){
+             $defclass = $this->definition;
+             $def = new $defclass();
+         }
+
          $loaded_components[$this->name] = true;
 
          $files = [];
 
          // 1. Resolve dependencies first
-         $deps = $this->get_dependencies()[$type];
+         $deps = $this->get_dependencies($def)[$type];
 
          foreach($deps as $dep){
              /**
@@ -123,23 +127,44 @@ class UiComponentDefinition {
               * Expects absolute urls
               * */
              elseif(str_starts_with($dep, '~')){
-                 $files[] = $dep;
+                 $files[] = (Object)[
+                     "file" => $dep,
+                     'name' => null
+                 ];
              }
              /**
               * Global assets living inside this
               * project. 
               * */
              else{
-                 $files[] = path_join([config('base_path'), "public/static/{$type}/", "{$dep}.{$type}"]);
+                 $files[] = (Object)[
+                     'file' => path_join([config('base_path'), "public/static/{$type}/", "{$dep}.{$type}"]),
+                     'name' => null
+                 ];
              }
          }
- 
-         //2. Add this component's own assets
+
          $name = $type === "css" ? "Style" : "Script";
+ 
+         //2. Add this component theme assets if available
+         $theme = $def ? $def->theme() : "Default";
+         $theme_file = "{$this->path}/Themes/{$theme}/{$name}.{$type}";
+
+         if(file_exists($theme_file)){
+             $files[] = (Object)[
+                 'file' => $theme_file,
+                 'name' => strtolower($theme)."_{$this->name}.{$type}"
+             ];
+         }
+
+         //3. Add this component's own assets (both theme and direct assets)
          $file = "{$this->path}/{$name}.{$type}";
 
          if(file_exists($file)){
-             $files[] = $file;
+             $files[] = (Object)[
+                 'file' => $file,
+                 'name' => "{$this->name}.{$type}"
+             ];
          }
          
          $assets = [];
@@ -147,7 +172,7 @@ class UiComponentDefinition {
 
          foreach($files as $f){
 
-             $fn = strtolower($f);
+             $fn = strtolower($f->file);
 
              if(!in_array($fn, $listed)){
                  $assets[] = $f;

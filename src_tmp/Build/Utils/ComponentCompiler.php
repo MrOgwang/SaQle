@@ -86,12 +86,6 @@ class ComponentCompiler {
 
          self::$components_dirs = [];
 
-         // Project components.
-         self::add_components_dir(
-             path_join([config('base_path'), 'src', 'Components']),
-             'app'
-         );
-
          // Framework module components.
          foreach (config('framework_modules') as $fm){
              $module = new $fm();
@@ -102,7 +96,7 @@ class ComponentCompiler {
              );
          }
 
-         // Application module components.
+         //Application module components.
          foreach (config('app.modules') as $am){
              $module = new $am();
 
@@ -144,9 +138,13 @@ class ComponentCompiler {
              //Every direct directory is a component.
              foreach(self::component_directories($path) as $component_path){
 
-                 $component = self::compile_component($component_path, $prefix);
-
                  $component_name = strtolower($prefix.'.'.basename($component_path));
+
+                 $override_dir_name = str_replace(" ", "_", ucwords(str_replace(".", " ", $component_name)));
+
+                 $override_dir = path_join([config('base_path'), "src", "Components", $override_dir_name]);
+
+                 $component = self::compile_component($component_path, $prefix, $override_dir);
 
                  if(isset($components[$component_name])){
                      throw new RuntimeException("Duplicate component: {$component_name}");
@@ -187,9 +185,25 @@ class ComponentCompiler {
      /**
      * Compile one component directory.
      */
-     private static function compile_component(string $component_path, string $prefix): array {
+     private static function compile_component(string $component_path, string $prefix, string $override_dir): array {
 
+         $original_component_path = $component_path;
+         $override_exists = false;
+
+         $override_folder = basename(str_replace('\\', '/', rtrim($override_dir, '\\/')));
+         $override_namespace = "App\\Components\\".$override_folder;
+
+         /**
+          * A components original name is used
+          * even when the component has been overriden
+          * */
          $component_name = basename(rtrim($component_path, DIRECTORY_SEPARATOR));
+
+         //if there is an override
+         if(is_dir($override_dir)){
+             $component_path = $override_dir;
+             $override_exists = true;
+         }
 
          $compiled_template_name = strtolower($prefix.".".$component_name);
 
@@ -227,6 +241,20 @@ class ComponentCompiler {
 
              if($namespace && $class_name){
 
+                 if($override_exists){
+
+                     $namespace = $override_namespace;
+
+                     $content = preg_replace(
+                         '/^(\s*namespace\s+)[^;]+;/m',
+                         '$1'.$override_namespace.';',
+                         $content,
+                         1
+                     );
+
+                     file_put_contents($controller_path, $content);
+                 }
+
                  $fqcn = $namespace.'\\'.$class_name;
 
                  $component['controller'] = $fqcn;
@@ -261,6 +289,20 @@ class ComponentCompiler {
              $class_name = $class_match[1] ?? null;
 
              if($namespace && $class_name){
+
+                 if($override_exists){
+                    
+                     $namespace = $override_namespace;
+
+                     $content = preg_replace(
+                         '/^(\s*namespace\s+)[^;]+;/m',
+                         '$1'.$override_namespace.';',
+                         $content,
+                         1
+                     );
+
+                     file_put_contents($definition_path, $content);
+                 }
 
                  $def = $namespace.'\\'.$class_name;
 

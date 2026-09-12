@@ -1,14 +1,16 @@
 <?php
+
 namespace SaQle\Build\Commands;
 
-use SaQle\Routing\RouteRegistry;
 use SaQle\Console\{
      Command, 
      CommandContext
 };
 use SaQle\Console\Signature\Signature;
+use SaQle\Core\Registries\ComponentRegistry;
+use Exception;
 
-class RouteList extends Command {
+class ComponentList extends Command {
 
      public function signature(): Signature {
          return Signature::make();
@@ -16,25 +18,25 @@ class RouteList extends Command {
 
      public function handle(CommandContext $context) : int {
 
-         $context->output()->info("\nListing all project routes\n");
+         $context->output()->info("\nListing all project components\n");
 
-         $compiled_routes = RouteRegistry::all();
+         $components = ComponentRegistry::all();
 
-         $headers = ['#', 'METHOD', 'URI', 'NAME', 'COMPONENT'];
+         $headers = ['#', 'NAME', 'OWNER', 'PROXY', 'PATH'];
 
          $rows = [];
 
          $count = 0;
-         foreach($compiled_routes as $route){
+         foreach($components as $c => $c_props){
 
              $count += 1;
 
              $rows[] = [
                  "#{$count}",
-                 $route['method'],
-                 $route['route']['url'],
-                 $route['route']['name'],
-                 $route['route']['target']
+                 $c,
+                 $c_props['owner'],
+                 $c_props['proxy'] ? "Yes" : "No",
+                 $c_props['base_path']
              ];
          }
 

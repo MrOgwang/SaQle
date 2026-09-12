@@ -2,30 +2,52 @@
 
 namespace SaQle\Console;
 
-class Output
-{
-    public function line(string $text = ''): void
-    {
-        echo $text.PHP_EOL;
-    }
+class Output extends Cli {
 
-    public function success(string $text): void
-    {
-        echo "\033[32m✔ {$text}\033[0m".PHP_EOL;
-    }
+     public function table(array $headers, array $rows) : void {
+         $widths = [];
 
-    public function error(string $text): void
-    {
-        echo "\033[31m✖ {$text}\033[0m".PHP_EOL;
-    }
+         //Determine column widths
+         foreach($headers as $i => $header){
+             $widths[$i] = strlen($header);
 
-    public function warning(string $text): void
-    {
-        echo "\033[33m⚠ {$text}\033[0m".PHP_EOL;
-    }
+             foreach($rows as $row){
+                $widths[$i] = max($widths[$i], strlen((string)$row[$i]));
+             }
+         }
 
-    public function info(string $text): void
-    {
-        echo "\033[36m{$text}\033[0m".PHP_EOL;
-    }
+         //Header
+         foreach ($headers as $i => $header) {
+             echo str_pad($header, $widths[$i] + 2);
+         }
+         echo PHP_EOL;
+
+         //Separator
+         foreach ($widths as $width) {
+             echo str_repeat('-', $width) . '  ';
+         }
+         echo PHP_EOL;
+
+         // Rows
+         foreach ($rows as $row) {
+             foreach ($row as $i => $cell) {
+                 echo str_pad((string)$cell, $widths[$i] + 2);
+             }
+             echo PHP_EOL;
+         }
+     }
+
+     public function field(string $label, mixed $value): void {
+        
+         if($value === null || $value === ''){
+             $value = '—';
+         }
+
+         if(is_bool($value)){
+             $value = $value ? 'Yes' : 'No';
+         }
+
+         $this->line(str_pad($label, 20).$value);
+     }
+
 }

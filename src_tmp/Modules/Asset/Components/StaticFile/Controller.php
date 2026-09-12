@@ -24,7 +24,7 @@ class Controller {
          }
 
          //build base directory safely
-         $base_dir = realpath(path_join([config('base_path'), config('assets_cache_dir')]));
+         $base_dir = realpath(path_join([config('base_path'), config('assets_cache_dir'), $type]));
 
          if($base_dir === false){
              throw internal_server_error_exception();

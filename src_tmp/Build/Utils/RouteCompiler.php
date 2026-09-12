@@ -97,7 +97,8 @@ final class RouteCompiler {
          foreach($components as $component_name => $component_config){
 
              //only developer created components
-             if(!str_starts_with($component_name, "app") || $component_name === "app.page"){
+             if(!str_starts_with($component_name, "app") || 
+                $component_name === config('page_component')){
                  continue;
              }
 

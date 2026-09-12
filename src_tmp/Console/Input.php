@@ -2,33 +2,52 @@
 
 namespace SaQle\Console;
 
-class Input {
-    public function ask(string $question): string
-    {
-        echo $question.' ';
+class Input extends Cli {
 
-        return trim(fgets(STDIN));
-    }
+     public function ask(string $question): string {
+         return trim(readline($question));
+     }
 
-    public function confirm(string $question): bool
-    {
-        return strtolower(
-            $this->ask($question.' [y/N]')
-        ) === 'y';
-    }
+     public function confirm(string $question): bool {
+         return strtolower($this->ask($question.' [y/N]')) === 'y';
+     }
 
-    public function secret(string $question): string
-    {
-        echo $question.' ';
+     public function choice(string $label, array $choices){
 
-        shell_exec('stty -echo');
+         $this->line($label);
 
-        $value = trim(fgets(STDIN));
+         $keys = array_keys($choices);
+         $i = 1;
 
-        shell_exec('stty echo');
+         foreach($choices as $display){
+             $this->line("  {$i}. {$display}");
+             $i++;
+         }
 
-        echo PHP_EOL;
+         while(true){
+             $selection = $this->ask("Select option: ");
 
-        return $value;
-    }
+             if(is_numeric($selection) && $selection >= 1 && $selection <= count($keys)){
+                 return $keys[$selection - 1];
+             }
+
+             $this->error("Invalid selection.");
+         }
+     }
+
+     /**
+      * This will not work on a windows terminal. 
+      * 
+      * TO DO: Detect environment and have the appropriate
+      * implementation
+      * */
+     public function secret(string $question): string {
+         $this->line($question);
+         shell_exec('stty -echo');
+         $value = trim(fgets(STDIN));
+         shell_exec('stty echo');
+         $this->line("");
+
+         return $value;
+     }
 }

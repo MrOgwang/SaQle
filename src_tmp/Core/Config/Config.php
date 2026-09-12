@@ -140,7 +140,9 @@ final class Config {
 
              'system_url_prefix' => '/saqle/',
 
-             'session_tenant_key' => '__tenant'
+             'session_tenant_key' => '__tenant',
+
+             'page_component' => 'saqle.lib.page'
          ];
      }
 }
