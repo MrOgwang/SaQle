@@ -541,11 +541,6 @@ button:active{
 ========================= */
 
 @media(max-width:768px){
-
-    body{
-        padding:20px;
-    }
-
     .file-upload-dropzone{
         min-height:260px;
         padding:24px;
