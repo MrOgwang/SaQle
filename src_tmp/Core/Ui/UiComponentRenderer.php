@@ -7,7 +7,7 @@ use SaQle\Http\Response\Message;
 use SaQle\Http\Request\Request;
 use SaQle\Core\Ui\{
      View, 
-     AssetManager
+     PageManager
 };
 use RuntimeException;
 
@@ -16,8 +16,6 @@ class UiComponentRenderer {
      private ?UiComponentNode $current_node = null;
 
      private array $attributes = [
-         'css'   => [], 
-         'js'    => [], 
          'title' => '', 
          'meta'  => ''
      ];
@@ -64,8 +62,6 @@ class UiComponentRenderer {
 
          $node->active = true;
 
-         //$html = $node->render($this->request, $context);
-
          $previous = $this->current_node;
 
          $this->current_node = $node;
@@ -104,19 +100,37 @@ class UiComponentRenderer {
          return preg_replace($pattern, $rendered, $html, 1);
      }
 
-     public function wrap_root(string $html){
-         $assets = AssetManager::output();
+     public function extract_page_metadata(string $html): array {
+         $metadata = [
+             'meta' => [],
+             'title' => null,
+         ];
 
-         $page_component = ComponentRegistry::resolve_component(config('page_component'), 'GET', 'layout');
-         $page = new View($page_component->compiled_template_path);
-         $page->set_context([
-             'content' => $html,
-             'css'     => $assets['css'],
-             'js'      => $assets['js'],
-             'title'   => $this->attributes['title'],
-             'meta'    => $this->attributes['meta']
-         ]);
+         $patterns = [
+             'meta' => '/@meta\s*(.*?)\s*@endmeta/is',
+             'title' => '/@title\s*(.*?)\s*@endtitle/is',
+         ];
 
-         return $page->render();
+         foreach ($patterns as $type => $pattern) {
+             $html = preg_replace_callback(
+                 $pattern,
+                 function (array $matches) use (&$metadata, $type): string {
+                     $content = trim($matches[1]);
+
+                     if($type === 'meta'){
+                         $metadata['meta'][] = $content;
+                     }else{
+                         $metadata['title'] = $content;
+                     }
+
+                     return '';
+                 },
+                 $html
+             );
+         }
+
+         $metadata['html'] = $html;
+
+         return $metadata;
      }
 } 

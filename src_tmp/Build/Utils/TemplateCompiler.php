@@ -7,7 +7,6 @@ use SaQle\Core\Support\Cli;
 
 class TemplateCompiler {
 
- 
      private static function cache_path(){
          $path = path_join([config('base_path'), config('templates_cache_dir')]);
 

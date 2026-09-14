@@ -19,6 +19,7 @@ use SaQle\Core\Ui\Template;
 use SaQle\Http\Request\Middleware\CsrfMiddleware;
 use SaQle\Auth\Models\GuestUser;
 use SaQle\Core\Support\AppStage;
+use SaQle\Core\Ui\PageManager;
 
 final class HtmlResponseStrategy implements ResponseStrategy {
     
@@ -63,7 +64,7 @@ final class HtmlResponseStrategy implements ResponseStrategy {
              $leaf_component = $target_action ? $target_component."@".$target_action : $target_component;
              $layout = $request->route->layout ?? [];
 
-             return array_merge($layout, [$leaf_component]);
+             return array_merge([config('page_component')], $layout, [$leaf_component]);
          }
 
          /**
@@ -78,7 +79,7 @@ final class HtmlResponseStrategy implements ResponseStrategy {
           * 
           * */
          if(!app()->is_stage(AppStage::REQUEST_RESOLUTION)){
-             return [config('error.component')."@get"];
+             return [config('page_component'), config('error.component')."@get"];
          }
 
          /**
@@ -91,7 +92,44 @@ final class HtmlResponseStrategy implements ResponseStrategy {
           *    the happy path would have caught it
           * 3. The fail came from executing the controller method.
           * */
-         return array_merge($request->route->layout ?? [], [config('error.component')."@get"]);
+         return array_merge(
+             [config('page_component')], 
+             $request->route->layout ?? [], 
+             [config('error.component')."@get"]
+         );
+     }
+
+     private function inject_page_header(string $html): string {
+
+         $assets = PageManager::init()->output();
+
+         return preg_replace_callback(
+             '/<ui:(scripts|styles|meta|title)\s*(?:\/>|>(.*?)<\/ui:\1\s*>)/is',
+             function (array $matches) use ($assets): string {
+
+                 $type = $matches[1];
+
+                 $default = isset($matches[2]) ? trim($matches[2]) : '';
+
+                 $generated = match($type){
+                     'scripts' => $assets['js'] ?? '',
+                     'styles'  => $assets['css'] ?? '',
+                     'meta'    => $assets['meta'] ?? '',
+                     'title'   => $assets['title'] ?? '',
+                     default   => '',
+                 };
+
+                 if($type === 'title'){
+                     //generated title takes precedence over default title.
+                     return $generated !== '' ? $generated : $default;
+                 }
+
+                 //meta, styles and scripts: preserve defaults and append generated content.
+                 return $default."\n".$generated;
+             },
+
+             $html
+         );
      }
  
      public function build(Request $request, Message $result) : Response {
@@ -108,7 +146,7 @@ final class HtmlResponseStrategy implements ResponseStrategy {
 
          $html = $renderer->render($tree, $context);
 
-         $html = $renderer->wrap_root($html);
+         $html = $this->inject_page_header($html);
  
          return new HtmlResponse($html);
      }

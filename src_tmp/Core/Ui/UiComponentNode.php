@@ -4,7 +4,7 @@ namespace SaQle\Core\Ui;
 
 use SaQle\Core\Ui\{
      View, 
-     AssetManager
+     PageManager
 };
 use SaQle\Http\Request\Execution\ActionExecutor;
 use SaQle\Core\Registries\ComponentRegistry;
@@ -120,15 +120,17 @@ class UiComponentNode {
          $css = $this->def->css($css_loaded_components, $template_path);
          $js = $this->def->js($js_loaded_components , $template_path);
 
-         AssetManager::add_css($css);
-         AssetManager::add_js($js);
+         $page_manager = PageManager::init();
 
+         $page_manager->add_css($css);
+         $page_manager->add_js($js);
+         
          $view = new View($compiled_template_path);
 
          $renderer = null;
          if(isset($parent_context['__renderer'])){
              $renderer = $parent_context['__renderer'];
-         } 
+         }
          
          $view->set_context(array_merge(
              $this->context->expose(),
@@ -140,6 +142,14 @@ class UiComponentNode {
              $this->props
          ));
          
-         return $view->render();
+         $html = $view->render();
+
+         $metadata = $renderer->extract_page_metadata($html);
+
+         $page_manager->add_meta(implode("\n", $metadata['meta']));
+
+         $page_manager->set_title($metadata['title'] ?? "");
+
+         return $metadata['html'];
      }
 }

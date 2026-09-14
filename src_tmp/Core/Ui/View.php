@@ -5,6 +5,7 @@ namespace SaQle\Core\Ui;
 class View {
 
      private string $template_path;
+     
      private array $data = [];
 
      public function __construct(string $template){
