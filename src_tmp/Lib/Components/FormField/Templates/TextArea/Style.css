@@ -1,0 +1,5 @@
+textarea{
+     min-height:140px;
+     padding:14px 16px;
+     resize:vertical;
+}

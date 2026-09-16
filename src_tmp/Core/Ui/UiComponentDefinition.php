@@ -88,7 +88,7 @@ class UiComponentDefinition {
          ];
      }
 
-     private function get_assets(string $type, array &$loaded_components = [], string $template_path = "") : array {
+     private function get_assets(string $type, array &$loaded_components = [], ?string $template_name = null) : array {
          
          if(isset($loaded_components[$this->name])) {
              return [];
@@ -157,7 +157,7 @@ class UiComponentDefinition {
              ];
          }
 
-         //3. Add this component's own assets (both theme and direct assets)
+         //3. Add this component's own assets
          $file = "{$this->path}/{$name}.{$type}";
 
          if(file_exists($file)){
@@ -165,6 +165,19 @@ class UiComponentDefinition {
                  'file' => $file,
                  'name' => "{$this->name}.{$type}"
              ];
+         }
+
+         //4. Add the component's template assets.
+         if($template_name){
+
+             $template_file = "{$this->path}/Templates/{$template_name}/{$name}.{$type}";
+
+             if(file_exists($template_file)){
+                 $files[] = (Object)[
+                     'file' => $template_file,
+                     'name' => strtolower($template_name)."_{$this->name}.{$type}"
+                 ];
+             }
          }
          
          $assets = [];
@@ -184,11 +197,11 @@ class UiComponentDefinition {
          return $assets;
      }
 
-     public function js(array &$loaded_components = [], string $template_path = "") : array {
-         return $this->get_assets("js", $loaded_components, $template_path);
+     public function js(array &$loaded_components = [], ?string $template_name = null) : array {
+         return $this->get_assets("js", $loaded_components, $template_name);
      }
 
-     public function css(array &$loaded_components = [], string $template_path = "") : array {
-         return $this->get_assets("css", $loaded_components, $template_path);
+     public function css(array &$loaded_components = [], ?string $template_name = null) : array {
+         return $this->get_assets("css", $loaded_components, $template_name);
      }
 }

@@ -22,7 +22,7 @@ class ComponentList extends Command {
 
          $components = ComponentRegistry::all();
 
-         $headers = ['#', 'NAME', 'OWNER', 'PROXY', 'PATH'];
+         $headers = ['#', 'NAME', 'OWNER', 'PROXY', 'PATH', 'HAS TEMPLATES'];
 
          $rows = [];
 
@@ -36,7 +36,8 @@ class ComponentList extends Command {
                  $c,
                  $c_props['owner'],
                  $c_props['proxy'] ? "Yes" : "No",
-                 $c_props['base_path']
+                 $c_props['base_path'],
+                 $c_props['has_many_templates'] ? "Yes" : "No"
              ];
          }
 

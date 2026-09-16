@@ -371,6 +371,10 @@ class ComponentCompiler {
 
              Cli::print("Templates: $compile_path");
 
+             $template_files = self::template_files($templates_path);
+
+             print_r($template_files);
+
              foreach(self::template_files($templates_path) as $variation => $variation_path){
 
                  [$compile_path, $file_owner] = self::normalize_path(realpath($variation_path));
@@ -408,30 +412,32 @@ class ComponentCompiler {
      /**
      * Find templates inside Templates/.
      *
-     * FileOne.html -> FileOne
-     * FileTwo.html -> FileTwo
+     * FileOne/Template.html -> fileone
+     * FileTwo/Template.html -> filetwo
      */
      private static function template_files(string $path) : array {
 
          $templates = [];
 
-         foreach (scandir($path) ?: [] as $filename){
+         foreach(scandir($path) ?: [] as $directory){
 
-             if($filename === '.' || $filename === '..'){
+             if($directory === '.' || $directory === '..'){
                  continue;
              }
 
-             $template_path = path_join([$path, $filename]);
+             $template_directory = path_join([$path, $directory]);
+
+             if(!is_dir($template_directory)){
+                 continue;
+             }
+
+             $template_path = path_join([$template_directory, 'Template.html']);
 
              if(!is_file($template_path)){
                  continue;
              }
 
-             if(strtolower(pathinfo($filename, PATHINFO_EXTENSION)) !== 'html'){
-                 continue;
-             }
-
-             $variation = pathinfo($filename, PATHINFO_FILENAME);
+             $variation = $directory;
 
              $templates[strtolower($variation)] = $template_path;
          }

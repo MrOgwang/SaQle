@@ -38,11 +38,11 @@
      font-weight: 500;
 }
 .resource-actions a{
-    background:var(--primary);
+    background:var(--primary-color);
     color:#fff;
 }
 .resource-actions button{
-    background:var(--danger);
+    background:var(--danger-color);
     color:#fff;
 }
 .card{

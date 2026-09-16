@@ -1,70 +1,3 @@
-
-/*Reset*/
-
-*,
-*::before,
-*::after{
-    box-sizing:border-box;
-}
-
-:root{  
-    --bg:#f5f7fb;
-    --surface:#ffffff;
-
-    /* Borders */
-    --border:#D6E4F5;
-    --hard-border:#d0d0d0;
-    --border-hover:#b8c4d6;
-
-    /* Brand */
-    --primary:#2563eb;
-    --secondary:#60A5FA;
-    --primary-soft:#dbeafe;
-
-    /* Text */
-    --text:#1E293B;
-    --muted:#64748b;
-    --text-light:#94a3b8;
-    --text-inverse:#ffffff;
-
-    /* Status */
-    --success:#16a34a;
-    --success-soft:#dcfce7;
-
-    --warning:#f59e0b;
-    --warning-soft:#fef3c7;
-
-    --danger:#dc2626;
-    --danger-soft:#fee2e2;
-
-    --info:#0ea5e9;
-    --info-soft:#e0f2fe;
-
-    /* Neutral Actions */
-    --cancel:#6b7280;
-    --cancel-hover:#4b5563;
-
-    /* Disabled */
-    --disabled:#cbd5e1;
-    --disabled-text:#94a3b8;
-
-    /* Links */
-    --link:#2563eb;
-    --link-hover:#1d4ed8;
-
-    /* Overlays */
-    --backdrop:rgba(15,23,42,.5);
-
-    /* Misc */
-    --radius:14px;
-    --shadow:
-        0 1px 2px rgba(0,0,0,.04),
-        0 8px 24px rgba(15,23,42,.06);
-
-    --input-height:40px;
-    --transition:.2s ease;
-}
-
 .app {
 	 width:100%;
      display:grid;
@@ -107,9 +40,7 @@
 }
 
 .app-info{
-
     margin-left:14px;
-
 }
 
 .app-info h2{
@@ -346,7 +277,7 @@
 }
 .appheader a{
 	text-decoration: none;
-	color:var(--text);
+	color:var(--text-color);
 	width:35px;
 	height:35px;
 	border-radius: 5px;
@@ -382,5 +313,5 @@
 
 /* Chrome, Safari, Opera */
 .scrollable::-webkit-scrollbar {
-    display: none;
+     display: none;
 }

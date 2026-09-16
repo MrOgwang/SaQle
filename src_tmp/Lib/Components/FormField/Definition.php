@@ -24,7 +24,8 @@ final class Definition extends ComponentDefinition {
 
          $path = path_join([
              $this->path('Templates'),
-             $name.".".config('app.component_template_ext')
+             $name,
+             "Template.".config('app.component_template_ext')
          ]);
 
          if(file_exists($path)){

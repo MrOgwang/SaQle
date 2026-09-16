@@ -34,10 +34,10 @@
     justify-content: center;
     text-decoration: none;
     height:30px;
-    border:1px solid var(--primary);
+    border:1px solid var(--primary-color);
     padding-left:1em;
     padding-right:1em;
-    background-color:var(--primary);
+    background-color:var(--primary-color);
     color:#fff;
     border-radius: 10px;
 }

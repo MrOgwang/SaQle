@@ -94,6 +94,7 @@ class UiComponentNode {
 
          $compiled_template_path = $this->def->compiled_template_path;
          $template_path = $this->def->template_path;
+         $template_name = null;
 
          if($this->def->has_many_templates && $this->def->definition){
 
@@ -117,8 +118,8 @@ class UiComponentNode {
 
          $css_loaded_components = [];
          $js_loaded_components = [];
-         $css = $this->def->css($css_loaded_components, $template_path);
-         $js = $this->def->js($js_loaded_components , $template_path);
+         $css = $this->def->css($css_loaded_components, $template_name);
+         $js = $this->def->js($js_loaded_components, $template_name);
 
          $page_manager = PageManager::init();
 
