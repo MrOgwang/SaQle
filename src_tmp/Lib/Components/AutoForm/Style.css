@@ -50,10 +50,6 @@
     .form-actions{
         flex-direction:column;
     }
-
-    button{
-        width:100%;
-    }
 }
 
 @keyframes fadeIn{
@@ -64,17 +60,5 @@
     to{
         opacity:1;
         transform:translateY(0);
-    }
-}
-
-
-@media(max-width:768px){
-    .file-upload-dropzone{
-        min-height:260px;
-        padding:24px;
-    }
-
-    .file-upload-title{
-        font-size:20px;
     }
 }
