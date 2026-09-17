@@ -43,7 +43,7 @@ class BaseUser extends Model implements UserInterface {
 		     'password'     => Table::password_field()->required()->max_length(255),
 		     'is_super_admin' => Table::boolean_field()->required()->render(function($value, $model){
 			 	 return $value ? 'Yes' : 'No';
-			 })->default(false),
+			 })->default(false)->description("Has administrative access to the entire system"),
 		     'avatar'       => $avatar_field
 		 ]);
 

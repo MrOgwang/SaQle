@@ -12,7 +12,12 @@
          @endif
          <div>
          	 @let($error_class = $field->errors ? "input_error" : "")
-         	 <input class='{{ $error_class }}' value='{{ $field->value }}' type='password' name='{{ $field->name }}' id='{{ $field->id }}'/>
+             <div class="{{ $error_class }} password-field">
+                 <input type="password" value='{{ $field->value }}' name='{{ $field->name }}' id="{{ $field->id }}" placeholder="Password">
+                 <button type="button" id="toggle-password" aria-label="Show password">
+                    SHOW
+                 </button>
+             </div>
              @if($field->errors)
              <div class="field-error">
                  {{ implode(',', $field->errors) }}

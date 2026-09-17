@@ -1,0 +1,19 @@
+.password-field {
+     position: relative;
+     display: inline-flex;
+     width:100%;
+}
+
+.password-field input {
+     padding: 10px 40px 10px 12px;
+}
+
+.password-field button {
+     position: absolute;
+     right: 8px;
+     top: 50%;
+     transform: translateY(-50%);
+     border: 0;
+     background: none;
+     cursor: pointer;
+}
