@@ -31,6 +31,7 @@
      border-radius:999px;
      cursor:pointer;
      transition:background var(--transition);
+     display:block;
 }
 
 .switch-slider::before{

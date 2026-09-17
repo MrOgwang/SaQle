@@ -16,6 +16,10 @@ class PageManager {
 
      private string $title = "";
 
+     private array $js_loaded_components = [];
+
+     private array $css_loaded_components = [];
+
      private function __construct(){}
      private function __clone(){}
      public function __wakeup(){}
@@ -113,5 +117,44 @@ class PageManager {
      private function minify($content){
          //simple minifier: TODO, upgrade minifier later
          return preg_replace('/\s+/', ' ', $content);
+     }
+
+     public function is_loaded(string $type, string $component_name, ?string $template_name = null) : array {
+
+         $loaded_components = $type === "css" ? $this->css_loaded_components : $this->js_loaded_components;
+
+         if(!array_key_exists($component_name, $loaded_components)){
+             return [false, false];
+         }
+
+         if(!$template_name){
+             return [true, true];
+         }
+
+         if(!array_key_exists($template_name, $loaded_components[$component_name])){
+             return [true, false];
+         }
+ 
+         return [true, true];
+     }
+
+     public function set_loaded(string $type, string $component_name, ?string $template_name = null) : void {
+
+         $loaded_components = $type === "css" ? $this->css_loaded_components : $this->js_loaded_components;
+
+         if(!array_key_exists($component_name, $loaded_components)){
+             $loaded_components[$component_name] = [];
+         }
+
+         if($template_name){
+             $loaded_components[$component_name][$template_name] = true;
+         }
+
+         if($type === "css"){
+             $this->css_loaded_components = $loaded_components;
+         }else{
+             $this->js_loaded_components = $loaded_components;
+         }
+         
      }
 }

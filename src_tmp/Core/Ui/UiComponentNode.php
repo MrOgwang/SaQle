@@ -116,10 +116,8 @@ class UiComponentNode {
              }
          }
 
-         $css_loaded_components = [];
-         $js_loaded_components = [];
-         $css = $this->def->css($css_loaded_components, $template_name);
-         $js = $this->def->js($js_loaded_components, $template_name);
+         $css = $this->def->css($template_name);
+         $js = $this->def->js($template_name);
 
          $page_manager = PageManager::init();
 

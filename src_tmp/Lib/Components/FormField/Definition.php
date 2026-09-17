@@ -38,15 +38,4 @@ final class Definition extends ComponentDefinition {
              default          => null
          };
      }
-
-     public function dependencies() : array {
-         return [
-             'scripts' => [
-                 '@saqle.lib.autoform'
-             ],
-             'styles' => [
-                 '@saqle.lib.autoform'
-             ],
-         ];
-     }
 }

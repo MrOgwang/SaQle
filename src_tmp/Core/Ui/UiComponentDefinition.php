@@ -75,7 +75,7 @@ class UiComponentDefinition {
      }
 
      private function get_dependencies(?ComponentDefinition $def = null) : array {
-
+        
          if(!$def){
              return ['css' => [], 'js' => []];
          }
@@ -88,88 +88,97 @@ class UiComponentDefinition {
          ];
      }
 
-     private function get_assets(string $type, array &$loaded_components = [], ?string $template_name = null) : array {
-         
-         if(isset($loaded_components[$this->name])) {
+     private function get_assets(string $type, ?string $template_name = null) : array {
+
+         $page_manager = PageManager::init();
+
+         [$component_loaded, $template_loaded] = $page_manager->is_loaded($type, $this->name, $template_name);
+
+         if($component_loaded && $template_loaded){
              return [];
          }
 
+         $page_manager->set_loaded($type, $this->name, $template_name);
+
          $def = null;
+
+         $name = $type === "css" ? "Style" : "Script";
 
          if($this->definition){
              $defclass = $this->definition;
              $def = new $defclass();
          }
 
-         $loaded_components[$this->name] = true;
-
          $files = [];
 
-         // 1. Resolve dependencies first
-         $deps = $this->get_dependencies($def)[$type];
+         if(!$component_loaded){
 
-         foreach($deps as $dep){
-             /**
-              * Assets belonging to other components
-              * that are to be shared by this component
-              * */
-             if(str_starts_with($dep, '@')){
-                 $component_name = substr($dep, 1);
+             // 1. Resolve dependencies first
+             $deps = $this->get_dependencies($def)[$type];
 
-                 $component = ComponentRegistry::get_definition($component_name);
-                 if($component){
-                     $files = array_merge($files, $component->$type($loaded_components));
+             foreach($deps as $dep){
+                 /**
+                  * Assets belonging to other components
+                  * that are to be shared by this component
+                  * */
+                 if(str_starts_with($dep, '@')){
+                     $component_name = substr($dep, 1);
+
+                     $component = ComponentRegistry::get_definition($component_name);
+                     if($component){
+                         $files = array_merge($files, $component->$type());
+                     }
+                 }
+                 /**
+                  * Assets living outside project.
+                  * 
+                  * Expects absolute urls
+                  * */
+                 elseif(str_starts_with($dep, '~')){
+                     $files[] = (Object)[
+                         "file" => $dep,
+                         'name' => null
+                     ];
+                 }
+                 /**
+                  * Global assets living inside this
+                  * project. 
+                  * */
+                 else{
+                     $files[] = (Object)[
+                         'file' => path_join([config('base_path'), "public/static/{$type}/", "{$dep}.{$type}"]),
+                         'name' => null
+                     ];
                  }
              }
-             /**
-              * Assets living outside project.
-              * 
-              * Expects absolute urls
-              * */
-             elseif(str_starts_with($dep, '~')){
+     
+             //2. Add this component theme assets if available
+             $theme = $def ? $def->theme() : "Default";
+             $theme_file = "{$this->path}/Themes/{$theme}/{$name}.{$type}";
+
+             if(file_exists($theme_file)){
                  $files[] = (Object)[
-                     "file" => $dep,
-                     'name' => null
+                     'file' => $theme_file,
+                     'name' => strtolower($theme)."_{$this->name}.{$type}"
                  ];
              }
-             /**
-              * Global assets living inside this
-              * project. 
-              * */
-             else{
+
+             //3. Add this component's own assets
+             $file = "{$this->path}/{$name}.{$type}";
+
+             if(file_exists($file)){
                  $files[] = (Object)[
-                     'file' => path_join([config('base_path'), "public/static/{$type}/", "{$dep}.{$type}"]),
-                     'name' => null
+                     'file' => $file,
+                     'name' => "{$this->name}.{$type}"
                  ];
              }
+
          }
 
-         $name = $type === "css" ? "Style" : "Script";
- 
-         //2. Add this component theme assets if available
-         $theme = $def ? $def->theme() : "Default";
-         $theme_file = "{$this->path}/Themes/{$theme}/{$name}.{$type}";
-
-         if(file_exists($theme_file)){
-             $files[] = (Object)[
-                 'file' => $theme_file,
-                 'name' => strtolower($theme)."_{$this->name}.{$type}"
-             ];
-         }
-
-         //3. Add this component's own assets
-         $file = "{$this->path}/{$name}.{$type}";
-
-         if(file_exists($file)){
-             $files[] = (Object)[
-                 'file' => $file,
-                 'name' => "{$this->name}.{$type}"
-             ];
-         }
-
-         //4. Add the component's template assets.
-         if($template_name){
-
+         if(!$template_loaded && $template_name){
+             
+             //4. Add the component's template assets.
+             
              $template_file = "{$this->path}/Templates/{$template_name}/{$name}.{$type}";
 
              if(file_exists($template_file)){
@@ -178,30 +187,17 @@ class UiComponentDefinition {
                      'name' => strtolower($template_name)."_{$this->name}.{$type}"
                  ];
              }
-         }
-         
-         $assets = [];
-         $listed = [];
-
-         foreach($files as $f){
-
-             $fn = strtolower($f->file);
-
-             if(!in_array($fn, $listed)){
-                 $assets[] = $f;
-                 $listed[] = $fn;
-             }
 
          }
 
-         return $assets;
+         return $files;
      }
 
-     public function js(array &$loaded_components = [], ?string $template_name = null) : array {
-         return $this->get_assets("js", $loaded_components, $template_name);
+     public function js(?string $template_name = null) : array {
+         return $this->get_assets("js", $template_name);
      }
 
-     public function css(array &$loaded_components = [], ?string $template_name = null) : array {
-         return $this->get_assets("css", $loaded_components, $template_name);
+     public function css(?string $template_name = null) : array {
+         return $this->get_assets("css", $template_name);
      }
 }
