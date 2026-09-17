@@ -1,21 +1,3 @@
-input[type="file"]{
-     padding:10px;
-     height:auto;
-     background:#f8fafc;
-     cursor:pointer;
-}
-
-input[type="file"]::file-selector-button{
-     border:none;
-     background:var(--primary-color);
-     color:#fff;
-     padding:10px 16px;
-     border-radius:10px;
-     margin-right:12px;
-     cursor:pointer;
-     font-weight:600;
-}
-
 .file-upload{
      width:100%;
 }
@@ -47,7 +29,6 @@ input[type="file"]::file-selector-button{
 .file-upload-dropzone:hover{
      border-color:var(--hard-border);
      background:#fff;
-     transform:translateY(-2px);
      box-shadow: 0 10px 35px rgba(37,99,235,.08);
 }
 
@@ -60,17 +41,42 @@ input[type="file"]::file-selector-button{
 .file-upload-content{
      display:grid;
      grid-template-rows: 1fr;
-     grid-template-columns:auto 1fr;
+     grid-template-columns:auto 1fr auto;
+     gap:10px;
 }
 
 .file-upload-icon{
-     width:60px;
-     height:60px;
+     width:50px;
+     height:50px;
      margin-right:10px;
      border-radius:10px;
-     background:#eff6ff;
+     background:var(--primary-color-soft);
      color:var(--primary-color);
 }
+
+.file-upload-file-icon {
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border-radius: 6px;
+}
+
+.file-upload-file-preview {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.file-upload-button:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+}
+
 .file-upload-icon svg{
      width:30px;
      height:30px;
@@ -103,10 +109,6 @@ input[type="file"]::file-selector-button{
         opacity var(--transition),
         background var(--transition);
      margin-left:0!important;
-}
-
-.file-upload-button:hover{
-     transform:translateY(-1px);
 }
 
 .file-upload-button svg{

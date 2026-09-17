@@ -14,6 +14,7 @@ use SaQle\Core\Files\Commits\{
 	 FileCommitter,
 	 FileCommitInterface
 };
+use RuntimeException;
 
 class FileField extends Field {
 	 /**
@@ -66,6 +67,10 @@ class FileField extends Field {
 	 //whether to upload multiple files or not
 	 #[FormControl()]
 	 protected bool $multiple = false;
+
+	 //max number of files uploadable for this control
+	 #[FormControl()]
+	 protected ?int $max_files = null;
 
 	 /**
 	  * A list of allowed file extensions without the dot
@@ -163,6 +168,21 @@ class FileField extends Field {
 
 	 public function get_multiple(){
 	 	 return $this->multiple;
+	 }
+
+	 public function max_files(int $count){
+
+	 	 if($count === 0){
+	 	 	 throw new RuntimeException("Max files count must be more than 0!");
+	 	 }
+
+	 	 $this->max_files = $count;
+
+	 	 return $this;
+	 }
+
+	 public function get_max_files() : int {
+	 	 return $this->max_files;
 	 }
 
 	 public function extensions(array $extensions){

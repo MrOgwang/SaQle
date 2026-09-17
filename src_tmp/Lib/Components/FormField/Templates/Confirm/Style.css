@@ -1,0 +1,44 @@
+.confirm-field label {
+     display: inline-flex;
+     align-items: center;
+     gap: 8px;
+     cursor: pointer;
+     user-select: none;
+}
+
+.confirm-field input[type=checkbox] {
+     display:none;
+}
+
+.confirm-box {
+     width: 18px;
+     height: 18px;
+     border: 1px solid #cbd5e1;
+     border-radius: 4px;
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     flex-shrink: 0;
+     transition: .15s ease;
+}
+
+.confirm-field input:checked + .confirm-box {
+     background: var(--primary-color);
+     border-color: var(--primary-color);
+}
+
+.confirm-field input:checked + .confirm-box::after {
+     content: "✓";
+     color: #fff;
+     font-size: 13px;
+     font-weight: 600;
+}
+
+.confirm-field input:focus-visible + .confirm-box {
+     outline: 3px solid rgba(212, 175, 55, .15);
+}
+
+.confirm-label {
+     font-size: 14px;
+     color: #334155;
+}
