@@ -8,7 +8,7 @@ use SaQle\Build\Commands\{MakeMigrations, Migrate, MakeCollections, MakeModels,
     MakeThroughs, SeedDatabase, ResetDatabase, MakeSuperuser, StartProject, 
     StartApps, MakeResources, BuildProject, TestModel, RunCron, QueueCron,
     MakeComponent, MakeUser, Install, MakeEnv, MigrateStructure, RouteList,
-    MigrateProject, OverrideComponent, ComponentList, ComponentInfo
+    MigrateProject, OverrideComponent, ComponentList, ComponentInfo, MakeModule
 };
 use SaQle\Build\Middleware\SuperUserContextMiddleware;
 
@@ -131,6 +131,12 @@ class FrameworkCommandsProvider extends ServiceProvider {
              middleware: []  
          );
 
+         $makemodule = new CommandDefinition(
+             name: 'make:module',
+             class: MakeModule::class,
+             middleware: []  
+         );
+
          $this->app->commands->add($superuser);
          $this->app->commands->add($component);
          $this->app->commands->add($migration);
@@ -150,6 +156,7 @@ class FrameworkCommandsProvider extends ServiceProvider {
          $this->app->commands->add($override_component);
          $this->app->commands->add($list_component);
          $this->app->commands->add($component_info);
+         $this->app->commands->add($makemodule);
          
      }
 }
