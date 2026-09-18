@@ -3,6 +3,7 @@ namespace SaQle\Modules\Asset\Components\ProtectedFile;
 
 use SaQle\Core\Files\Storage\StorageFactory;
 use SaQle\Http\Response\Message;
+use SaQle\Core\Files\Utils\DefaultFileUrlEncoder;
 
 class Controller {
 
@@ -31,7 +32,7 @@ class Controller {
          $file = url_to_base64($file);
          $storage_config = config('app.media_storage_drivers')[$storage_key];
 
-         $url_encoder_class = $storage_config['url_encoder'] ?? null;
+         $url_encoder_class = $storage_config['url_encoder'] ?? DefaultFileUrlEncoder::class;
          if(!$url_encoder_class || !class_exists($url_encoder_class)){
              throw bad_request_exception("Url generator class not found for storage: {$storage_key}!");
          }
