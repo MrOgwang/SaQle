@@ -41,14 +41,14 @@ final class MakeComponent extends Command {
          $module_slug = $module ? self::slug($module, "Module") : "";
 
          if($module){
-             $base_path = base_path("modules", $module_slug, "Components");
+             $base_path = base_path("src", "Modules", $module_slug, "Components");
              $namespace = "App\\Modules\\".ucwords($module_slug)."\\Components\\".ucwords($name_slug);
          }else{
-             $base_path = base_path("Components");
+             $base_path = base_path("src", "Components");
              $namespace = "App\\Components\\".ucwords($name_slug);
          }
 
-         $component_path = $base_path."/".$name_slug;
+         $component_path = path_join([$base_path, $name_slug]);
 
          if(is_dir($component_path)){
              Cli::print("Component already exists.\n");
