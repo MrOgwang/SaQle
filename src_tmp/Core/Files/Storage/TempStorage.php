@@ -2,7 +2,10 @@
 
 namespace SaQle\Core\Files\Storage;
 
-use SaQle\Core\Files\{TempFileRef, UploadedFile};
+use SaQle\Core\Files\{
+     TempFileRef, 
+     UploadedFile
+};
 use RuntimeException;
 
 final class TempStorage {

@@ -16,7 +16,7 @@ use InvalidArgumentException;
 use Exception;
 use PDO;
 
-class CreateManager extends QueryManager{
+class CreateManager extends QueryManager {
 	 use ImageUtils, EventUtils;
 
 	 public function __construct(IModel $model){

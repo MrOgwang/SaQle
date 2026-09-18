@@ -2,7 +2,6 @@
 
 namespace SaQle\Modules\Asset\Components\StaticFile;
 
-use SaQle\Core\Files\Storage\StorageFactory;
 use SaQle\Http\Response\Message;
 
 class Controller {

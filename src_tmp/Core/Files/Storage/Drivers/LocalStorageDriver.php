@@ -9,7 +9,12 @@ class LocalStorageDriver implements IStorageDriver {
      ){}
 
      public function full_path(string $path): string {
-         return path_join([$this->config['root'], $path]);
+
+         $media_root = $this->config['visibility'] === 'private' ? 
+         path_join([config('base_path'), $this->config['root']], true) : 
+         path_join([config('document_root'), $this->config['root']], true);
+
+         return path_join([$media_root, $path]);
      }
 
      public function config(): array {
@@ -17,7 +22,9 @@ class LocalStorageDriver implements IStorageDriver {
      }
 
      public function put(string $path, mixed $contents): void {
+
          $full = $this->full_path($path);
+
          $dir  = dirname($full);
 
          if(!is_dir($dir)){
@@ -45,6 +52,10 @@ class LocalStorageDriver implements IStorageDriver {
          return fopen($this->full_path($path), 'rb');
      }
 
+     public function path(string $path): ?string {
+         return $this->full_path($path);
+     }
+
      public function public_url(string $path): ?string {
 
          if(($this->config['visibility'] ?? null) !== 'public'){
@@ -52,9 +63,5 @@ class LocalStorageDriver implements IStorageDriver {
          }
 
          return path_join([$this->config['base_url'], $path]);
-     }
-
-     public function path(string $path): ?string {
-         return $this->full_path($path);
      }
 }

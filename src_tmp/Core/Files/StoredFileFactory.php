@@ -2,7 +2,6 @@
 
 namespace SaQle\Core\Files;
 
-use SaQle\Core\Files\Storage\StorageFactory;
 use RuntimeException;
 
 class StoredFileFactory {

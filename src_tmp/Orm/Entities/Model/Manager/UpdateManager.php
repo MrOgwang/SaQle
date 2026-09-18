@@ -45,7 +45,9 @@ class UpdateManager extends QueryManager {
 		 $this->__filterConstruct();
 
 		 [$clean_data, $file_data] = $this->model->get_update_data($this->container->data, []);
+		 
 		 $this->container->files = $file_data;
+		 
 		 $this->clean_data = $clean_data;
 
 		 $this->dbdriver->set_update_query($this);

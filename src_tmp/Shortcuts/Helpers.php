@@ -272,12 +272,6 @@ if(!function_exists('event')){
      }
 }
 
-if(!function_exists('media_root')){
-     function media_root(string $path, bool $public = true) : string {
-         return !$public ? path_join([config('base_path'), $path], true) : path_join([config('document_root'), $path], true);
-     }
-}
-
 if(!function_exists('encrypt')){
      function encrypt($plain_text, $key = '', $salt = ''){
          $secret_key = hash_pbkdf2("sha256", $key, $salt, 10000, 32, true); // 32 bytes for AES-256

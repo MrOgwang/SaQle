@@ -16,6 +16,7 @@ class Storage {
      }
 
      public function url(array $file_meta) : ? string {
+
          $path = path_join([$file_meta['path'], $file_meta['name']]);
          
          $visibility = $this->driver->config()['visibility'] ?? 'private';
@@ -24,15 +25,11 @@ class Storage {
              return $this->driver->public_url($path);
          }
 
-         $encoder_class = $this->driver->config()['url_encoder'] ?? DefaultFileUrlEncoder::class;
-
-         $encoder = new $encoder_class($this->driver);
+         $encoder = new DefaultFileUrlEncoder();
 
          $token = $encoder->encode($file_meta);
 
-         $route_name = ActorContext::is_platform() ? 
-         "saqle.".$file_meta['storage'].".media" : 
-         "app.".$file_meta['storage'].".media";
+         $route_name = ActorContext::is_platform() ? "saqle.".$file_meta['storage'].".media" : "app.".$file_meta['storage'].".media";
 
          return route($route_name, [
              'file' => rawurlencode($token),

@@ -1,4 +1,5 @@
 <?php
+
 namespace SaQle\Core\Registries;
 
 use SaQle\Core\Files\Storage\Storage;

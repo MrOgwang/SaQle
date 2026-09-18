@@ -275,48 +275,40 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
 
 	 protected function save_model_files(array &$kwargs){
 
-	 	 $file_field_names = $this->table->get_file_field_names();
+         $model = strtolower((new ReflectionClass($this))->getShortName());
+         $session = bin2hex(random_bytes(16));
 
-	     if(empty($file_field_names)){
-	         return;
-	     }
+         $file_fields = array_intersect_key($kwargs, array_flip($this->table->get_file_field_names()));
 
-	     $model = strtolower((new ReflectionClass($this))->getShortName());
-	     $session = bin2hex(random_bytes(16));
+         $file_fields = array_filter($file_fields, function($value){
+             
+             if($value instanceof UploadedFile){
+                 return true;
+             }
 
-	     foreach($file_field_names as $ffn){
+             if(is_array($value)){
+                 return count($value) > 0 && array_all($value, fn($file) => $file instanceof UploadedFile);
+             }
 
-	         if(!array_key_exists($ffn, $kwargs)){
-	             continue;
-	         }
+             return false;
+         });
 
-	         $value = $kwargs[$ffn];
- 
-             $is_missing = is_null($value) || (is_string($value) && trim($value) === "");
+         foreach($file_fields as $field_name => $files){
 
-	         if($is_missing){
-	             continue;
-	         }
+             $files = !is_array($files) ? [$files] : $files;
 
-             $field = $this->table->get_clean_fields()[$ffn];
-	         $files = is_array($value) ? $value : [$value];
-	         $refs  = [];
+             $file_refs  = [];
 
-	         foreach($files as $file){
-	             if(!$file instanceof UploadedFile) {
-	                 throw new InvalidArgumentException(
-	                    "Invalid upload supplied for file field '{$ffn}'"
-	                 );
-	             }
+             foreach($files as $file){
+                 $file_refs[] = TempStorage::store(model: $model, field: $field_name, session: $session, file: $file);
+             }
 
-	             $refs[] = TempStorage::store(model: $model, field: $ffn, session: $session, file: $file);
-	         }
+             $kwargs[$field_name] = implode("~", array_map(fn($ref) => $ref->file_id, $file_refs));
 
-             $kwargs[$ffn] = implode("~", array_map(fn($ref) => $ref->file_id, $refs));
+             $this->files['references'][$field_name] = count($file_refs) === 1 ? $file_refs[0] : $file_refs;
 
-	         $this->files['references'][$ffn] = count($refs) === 1 ? $refs[0] : $refs;
-	     }
-
+         }
+         
 	     $this->files['file_upload_session'] = $session;
 	 }
 
@@ -406,7 +398,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
      }
 
 	 public function __get($name){
-	 	 $this->assert_field_exists($name);
+         $this->assert_field_exists($name);
 	 	 return $this->render_field($name);
      }
 

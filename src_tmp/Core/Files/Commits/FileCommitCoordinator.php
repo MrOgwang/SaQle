@@ -5,6 +5,7 @@ namespace SaQle\Core\Files\Commits;
 use SaQle\Core\Files\Storage\TempStorage;
 
 final class FileCommitCoordinator {
+    
      protected array $committed = [];
 
      public function commit(object $model, array $files, string $session, mixed $row): void {

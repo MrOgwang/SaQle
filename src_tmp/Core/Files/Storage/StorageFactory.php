@@ -3,27 +3,27 @@
 namespace SaQle\Core\Files\Storage;
 
 use SaQle\Core\Files\Storage\Drivers\LocalStorageDriver;
-use SaQle\Core\Files\Utils\DefaultFileUrlEncoder;
 use RuntimeException;
 
 final class StorageFactory {
 
      public static function make(string $name): Storage {
-         $config = config('app.media_storage_drivers')[$name] ?? null;
 
-         //Framework default
+         $driver_class = self::get_driver($name);
+
+         $config = config('app.media_storage_drivers', [])[$name] ?? null;
+
          if(!$config){
-             $config = [
-                 'driver' => LocalStorageDriver::class,
-                 'root' => media_root('media', false),
-                 'visibility' => 'private',
-                 'base_url' => '/media',
-                 'url_encoder' => DefaultFileUrlEncoder::class
-             ];
+             throw new RuntimeException("The storage driver: {$name} not valid!");
          }
 
-         $driver_class = $config['driver'];
-
          return new Storage(new $driver_class($config));
+     }
+
+     public static function get_driver(string $name){
+         return match($name){
+             'local' => LocalStorageDriver::class,
+             default => throw new RuntimeException("The storage driver: {$name} not valid!")
+         };
      }
 }

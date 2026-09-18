@@ -25,6 +25,7 @@ class Controller {
      ){
 
          $file = trim($file);
+
          if(!$file){
              throw bad_request_exception('File is missing!');
          }
@@ -32,18 +33,7 @@ class Controller {
          $file = url_to_base64($file);
          $storage_config = config('app.media_storage_drivers')[$storage_key];
 
-         $url_encoder_class = $storage_config['url_encoder'] ?? DefaultFileUrlEncoder::class;
-         if(!$url_encoder_class || !class_exists($url_encoder_class)){
-             throw bad_request_exception("Url generator class not found for storage: {$storage_key}!");
-         }
-
-         $storage_driver_class = $storage_config['driver'] ?? null;
-         if(!$storage_driver_class || !class_exists($storage_driver_class)){
-             throw bad_request_exception("Driver class not defined for storage: {$storage_key}!");
-         }
-
-         $storage_driver = new $storage_driver_class($storage_config);
-         $url_encoder = new $url_encoder_class($storage_driver);
+         $url_encoder = new DefaultFileUrlEncoder();
 
          $file_meta = $url_encoder->decode($file);
 
@@ -54,6 +44,7 @@ class Controller {
          $storage = StorageFactory::make($file_meta['storage']);
 
          $path = $storage->path($file_meta['path']);
+
          $name = $file_meta['original_name'];
 
          if(!file_exists($path)){

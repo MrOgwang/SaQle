@@ -3,7 +3,10 @@
 namespace SaQle\Core\Files\Commits;
 
 use SaQle\Orm\Entities\Field\Types\FileField;
-use SaQle\Core\Files\Storage\{TempStorage, StorageFactory};
+use SaQle\Core\Files\Storage\{
+     TempStorage, 
+     StorageFactory
+};
 use RuntimeException;
 use Throwable;
 
@@ -20,10 +23,13 @@ class FileCommitter implements FileCommitInterface {
      public function commit(object $model, array $refs, mixed $row) : array {
 
          $storage_name = $this->field->get_storage();
+
          $storage = StorageFactory::make($storage_name);
 
          foreach($refs as $n => $ref){
+
              $temp = TempStorage::resolve($ref);
+
              $final = $this->build_path($row, basename($temp), $ref->file_name, $n);
 
              $stream = fopen($temp, 'rb');
@@ -53,6 +59,7 @@ class FileCommitter implements FileCommitInterface {
      }
 
      public function rollback(array $commits): void {
+        
          $storage = StorageFactory::make($this->field->get_storage());
 
          foreach($commits as $commit){
@@ -61,7 +68,9 @@ class FileCommitter implements FileCommitInterface {
      }
 
      protected function build_path($row, $file_name, $original_file_name, $file_index){
+
          $upload_to = $this->field->get_upload_to() ?? "";
+
          $rename_to = $this->field->get_rename_to();
 
          //if rename to was provided, rename the file.

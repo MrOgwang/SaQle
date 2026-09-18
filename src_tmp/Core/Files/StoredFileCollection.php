@@ -2,7 +2,6 @@
 
 namespace SaQle\Core\Files;
 
-use SaQle\Core\Files\Storage\StorageFactory;
 use JsonSerializable;
 use SaQle\Core\Collection\Base\TypedCollection;
 
