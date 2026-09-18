@@ -156,7 +156,7 @@ namespace {$namespace};
 use SaQle\Core\Components\ComponentDefinition;
 use SaQle\Http\Request\Request;
 
-class Definition {
+class Definition extends ComponentDefinition {
 
      public function template(Request \$request, ...\$args): ?string {
          return null;
