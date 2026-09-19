@@ -17,6 +17,7 @@ use SaQle\Core\Ui\Forms\{
      Form,
      FormFieldsCompiler
 };
+use SaQle\Core\Ui\Presenters\Presenter;
 use SaQle\Core\Support\{
      Db, 
      AttributeResolver
@@ -101,11 +102,19 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
 	  * */
 	 public function __construct(...$kwargs){
 	 	 /**
-	 	  * if a model isntance is not created from static and from database,
+	 	  * if a model instance is not created from static and from database,
 	 	  * the field values must be provided in the constructor
 	 	  * */
 	 	 if(!self::$from_static_method && !self::$from_database){
 	 	 	 $kwargs = $this->initialize_model_data($kwargs);
+         }
+
+         /**
+          * If the model instance is being hydrated from the database,
+          * convert the file values into StoredFile objects
+          * */
+         if(self::$from_database){
+             $kwargs = $this->convert_file_fields($kwargs);
          }
 
          $this->data = $kwargs;
@@ -234,11 +243,15 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
      }
 
      final public static function from_db(...$data){
+
      	 self::$from_database = true;
 
          $called_class = get_called_class();
+
          $model = new $called_class(...$data);
+
          self::$from_database = false;
+
          return $model;
      }
 
@@ -308,7 +321,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
              $this->files['references'][$field_name] = count($file_refs) === 1 ? $file_refs[0] : $file_refs;
 
          }
-         
+
 	     $this->files['file_upload_session'] = $session;
 	 }
 
@@ -373,33 +386,33 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
      	 }
      }
 
-     private function render_field(string $name){
-     	 $value = $this->data[$name] ?? "";
-         
-     	 if(array_key_exists($name, $this->table->get_clean_fields())){ 
-     	 	 $field = $this->table->get_clean_fields()[$name];
-     	 	 
-             if($field instanceof FileField || is_subclass_of($field::class, FileField::class)){
-                 $value = trim($value);
+     private function convert_file_fields(array $data){
 
-                 $default_url = $field->get_default_url();
-                 if(is_callable($default_url)){
-                     $default_url = $default_url($this);
-                 }
+         $file_fields = array_intersect_key($data, array_flip($this->table->get_file_field_names()));
 
-                 $value = StoredFileFactory::make($value ? $value : null,  $default_url, $field->get_multiple());
-     	 	 }
+         foreach($file_fields as $field_name => $value){
 
-     	 	 $field->value($value);
-     	 	 $value = $field->render_field($this);
-     	 }
+             $field = $this->table->get_clean_fields()[$field_name];
 
-     	 return $value;
+             $value = trim((string)$value);
+
+             $default_url = $field->get_default_url();
+
+             if(is_callable($default_url)){
+                 $default_url = $default_url($this);
+             }
+
+             $data[$field_name] = StoredFileFactory::make($value ? $value : null,  $default_url, $field->get_multiple());
+         }
+
+         return $data;
      }
 
 	 public function __get($name){
+
          $this->assert_field_exists($name);
-	 	 return $this->render_field($name);
+
+         return $this->data[$name] ?? null;
      }
 
      public function __set($name, $value){
@@ -408,25 +421,32 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
          }
 
          $this->assert_field_exists($name);
+
          $this->data = array_merge($this->data, [$name => $value]);
      }
 
      public function __call(string $name, array $args){
 
      	 $this->assert_field_exists($name, true);
+
      	 $field = $this->table->get_clean_fields()[$name];
+
      	 $field->value($this->data[$name]);
 
      	 return $field;
-     }
+     } 
 
      public static function __callStatic(string $name, array $args){
-     	 $model = self::make();
-     	 if(!array_key_exists($name, $model->table->get_clean_fields())){
-     	 	 throw new Exception("The field: ".$field_name." does not exist on the model: ".$model::class);
+     	 
+         $model = self::make();
+
+         $field = $model->table->get_clean_fields()[$name] ?? null;
+
+     	 if(!$field){
+     	 	 throw new Exception("The field: ".$name." does not exist on the model: ".$model::class);
      	 }
 
-     	 return $model->table->get_clean_fields()[$name];
+     	 return $field;
      }
 
      /**
@@ -473,12 +493,19 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
      private function extract_presenters(){
 
          $attr_resolver = new AttributeResolver();
-         $presenter_methods = $attr_resolver->get_methods_with_attribute($this::class, Presenter::class);
+         $presenter_methods = $attr_resolver->get_methods_with_attribute($this::class, NamedPresenter::class);
 
          $presenters = [];
 
-         foreach($presenter_methods as $method => $presenter){
-             $presenters[$presenter->name ?? $method] = $this->$method();
+         foreach($presenter_methods as $method => $named_presenter){
+
+             $presenter_name = $named_presenter->name ?? $method;
+
+             $presenter = $this->$method(new Presenter($presenter_name));
+
+             if($presenter){
+                 $presenters[$presenter_name] = $presenter;
+             }
          }
 
          return $presenters;
@@ -510,21 +537,18 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
      }
 
      private function present_field(string $presenter, string $field){
-         $presenters = $this->table->get_presenters  ();
 
-         if(!array_key_exists($presenter, $presenters)){
+         $presenters = $this->table->get_presenters();
+
+         $presenter = $presenters[$presenter] ?? null;
+
+         if(!$presenter){
              return $this->$field;
          }
 
-         $presenter = $presenters[$presenter];
+         $field_presenter = $presenter->get_field($field);
 
-         if(!array_key_exists($field, $presenter)){
-             throw new Exception("The field: {$field} doesn't exist in the presenter: {$presenter}");
-         }
-
-         $field_presenter = $presenter[$field];
-
-         if(is_null($field_presenter)){
+         if(!$field_presenter){
              return $this->$field;
          }
 
@@ -536,27 +560,26 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
      }
 
      private function present_model(string $presenter){
+
          $presenters = $this->table->get_presenters();
 
-         if(!array_key_exists($presenter, $presenters)){
+         $presenter = $presenters[$presenter] ?? null;
+
+         if(!$presenter){
              return $this;
          }
 
-         $presenter = $presenters[$presenter];
-
          $data = [];
 
-         foreach($presenter as $field => $field_presenter){
-             if(is_null($field_presenter)){
-                 $data[$field] = $this->$field;
-             }elseif(is_callable($field_presenter)){
+         foreach($presenter->get_fields() as $field => $field_presenter){
+             if(is_callable($field_presenter)){
                  $data[$field] = $field_presenter((Object)$this->data);
              }else{
-                $data[$field] = $field_presenter;
+                 $data[$field] = $field_presenter;
              }
          }
 
-         $this->data = $data;
+         $this->data = array_merge($this->data, $data);
 
          return $this;
      }

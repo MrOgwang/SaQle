@@ -20,6 +20,7 @@ class StoredFileFactory {
          ?string $default_url = null,
          bool $is_multiple = true
      ) : null|StoredFile|StoredFileCollection {
+        
          if(!$json){
              return self::default_or_null($default_url);
          }

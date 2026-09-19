@@ -4,11 +4,11 @@ namespace SaQle\Core\Files;
 
 use SaQle\Core\Files\Storage\StorageFactory;
 use RuntimeException;
-use JsonSerializable;
 
-class StoredFile implements JsonSerializable{
+class StoredFile {
 
      protected array $meta = [];
+
      protected ?string $default_url = null;
 
      /**
@@ -27,10 +27,6 @@ class StoredFile implements JsonSerializable{
      public function __construct(array $meta = [], ?string $default_url = null){
          $this->meta = $meta;
          $this->default_url = $default_url;
-     }
-
-     public function jsonSerialize() : mixed {
-         return $this->url();
      }
 
      /**
@@ -114,13 +110,6 @@ class StoredFile implements JsonSerializable{
      */
      public function name(): string {
          return $this->default_url ? "" : $this->meta['name'];
-     }
-
-     /**
-     * Magic __toString returns URL
-     */
-     public function __toString(): string {
-         return $this->url();
      }
 
      /**

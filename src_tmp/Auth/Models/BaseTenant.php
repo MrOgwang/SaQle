@@ -4,9 +4,11 @@ namespace SaQle\Auth\Models;
 use SaQle\Orm\Entities\Model\Schema\{
 	 Model, 
 	 Table,
-	 Presenter
+	 NamedPresenter
 };
 use SaQle\Auth\Identity\Tenant\Interfaces\TenantInterface;
+use SaQle\Core\Ui\Forms\Form;
+use SaQle\Core\Ui\Presenters\Presenter;
 
 class BaseTenant extends Model implements TenantInterface {
 
@@ -39,15 +41,13 @@ class BaseTenant extends Model implements TenantInterface {
      	 return $this->tenant_name;
      }
 
-     #[Presenter(name: 'admin')] 
-     public function admin_presenter(){
-     	 return [
-     	 	 'tenant_id'   => null,
-     	 	 'tenant_name' => null,
-     	 	 'slug'        => null,
-     	 	 'url'         => function($model){
-     	 	 	 return "<a target='_blank' href='{$model->url}'>Manage</a>";
-     	 	 }
-     	 ];
+     #[NamedPresenter(name: 'admin')] 
+     public function admin_presenter(Presenter $presenter){
+
+     	 $presenter->field('url', function($model){
+     	 	 return "<a target='_blank' href='{$model->url}'>Manage</a>";
+     	 });
+
+     	 return $presenter;
      }
 }

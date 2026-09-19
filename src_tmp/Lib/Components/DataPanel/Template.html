@@ -95,7 +95,7 @@
  	 	 	 	 	 <td><span class='flex center'><i class="fa-solid fa-grip-vertical"></i></span></td>
  	 	 	 	     @foreach($panel->columns as $column_name => $column)
  	 	 	 	     @if($panel->columns[$column_name]->type === 'image')
- 	 	 	 	     <td><img class='dp-image' src="{!! $row->$column_name !!}"/></td>
+ 	 	 	 	     <td><img class='dp-image' src="{!! $row->$column_name?->url() !!}"/></td>
  	 	 	 	     @else
  	 	 	 	     <td>{!! ucwords($row->$column_name ?? "") !!}</td>
  	 	 	 	     @endif
