@@ -30,7 +30,7 @@ class ComponentInfo extends Command {
 
              $context->output()->info("\nComponent information for: {$name}\n");
 
-             $component = ComponentRegistry::get($name);
+             $component = ComponentRegistry::get_or_fail($name);
 
              $this->display($name, $component);
 

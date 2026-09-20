@@ -3,6 +3,9 @@
 namespace SaQle\Core\Support;
 
 use InvalidArgumentException;
+use RecursiveIteratorIterator;
+use RecursiveDirectoryIterator;
+use FilesystemIterator;
 
 class Directory {
 
@@ -41,6 +44,24 @@ class Directory {
          $filename = $random ? $this->random_file_name($extension) : $original_name;
 
          return path_join([$dir, $filename]);
+     }
+
+     public function delete(string $directory): bool {
+
+         if(!is_dir($directory)){
+             return false;
+         }
+
+         $iterator = new RecursiveIteratorIterator(
+             new RecursiveDirectoryIterator($directory, FilesystemIterator::SKIP_DOTS),
+             RecursiveIteratorIterator::CHILD_FIRST
+         );
+
+         foreach($iterator as $item){
+             $item->isDir() ? rmdir($item->getPathname()) : unlink($item->getPathname());
+         }
+
+         return rmdir($directory);
      }
 
      protected function resolve_blueprint(string $template, array $context): string {

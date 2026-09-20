@@ -30,19 +30,21 @@ class OverrideComponent extends Command {
 
              $context->output()->info("\nOverriding component: {$name}\n");
 
-             $component = ComponentRegistry::get($name);
+             $component = ComponentRegistry::get_or_fail($name);
 
-             $base_path = $component['base_path'] ?? "";
+             $source_path = $component['source_path'] ?? "";
 
-             $source = $component['owner'] === 'project' ? 
-             path_join([config('base_path'), $base_path]) : 
-             path_join([config('framework_path'), $base_path]);
+             $source = $component['source_owner'] === 'project' ? 
+             path_join([config('base_path'), $source_path]) : 
+             path_join([config('framework_path'), $source_path]);
+
+             $context->output()->info("Checking source: {$source}\n");
 
              if(!$source || !is_dir($source)){
                  throw new Exception("Component source directory does not exist.");
              }
 
-             $destination = ComponentOverrider::override($name, $source);
+             $destination = ComponentOverrider::override($name, $source, $context);
 
              $context->output()->success("Component '{$name}' override successful.");
              $context->output()->line('');

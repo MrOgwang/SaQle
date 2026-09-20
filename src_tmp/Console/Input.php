@@ -17,6 +17,7 @@ class Input extends Cli {
          $this->line($label);
 
          $keys = array_keys($choices);
+         
          $i = 1;
 
          foreach($choices as $display){

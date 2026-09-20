@@ -6,12 +6,19 @@ use RuntimeException;
 
 final class ComponentOverrider {
 
-     public static function override(string $name, string $source) : string {
+     public static function override(string $name, string $source, mixed $context) : string {
 
          $destination = self::get_destination($name);
 
          if(is_dir($destination)){
-             throw new RuntimeException("Component already exists at '{$destination}'.");
+
+             $context->output()->warning("Component already exists at '{$destination}'");
+
+             if(!$context->input()->confirm("Would you like to override it?")){
+                 throw new RuntimeException("Override aborted! Component already exists at '{$destination}'.");
+             }
+
+             saqle_dir()->delete($destination);
          }
 
          self::copy_directory($source, $destination);

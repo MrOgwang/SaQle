@@ -29,8 +29,14 @@ final class ComponentRegistry {
 
      public static function all(bool $reload = false): array {
 
+         $cache_path = path_join([config('base_path'), config('class_mappings_dir'), 'Components.php']);
+
+         if(!file_exists($cache_path)){
+             return [];
+         }
+
          if(self::$components === null || $reload === true || self::$_reload === true){
-             self::$components = require path_join([config('base_path'), config('class_mappings_dir'), 'Components.php']);
+             self::$components = require $cache_path;
          }
 
          return self::$components;
@@ -54,14 +60,21 @@ final class ComponentRegistry {
          return $real_path;
      }
 
-     public static function get(string $name): array {
+     public static function get(string $name): ?array {
+         
          $components = self::all();
+         
+         return $components[$name] ?? null;
+     }
 
-         if(!isset($components[$name])){
+     public static function get_or_fail(string $name): array {
+         $component = self::get($name);
+
+         if(!$component){
              throw new InvalidArgumentException("Component [$name] does not exist.");
          }
 
-         return $components[$name];
+         return $component;
      }
 
      public static function get_definition(string $name, array $props = []) : UiComponentDefinition {

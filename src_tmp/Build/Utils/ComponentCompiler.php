@@ -44,7 +44,9 @@ class ComponentCompiler {
              'proxy'                  => false,
              'has_many_templates'     => false,
              'template_variations'    => [],
-             'base_path'              => ""
+             'base_path'              => "",
+             'source_path'            => "",
+             'source_owner'           => ""
          ];
      }
 
@@ -207,6 +209,8 @@ class ComponentCompiler {
 
          $compiled_template_name = strtolower($prefix.".".$component_name);
 
+         $existing_component = ComponentRegistry::get($compiled_template_name);
+
          Cli::print("\nComponent: $component_name");
 
          $component = self::initialize_component();
@@ -214,6 +218,8 @@ class ComponentCompiler {
          [$base_path, ] = self::normalize_path(realpath($component_path));
 
          $component['base_path'] = $base_path;
+
+         $component['source_path'] = !$existing_component ? $base_path : $existing_component['source_path'];
 
          $component_owner = "project";
 
@@ -373,8 +379,6 @@ class ComponentCompiler {
 
              $template_files = self::template_files($templates_path);
 
-             print_r($template_files);
-
              foreach(self::template_files($templates_path) as $variation => $variation_path){
 
                  [$compile_path, $file_owner] = self::normalize_path(realpath($variation_path));
@@ -403,6 +407,8 @@ class ComponentCompiler {
          $component['has_many_templates'] = $variation_count > 1;
 
          $component['owner'] = $component_owner;
+
+         $component['source_owner'] = !$existing_component ? $component_owner : $existing_component['source_owner'];
 
          Cli::print("Component compilation successful!\n");
 
