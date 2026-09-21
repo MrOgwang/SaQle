@@ -10,14 +10,23 @@
              {{ $errors }}
          </div>
          @endif
-         <div class="form-group">
-             <label>User Name</label>
-             <input type="text" name="username" required>
+         <ui:component 
+             name="saqle.lib.formfield" 
+             bind='app.auth.user:username' 
+             required='0' 
+             label="User Name"
+         />
+         <ui:component 
+             name="saqle.lib.formfield" 
+             bind='app.auth.user:password' 
+             required='0' 
+             label="Password"
+         />
+         <div class='form-buttons'>
+             <button class="submit-button" type="submit" id="submitButton">
+                 <span class="button-label">Sign in</span>
+                 <span class="button-spinner" aria-hidden="true"></span>
+             </button>
          </div>
-         <div class="form-group">
-             <label>Password</label>
-             <input type="password" name="password" required>
-         </div>
-         <button type="submit">Sign In</button>
      </form>
 </div>
