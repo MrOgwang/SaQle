@@ -26,36 +26,6 @@ class Db {
          $this->connection_key = self::get_connection_key(connection_key: $connection_key);
      }
 
-     public static function register_tenant_db($connection_key, $tenant){
-
-         $listed_connections = config('db.connections', []);
-        
-         if(!$listed_connections){
-             return;
-         }
-
-         $connection_key_parts = explode(".", $connection_key);
-
-         $connection_name = $connection_key_parts[0];
-         $database_name = $connection_key_parts[1];
-
-         $tenant_database_name = $database_name."_".strtolower(str_replace(" ", "_", $tenant->tenant_name));
-         $tenant_database_schema = $listed_connections[$connection_name]['databases'][$database_name];
-
-         $updated_databases = array_merge(
-             $listed_connections[$connection_name]['databases'],
-             [
-                 $tenant_database_name => $tenant_database_schema
-             ]
-         );
-
-         $listed_connections[$connection_name]['databases'] = $updated_databases;
-
-         config()->set('db.connections', $listed_connections); 
-
-         return [$connection_name.".".$tenant_database_name, $tenant_database_schema];
-     }
-
      /**
       * This method is defective: It assumes that a model will be tied to only
       * one database schema. In practice, especially the way the db.config file is setup,

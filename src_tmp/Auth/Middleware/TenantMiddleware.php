@@ -32,61 +32,6 @@ class TenantMiddleware implements RequestMiddleware {
          private TenantProviderInterface $tenant_provider
      ){}
 
-     private function register_tenant_databases($tenant){
-
-         //register tenant connections.
-
-         $default_connection_key = config('db.default_connection').".".config('db.default_database');
-
-         $new_default_connection_key = null;
-
-         $to_remove = [];
-
-         foreach(config('db.connections', []) as $name => $props){
-
-             if($name === config('framework_connection')){
-                 continue;
-             }
-
-             foreach($props['databases'] as $db => $schema){
-
-                 $connection_key = $name.".".$db;
-
-                 [$tenant_connection_key,] = Db::register_tenant_db($connection_key, $tenant);
-
-                 if($default_connection_key === $connection_key){
-                     $new_default_connection_key = $tenant_connection_key;
-                 }
-
-                 $to_remove[] = $connection_key;
-             }
-         }
-
-         foreach($to_remove as $key){
-
-             [$name, $db] = explode('.', $key, 2);
-
-             $connections = config('db.connections', []);
-
-             unset($connections[$name]['databases'][$db]);
-
-             config()->set('db.connections', $connections); 
-
-         }
-
-         //change the default database to a tenant database
-
-         if($new_default_connection_key){
-
-             $connection = explode(".", $new_default_connection_key);
-
-             config()->set('db.default_connection', $connection[0]); 
-             config()->set('db.default_database', $connection[1]); 
-
-         }
-
-     }
-
      public function before($request) : ?Message {
 
          $tenant_key = config('session_tenant_key');
@@ -106,16 +51,12 @@ class TenantMiddleware implements RequestMiddleware {
          $tenant_id = $this->id_resolver->resolve();
 
          if(!$tenant_id){
-             //return Message::bad_request(message: "Failed to resolve tenant id!");
              return null;
          }
 
          $tenant = $request->session->get($tenant_key, null);
          
          if($tenant && ($tenant->get_id() === $tenant_id || $tenant->slug === $tenant_id)){
-
-             $this->register_tenant_databases($tenant);
-
              return null;
          }
 
@@ -126,8 +67,6 @@ class TenantMiddleware implements RequestMiddleware {
          }
 
          $request->session->set($tenant_key, $tenant, true);
-
-         $this->register_tenant_databases($tenant);
 
          if(Session::has('__manage_tenant__')){
 

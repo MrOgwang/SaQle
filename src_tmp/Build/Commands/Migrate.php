@@ -266,12 +266,8 @@ class Migrate extends Command {
          return;
      }
 
-     public function handle(CommandContext $context) : int {
-
-         Cli::print("\n========================================");
-         Cli::print("SaQle Database Migration");
-         Cli::print("========================================\n");
-
+     public function migrate() : int {
+         
          $files = array_values($this->sort_files(File::scandir(path: $this->migrations_folder, exts: ['php'])));
 
          foreach($files as $index => $f){
@@ -279,5 +275,14 @@ class Migrate extends Command {
          } 
 
          return 0;
+     }
+
+     public function handle(CommandContext $context) : int {
+
+         Cli::print("\n========================================");
+         Cli::print("SaQle Database Migration");
+         Cli::print("========================================\n");
+
+         return $this->migrate();
      } 
 }

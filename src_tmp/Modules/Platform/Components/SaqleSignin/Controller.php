@@ -37,12 +37,5 @@ class Controller {
 		 	 'errors' => flash_from_session('__errors', '')
 		 ]);
 	 }
-
-	 public function signout(){
-
-	 	 $this->auth_service->logout();
-	 	 
-	 	 return Message::redirect(route('saqle.login.form'));
-	 }
 }
 ?>

@@ -496,12 +496,13 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
          $presenter_methods = $attr_resolver->get_methods_with_attribute($this::class, NamedPresenter::class);
 
          $presenters = [];
+         $model_fields = array_keys($this->table->get_clean_fields());
 
          foreach($presenter_methods as $method => $named_presenter){
 
              $presenter_name = $named_presenter->name ?? $method;
 
-             $presenter = $this->$method(new Presenter($presenter_name));
+             $presenter = $this->$method(new Presenter($presenter_name, $model_fields));
 
              if($presenter){
                  $presenters[$presenter_name] = $presenter;
@@ -548,7 +549,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
 
          $field_presenter = $presenter->get_field($field);
 
-         if(!$field_presenter){
+         if(is_null($field_presenter)){
              return $this->$field;
          }
 
@@ -572,11 +573,18 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
          $data = [];
 
          foreach($presenter->get_fields() as $field => $field_presenter){
+
+             if(is_null($field_presenter)){
+                 $data[$field] = $this->data[$field];
+                 continue;
+             }
+
              if(is_callable($field_presenter)){
                  $data[$field] = $field_presenter((Object)$this->data);
-             }else{
-                 $data[$field] = $field_presenter;
+                 continue;
              }
+
+             $data[$field] = $field_presenter;
          }
 
          $this->data = array_merge($this->data, $data);

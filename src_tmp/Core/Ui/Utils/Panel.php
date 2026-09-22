@@ -64,9 +64,11 @@ trait Panel {
      	 $column_names = array_keys($this->fields);
 
      	 if(isset($this->props['presenter'])){
-     	 	 $presenters = $model_presenters[$this->props['presenter']] ?? null;
-     	 	 if($presenters){
-     	 	 	 $column_names = array_keys($presenters);
+
+     	 	 $presenter = $model_presenters[$this->props['presenter']] ?? null;
+     	 	 
+             if($presenter){
+     	 	 	 $column_names = array_keys($presenter->get_fields());
      	 	 }
      	 }
      	 

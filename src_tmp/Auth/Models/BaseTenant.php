@@ -42,7 +42,9 @@ class BaseTenant extends Model implements TenantInterface {
      }
 
      #[NamedPresenter(name: 'admin')] 
-     public function admin_presenter(Presenter $presenter){
+     public function admin_presenter(Presenter $presenter){  
+
+     	 $presenter->show_all();
 
      	 $presenter->field('url', function($model){
      	 	 return "<a target='_blank' href='{$model->url}'>Manage</a>";

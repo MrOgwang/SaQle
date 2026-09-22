@@ -28,7 +28,7 @@ class PlatformAuthorizationProvider extends ServiceProvider {
              }
          );
 
-         $this->app->guards->add(
+         $this->app->guards->add( 
              '__super_admin__', 
 
              function(?UserInterface $user = null){
@@ -41,7 +41,7 @@ class PlatformAuthorizationProvider extends ServiceProvider {
                      $auth_service = resolve(AuthenticationService::class);
 
                      $auth_service->logout();
-                     
+
                      redirect(route('saqle.login.form'));
                      
                  }

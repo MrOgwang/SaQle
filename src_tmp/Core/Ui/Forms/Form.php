@@ -194,7 +194,7 @@ final class Form {
      }
 
      public function exclude(array $fields){
-
+  
          $fillable_fields = [];
 
          foreach($this->fields_register as $field_name => $field){
