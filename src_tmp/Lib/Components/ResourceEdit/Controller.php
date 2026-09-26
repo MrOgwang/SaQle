@@ -2,54 +2,35 @@
 namespace SaQle\Lib\Components\ResourceEdit;
 
 use SaQle\Http\Response\Message;
-use SaQle\Core\Ui\Forms\{
-	 FormMode, 
-	 FormContext
-};
-use SaQle\Routing\Resources\ResourceRouteUtils;
-use RuntimeException;
 
 class Controller {
 
-	 use ResourceRouteUtils;
+	 public function get(int | string $id) : Message {
 
-	 public function get(int | string $id, array $__props) : Message {
+	 	 $model = $this->definition->get_props()['model'];
 
-	 	 $model_parts = explode("@", request()->route->model_class);
-         $model_class = $model_parts[0] ?? "";
-
-		 $form = $this->create_auto_form(FormMode::UPDATE, $__props);
-
-	 	 if(!$form){
-	 	 	 throw new RuntimeException("Unknown resource form requested!");
-	 	 }
-
-	 	 $object = $model_class::get()->where($model_class::get_pk_name()."__eq", $id)->first_or_fail();
-	 	 $form->bind(FormContext::make($object), request());
+	 	 $object = $model::get()->where($model::get_pk_name()."__eq", $id)->first_or_fail();
 
 		 return Message::ok([
-		 	 'form' => $form,
-		 	 'object' => $object,
-		 	 'resource' => $this->resource($model_class)
+		 	 'object' => $object
 		 ]);
 	 }
 
 	 public function patch(int | string $id) : Message {
 
-	 	 $form = $this->create_auto_form(FormMode::UPDATE);
+	 	 $form  = $this->definition->get_props()['form'];
+	 	 $model = $this->definition->get_props()['model'];
 
 	 	 $incoming = request()->data->get_all();
+
 	 	 $data = array_intersect_key(
              $incoming,
              array_flip(array_keys($form->get_fields()))
          );
 
-	 	 $model_parts = explode("@", request()->route->model_class);
-         $model_class = $model_parts[0] ?? "";
-	 	 
-	 	 $saved = $model_class::update($data)->where($model_class::get_pk_name()."__eq", $id)->now();
+	 	 $saved = $model::update($data)->where($model::get_pk_name()."__eq", $id)->now();
 
-		 return Message::redirect(route(resource_route_name("list", $model_class)))
+		 return Message::redirect(route(resource_route_name("list", $model)))
 		 ->with_message('success', 'Updated successfully!');
 	 }
 }

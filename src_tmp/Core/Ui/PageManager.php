@@ -115,8 +115,9 @@ class PageManager {
      }
 
      private function minify($content){
-         //simple minifier: TODO, upgrade minifier later
-         return preg_replace('/\s+/', ' ', $content);
+         //TODO, possible work on a minifier, or minify asset files manually
+
+         return $content;
      }
 
      public function is_loaded(string $type, string $component_name, ?string $template_name = null) : array {

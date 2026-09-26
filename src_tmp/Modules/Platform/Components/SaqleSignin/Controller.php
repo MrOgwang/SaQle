@@ -13,7 +13,7 @@ class Controller {
      }
 
 	 public function post(
-	 	 string $username, 
+	 	 string $username,  
 	 	 string $password,
 	 ){
 		 $auth_result = $this->auth_service->login('password', ['username' => $username, 'password' => $password]);

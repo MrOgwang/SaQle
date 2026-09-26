@@ -37,10 +37,10 @@ trait ResourceRouteUtils {
          ];
      }
 
-     private function create_auto_form(FormMode $mode, array $props = []){
+     private function create_auto_form(FormMode $mode, ?string $name = null){
 
-         if(array_key_exists('name', $props)){
-             [, $model_class, $form_name] = FormModelResolver::resolve($props['name']);
+         if($name){
+             [, $model_class, $form_name] = FormModelResolver::resolve($name);
          }else{
              $model_class = request()->route->model_class;
              $form_name = match($mode){

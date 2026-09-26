@@ -5,12 +5,9 @@ use SaQle\Http\Response\Message;
 
 class Controller {
 	 
-	 public function get(array $__props) : Message {
+	 public function get() : Message {
 
-		 return Message::ok([
-		 	 'label' => $__props['label'],
-		 	 'options' => $__props['options']
-		 ]);
+		 return Message::ok();
 		 
 	 } 
 

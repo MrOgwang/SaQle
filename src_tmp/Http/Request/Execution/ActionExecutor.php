@@ -18,18 +18,13 @@ final class ActionExecutor {
          Request $request, 
          ?string $controller = null, 
          ?string $method = null,
-         /**
-          * Props come from html component attributes.
-          * Am not sure this is the right place for this, but for now,
-          * we do it this way
-          * */
-         array &$props = []
      ) : Message {
 
          if(!$controller || !$method){
+            
              $controller = $request->route->compiled_target->controller;
-
              $method = $request->route->compiled_target->method;
+
              if(!$controller || !$method){
                  return Message::ok();
              }
@@ -38,6 +33,7 @@ final class ActionExecutor {
          try{
 
              $instance = new $controller();
+
              $reflection_method = new ReflectionMethod($instance, $method);
 
              if($instance instanceof ErrorComponent){
@@ -59,9 +55,10 @@ final class ActionExecutor {
              if($access_control){
                  $access_control->enforce();
              } 
-
+ 
              $resolver = new ParameterResolver($request);
-             $args = array_values($resolver->resolve($instance, $method, $props));
+             $args = array_values($resolver->resolve($instance, $method));
+
              $result = $reflection_method->invokeArgs($instance, $args);
 
              return $result instanceof Message ? $result : Message::ok($result);

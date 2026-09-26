@@ -158,7 +158,7 @@ use SaQle\Http\Request\Request;
 
 class Definition extends ComponentDefinition {
 
-     public function template(Request \$request, ...\$args): ?string {
+     public function template(Request \$request): ?string {
          return null;
      }
 

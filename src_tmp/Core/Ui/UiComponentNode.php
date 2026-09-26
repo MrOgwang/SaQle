@@ -55,6 +55,15 @@ class UiComponentNode {
      //let nodes self render
      public function render(Request $request, array $parent_context) : string {
 
+         //initialize component definition
+         $component_definition = null;
+         if($this->def->definition){
+             $component_definition_class = $this->def->definition;
+             $component_definition = new $component_definition_class($this->props);
+
+             $this->props = $component_definition->get_props();
+         }
+
          if($this->execute && $this->def->controller && $this->def->method){
 
              try{
@@ -62,8 +71,7 @@ class UiComponentNode {
                  $this_context = ActionExecutor::execute(
                      $request, 
                      $this->def->controller, 
-                     $this->def->method,
-                     $this->props
+                     $this->def->method
                  )->data ?? []; 
                  
                  $this->context = new UiComponentContext($this_context);
@@ -84,6 +92,7 @@ class UiComponentNode {
                      'data'    => $http_message->data
                  ]);
              }
+
          }
 
          if(is_null($this->context)){
@@ -91,18 +100,14 @@ class UiComponentNode {
          }
 
          $this->context->parent_context(new UiComponentContext($parent_context));
-
+ 
          $compiled_template_path = $this->def->compiled_template_path;
          $template_path = $this->def->template_path;
          $template_name = null;
 
-         if($this->def->has_many_templates && $this->def->definition){
+         if($this->def->has_many_templates && $component_definition){
 
-             $component_definition_class = $this->def->definition;
-
-             $component_definition = new $component_definition_class();
-
-             $template_name = $component_definition->template($request, ...$this->props);
+             $template_name = $component_definition->template($request);
 
              if($template_name){
 
