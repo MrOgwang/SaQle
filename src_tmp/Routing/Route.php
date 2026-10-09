@@ -77,14 +77,6 @@ final class Route {
          get => $this->method;
      }
 
-     public private(set) array $compiled_target {
-         set(array $value){
-             $this->compiled_target = $value;
-         }
-
-         get => $this->compiled_target;
-     }
-
      /**
       * componentname@method  - the component name and the method to execute
       * componentname         - just the component name, 
@@ -93,16 +85,7 @@ final class Route {
       * */
      public string $target {
          set(string $value){
-
-             if($value){
-                
-                 ComponentRegistry::reload(true);
-                 $compiled_target = ComponentRegistry::resolve_component($value, $this->method, 'target');
-
-                 $this->compiled_target = $compiled_target->to_array();
-
-                 $this->target = $compiled_target->get_target();
-             }
+             $this->target = $value;
          }
 
          get => $this->target;
@@ -219,7 +202,9 @@ final class Route {
 
          Assert::allStringNotEmpty($layouts, 'Layout components must be non-empty strings for route: '.$this->url);
 
-         ComponentRegistry::assert_components_exist($layouts);
+         foreach($layouts as $l){
+             ComponentRegistry::assert_exists($l);
+         }
 
          $layouts = array_unique(array_merge($this->layout ?? [], $layouts));
          

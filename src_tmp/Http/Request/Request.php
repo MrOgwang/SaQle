@@ -21,10 +21,11 @@ use SaQle\Routing\MatchedRoute;
 use SaQle\Auth\Models\{BaseUser, BaseTenant};
 use SaQle\Http\Response\ResponseType;
 use SaQle\Middleware\Pipeable;
+use SaQle\Core\Components\Component;
 use Closure;
 
 class Request implements Pipeable {
-     //only one instance of a request will be available
+
 	 private static $instance;
 
      private string $method;
@@ -123,6 +124,15 @@ class Request implements Pipeable {
          }
 
          get => $this->responsetype;
+     }
+
+     //the component that is executed
+     public ?Component $target = null {
+         set(?Component $value){
+             $this->target = $value;
+         }
+ 
+         get => $this->target;
      }
 
      //prevent direct creation of request object

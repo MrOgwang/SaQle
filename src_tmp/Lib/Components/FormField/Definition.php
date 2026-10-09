@@ -2,7 +2,7 @@
 
 namespace SaQle\Lib\Components\FormField;
 
-use SaQle\Core\Components\ComponentDefinition;
+use SaQle\Core\Components\Abstracts\AbstractDefinition;
 use SaQle\Http\Request\Request;
 use SaQle\Core\Registries\ModelRegistry;
 use SaQle\Core\Ui\Forms\{
@@ -10,7 +10,7 @@ use SaQle\Core\Ui\Forms\{
      FormFieldsCompiler
 };
 
-final class Definition extends ComponentDefinition {
+final class Definition extends AbstractDefinition {
 
      private function construct_field(string $field_key){
 
@@ -28,16 +28,19 @@ final class Definition extends ComponentDefinition {
         
      }
 
-     protected function init() : void { 
+     protected function initialize(array $props = []) : void { 
+
+         parent::initialize($props);
 
          //translate the bind prop into a FormField value
+         $bind = $this->context()->props()->get('bind', null);
 
-         if(array_key_exists("bind", $this->props)){
+         if($bind !== null){
 
-             $field = $this->construct_field($this->props['bind']);
+             $field = $this->construct_field($bind);
 
              if(!$field){
-                throw new RuntimeException("The field [".$this->props['bind']."] does not exist!");
+                throw new RuntimeException("The field [".$bind."] does not exist!");
              }
 
              /**
@@ -50,14 +53,14 @@ final class Definition extends ComponentDefinition {
              $unsafe_attrs = ['name', 'id'];
 
              foreach($default_attrs as $attr => $attr_val){
-                 if(array_key_exists($attr, $this->props) && !in_array($attr, $unsafe_attrs)){
-                     $field->$attr($this->props[$attr]);
+                 if($this->context()->props()->exists($attr) && !in_array($attr, $unsafe_attrs)){
+                     $field->$attr($this->context()->props()->get($attr));
                  }
              }
 
              $field->value($field->default);
 
-             $this->props['field'] = $field;
+             $this->context()->props()->set('field', $field);
          }
          /**
           * There should be a field prop provided here,
@@ -65,11 +68,11 @@ final class Definition extends ComponentDefinition {
           * */
          else{
 
-             $field = $this->props['field'] ?? null;
-             
+             $field = $this->context()->props()->get('field', null);
+
              if(!$field || !$field instanceof FormFieldContainer){
-                 
-                 $this->props['field'] = new FormFieldContainer([
+
+                 $this->context()->props()->set('field', new FormFieldContainer([
                      'id'          => '',
                      'label'       => '',
                      'name'        => '',
@@ -79,10 +82,8 @@ final class Definition extends ComponentDefinition {
                      'required'    => false,
                      'type'        => 'text',
                      'placeholder' => "",
-                 ]);
-
+                 ]));
              }
-
          }
      }
 
@@ -93,15 +94,15 @@ final class Definition extends ComponentDefinition {
          $file_name = str_replace(" ", "", $file_name);
 
          return $file_name;
-     }
+     } 
 
      public function template(Request $request): ?string {
 
-         $type = $this->props['field']->type;
+         $field = $this->context()->props()->get_or_fail('field');
 
-         $name = $this->make_file_name($type);
+         $name = $this->make_file_name($field->type);
 
-         $path = path_join([
+         $path = path_join([ 
              $this->path('Templates'),
              $name,
              "Template.".config('app.component_template_ext')
@@ -111,7 +112,7 @@ final class Definition extends ComponentDefinition {
              return $name;
          }
 
-         return match($type){
+         return match($field->type){
              'datetime-local' => 'DateTimeLocal',
              'textarea'       => 'TextArea',
              default          => null

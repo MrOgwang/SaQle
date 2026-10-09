@@ -360,15 +360,15 @@ if(!function_exists('asset')){
              return url_join([config('app.domain.root'), $path]);
          }
 
-         $c = ComponentRegistry::get_definition($component);
+         $c = ComponentRegistry::get_or_fail($component, true);
 
-         $component_path = $c->path;
+         $component_path = $c->get_path();
 
          //Make sure the requested asset actually exists
          $asset_path = realpath(path_join([$component_path, 'Assets', $path]));
 
          if($asset_path === false || !is_file($asset_path) || !is_readable($asset_path)){
-             throw new RuntimeException("Component asset [$path] does not exist.");
+             throw new RuntimeException("Component asset [$asset_path] does not exist.");
          }
 
          //Prevent ../ from escaping the component directory.
@@ -380,7 +380,7 @@ if(!function_exists('asset')){
          * The URL doesn't expose the filesystem path.
          *
          * We encode the component + relative path and sign it.
-         */
+         */ 
          $payload = base64_to_url(
              base64_encode(json_encode([
              'component' => $component,

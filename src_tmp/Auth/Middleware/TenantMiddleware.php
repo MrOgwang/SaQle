@@ -37,8 +37,8 @@ class TenantMiddleware implements RequestMiddleware {
          $tenant_key = config('session_tenant_key');
 
          if(
-             config('protected_file_component') === $request->route->compiled_target->name || 
-             config('static_assets_component') === $request->route->compiled_target->name
+             str_contains($request->route->target, config('protected_file_component')) ||
+             str_contains($request->route->target, config('static_assets_component'))
          ){
              return null;
          }

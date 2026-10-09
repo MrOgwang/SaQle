@@ -2,17 +2,18 @@
 namespace SaQle\Lib\Components\ResourceCreate;
 
 use SaQle\Http\Response\Message;
+use SaQle\Core\Components\Abstracts\AbstractController;
 
-class Controller {
+class Controller extends AbstractController {
 
 	 public function get() : Message { 
 	 	 return Message::ok();
-	 }
+	 } 
 
 	 public function post() : Message {
 
-	 	 $form  = $this->definition->get_props()['form'];
-	 	 $model = $this->definition->get_props()['model'];
+	 	 $form = $this->context()->props()->get_or_fail('form');
+	 	 $model = $this->context()->props()->get_or_fail('model');
 
 	 	 $incoming = request()->data->get_all();
 	 	 

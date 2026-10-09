@@ -41,10 +41,7 @@ class Controller {
          $component = $data['component'];
          $path      = $data['path'];
 
-         //Resolve component.
-         $component_def = ComponentRegistry::get_definition($component);
-
-         $component_path = $component_def->path;
+         $component_path = ComponentRegistry::get_or_fail($component, true)->get_path();
 
          //Resolve the actual file.
          $file = realpath(path_join([$component_path, 'Assets', $path]));

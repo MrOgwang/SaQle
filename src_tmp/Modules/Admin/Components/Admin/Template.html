@@ -45,9 +45,9 @@
          <!-- ================= FOOTER ================= -->
          <div class="sidebar-footer">
              <div class="profile">
-                 <img src="{{ asset('profile.png', 'saqle.admin.admin') }}" alt="{{ $session_user->first_name }} profile's picture">
+                 <img src="{{ asset('profile.png', 'saqle.admin.admin') }}" alt="{{ actor()->first_name }} profile's picture">
                  <div>
-                     <div class="name">{{ $session_user->first_name }}&nbsp;{{ $session_user->last_name }}</div>
+                     <div class="name">{{ actor()->first_name }}&nbsp;{{ actor()->last_name }}</div>
                      <div class="role">Administrator</div>
                  </div>  
              </div>
@@ -56,7 +56,7 @@
              @else
              <form method='POST' action="{{ route(config('auth.logout_route')) }}">
              @endif
-                 {!! $csrf_token !!}
+                 @csrf
                  <button type='submit' class="flex center logout">
                      <svg viewBox="0 0 24 24">
                          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
@@ -70,7 +70,7 @@
      <div class='appright'>
          <div class='flex v_center row_reverse appheader'>
              <div class='flex center admininitials'>
-                 <span>{{ strtoupper($session_user->first_name[0].$session_user->last_name[0]) }}</span>
+                 <span>{{ strtoupper(actor()->first_name[0].actor()->last_name[0]) }}</span>
              </div>
              <a class='flex center' href='#'>
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">

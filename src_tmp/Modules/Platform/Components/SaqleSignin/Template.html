@@ -4,7 +4,7 @@
          <p>Sign in to continue</p>
      </div>
      <form method='POST' id="signinForm">
-         {!! $csrf_token !!}
+         @csrf
          @if($errors)
          <div class="form-group siginin-error">
              {{ $errors }}

@@ -1,6 +1,6 @@
 <?php
 
-namespace SaQle\Core\Ui;
+namespace SaQle\Core\Ui\Abstracts;
 
 use SaQle\Core\Ui\Utils\Label;
 use SaQle\Orm\Entities\Field\Types\{

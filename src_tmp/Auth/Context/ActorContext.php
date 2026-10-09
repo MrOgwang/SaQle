@@ -11,7 +11,7 @@ class ActorContext {
 
      private static ?UserInterface $_impersonated_user = null;
 
-     private static ?TenantInterface $_tenant = null;
+     private static ?TenantInterface $_tenant = null; 
 
      private static Realm $_realm = Realm::APP;
 
@@ -47,11 +47,7 @@ class ActorContext {
      }
 
      public static function actor(){
-         if(self::$_impersonated_user){
-             return self::$_impersonated_user;
-         }
-
-         return self::$_user;
+         return self::$_impersonated_user ?? self::$_user;
      }
     
      //tenant methods

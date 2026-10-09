@@ -11,12 +11,10 @@ use SaQle\Http\Response\{
 use SaQle\Http\Response\Types\{
      HtmlResponse
 };
-use SaQle\Core\Ui\{
-     UiComponentTreeBuilder, 
-     UiComponentRenderer
+use SaQle\Core\Components\{
+     Tree,
+     Renderer
 };
-use SaQle\Core\Ui\Template;
-use SaQle\Http\Request\Middleware\CsrfMiddleware;
 use SaQle\Auth\Models\GuestUser;
 use SaQle\Core\Support\AppStage;
 use SaQle\Core\Ui\PageManager;
@@ -25,9 +23,6 @@ final class HtmlResponseStrategy implements ResponseStrategy {
     
      private function prepare_context(Request $request) : array {
          $context = [];
-
-         //inject global context data
-         $context = array_merge($context, Template::init()::get_context());
 
          //inject flash message and context
          $context['flash'] = null;
@@ -38,14 +33,6 @@ final class HtmlResponseStrategy implements ResponseStrategy {
              $session->remove('flash');
          }
 
-         //inject csrf token input here
-         $token_key = CsrfMiddleware::get_token_key();
-         $token     = CsrfMiddleware::get_token();
-         
-         $context[$token_key] = "<input type='hidden' id='".$token_key."' name='".$token_key."' value='".$token."'>";
-
-         $context['session_user'] = $request->user ?? new GuestUser();
-         
          return $context;
      }
 
@@ -59,12 +46,8 @@ final class HtmlResponseStrategy implements ResponseStrategy {
           * 2. The result is a SuccessMessage
           * */
          if(app()->is_stage(AppStage::REQUEST_RESOLUTION) && $result instanceof SuccessMessage && $request->route){
-             $target_component = $request->route->compiled_target->name;
-             $target_action = $request->route->compiled_target->method ?? null;
-             $leaf_component = $target_action ? $target_component."@".$target_action : $target_component;
              $layout = $request->route->layout ?? [];
-
-             return array_merge([config('page_component')], $layout, [$leaf_component]);
+             return array_merge([config('page_component')], $layout, [$request->route->target]);
          }
 
          /**
@@ -138,11 +121,9 @@ final class HtmlResponseStrategy implements ResponseStrategy {
 
          $context = $this->prepare_context($request);
 
-         $tree = new UiComponentTreeBuilder()->build($layout, $result->data ?? []);
+         $tree = new Tree()->build($request, $layout);
 
-         $renderer = new UiComponentRenderer($request);
-
-         $context['__renderer'] = $renderer;
+         $renderer = new Renderer($request);
 
          $html = $renderer->render($tree, $context);
 

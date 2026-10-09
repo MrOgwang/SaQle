@@ -2,12 +2,13 @@
 namespace SaQle\Lib\Components\ResourceEdit;
 
 use SaQle\Http\Response\Message;
+use SaQle\Core\Components\Abstracts\AbstractController;
 
-class Controller {
+class Controller extends AbstractController { 
 
 	 public function get(int | string $id) : Message {
 
-	 	 $model = $this->definition->get_props()['model'];
+	 	 $model = $this->context()->props()->get_or_fail('model'); 
 
 	 	 $object = $model::get()->where($model::get_pk_name()."__eq", $id)->first_or_fail();
 
@@ -18,8 +19,8 @@ class Controller {
 
 	 public function patch(int | string $id) : Message {
 
-	 	 $form  = $this->definition->get_props()['form'];
-	 	 $model = $this->definition->get_props()['model'];
+	 	 $form  = $this->context()->props()->get_or_fail('form');
+	 	 $model = $this->context()->props()->get_or_fail('model');
 
 	 	 $incoming = request()->data->get_all();
 

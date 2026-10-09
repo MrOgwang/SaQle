@@ -15,7 +15,8 @@
              "src_tmp/Shortcuts/Arrays.php",
              "src_tmp/Shortcuts/Exceptions.php",
              "src_tmp/Shortcuts/Session.php",
-             "src_tmp/Shortcuts/Db.php"
+             "src_tmp/Shortcuts/Db.php",
+             "src_tmp/Shortcuts/Templates.php"
          ]
      },
      "require": {

@@ -1,7 +1,7 @@
 <?php
 namespace SaQle\Lib\Components\ResourceEdit;
 
-use SaQle\Core\Components\ComponentDefinition;
+use SaQle\Core\Components\Abstracts\AbstractDefinition;
 use SaQle\Core\Ui\Forms\{
      FormMode, 
      FormContext
@@ -9,11 +9,13 @@ use SaQle\Core\Ui\Forms\{
 use SaQle\Routing\Resources\ResourceRouteUtils;
 use RuntimeException;
 
-final class Definition extends ComponentDefinition {
+final class Definition extends AbstractDefinition {
 
      use ResourceRouteUtils;
 
-     protected function init() : void {
+     protected function initialize(array $props = []) : void {
+
+         parent::initialize($props);
 
          $model_parts = explode("@", request()->route->model_class);
          $model_class = $model_parts[0] ?? "";
@@ -22,14 +24,13 @@ final class Definition extends ComponentDefinition {
 
          //$form->bind(FormContext::make($object), request());
 
-         if(!$form){
+         if(!$form){  
              throw new RuntimeException("Unknown resource form requested!");
          }
-         
-         $this->props['form'] = $form;
-         $this->props['resource'] = $this->resource($model_class);
-         $this->props['model'] = $model_class;
 
+         $this->context()->props()->set('form', $form);
+         $this->context()->props()->set('resource', $this->resource($model_class));
+         $this->context()->props()->set('model', $model_class);
      }
 
 }

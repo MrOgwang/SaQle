@@ -1,19 +1,14 @@
 <?php
 
-namespace SaQle\Core\Ui;
+namespace SaQle\Core\Components;
 
 use SaQle\Core\Registries\ComponentRegistry;
-use SaQle\Http\Response\Message;
 use SaQle\Http\Request\Request;
-use SaQle\Core\Ui\{
-     View, 
-     PageManager
-};
-use RuntimeException;
+use SaQle\Security\Csrf\CsrfToken;
 
-class UiComponentRenderer {
+class Renderer {
      
-     private ?UiComponentNode $current_node = null;
+     private ?Node $current_node = null;
 
      private array $attributes = [
          'title' => '', 
@@ -23,6 +18,14 @@ class UiComponentRenderer {
      public function __construct(
          private Request $request
      ){}
+
+     public function csrf(){
+
+         $token = CsrfToken::get();
+
+         return "<input type='hidden' id='".CsrfToken::get_key()."' name='".CsrfToken::get_key()."' value='".$token."'>";
+
+     }
 
      //runtime block rendering api
      public function block(string $name, string $default_template, array $scope) : string {
@@ -37,20 +40,18 @@ class UiComponentRenderer {
      //runtime component rendering API
      public function component(
          string $name, 
-         array $props = [],  
-         array $blocks = [],
-         array $context = []
+         array  $props = [],  
+         array  $blocks = [],
+         array  $context = []
      ) : string {
- 
-         $definition = ComponentRegistry::get_definition($name, $props);
 
-         if(!$definition){
+         $component = ComponentRegistry::get($name, true);
+
+         if(!$component){
              return "<!-- component '{$name}' not found -->";
-         }
+         }  
 
-         $node = new UiComponentNode($definition);
-
-         $node->props = $props;
+         $node = new Node($component, $props);
 
          $node->blocks = $blocks;
 
@@ -58,8 +59,8 @@ class UiComponentRenderer {
      }
 
      //recursive tree rendering
-     public function render(UiComponentNode $node, array $context = []) : string {
-
+     public function render(Node $node, array $context = []) : string {
+ 
          $node->active = true;
 
          $previous = $this->current_node;
@@ -70,13 +71,13 @@ class UiComponentRenderer {
 
          $this->current_node = $previous;
 
-         $html = $this->inject_dynamic($html, $node, $node->context->expose());
+         $html = $this->inject_dynamic($html, $node);
 
          return $html;
      }
 
      //inject dynamic
-     private function inject_dynamic(string $html, UiComponentNode $node, array $context) : string {
+     private function inject_dynamic(string $html, Node $node) : string {
          // Match <ui:slot />, allowing arbitrary whitespace
          $pattern = '/<ui:slot\s*\/>/i';
 
@@ -94,43 +95,9 @@ class UiComponentRenderer {
          }
 
          //Render the child using the parent context
-         $rendered = $this->render($child, $context);
+         $rendered = $this->render($child, $node->component->context()->expose());
 
          //Replace the FIRST occurrence only
          return preg_replace($pattern, $rendered, $html, 1);
-     }
-
-     public function extract_page_metadata(string $html): array {
-         $metadata = [
-             'meta' => [],
-             'title' => null,
-         ];
-
-         $patterns = [
-             'meta' => '/@meta\s*(.*?)\s*@endmeta/is',
-             'title' => '/@title\s*(.*?)\s*@endtitle/is',
-         ];
-
-         foreach ($patterns as $type => $pattern) {
-             $html = preg_replace_callback(
-                 $pattern,
-                 function (array $matches) use (&$metadata, $type): string {
-                     $content = trim($matches[1]);
-
-                     if($type === 'meta'){
-                         $metadata['meta'][] = $content;
-                     }else{
-                         $metadata['title'] = $content;
-                     }
-
-                     return '';
-                 },
-                 $html
-             );
-         }
-
-         $metadata['html'] = $html;
-
-         return $metadata;
      }
 } 

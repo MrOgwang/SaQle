@@ -1,7 +1,6 @@
 <?php
 namespace SaQle\Build\Utils;
 
-use SaQle\Core\Registries\ComponentRegistry;
 use RuntimeException;
 use SaQle\Core\Support\Cli;
 
@@ -169,6 +168,12 @@ class TemplateCompiler {
                      $output .= self::compile_let($expr);
                      continue;
                  }
+
+                 if(substr($template, $i, 5) === '@csrf'){
+                     $output .= "<?php echo __renderer()->csrf(); ?>";
+                     $i += 4;
+                     continue;
+                 }
              }
 
              $output .= $template[$i];
@@ -212,7 +217,9 @@ class TemplateCompiler {
      private static function compile_component(array $matches) : string {
 
          $type = strtolower(trim($matches[1]));
+         
          $attribute_string = trim($matches[2]);
+
          $body = trim($matches[3] ?? '');
 
          $attributes = self::parse_attributes($attribute_string);
@@ -225,10 +232,6 @@ class TemplateCompiler {
 
          $compiled_props = self::compile_props($attributes);
 
-         if($type === 'form'){
-             $name = 'saqle.autoresource';
-         }
-
          $blocks = [];
          if($body){
              $blocks = self::extract_blocks($body);
@@ -236,7 +239,7 @@ class TemplateCompiler {
 
          $compiled_blocks = self::compile_override_blocks($blocks);
 
-         return "<?php echo \$__renderer->component('".$name."', ".$compiled_props.", ".$compiled_blocks.", \$__context); ?>";
+         return "<?php echo __renderer()->component('".$name."', ".$compiled_props.", ".$compiled_blocks."); ?>";
      }
 
      private static function extract_blocks(string &$content) : array {
@@ -287,7 +290,7 @@ class TemplateCompiler {
                      type: 'component_block'
                  );
 
-                 return "<?php echo \$__renderer->block(
+                 return "<?php echo __renderer()->block(
                      ".var_export($name, true).",
                      ".var_export($path, true).",
                     get_defined_vars()

@@ -25,12 +25,12 @@ use SaQle\Core\Support\RouteResolver;
 use SaQle\Http\Request\Request;
 use SaQle\Routing\MatchedRoute;
 use SaQle\Core\Exceptions\Route\RouteNotFoundException;
-use SaQle\Core\Ui\UiComponentDefinition;
 use RuntimeException;
 
 final class RouteMatcher {
 
      public static function match(Request $request){
+
          //find matching route
          $match = self::find_matching_route($request->method(), $request->uri());
          
@@ -47,7 +47,7 @@ final class RouteMatcher {
              $match['route']['url'],
              $match['path'], 
              $match['method'], 
-             UiComponentDefinition::from_array($match['route']['compiled_target']),
+             $match['route']['target'],
              $match['route']['name'],
              $match['route']['model_class'],
              $match['route']['layout'],

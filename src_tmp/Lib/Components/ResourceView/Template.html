@@ -18,7 +18,7 @@
              <form method='POST' action="{{ $del_url }}">
                  <input type='hidden' name='_method' value='DELETE'/>
                  <input type='hidden' name='pk' value='{{ $panel->data->{$resource->pk} }}'/>
-                 {!! $csrf_token !!}
+                 @csrf
                  <button type='submit'>
                      Delete
                  </button>

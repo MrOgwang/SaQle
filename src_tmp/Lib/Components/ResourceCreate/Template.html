@@ -5,7 +5,7 @@
      class='resourcelist'
  >
      <input type='hidden' name='_method' value='POST'/>
-     {!! $csrf_token !!}
+     @csrf
      <div class='resourcelist-header'>
          <div class='breadcramb'>
              <a class='flex center' href='{{ route($resource->list_route) }}'>

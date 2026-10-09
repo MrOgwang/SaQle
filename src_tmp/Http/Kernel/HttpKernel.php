@@ -16,7 +16,6 @@ use SaQle\Core\Support\{
      AppStage
 };
 use SaQle\Http\Request\Execution\ActionExecutor;
-use SaQle\Core\Registries\ComponentRegistry;
 use SaQle\Core\Exceptions\ValidationException;
 use SaQle\Http\Request\{
      Request,

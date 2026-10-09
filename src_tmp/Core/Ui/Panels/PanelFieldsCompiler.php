@@ -2,7 +2,7 @@
 
 namespace SaQle\Core\Ui\Panels;
 
-use SaQle\Core\Ui\AbstractFieldsCompiler;
+use SaQle\Core\Ui\Abstracts\AbstractFieldsCompiler;
 use SaQle\Orm\Entities\Field\Types\ImageField;
 
 final class PanelFieldsCompiler extends AbstractFieldsCompiler {

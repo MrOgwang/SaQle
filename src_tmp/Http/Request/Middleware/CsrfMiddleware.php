@@ -3,45 +3,25 @@ namespace SaQle\Http\Request\Middleware;
 
 use SaQle\Middleware\RequestMiddleware;
 use SaQle\Http\Response\Message;
+use SaQle\Security\Csrf\CsrfToken;
 
 class CsrfMiddleware implements RequestMiddleware {
-
-     private static string $token_key = 'csrf_token';
      
      public function before($request) : ?Message {
 
-         //Generate CSRF token if not set
-         $token_key = CsrfMiddleware::get_token_key();
-         $token = $request->session->get($token_key);
-         if(!$token){
-             $request->session->set($token_key, bin2hex(random_bytes(32)), true);
-         }
+         CsrfToken::get();
 
          //skip CSRF check for safe HTTP methods
          if($request->is_safe()){
              return null;
          }
 
-         //validate CSRF token for state-changing requests
-         $submitted_token = $request->data->get($token_key, $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '');
+         $token = $request->data->get(CsrfToken::get_key(), $_SERVER['HTTP_X_CSRF_TOKEN'] ?? ''); 
 
-         if(!$submitted_token || $submitted_token !== $token){
+         if(!CsrfToken::validate($token)){
              throw authorization_exception('CSRF token validation failed');
          }
 
          return null;
-     }
-
-     public static function get_token_key() : string {
-         return self::$token_key;
-     }
-
-     public static function get_token(): string {
-         $request = resolve('request');
-         $token_key = CsrfMiddleware::get_token_key();
-         if(session_status() === PHP_SESSION_NONE){
-             session_start();
-         }
-         return $request->session->get($token_key, '');
      }
 }

@@ -5,7 +5,7 @@
  >
      <input type='hidden' name='_method' value='PATCH'/>
      <input type='hidden' name='pk' value='{{ $object->{$resource->pk} }}'/>
-     {!! $csrf_token !!}
+     @csrf
      <div class='resourcelist-header'>
          <div class='breadcramb'>
              <a class='flex center' href='{{ route($resource->list_route) }}'>

@@ -1,31 +1,30 @@
 <?php
 
-namespace SaQle\Core\Components;
+namespace SaQle\Core\Components\Abstracts;
 
 use SaQle\Http\Request\Request;
+use SaQle\Core\Components\{
+     Context,
+     Component
+};
 use ReflectionClass;
 
-abstract class ComponentDefinition {
-
-     /**
-      * Collection of attributes declared on <ui:component/>
-      * */
-     protected array $props = [];
+abstract class AbstractDefinition {
 
      //the path to the component folder
      private string $path;
 
      public function __construct(array $props = []){
 
-         $this->props = $props;
-
          $this->path = dirname((new ReflectionClass($this))->getFileName());
 
-         $this->init();
-     } 
+         $this->initialize($props);
+     }
 
-     protected function init() : void {
-
+     protected function initialize(array $props = []) : void {
+         foreach($props as $key => $value){
+             $this->context()->props()->set($key, $value);
+         }
      }
 
      /**
@@ -76,7 +75,7 @@ abstract class ComponentDefinition {
          return "Default";
      }
 
-     final public function get_props() : array {
-         return $this->props;
-     }
+     final protected function context() : Context {
+         return Component::current()->context();
+     } 
 }

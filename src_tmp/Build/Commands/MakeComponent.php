@@ -153,10 +153,10 @@ JS;
 
 namespace {$namespace};
 
-use SaQle\Core\Components\ComponentDefinition;
+use SaQle\Core\Components\Abstracts\AbstractDefinition;
 use SaQle\Http\Request\Request;
 
-class Definition extends ComponentDefinition {
+class Definition extends AbstractDefinition {
 
      public function template(Request \$request): ?string {
          return null;

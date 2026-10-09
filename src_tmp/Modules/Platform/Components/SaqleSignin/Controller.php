@@ -20,16 +20,9 @@ class Controller {
 
 		 if(!$auth_result->success){
 		 	 throw authorization_exception("Invalid credentials!");
-		 }
+		 }   
 
-		 return Message::redirect(
-		 	 route(
-		 	 	 resource_route_name(
-		 	 	 	action: 'overview', 
-		 	 	 	is_platform: true
-		 	 	 )
-		 	 )
-		 );
+		 return Message::redirect(route(resource_route_name(action: 'overview', is_platform: true)));
 	 }
 
 	 public function get(){

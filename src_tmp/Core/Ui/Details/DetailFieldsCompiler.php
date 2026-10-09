@@ -2,7 +2,7 @@
 
 namespace SaQle\Core\Ui\Details;
 
-use SaQle\Core\Ui\AbstractFieldsCompiler;
+use SaQle\Core\Ui\Abstracts\AbstractFieldsCompiler;
 use SaQle\Orm\Entities\Field\Types\{
      OneToMany, 
      ManyToMany, 
