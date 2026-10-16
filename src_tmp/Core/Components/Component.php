@@ -80,6 +80,8 @@ class Component {
 
      private bool $initialized = false;
 
+     private ?AbstractDefinition $def = null;
+
      public function __construct(string $name){
 
          $this->name = $name;
@@ -126,10 +128,18 @@ class Component {
                  }
              }
 
+             $this->def = $def;
+
          }
 
          $this->initialized = true;
 
+     }
+
+     public function finalize(Request $request){
+         if($this->def){
+             $this->def->finalize();
+         }
      }
 
      public function get_selected_template_name() : ?string {
@@ -310,6 +320,12 @@ class Component {
          return path_join([config('base_path'), $this->compiled_template_path]);
      }
 
+     public function template_variations(array $variations) : static {
+         $this->template_variations = $variations;
+
+         return $this;
+     }
+
      public function add_template_variation($name, $template_path, $compiled_template_path) : static {
 
          $this->template_variations[$name] = [
@@ -345,7 +361,7 @@ class Component {
      }
 
      public function has_many_templates() : bool {
-         return count($this->template_variations);
+         return count($this->template_variations) > 1;
      }
 
      public function to_array() : array {
@@ -544,8 +560,6 @@ class Component {
          $template = null;
  
          if($this->has_many_templates() && $this->definition){
-
-             $ 
 
              $template_name = $definition->template($request);
 

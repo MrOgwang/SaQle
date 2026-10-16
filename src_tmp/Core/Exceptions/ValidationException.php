@@ -1,8 +1,8 @@
 <?php
 namespace SaQle\Core\Exceptions;
 
-use SaQle\Core\Exceptions\Abstracts\FrameworkException;
-use SaQle\Core\FeedBack\FeedBack;
+use SaQle\Core\Exceptions\Abstracts\AppException;
+use SaQle\Http\HttpStatus;
 use Throwable;
 
 /**
@@ -22,7 +22,7 @@ use Throwable;
  * 
  * */
 
-class ValidationException extends FrameworkException {
+class ValidationException extends AppException {
 
      protected string $safe_message = "Validation failed";
 
@@ -33,18 +33,18 @@ class ValidationException extends FrameworkException {
      ){
          parent::__construct(
              $message ?: $this->format_errors($context['errors'] ?? []), 
-             FeedBack::UNPROCESSABLE_ENTITY, 
+             HttpStatus::UNPROCESSABLE_ENTITY, 
              $context, 
              $prev
          );
      }
 
      public function errors(): array {
-        return $this->get_context()['errors'] ?? [];
+        return $this->getContext()['errors'] ?? [];
      }
 
      public function input(): array {
-        return $this->get_context()['input'] ?? [];
+        return $this->getContext()['input'] ?? [];
      }
 
      private function format_errors($errors) : string {

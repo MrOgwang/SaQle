@@ -1,7 +1,7 @@
 <?php
 namespace SaQle\Lib\Components\Picker;
 
-use SaQle\Http\Response\Message;
+use SaQle\Http\Message\Message;
 
 class Controller {
 	 

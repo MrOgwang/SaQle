@@ -4,12 +4,11 @@ namespace SaQle\Http\Request\Execution;
 
 use Throwable;
 use SaQle\Http\Request\Request;
-use SaQle\Http\Response\Message;
+use SaQle\Http\Message\Message;
 use SaQle\Core\Support\{
      Allow,
      ErrorComponent
 };
-use SaQle\Core\FeedBack\FeedBack;
 use SaQle\Core\Registries\ComponentRegistry;
 use SaQle\Core\Components\Component;
 use SaQle\Core\Components\Abstracts\{
@@ -125,66 +124,38 @@ final class ActionExecutor {
 
      public static function execute(Request $request) : Message { 
 
-         try{
+         //resolve and initialize component
+         $component = self::resolve_component($request->route->target, $request->route->method);
 
-             //resolve and initialize component
-             $component = self::resolve_component($request->route->target, $request->route->method);
+         //keep track of executing component
+         Component::current($component);
 
-             //keep track of executing component
-             Component::current($component);
+         //initialize component
+         $component->initialize($request);
 
-             //initialize component
-             $component->initialize($request);
+         $request->target = $component;
 
-             if(!$component->is_executable()){
-                 return Message::ok();  
-             }
-             
-             $controller = $component->get_controller();
-             $instance = new $controller();
-
-             $args = array_values(new ParameterResolver($request)->resolve($instance, $component->get_method()));
-
-             $m = new ReflectionMethod($instance, $component->get_method());
-             $message = $m->invokeArgs($instance, $args);
-
-             if(!$message instanceof Message){
-                 throw new RuntimeException("The action: [".$component->get_method()."] of the controller: [".$controller."] does not return a Response object!");
-             }
-
-             $component->context()->data()->replace($message->data);
-
-             $request->target = $component;
-
-             return $message;
-
-
-             
-             /*$reflection_method = new ReflectionMethod($instance, $method);
-
-             if($instance instanceof ErrorComponent){ 
-                 
-                 $params = [
-                     $request->attributes->get('error.code', FeedBack::INTERNAL_SERVER_ERROR),
-                     $request->attributes->get('error.message', "Internal Server Error"),
-                     $request->attributes->get('error.context', null)
-                 ];
-
-                 $result = $reflection_method->invokeArgs($instance, $params);
-
-                 return $result instanceof Message ? $result : Message::ok($result);
-             }
-
-             //extract allow guards
-             $access_attr = $reflection_method->getAttributes(Allow::class);
-             $access_control = $access_attr ? $access_attr[0]->newInstance() : null;
-             if($access_control){
-                 $access_control->enforce();
-             }  */
- 
-         }catch(Throwable $e){
-             throw $e;
+         if(!$component->is_executable()){
+             return Message::ok();  
          }
+         
+         $controller = $component->get_controller();
+         $instance = new $controller();
+
+         $args = array_values(new ParameterResolver($request)->resolve($instance, $component->get_method()));
+
+         $m = new ReflectionMethod($instance, $component->get_method());
+         $message = $m->invokeArgs($instance, $args);
+
+         if(!$message instanceof Message){
+             throw new RuntimeException("The action: [".$component->get_method()."] of the controller: [".$controller."] does not return a Response object!");
+         }
+
+         $component->context()->data()->replace($message->get_data());
+
+         $component->finalize($request);
+
+         return $message;
      }
 
 }

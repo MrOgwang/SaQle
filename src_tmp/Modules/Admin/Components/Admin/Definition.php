@@ -31,7 +31,7 @@ final class Definition extends AbstractDefinition {
 
          $this->context()->props()->set(
              'navigation', 
-             ActorContext::is_platform() ? Platform::navigation() : AdminProvider::navigation()
+             ActorContext::is_platform() ? Platform::navigation() : Admin::navigation()
          );
 
          $this->context()->props()->set(

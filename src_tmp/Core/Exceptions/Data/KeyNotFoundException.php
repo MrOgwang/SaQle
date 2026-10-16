@@ -1,8 +1,8 @@
 <?php
 namespace SaQle\Core\Exceptions\Data;
 
-use SaQle\Core\Exceptions\Abstracts\FrameworkException;
-use SaQle\Core\FeedBack\FeedBack;
+use SaQle\Core\Exceptions\Abstracts\AppException;
+use SaQle\Http\HttpStatus;
 use Throwable;
 
 /**
@@ -10,7 +10,7 @@ use Throwable;
  * request context object
  * */
 
-class KeyNotFoundException extends FrameworkException {
+class KeyNotFoundException extends AppException {
 
      public function __construct(
          string $message = '', 
@@ -19,7 +19,7 @@ class KeyNotFoundException extends FrameworkException {
      ){
          parent::__construct(
              $message ?: $context['type']." key [".$context['key']."] does not exist!", 
-             FeedBack::INTERNAL_SERVER_ERROR, 
+             HttpStatus::INTERNAL_SERVER_ERROR, 
              $context, 
              $prev
          );

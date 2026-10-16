@@ -27,6 +27,10 @@ abstract class AbstractDefinition {
          }
      }
 
+     public function finalize() : void {
+
+     }
+
      /**
       * Return the component path.
       * */

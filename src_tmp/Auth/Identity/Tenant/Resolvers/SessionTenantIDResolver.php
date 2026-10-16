@@ -9,7 +9,7 @@ class SessionTenantIDResolver implements TenantIDResolverInterface {
 
 	 public function resolve() : null|int|string {
 
-         return request()->session->get($this->key, null);
+         return request()->session()->get($this->key, null);
          
 	 }
 }

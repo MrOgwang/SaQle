@@ -10,11 +10,12 @@ use SaQle\Http\Response\Strategies\{
      FileResponseStrategy,
      RedirectResponseStrategy
 };
-use SaQle\Http\Response\{
+use SaQle\Http\Message\{
+     Message,
      RedirectMessage,
-     FileMessage,
-     ResponseType
+     FileMessage
 };
+use SaQle\Http\Response\ResponseType;
 use RuntimeException;
 
 final class ResponseResolver {

@@ -1,11 +1,11 @@
 <?php
 namespace SaQle\Core\Exceptions\Http;
 
-use SaQle\Core\Exceptions\Abstracts\FrameworkException;
-use SaQle\Core\FeedBack\FeedBack;
+use SaQle\Core\Exceptions\Abstracts\AppException;
+use SaQle\Http\HttpStatus;
 
-class NotAcceptableException extends FrameworkException {
+class NotAcceptableException extends AppException {
      public function __construct(string $message = '', array $data = []){
-     	 parent::__construct($message, FeedBack::NOT_ACCEPTABLE, $data);
+     	 parent::__construct($message, HttpStatus::NOT_ACCEPTABLE, $data);
      }
 }

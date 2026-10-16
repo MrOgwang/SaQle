@@ -3,10 +3,8 @@
 namespace SaQle\Http\Response\Strategies;
 
 use SaQle\Http\Request\Request;
-use SaQle\Http\Response\{
-     Response, 
-     Message
-};
+use SaQle\Http\Response\Response;
+use SaQle\Http\Message\Message;
 use SaQle\Http\Response\Types\SseResponse;
 
 final class SseResponseStrategy implements ResponseStrategy {

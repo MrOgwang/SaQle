@@ -2,7 +2,7 @@
 
 namespace SaQle\Lib\Components\ResourceList;
 
-use SaQle\Http\Response\Message;
+use SaQle\Http\Message\Message;
 use SaQle\Core\Ui\Panels\TableView;
 use SaQle\Routing\Resources\ResourceRouteUtils;
 
@@ -31,9 +31,8 @@ class Controller {
 	 	 	 ]
 	 	 );
 
-		 return Message::ok([
-		 	 'panel' => $panel,
-		 	 'resource' => $this->resource(request()->route->model_class)
-		 ]);
+	 	 return Message::ok()
+	 	 ->with('panel', $panel)
+	 	 ->with('resource', $this->resource(request()->route->model_class));
 	 }
 }

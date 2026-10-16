@@ -2,16 +2,13 @@
 
 namespace SaQle\Core\Exceptions\Abstracts;
 
-use SaQle\Http\Response\Message;
+use SaQle\Http\Message\Message;
 use SaQle\Core\Exceptions\ServerException;
 use Exception;
 use Throwable;
 use Closure;
 
-abstract class FrameworkException extends Exception {
-
-     //customize how to respond when this exception happens
-     protected ?Message $http_message = null;
+abstract class AppException extends Exception {
 
      //array of key => value context data
      protected array $context = [];
@@ -19,24 +16,27 @@ abstract class FrameworkException extends Exception {
      //front facing safe message
      protected string $safe_message = "An unexpected error occurred";
 
-     public function __construct(
-         string $message = '', 
-         int $code = 500, 
-         array $context = [], 
-         ?Throwable $previous = null
-     ){
-         parent::__construct($message ?: $this->safe_message, $code,  $previous);
-         
-         $this->context = $context;
+     public function __construct(string $message = '', int $code = 500, array $context = [], ?Throwable $previous = null){
 
-         $this->http_message = new Message($this->getCode(), $this->get_context(), $this->getMessage());
+         $this->safe_message = $message ?: $this->safe_message;
+
+         $this->context = $context;
+         
+         parent::__construct(code: $code,  previous: $previous);
      }
 
-     public function get_context() : array {
+     public function with(string $key, mixed $value): static {
+
+         $this->context[$key] = $value;
+
+         return $this;
+     }
+
+     public function getContext() : array {
          return $this->context;
      }
 
-     public function get_safe_message() : string {
+     public function getSafeMessage() : string {
          return $this->safe_message;
      }
 
@@ -51,9 +51,5 @@ abstract class FrameworkException extends Exception {
          }
 
          throw $this;
-     }
-
-     public function get_http_message(){
-         return $this->http_message;
      }
 }

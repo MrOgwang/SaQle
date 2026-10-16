@@ -2,7 +2,7 @@
 
 namespace SaQle\Core\Support;
 
-use SaQle\Http\Response\Message;
+use SaQle\Http\Message\Message;
 
 abstract class ResolverComponent {
 	

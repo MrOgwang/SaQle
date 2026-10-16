@@ -20,11 +20,12 @@ use SaQle\Middleware\{
      RequestMiddleware,
      ResponseMiddleware
 };
-use SaQle\Http\Response\Message;
+use SaQle\Http\Message\Message;
+use SaQle\Http\HttpStatus;
 
 class CorsMiddleware implements RequestMiddleware, ResponseMiddleware {
 
-     public function before($request) : ?Message {
+     public function before($request) : Message {
          $app         = app();
          $origins     = $app->cors->get_origins();
          $headers     = $app->cors->get_headers();
@@ -34,7 +35,7 @@ class CorsMiddleware implements RequestMiddleware, ResponseMiddleware {
          $origin = $request->header('Origin');
 
          if(!$origin){
-             return null;
+             return Message::ok();
          }
 
          //Determine allowed origin
@@ -47,7 +48,7 @@ class CorsMiddleware implements RequestMiddleware, ResponseMiddleware {
          }
        
          if(!$allowed_origin){
-             return null;
+             return Message::ok();
          }
 
          $cors_headers = [
@@ -73,18 +74,17 @@ class CorsMiddleware implements RequestMiddleware, ResponseMiddleware {
          $request->attributes->set('cors_headers', $cors_headers);
 
          if($request->method() === 'OPTIONS'){
-             return no_content();
+             return Message::make(HttpStatus::NO_CONTENT);
          }
 
          //Headers will be attached to response later (response middleware phase)
-         
-         return null;
+         return Message::ok();
      }
 
-     public function after($request, $response) : ?Message {
+     public function after($request, $response) : Message {
          $cors_headers = $request->attributes->get('cors_headers', []);
          $response->headers($cors_headers);
 
-         return null;
+         return Message::ok();
      }
 }

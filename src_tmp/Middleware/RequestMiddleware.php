@@ -1,8 +1,8 @@
 <?php
 namespace SaQle\Middleware;
 
-use SaQle\Http\Response\Message;
+use SaQle\Http\Message\Message;
 
 interface RequestMiddleware extends MiddlewareInterface {
-	 public function before($request) : ? Message;
+	 public function before($request) : Message;
 }

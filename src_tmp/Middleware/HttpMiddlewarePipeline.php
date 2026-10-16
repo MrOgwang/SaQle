@@ -3,10 +3,8 @@
 namespace SaQle\Middleware;
 
 use SaQle\Http\Request\Request;
-use SaQle\Http\Response\{
-     Response, 
-     Message
-};
+use SaQle\Http\Response\Response;
+use SaQle\Http\Message\Message;
 
 class HttpMiddlewarePipeline {
 
@@ -23,25 +21,22 @@ class HttpMiddlewarePipeline {
          array $middlewares, 
          Request $request, 
          ?Response $response = null
-     ) : ?Message {
+     ) : Message {
 
          if(!$middlewares){
-             return null;
+             return Message::ok();
          }
 
          foreach($middlewares as $middleware){
 
              $instance = resolve($middleware);
-             $http_message = $phase === 'before' ? 
-             $instance->before($request) : 
-             $instance->after($request, $response);
+             $message = $phase === 'before' ? $instance->before($request) : $instance->after($request, $response);
 
-             if($http_message !== null){
-                 //STOP everything immediately
-                 return $http_message;
+             if(!$message->is_success()){
+                 return $message;
              }
          }
 
-         return null;
+         return Message::ok();
      }
 }

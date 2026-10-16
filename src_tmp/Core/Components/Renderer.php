@@ -46,7 +46,7 @@ class Renderer {
      ) : string {
 
          $component = ComponentRegistry::get($name, true);
-
+         
          if(!$component){
              return "<!-- component '{$name}' not found -->";
          }  

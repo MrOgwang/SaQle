@@ -1,11 +1,11 @@
 <?php
 namespace SaQle\Core\Exceptions\Http;
 
-use SaQle\Core\Exceptions\Abstracts\FrameworkException;
-use SaQle\Core\FeedBack\FeedBack;
+use SaQle\Core\Exceptions\Abstracts\AppException;
+use SaQle\Http\HttpStatus;
 
-class RequestTimeoutException extends FrameworkException {
+class RequestTimeoutException extends AppException {
      public function __construct(string $message = '', array $data = []){
-     	 parent::__construct($message, FeedBack::REQUEST_TIMEOUT, $data);
+     	 parent::__construct($message, HttpStatus::REQUEST_TIMEOUT, $data);
      }
 }

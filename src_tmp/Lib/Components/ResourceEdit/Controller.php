@@ -1,7 +1,7 @@
 <?php
 namespace SaQle\Lib\Components\ResourceEdit;
 
-use SaQle\Http\Response\Message;
+use SaQle\Http\Message\Message;
 use SaQle\Core\Components\Abstracts\AbstractController;
 
 class Controller extends AbstractController { 
@@ -12,9 +12,7 @@ class Controller extends AbstractController {
 
 	 	 $object = $model::get()->where($model::get_pk_name()."__eq", $id)->first_or_fail();
 
-		 return Message::ok([
-		 	 'object' => $object
-		 ]);
+	 	 return Message::ok()->with('object', $object);
 	 }
 
 	 public function patch(int | string $id) : Message {
@@ -32,6 +30,9 @@ class Controller extends AbstractController {
 	 	 $saved = $model::update($data)->where($model::get_pk_name()."__eq", $id)->now();
 
 		 return Message::redirect(route(resource_route_name("list", $model)))
-		 ->with_message('success', 'Updated successfully!');
+		 ->with('message', [
+		 	 'type' => 'success',
+		 	 'message' => 'Updated successfully!'
+		 ]);
 	 }
 }

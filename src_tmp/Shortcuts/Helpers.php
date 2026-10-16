@@ -1,9 +1,8 @@
 <?php
 
 use SaQle\Log\FileLogger;
-use SaQle\Http\Response\Message;
+use SaQle\Http\HttpStatus;
 use SaQle\Http\Response\Types\RedirectResponse;
-use SaQle\Http\Request\Data\Session;
 use SaQle\Core\Config\ConfigRepository;
 use SaQle\Http\Request\Request;
 use SaQle\Core\Support\{Directory, AppContext};
@@ -77,12 +76,6 @@ if(!function_exists('with_config')){
          }finally{
              $config->pop();
          }
-     }
-}
-
-if(!function_exists('session')){
-     function session(): Session {
-         return Request::get()->session();
      }
 }
 
@@ -164,7 +157,7 @@ if(!function_exists('base_path')){
 }
 
 if(!function_exists('redirect')){
-     function redirect(string $url, int $status = Message::FOUND): never {
+     function redirect(string $url, int $status = HttpStatus::FOUND): never {
          if(!headers_sent()){
              http_response_code($status);
              header("Location: {$url}");
@@ -179,7 +172,7 @@ if(!function_exists('to_session')){
          $data = $data_source();
 
          $request = Request::get();
-         $request->session->set($key, $data, $persistent);
+         $request->session()->set($key, $data, $persistent);
 
          return $data;
      }
@@ -188,10 +181,10 @@ if(!function_exists('to_session')){
 if(!function_exists('from_session')){
      function from_session(string $key, ?callable $data_source = null, bool $latest = false){
          $request = Request::init();
-         if(!$request->session->exists($key) || $latest)
+         if(!$request->session()->exists($key) || $latest)
              return $data_source ? $data_source() : null;
 
-         return $request->session->get($key, null);
+         return $request->session()->get($key, null);
      }
 }
 

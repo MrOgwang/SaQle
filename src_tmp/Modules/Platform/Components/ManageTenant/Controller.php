@@ -2,8 +2,8 @@
 
 namespace SaQle\Modules\Platform\Components\ManageTenant;
 
-use SaQle\Http\Response\Message;
-use SaQle\Http\Kernel\Session;
+use SaQle\Http\Message\Message;
+use SaQle\Core\Support\Session;
  
 class Controller {
 

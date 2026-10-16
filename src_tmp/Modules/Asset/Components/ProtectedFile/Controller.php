@@ -2,7 +2,7 @@
 namespace SaQle\Modules\Asset\Components\ProtectedFile;
 
 use SaQle\Core\Files\Storage\StorageFactory;
-use SaQle\Http\Response\Message;
+use SaQle\Http\Message\Message;
 use SaQle\Core\Files\Utils\DefaultFileUrlEncoder;
 
 class Controller {

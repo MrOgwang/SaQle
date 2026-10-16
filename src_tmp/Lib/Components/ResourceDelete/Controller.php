@@ -1,7 +1,7 @@
 <?php
 namespace SaQle\Lib\Components\ResourceDelete;
 
-use SaQle\Http\Response\Message;
+use SaQle\Http\Message\Message;
 
 class Controller {
 
@@ -13,6 +13,9 @@ class Controller {
          $deleted = $model_class::delete()->where($model_class::get_pk_name()."__eq", $id)->now();
 
 		 return Message::redirect(route(resource_route_name('list', $model_class)))
-		 ->with_message('success', 'Deleted successfully!');
+		 ->with('message', [
+		 	 'type' => 'success',
+		 	 'message' => 'Deleted successfully!'
+		 ]);
 	 }
 }

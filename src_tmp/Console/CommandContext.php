@@ -2,7 +2,7 @@
 
 namespace SaQle\Console;
 
-use SaQle\Http\Request\Data\Data;
+use SaQle\Core\Data\Data;
 use SaQle\Middleware\Pipeable;
 
 class CommandContext implements Pipeable {

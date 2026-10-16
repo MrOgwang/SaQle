@@ -16,9 +16,13 @@
  * */
 namespace SaQle\Http\Request;
 
-use SaQle\Http\Request\Data\{Session, Data};
+use SaQle\Session\Session;
+use SaQle\Core\Data\Data;
 use SaQle\Routing\MatchedRoute;
-use SaQle\Auth\Models\{BaseUser, BaseTenant};
+use SaQle\Auth\Models\{
+     BaseUser, 
+     BaseTenant
+};
 use SaQle\Http\Response\ResponseType;
 use SaQle\Middleware\Pipeable;
 use SaQle\Core\Components\Component;
@@ -51,13 +55,8 @@ class Request implements Pipeable {
          get => $this->data;
      }
 
-     public private(set) ?Session $session = null {
-         set(?Session $value){
-             $this->session = $value;
-         }
-
-         get => $this->session;
-     }
+     //a wrapper around session
+     private session $session;
 
      //a wrapper around request headers
      public ?Data $headers = null {
@@ -143,7 +142,7 @@ class Request implements Pipeable {
          $this->cookies    = new Data();
          $this->queries    = new Data();
          $this->params     = new Data();
-         $this->session    = new Session($this);
+         $this->session    = new Session();
          $this->attributes = new Data();
      }
 

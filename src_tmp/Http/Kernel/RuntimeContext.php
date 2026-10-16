@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace SaQle\Http\Kernel;
 
-use SaQle\Http\Kernel\Session;
+use SaQle\Core\Support\Session;
 
 abstract class RuntimeContext {
      protected function __construct(

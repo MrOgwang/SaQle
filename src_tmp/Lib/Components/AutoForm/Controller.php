@@ -2,7 +2,7 @@
 
 namespace SaQle\Lib\Components\AutoForm;
 
-use SaQle\Http\Response\Message;
+use SaQle\Http\Message\Message;
 use SaQle\Core\Ui\Forms\FormField;
 use SaQle\Core\Registries\ModelRegistry;
 use RuntimeException;
@@ -99,7 +99,7 @@ class Controller {
 
 	 	 	 $choices = $this->load_select_choices($form->field($field));
 
-	         return Message::ok($choices);
+	         return Message::ok()->with('choices', $choices);
 
 	 	 }catch(Throwable $e){
 	 	 	 return Message::bad_request(message: 'There was an error loading options!');
@@ -127,7 +127,7 @@ class Controller {
 	 	 	 	 $choices[$n] = $this->load_select_choices($form->field($n), $col_name, $val);
 	 	 	 }
 
-	         return Message::ok($choices);
+	         return Message::ok()->with('choices', $choices);
 
 	 	 }catch(Throwable $e){
 	 	 	 return Message::bad_request(message: 'There was an error loading options!');
@@ -148,7 +148,7 @@ class Controller {
 
 	 	 	 $choices = $this->load_select_choices($form_field, $form_field->searchable, $keyword, true);
 
-	         return Message::ok($choices);
+	         return Message::ok()->with('choices', $choices);
 
 	 	 }catch(Throwable $e){
 	 	 	 return Message::bad_request(message: 'There was an error loading options!');

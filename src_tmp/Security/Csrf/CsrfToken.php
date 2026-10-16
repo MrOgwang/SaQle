@@ -4,7 +4,7 @@ namespace SaQle\Security\Csrf;
 
 use RuntimeException;
 use SessionHandlerInterface;
-use SaQle\Http\Kernel\Session;
+use SaQle\Core\Support\Session;
 
 class CsrfToken {
 

@@ -88,7 +88,7 @@ final class MakeComponent extends Command {
 
 namespace {$namespace};
 
-use SaQle\Http\Response\Message;
+use SaQle\Http\Message\Message;
 
 class Controller {
      public function get() {

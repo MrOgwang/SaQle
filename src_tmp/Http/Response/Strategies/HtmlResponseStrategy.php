@@ -3,11 +3,8 @@
 namespace SaQle\Http\Response\Strategies;
 
 use SaQle\Http\Request\Request;
-use SaQle\Http\Response\{
-     Response, 
-     Message,
-     SuccessMessage
-};
+use SaQle\Http\Response\Response;
+use SaQle\Http\Message\Message;
 use SaQle\Http\Response\Types\{
      HtmlResponse
 };
@@ -20,24 +17,9 @@ use SaQle\Core\Support\AppStage;
 use SaQle\Core\Ui\PageManager;
 
 final class HtmlResponseStrategy implements ResponseStrategy {
-    
-     private function prepare_context(Request $request) : array {
-         $context = [];
-
-         //inject flash message and context
-         $context['flash'] = null;
-
-         $session = request()->session();
-         if($session->exists('flash')){
-             $context['flash'] = $session->get('flash');
-             $session->remove('flash');
-         }
-
-         return $context;
-     }
 
      private function get_layout(Request $request, Message $result) : array {
-
+        
          /**
           * The happy path:
           * 
@@ -45,10 +27,10 @@ final class HtmlResponseStrategy implements ResponseStrategy {
           * 2. The app stage is AppStage::REQUEST_RESOLUTION
           * 2. The result is a SuccessMessage
           * */
-         if(app()->is_stage(AppStage::REQUEST_RESOLUTION) && $result instanceof SuccessMessage && $request->route){
+         if(app()->has_reached(AppStage::RESPONSE_BOOTSTRAP) && $result->is_success() && $request->route){
              $layout = $request->route->layout ?? [];
              return array_merge([config('page_component')], $layout, [$request->route->target]);
-         }
+         }  
 
          /**
           * If request hasn't reached resolution stage,
@@ -61,7 +43,7 @@ final class HtmlResponseStrategy implements ResponseStrategy {
           * NOTE: Redirects are handled in RedirectResponseStrategy
           * 
           * */
-         if(!app()->is_stage(AppStage::REQUEST_RESOLUTION)){
+         if(!app()->has_reached(AppStage::REQUEST_RESOLUTION)){
              return [config('page_component'), config('error.component')."@get"];
          }
 
@@ -119,13 +101,9 @@ final class HtmlResponseStrategy implements ResponseStrategy {
 
          $layout = $this->get_layout($request, $result);
 
-         $context = $this->prepare_context($request);
-
          $tree = new Tree()->build($request, $layout);
 
-         $renderer = new Renderer($request);
-
-         $html = $renderer->render($tree, $context);
+         $html = (new Renderer($request))->render($tree);
 
          $html = $this->inject_page_header($html);
  

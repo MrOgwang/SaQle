@@ -84,4 +84,23 @@ final class HttpStatus {
      public static function reason(int $code): string {
          return self::REASONS[$code] ?? 'Unknown Status';
      }
+
+     public static function group(int $code): string {
+         return match(true){
+             $code >= 100 && $code < 200 => 'informational',
+             $code >= 200 && $code < 300 => 'success',
+             $code >= 300 && $code < 400 => 'redirect',
+             $code >= 400 && $code < 500 => 'client_error',
+             $code >= 500 && $code < 600 => 'server_error',
+             default => 'unknown',
+         };
+     }
+
+     public static function is_success(int $code): bool {
+         return self::group($code) === 'success';
+     }
+
+     public static function is_error(int $code): bool {
+         return self::group($code) === 'client_error' || self::group($code) === 'server_error';
+     }
 }

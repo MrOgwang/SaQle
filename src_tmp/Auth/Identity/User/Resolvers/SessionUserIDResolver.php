@@ -5,8 +5,11 @@ use SaQle\Auth\Identity\User\Interfaces\{
      UserInterface,
      UserIDResolverInterface
 };
+use SaQle\Core\Support\Session;
+use RuntimeException;
 
 class SessionUserIDResolver implements UserIDResolverInterface {
+     
      public function __construct(){
          if(session_status() === PHP_SESSION_NONE){
              session_start();
@@ -15,13 +18,15 @@ class SessionUserIDResolver implements UserIDResolverInterface {
 
      public function create(UserInterface $user): string {
          
-         session_regenerate_id();
+         if(!session_regenerate_id()){
+             throw new RuntimeException('Failed to regenerate session ID.');
+         }
 
-         $_SESSION['user_id'] = $user->user_id;
+         Session::set('user_id', $user->user_id);
 
          //if multitenancy is set, store the tenant id as well.
          if(config('tenancy.enabled')){
-             $_SESSION['tenant_id'] = $user->tenant_id;
+             Session::set('tenant_id', $user->tenant_id);
          }
 
          return session_id();
@@ -31,10 +36,8 @@ class SessionUserIDResolver implements UserIDResolverInterface {
     
      }
 
-     public function resolve(): ? string {
-
-         return $_SESSION['user_id'] ?? null;
-
+     public function resolve(): ?string {
+         return Session::get('user_id');
      }
 
      public function destroy() : void {

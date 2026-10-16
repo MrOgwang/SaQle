@@ -16,23 +16,28 @@
  * */
 namespace SaQle\Auth\Middleware;
 
-use SaQle\Middleware\RequestMiddleware;
+use SaQle\Middleware\{   
+     RequestMiddleware,
+     ResponseMiddleware
+};
 use SaQle\Auth\Identity\Tenant\Interfaces\TenantProviderInterface;
 use SaQle\Auth\Identity\Tenant\Resolvers\TenantIDResolver;
-use SaQle\Http\Response\Message;
+use SaQle\Http\Message\Message;
 use SaQle\Auth\Context\ActorContext;
-use SaQle\Core\Support\Db;
-use SaQle\Http\Kernel\Session;
+use SaQle\Core\Support\{
+     Db,
+     Session
+};
 use RuntimeException;
 
-class TenantMiddleware implements RequestMiddleware {
+class TenantMiddleware implements RequestMiddleware, ResponseMiddleware {
 
      public function __construct(
          private TenantIDResolver $id_resolver,
          private TenantProviderInterface $tenant_provider
      ){}
 
-     public function before($request) : ?Message {
+     public function before($request) : Message {
 
          $tenant_key = config('session_tenant_key');
 
@@ -40,24 +45,24 @@ class TenantMiddleware implements RequestMiddleware {
              str_contains($request->route->target, config('protected_file_component')) ||
              str_contains($request->route->target, config('static_assets_component'))
          ){
-             return null;
+             return Message::ok();
          }
 
          if(ActorContext::is_platform()){
-             $request->session->remove($tenant_key);
-             return null;
+             $request->session()->remove($tenant_key);
+             return Message::ok();
          }
 
          $tenant_id = $this->id_resolver->resolve();
 
          if(!$tenant_id){
-             return null;
+             return Message::ok();
          }
 
-         $tenant = $request->session->get($tenant_key, null);
+         $tenant = $request->session()->get($tenant_key, null);
          
          if($tenant && ($tenant->get_id() === $tenant_id || $tenant->slug === $tenant_id)){
-             return null;
+             return Message::ok();
          }
 
          $tenant = $this->tenant_provider->find($tenant_id);
@@ -66,7 +71,7 @@ class TenantMiddleware implements RequestMiddleware {
              return Message::bad_request(message: "Failed to resolve tenant. Tenant Id - {$tenant_id}!");
          }
 
-         $request->session->set($tenant_key, $tenant, true);
+         $request->session()->set($tenant_key, $tenant);
 
          if(Session::has('__manage_tenant__')){
 
@@ -80,12 +85,14 @@ class TenantMiddleware implements RequestMiddleware {
 
          }
 
-         return null;
+         return Message::ok();
      }
 
-     public function after($request, $response) : ?Message {
+     public function after($request, $response) : Message {
          if(Session::has('__manage_tenant__')){
              Session::remove('__manage_tenant__');
          }
+
+         return Message::ok();
      }
 }

@@ -1,7 +1,7 @@
 <?php
 namespace SaQle\Lib\Components\ResourceView;
 
-use SaQle\Http\Response\Message;
+use SaQle\Http\Message\Message;
 use SaQle\Core\Ui\Details\DetailView;
 use SaQle\Routing\Resources\ResourceRouteUtils;
 
@@ -21,10 +21,9 @@ class Controller {
          	 	 'with_audit' => true
          	 ]
          );
-         
-		 return Message::ok([
-		 	 'panel' => $panel,
-		 	 'resource' => $this->resource($model)
-		 ]);
+
+         return Message::ok()
+         ->with('panel', $panel)
+         ->with('resource', $this->resource($model));
 	 }
 }

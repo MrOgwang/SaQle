@@ -202,6 +202,10 @@ final class App {
      public function is_stage(AppStage $stage): bool {
          return $this->stage === $stage;
      }
+
+     public function has_reached(AppStage $stage): bool {
+         return $this->stage->has_reached($stage);
+     }
      
      public function run($args = null) : void {
         

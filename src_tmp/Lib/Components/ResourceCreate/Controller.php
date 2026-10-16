@@ -1,7 +1,7 @@
 <?php
 namespace SaQle\Lib\Components\ResourceCreate;
 
-use SaQle\Http\Response\Message;
+use SaQle\Http\Message\Message;
 use SaQle\Core\Components\Abstracts\AbstractController;
 
 class Controller extends AbstractController {
@@ -24,6 +24,6 @@ class Controller extends AbstractController {
 	 	 
 	 	 $saved = $model::create($data)->now();
 
-		 return Message::redirect()->with_message('success', 'Created successfully!');
+		 return Message::reload()->notify('success', 'Created successfully!');
 	 }
 }

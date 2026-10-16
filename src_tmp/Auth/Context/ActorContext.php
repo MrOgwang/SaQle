@@ -38,21 +38,21 @@ class ActorContext {
 
      //actor methods
 
-     public static function set_user(UserInterface $user){
+     public static function set_user(?UserInterface $user){
          self::$_user = $user;
      }
 
-     public function set_impersonated_user(UserInterface $user){
+     public function set_impersonated_user(?UserInterface $user){
          self::$_impersonated_user = $user;
      }
 
-     public static function actor(){
+     public static function actor() : ?UserInterface {
          return self::$_impersonated_user ?? self::$_user;
      }
     
      //tenant methods
 
-     public static function set_tenant(TenantInterface $tenant){
+     public static function set_tenant(?TenantInterface $tenant){
          self::$_tenant = $tenant;
      }
 

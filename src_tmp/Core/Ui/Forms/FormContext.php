@@ -3,8 +3,8 @@ declare(strict_types=1);
 
 namespace SaQle\Core\Ui\Forms;
 
-use SaQle\Http\Kernel\Session;
 use SaQle\Http\Kernel\RuntimeContext;
+use SaQle\Core\Support\Session;
 
 final class FormContext extends RuntimeContext {
      public function __construct(
@@ -15,9 +15,9 @@ final class FormContext extends RuntimeContext {
      ){}
 
      static public function make(?object $model = null){
-         $errors       = flash_from_session('__errors', null);
-         $input        = flash_from_session('__old', null);
-         $notification = flash_from_session('__notification', null);
+         $errors       = Session::get('__errors', []);
+         $input        = Session::get('__old', []);
+         $notification = Session::get('__notification');
          $message      = $notification ? new FormMessage($notification['type'], $notification['message']) : null;
 
          if($errors && !$message){

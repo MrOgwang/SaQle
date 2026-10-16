@@ -11,7 +11,7 @@ class SessionDataSourceManager extends DataSourceManager{
 
 	 public function get_value() : mixed {
 	 	 return $this->optional ? 
-	 	 $this->request->session->get($this->from->key, $this->default) : 
-	 	 $this->request->session->get_or_fail($this->from->key);
+	 	 $this->request->session()->get($this->from->key, $this->default) : 
+	 	 $this->request->session()->get_or_fail($this->from->key);
 	 }
 }

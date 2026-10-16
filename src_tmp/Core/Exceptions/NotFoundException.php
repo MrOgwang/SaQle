@@ -1,8 +1,8 @@
 <?php
 namespace SaQle\Core\Exceptions;
 
-use SaQle\Core\Exceptions\Abstracts\FrameworkException;
-use SaQle\Core\FeedBack\FeedBack;
+use SaQle\Core\Exceptions\Abstracts\AppException;
+use SaQle\Http\HttpStatus;
 use Throwable;
 
 /**
@@ -20,12 +20,12 @@ use Throwable;
  * 
  * */
 
-class NotFoundException extends FrameworkException {
+class NotFoundException extends AppException {
      public function __construct(
      	 string $message = '', 
      	 array $context = [], 
      	 ?Throwable $prev = null
      ){
-     	 parent::__construct($message, FeedBack::NOT_FOUND, $context, $prev);
+     	 parent::__construct($message, HttpStatus::NOT_FOUND, $context, $prev);
      }
 }

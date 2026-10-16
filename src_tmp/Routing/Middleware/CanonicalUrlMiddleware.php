@@ -18,7 +18,7 @@ namespace SaQle\Routing\Middleware;
 
 use SaQle\Middleware\RequestMiddleware;
 use SaQle\Routing\Canonical\CanonicalUrlPolicy;
-use SaQle\Http\Response\Message;
+use SaQle\Http\Message\Message;
 
 final class CanonicalUrlMiddleware implements RequestMiddleware {
 
@@ -28,15 +28,15 @@ final class CanonicalUrlMiddleware implements RequestMiddleware {
          $this->policy = resolve(CanonicalUrlPolicy::class);
      }
 
-     public function before($request) : ?Message {
+     public function before($request) : Message {
 
          if($request->is_unsafe()){
-             return null;
+             return Message::ok();
          }
 
          $redirect = $this->policy->canonicalize($request);
          if(!$redirect){
-             return null;
+             return Message::ok();
          }
 
          return Message::redirect($redirect->location)->permanently();

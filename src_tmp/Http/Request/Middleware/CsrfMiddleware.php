@@ -2,18 +2,18 @@
 namespace SaQle\Http\Request\Middleware;
 
 use SaQle\Middleware\RequestMiddleware;
-use SaQle\Http\Response\Message;
+use SaQle\Http\Message\Message;
 use SaQle\Security\Csrf\CsrfToken;
 
 class CsrfMiddleware implements RequestMiddleware {
      
-     public function before($request) : ?Message {
+     public function before($request) : Message {
 
          CsrfToken::get();
 
          //skip CSRF check for safe HTTP methods
          if($request->is_safe()){
-             return null;
+             return Message::ok();
          }
 
          $token = $request->data->get(CsrfToken::get_key(), $_SERVER['HTTP_X_CSRF_TOKEN'] ?? ''); 
@@ -22,6 +22,6 @@ class CsrfMiddleware implements RequestMiddleware {
              throw authorization_exception('CSRF token validation failed');
          }
 
-         return null;
+         return Message::ok();
      }
 }

@@ -2,7 +2,7 @@
 
 namespace SaQle\Modules\Asset\Components\StaticFile;
 
-use SaQle\Http\Response\Message;
+use SaQle\Http\Message\Message;
 
 class Controller {
 

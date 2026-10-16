@@ -2,11 +2,11 @@
 
 namespace SaQle\Core\Exceptions\Database;
 
-use SaQle\Core\Exceptions\Abstracts\FrameworkException;
-use SaQle\Core\FeedBack\FeedBack;
+use SaQle\Core\Exceptions\Abstracts\AppException;
+use SaQle\Http\HttpStatus;
 use Throwable;
 
-class DatabaseNotFoundException extends FrameworkException{
+class DatabaseNotFoundException extends AppException{
 
      protected string $safe_message = "Database not found!";
 
@@ -17,7 +17,7 @@ class DatabaseNotFoundException extends FrameworkException{
      ){
          parent::__construct(
              $message ?: $this->get_message($context), 
-             FeedBack::INTERNAL_SERVER_ERROR, 
+             HttpStatus::INTERNAL_SERVER_ERROR, 
              $context, 
              $prev
          );

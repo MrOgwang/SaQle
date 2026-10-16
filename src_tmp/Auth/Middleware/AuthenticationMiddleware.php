@@ -16,7 +16,7 @@
  * */
 namespace SaQle\Auth\Middleware;
 
-use SaQle\Http\Response\Message;
+use SaQle\Http\Message\Message;
 use SaQle\Middleware\RequestMiddleware;
 use SaQle\Auth\Services\AuthenticationService;
 use SaQle\Core\Services\IService;
@@ -25,7 +25,7 @@ class AuthenticationMiddleware implements RequestMiddleware {
      
      private IService $auth_service;
 
-     public function __construct(){
+     public function __construct(){ 
          /**
           * The auth_service must be resolved this way. If you provide
           * the auth_service as a constructor parameter, you end up with 
@@ -34,14 +34,14 @@ class AuthenticationMiddleware implements RequestMiddleware {
          $this->auth_service = resolve(AuthenticationService::class);
      }
 
-     public function before($request) : ?Message {
+     public function before($request) : Message {
          
          $user = $this->auth_service->resolve_user();
-
+ 
          if($user){
-             $request->session->set('user', $user, true);
+             $request->session()->set('user', $user);
          }
 
-         return null;
+         return Message::ok();
      }
 }

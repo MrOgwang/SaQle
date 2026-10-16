@@ -22,8 +22,6 @@ final class Definition extends AbstractDefinition {
 
          $form = $this->create_auto_form(FormMode::UPDATE, $this->props['name'] ?? null);
 
-         //$form->bind(FormContext::make($object), request());
-
          if(!$form){  
              throw new RuntimeException("Unknown resource form requested!");
          }
@@ -31,6 +29,16 @@ final class Definition extends AbstractDefinition {
          $this->context()->props()->set('form', $form);
          $this->context()->props()->set('resource', $this->resource($model_class));
          $this->context()->props()->set('model', $model_class);
+     }
+
+     public function finalize() : void {
+
+         $object = $this->context()->data()->get_or_fail('object');
+
+         $form = $this->context()->props()->get_or_fail('form');
+
+         $form->bind(FormContext::make($object), request());
+
      }
 
 }

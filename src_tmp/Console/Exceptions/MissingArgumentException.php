@@ -2,13 +2,13 @@
 
 namespace SaQle\Console\Exceptions;
 
-use SaQle\Core\Exceptions\Abstracts\FrameworkException;
-use SaQle\Core\FeedBack\FeedBack;
+use SaQle\Core\Exceptions\Abstracts\AppException;
+use SaQle\Http\HttpStatus;
 
-class MissingArgumentException extends FrameworkException {
+class MissingArgumentException extends AppException {
 
      public function __construct(string $name){
          $message = "The argument {$name} has not been provided!";
-         parent::__construct($message, FeedBack::NOT_ACCEPTABLE, [], null);
+         parent::__construct($message, HttpStatus::NOT_ACCEPTABLE, [], null);
      }
 }

@@ -2,7 +2,7 @@
 
 namespace SaQle\Modules\Admin\Components\Admin;
 
-use SaQle\Http\Response\Message;
+use SaQle\Http\Message\Message;
 
 class Controller { 
 

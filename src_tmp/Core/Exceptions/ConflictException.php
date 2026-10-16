@@ -1,8 +1,8 @@
 <?php
 namespace SaQle\Core\Exceptions;
 
-use SaQle\Core\Exceptions\Abstracts\FrameworkException;
-use SaQle\Core\FeedBack\FeedBack;
+use SaQle\Core\Exceptions\Abstracts\AppException;
+use SaQle\Http\HttpStatus;
 use Throwable;
 
 /**
@@ -21,12 +21,12 @@ use Throwable;
  * 
  * */
 
-class ConflictException extends FrameworkException {
+class ConflictException extends AppException {
      public function __construct(
      	 string $message = '', 
      	 array $context = [], 
      	 ?Throwable $prev = null
      ){
-         parent::__construct($message, FeedBack::CONFLICT, $context, $prev);
+         parent::__construct($message, HttpStatus::CONFLICT, $context, $prev);
      }
 }

@@ -2,7 +2,7 @@
 
 namespace SaQle\Modules\Asset\Components\AssetFile;
 
-use SaQle\Http\Response\Message;
+use SaQle\Http\Message\Message;
 use SaQle\Core\Registries\ComponentRegistry;
 
 class Controller {

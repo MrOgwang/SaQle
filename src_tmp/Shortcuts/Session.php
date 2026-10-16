@@ -1,19 +1,53 @@
 <?php
 
-use SaQle\Http\Kernel\Session;
+use SaQle\Core\Support\Session;
 use SaQle\Auth\Identity\Tenant\Interfaces\TenantInterface;
 use SaQle\Auth\Context\ActorContext;
 use SaQle\Auth\Identity\User\Interfaces\UserInterface;
+use SaQle\Http\Request\Request;
 
-if(!function_exists('flash_to_session')){
-     function flash_to_session(string $key, mixed $value) {
-         Session::flash($key, $value);
+if(!function_exists('session')){
+     function session(){
+         return Request::get()->session();
      }
 }
 
-if(!function_exists('flash_from_session')){
-     function flash_from_session(string $key, mixed $default) : mixed {
-         return Session::get_flash($key, $default);
+if(!function_exists('errors')){
+     function errors(?string $field = null){
+
+         $errors = Session::get('__errors', []);
+         
+         if($field){
+             return $errors[$field] ?? [];
+         }
+
+         return $errors;
+     }
+}
+
+if(!function_exists('old')){
+     function old(?string $field = null){
+         
+         $old = Session::get('__old', []);
+         
+         if($field){
+             return $old[$field] ?? null;
+         }
+
+         return $old;
+     }
+}
+
+if(!function_exists('notification')){
+     function notification(){
+        
+         $m = Session::get('__notification');
+
+         if($m){
+             return (Object)$m;
+         }
+
+         return null;
      }
 }
 

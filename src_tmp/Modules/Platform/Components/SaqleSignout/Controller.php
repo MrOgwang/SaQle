@@ -3,7 +3,7 @@
 namespace SaQle\Modules\Platform\Components\SaqleSignout;
 
 use SaQle\Auth\Services\AuthenticationService;
-use SaQle\Http\Response\Message;
+use SaQle\Http\Message\Message;
 
 class Controller {
 

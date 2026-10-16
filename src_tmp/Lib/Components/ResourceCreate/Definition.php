@@ -22,7 +22,7 @@ final class Definition extends AbstractDefinition {
 
          $form = $this->create_auto_form(FormMode::CREATE, $this->props['name'] ?? null);
          
-         //$form->bind(FormContext::make(), request());
+         $form->bind(FormContext::make(), request());
 
          if(!$form){
              throw new RuntimeException("Unknown resource form requested!");
