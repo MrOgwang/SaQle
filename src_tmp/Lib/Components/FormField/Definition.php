@@ -32,35 +32,16 @@ final class Definition extends AbstractDefinition {
 
          parent::initialize($props);
 
-         //translate the bind prop into a FormField value
          $bind = $this->context()->props()->get('bind', null);
+
+         $field = null;
+
+         $not_bound = false;
 
          if($bind !== null){
 
+             //translate the bind prop into a FormField value
              $field = $this->construct_field($bind);
-
-             if(!$field){
-                throw new RuntimeException("The field [".$bind."] does not exist!");
-             }
-
-             /**
-              * Override default field attributes with values
-              * passed via props
-              * */
-             $default_attrs = $field->get_attributes();
-
-             //do not override these attributes
-             $unsafe_attrs = ['name', 'id'];
-
-             foreach($default_attrs as $attr => $attr_val){
-                 if($this->context()->props()->exists($attr) && !in_array($attr, $unsafe_attrs)){
-                     $field->$attr($this->context()->props()->get($attr));
-                 }
-             }
-
-             $field->value($field->default);
-
-             $this->context()->props()->set('field', $field);
          }
          /**
           * There should be a field prop provided here,
@@ -72,7 +53,9 @@ final class Definition extends AbstractDefinition {
 
              if(!$field || !$field instanceof FormFieldContainer){
 
-                 $this->context()->props()->set('field', new FormFieldContainer([
+                 $not_bound = true;
+
+                 $field = new FormFieldContainer([
                      'id'          => '',
                      'label'       => '',
                      'name'        => '',
@@ -82,9 +65,32 @@ final class Definition extends AbstractDefinition {
                      'required'    => false,
                      'type'        => 'text',
                      'placeholder' => "",
-                 ]));
+                 ]);
              }
          }
+
+         if(!$field){
+             throw new RuntimeException("Could not resolve field component!");
+         }
+
+         /**
+          * Override default field attributes with values
+          * passed via props
+          * */
+         $default_attrs = $field->get_attributes();
+
+         //do not override these attributes
+         $unsafe_attrs =  $not_bound ? [] : ['name', 'id'];
+
+         foreach($default_attrs as $attr => $attr_val){
+             if($this->context()->props()->exists($attr) && !in_array($attr, $unsafe_attrs)){
+                 $field->$attr($this->context()->props()->get($attr));
+             }
+         }
+
+         $field->value($field->default);
+
+         $this->context()->props()->set('field', $field);
      }
 
      private function make_file_name(string $type) : string {

@@ -101,7 +101,7 @@ final class HtmlResponseStrategy implements ResponseStrategy {
 
          $layout = $this->get_layout($request, $result);
 
-         $tree = new Tree()->build($request, $layout);
+         $tree = new Tree()->build($request, $layout, $result);
 
          $html = (new Renderer($request))->render($tree);
 

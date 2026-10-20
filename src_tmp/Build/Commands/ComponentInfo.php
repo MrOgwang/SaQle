@@ -68,7 +68,7 @@ class ComponentInfo extends Command {
 
          $context->output()->field(
              'Has Many Templates',
-             !empty($definition['has_many_templates']) ? 'Yes' : 'No'
+             count($definition['template_variations']) > 1 ? 'Yes' : 'No'
          );
 
          $this->display_templates($definition['template_variations'] ?? []);

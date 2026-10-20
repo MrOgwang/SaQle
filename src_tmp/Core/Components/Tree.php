@@ -4,13 +4,14 @@ namespace SaQle\Core\Components;
 
 use SaQle\Core\Registries\ComponentRegistry;
 use SaQle\Http\Request\Request;
+use SaQle\Http\Message\Message;
 use LogicException;
 
 class Tree {
 
-     private function get_component(Request $request, string $name, bool $is_target = false){
+     private function get_component(Request $request, string $name, bool $is_success = true, bool $is_target = false){
 
-         if($is_target && $request->target !== null){
+         if($is_target && $request->target !== null && $is_success){
              return $request->target;
          }
 
@@ -26,7 +27,7 @@ class Tree {
      *
      * @return Node  Root (top-most) component node
      */
-     public function build(Request $request, array $layouts) : Node {
+     public function build(Request $request, array $layouts, Message $result) : Node {
          //1. Normalize input into a single ordered list
          $layouts = array_values($layouts);
 
@@ -39,7 +40,7 @@ class Tree {
          
          foreach($layouts as $i => $l){
 
-             $component = $this->get_component($request, $l, $i === count($layouts) - 1);
+             $component = $this->get_component($request, $l, $result->is_success(), $i === count($layouts) - 1);
 
              $node = new Node($component);
 

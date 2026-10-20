@@ -16,7 +16,7 @@ final class ExceptionHandler {
 	 private static function build_http_message(Request $request, Throwable $e){
 
          $code    = HttpStatus::INTERNAL_SERVER_ERROR;
-         $message = $e->getMessage();
+         $message = "Unexpected error occured";
          $context = [];
 
          if($e instanceof AppException){   

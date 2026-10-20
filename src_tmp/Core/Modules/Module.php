@@ -61,13 +61,17 @@ abstract class Module {
              homepage: "",
              priority: 1
          );
-
+ 
      }
 
      //util methods
      static public function get_models(bool $with_seeders = false) : array {
 
          return ModelRegistry::get_module_models(get_called_class());
+     }
 
+     static public function get_models_except(array $exclude = [], bool $with_seeders = false) : array {
+
+         return array_diff(self::get_models(), $exclude);
      }
 }

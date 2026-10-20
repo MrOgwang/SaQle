@@ -16,7 +16,7 @@ use SaQle\Middleware\HttpMiddlewarePipeline;
 use SaQle\Core\Support\{
      AppStage,
      Session
-};
+}; 
 
 class HttpKernel extends Kernel {
 
@@ -80,6 +80,8 @@ class HttpKernel extends Kernel {
              $response = $this->response($request, $result, true);
             
          }catch(Throwable $e){
+
+             log_to_file($e);
 
              $result = ExceptionHandler::handle($request, $e);
 

@@ -37,7 +37,7 @@ class ComponentList extends Command {
                  $c_props['owner'],
                  $c_props['proxy'] ? "Yes" : "No",
                  $c_props['base_path'],
-                 $c_props['has_many_templates'] ? "Yes" : "No"
+                 count($c_props['template_variations']) > 1 ? "Yes" : "No"
              ];
          }
 

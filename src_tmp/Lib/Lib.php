@@ -4,8 +4,7 @@ namespace SaQle\Lib;
 
 use SaQle\Core\Modules\{
 	 Module,
-	 ModuleBuilder,
-	 AdminModule
+	 ModuleBuilder
 };
 
 class Lib extends Module {
