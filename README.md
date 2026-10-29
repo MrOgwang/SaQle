@@ -31,7 +31,7 @@ Feature Overview
 
  `composer create-project mrogwang/saqle-project project_name`
 
-Full Docs: [View Documentation](https://saqle.co.ke/docs/welcome)
+Full Docs: [View Documentation](https://mrogwang.github.io/SaQle/)
 
 ## Contact
 

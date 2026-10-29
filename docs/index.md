@@ -26,6 +26,55 @@ If contributing to open source excites you, or you just want to learn, reach out
 
 ## Contents
 
+├── ### Introduction
+│   ├── What is SaQle?
+│   ├── Philosophy
+│   └── Requirements
+│
+├── ### Getting Started
+│   ├── Installation
+│   ├── Create a Project
+│   ├── Project Structure
+│   └── Your First Application
+│
+├── Fundamentals
+│   ├── Application
+│   ├── Configuration
+│   ├── Routing
+│   ├── Controllers
+│   ├── Requests & Responses
+│   ├── Middleware
+│   ├── Components
+│   ├── Templates & Layouts
+│   ├── Database & Models
+│   └── Migrations
+│
+├── Building Applications
+│   ├── Pages
+│   ├── Forms
+│   ├── CRUD
+│   ├── Authentication
+│   ├── Authorization
+│   ├── APIs
+│   ├── File Uploads
+│   └── Modules
+│
+├── Guides
+│   ├── Adding Authentication
+│   ├── Creating a Module
+│   ├── Creating Components
+│   ├── Multi-tenancy
+│   └── ...
+│
+└── Reference
+    ├── CLI
+    ├── Configuration
+    ├── Routing
+    ├── Middleware
+    ├── ORM
+    └── ...
+
+
 - [Getting Started](getstarted.md)
 - [Routing](routing.md)
 - [Controllers](controllers.md)

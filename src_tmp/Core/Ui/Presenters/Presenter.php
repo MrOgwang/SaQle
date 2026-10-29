@@ -24,7 +24,6 @@ final class Presenter {
      }
 
      public function field(string $field_name, mixed $renderer){
-        
          if(!array_key_exists($field_name, $this->fields)){
              throw new RuntimeException("The field: {$field_name} has not been included in the presenter: {$this->name}");
          }
