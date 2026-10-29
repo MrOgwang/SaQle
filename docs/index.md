@@ -26,58 +26,41 @@ If contributing to open source excites you, or you just want to learn, reach out
 
 ## Contents
 
-├── ### Introduction
-│   ├── What is SaQle?
-│   ├── Philosophy
-│   └── Requirements
-│
-├── ### Getting Started
-│   ├── Installation
-│   ├── Create a Project
-│   ├── Project Structure
-│   └── Your First Application
-│
-├── Fundamentals
-│   ├── Application
-│   ├── Configuration
-│   ├── Routing
-│   ├── Controllers
-│   ├── Requests & Responses
-│   ├── Middleware
-│   ├── Components
-│   ├── Templates & Layouts
-│   ├── Database & Models
-│   └── Migrations
-│
-├── Building Applications
-│   ├── Pages
-│   ├── Forms
-│   ├── CRUD
-│   ├── Authentication
-│   ├── Authorization
-│   ├── APIs
-│   ├── File Uploads
-│   └── Modules
-│
-├── Guides
-│   ├── Adding Authentication
-│   ├── Creating a Module
-│   ├── Creating Components
-│   ├── Multi-tenancy
-│   └── ...
-│
-└── Reference
-    ├── CLI
-    ├── Configuration
-    ├── Routing
-    ├── Middleware
-    ├── ORM
-    └── ...
-
-
-- [Getting Started](getstarted.md)
-- [Routing](routing.md)
-- [Controllers](controllers.md)
-- [Views](views.md)
-- [Databases](databases.md)
-- [Models](models.md).
+- ### Introduction
+	- #### [What is SaQle?](getstarted.md)
+	- #### [Philosophy](getstarted.md)
+	- #### [Requirements](getstarted.md)
+- ### Getting Started
+	- #### [Installation](getstarted.md)
+	- #### [Create a Project](getstarted.md)
+	- #### [Project Structure](getstarted.md)
+	- #### [Your First Application](getstarted.md)
+- ### Fundamentals
+	- #### [Application](getstarted.md)
+	- #### [Configuration](getstarted.md)
+	- #### [Routing](getstarted.md)
+	- #### [Components](getstarted.md)
+	- #### [Controllers](getstarted.md)
+	- #### [Requests](getstarted.md)
+	- #### [Responses](getstarted.md)
+	- #### [Middleware](getstarted.md)
+	- #### [Templates](getstarted.md)
+	- #### [Layouts](getstarted.md)
+	- #### [Database](getstarted.md)
+	- #### [Models](getstarted.md)
+	- #### [Migrations](getstarted.md)
+- ### Building Applications
+	- #### [Pages](getstarted.md)
+	- #### [Forms](getstarted.md)
+	- #### [CRUD](getstarted.md)
+	- #### [Authentication](getstarted.md)
+	- #### [Authorization](getstarted.md)
+	- #### [APIs](getstarted.md)
+	- #### [File Uploads](getstarted.md)
+	- #### [Modules](getstarted.md)
+- ### Reference
+	- #### [CLI](getstarted.md)
+	- #### [Configuration](getstarted.md)
+	- #### [Routing](getstarted.md)
+	- #### [Middleware](getstarted.md)
+	- #### [ORM](getstarted.md)
