@@ -13,6 +13,6 @@ The conventions applicable will be pointed out alongside other recommended pract
 
 SaQle is modular and component based. This ensures that a developer never has to do the same thing twice even across projects. 
 
-Modules and components are self container and easily transferrable from project to project. You basically write once, use everywhere. in a fast paced customer facing environment, this is a valuable feature of the framework,
+Modules and components are self contained and easily transferrable from project to project. You basically write once, use everywhere. in a fast paced customer facing environment, this is a valuable feature of the framework,
 
 

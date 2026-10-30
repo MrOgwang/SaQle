@@ -26,7 +26,7 @@ Feature Overview
 
 I come from an intense background of building customer facing applications, where half baked change requests come so often that before you finish a feature you are throwing it out of the window to start another.
 
-Having worked with c# Entity Framework, Python's Django and FastApi, PhP's Laravel and Cake, I wanted to see if I could build my own custom framework, one that could support rapid protoyping and delivery in a fast paced environment.
+Having worked with C# Entity Framework, Python's Django and FastApi, PhP's Laravel and Cake, I wanted to see if I could build my own custom framework, one that could support rapid protoyping and delivery in a fast paced environment.
 
 Therefore, more than anything else, this is a fun personal project, that has made me learn lots of good
 software engineering techniques, but which I hope will be as useful to you as it has been in my freelance
