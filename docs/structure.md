@@ -1,12 +1,17 @@
 # Project Structure
 
-A SaQle project is structured as shown:
+A SaQle project has a conventional structure that allows the framework to automatically wire and build your application.
 
-- MyProject
-	- Config
-	- Env
-		- Development
-		- Production
+By following this conventional structure, you create a project that is easily recognizable, understandable and browsable by you and other developers.
+
+## Root Directory 
+
+Once you have setup the starter saqle project, here are the top level directories.
+
+- **Config** - All the project configuration files go here
+- **Env**    - Environmental variables go here. 
+- **Public** - Contians the `index.php` file, which is your apps entry point. Also houses your publicly accessible asset files.
+
 	- Public
 	- Src
 		- Bootstrap
