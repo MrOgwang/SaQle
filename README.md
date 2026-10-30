@@ -1,7 +1,7 @@
 # SaQle
-SaQle is a simple, component based, MVC framework for rapid prototyping.
+SaQle is a simple, component based, MVC framework for rapid development.
 
-It is designed to be super light weight, easy to pick up by anyone from beginner to expert level PHP developers.
+It is batteries included, easy to pick up by anyone from beginner to expert level PHP developers.
 
 SaQle is built to help get you from idea to prototype/POC in hours instead of days while 
 giving you a solid foundation to build a complex and secure application on.
@@ -14,11 +14,11 @@ Feature Overview
 4. Built-in model and forms validation
 5. Simple but powerful templating engine
 6. Cookies, security, session, and request handling management components
-7. User input sanitization
-8. Customizable and extendable authorization and authentication
-9. Out of the box multitenancy support
-10. Out of the box image/video uploads, resizing and cropping
-11. Out of the box administrator panel
+7. Customizable and extendable authorization and authentication
+8. Out of the box multitenancy support
+9. Out of the box image/video uploads, resizing and cropping
+10. Out of the box administrator panel
+11. Many more features....
 
  ## Installation
 
@@ -26,10 +26,9 @@ Feature Overview
 
  `composer require mrogwang/saqle`
 
- For a quick start, install the starter project via composer. Replace 'project_name' with the name
- of your project
+ You can start a new saqle project by installing the starter project via composer
 
- `composer create-project mrogwang/saqle-project project_name`
+ `composer create-project mrogwang/saqle-project my_project`
 
 Full Docs: [View Documentation](https://mrogwang.github.io/SaQle/)
 
