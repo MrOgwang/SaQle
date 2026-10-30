@@ -17,6 +17,7 @@ use SaQle\Core\Support\{
      AppStage,
      Session
 }; 
+use SaQle\Auth\Models\GuestUser;
 
 class HttpKernel extends Kernel {
 
@@ -69,7 +70,7 @@ class HttpKernel extends Kernel {
              if($result->is_success()){
 
                  //set the actor
-                 ActorContext::set_user($request->user);
+                 ActorContext::set_user($request->user ?? new GuestUser());
 
                  //execute controller
                  $result = ActionExecutor::execute($request);

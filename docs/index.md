@@ -15,7 +15,7 @@ Email:  wycliffomondiotieno@gmail.com
 	- #### [Create a Project](getstarted.md)
 	- #### [Project Structure](structure.md)
 	- #### [Your First Application](getstarted.md)
-- ### Fundamentals
+- ### Fundamentals 
 	- #### [Application](getstarted.md)
 	- #### [Configuration](getstarted.md)
 	- #### [Routing](getstarted.md)

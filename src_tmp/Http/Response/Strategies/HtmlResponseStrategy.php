@@ -12,7 +12,6 @@ use SaQle\Core\Components\{
      Tree,
      Renderer
 };
-use SaQle\Auth\Models\GuestUser;
 use SaQle\Core\Support\AppStage;
 use SaQle\Core\Ui\PageManager;
 
