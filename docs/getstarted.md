@@ -92,9 +92,9 @@ We will discuss the admin panels further in later sections
 
 ## Open app in browser
 
-If the steps above completed without any problems, your application will be available at: http://your-domain
+If the steps above completed without any problems, your application will be available at: `http://your-domain`
 
-Example: http://localhost
+Example: `http://localhost`
 
 Congratulations! You have successfully setup your first project with SaQle.
 

@@ -9,11 +9,11 @@ Email:  wycliffomondiotieno@gmail.com
 
 - ### Introduction
 	- #### [About SaQle?](about.md)
-	- #### [Philosophy](philosophy.md)
-- ### Getting Started
+	- #### [Philosophy](philosophy.md) 
+- ### Getting Started 
 	- #### [Installation](installation.md)
 	- #### [Create a Project](getstarted.md)
-	- #### [Project Structure](getstarted.md)
+	- #### [Project Structure](structure.md)
 	- #### [Your First Application](getstarted.md)
 - ### Fundamentals
 	- #### [Application](getstarted.md)
