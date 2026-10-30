@@ -32,6 +32,10 @@ Feature Overview
 
 Full Docs: [View Documentation](https://mrogwang.github.io/SaQle/)
 
+## How To Contribute
+
+If contributing to open source excites you, or you just want to learn, reach out using the email address below and let's talk.
+
 ## Contact
 
 For questions, feedback, or contributions:
