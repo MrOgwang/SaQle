@@ -717,7 +717,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
          $user_id = null;
 
          if(!ActorContext::is_system()){
-             $user_id = ActorContext::actor()?->user_id;
+             $user_id = ActorContext::actor()->actor_id();
          }
 
      	 //inject creator and modifier fields, created and modified date time fields and deleted fields
@@ -866,7 +866,7 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
              $user_id = null;
 
              if(!ActorContext::is_system()){
-                 $user_id =  ActorContext::actor()?->user_id;
+                 $user_id =  ActorContext::actor()->actor_id();
              }
 
 	 	 	 $data['modifier'] = $user_id;

@@ -1,9 +1,12 @@
 <?php
 namespace SaQle\Auth\Models;
 
-use SaQle\Auth\Identity\User\Interfaces\UserInterface;
+use SaQle\Auth\Identity\User\Interfaces\{
+	 UserInterface,
+	 ActorInterface
+};
 
-class GuestUser implements UserInterface {
+class GuestUser implements UserInterface, ActorInterface {
      //check if a user can perform an action
 	 public function check(string $action) : bool {
 	 	 return false;
@@ -16,5 +19,9 @@ class GuestUser implements UserInterface {
 
 	 public function is_guest() : bool {
 	 	 return true;
+	 }
+
+	 public function actor_id() : mixed {
+	 	 return null;
 	 }
 }

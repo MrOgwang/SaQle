@@ -7,10 +7,13 @@ use SaQle\Orm\Entities\Model\Schema\{
 	 NamedForm
 };
 use SaQle\Auth\Guards\Guard;
-use SaQle\Auth\Identity\User\Interfaces\UserInterface;
+use SaQle\Auth\Identity\User\Interfaces\{
+	 UserInterface,
+	 ActorInterface
+};
 use SaQle\Core\Ui\Forms\Form;
 
-class BaseUser extends Model implements UserInterface {
+class BaseUser extends Model implements UserInterface, ActorInterface {
 
 	 protected function table_schema(Table $table) : void {
 
@@ -66,6 +69,10 @@ class BaseUser extends Model implements UserInterface {
 
 	 public function is_guest() : bool {
 	 	 return false;
+	 }
+
+	 public function actor_id() : mixed {
+	 	 return $this->user_id;
 	 }
 
 	 #[NamedForm('default_create')]
