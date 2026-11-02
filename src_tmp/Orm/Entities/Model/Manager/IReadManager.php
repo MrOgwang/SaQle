@@ -6,7 +6,15 @@
  use SaQle\Orm\Entities\Model\Interfaces\ITableSchema;
  use SaQle\Orm\Query\References\QueryReferenceMap;
  use SaQle\Orm\Entities\Model\Manager\Modes\FetchMode;
- use SaQle\Orm\Query\Helpers\{JoinManager, FilterManager, LimitManager, OrderManager, SelectManager, GroupManager};
+ use SaQle\Orm\Query\Helpers\{
+ 	 JoinManager, 
+ 	 FilterManager, 
+ 	 LimitManager, 
+ 	 OrderManager, 
+ 	 SelectManager, 
+ 	 GroupManager,
+ 	 LockManager
+ };
  use SaQle\Orm\Entities\Model\Schema\Model;
  use SaQle\Core\Registries\TableRegistry;
  use SaQle\Orm\Connection\ConnectionTarget;
@@ -31,6 +39,7 @@ class IReadManager extends QueryManager {
 	 use GroupManager{
 		 GroupManager::__construct as private __groupConstruct;
 	 }
+	 use LockManager;
 
 	 protected bool $paginate = false;
 
@@ -176,4 +185,12 @@ class IReadManager extends QueryManager {
 	 protected function after_group(){
 	 	 $this->dbdriver->set_read_query($this);
 	 }
+
+	 protected function before_lock(){
+	 	 $this->dbdriver->set_read_query($this);
+     }
+
+     protected function after_lock(){
+         $this->dbdriver->set_read_query($this);
+     }
 }

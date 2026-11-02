@@ -263,6 +263,12 @@ class MySqlDriver extends DbDriver {
              $sql     .= $manager->get_groupby_clause();
              $sql     .= $manager->obuilder->construct_order_clause();
              $sql     .= $manager->lbuilder->construct_limit_clause();
+
+             if($manager->is_locked_for_update()){
+                 $sql .= " FOR UPDATE";
+             }elseif($manager->is_locked_for_share()){
+                 $sql .= " FOR SHARE";
+             }
          }else{
              $sql     .= $join_clause->clause;
              $sql     .= $where_clause->clause;
