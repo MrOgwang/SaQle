@@ -4,7 +4,7 @@ namespace SaQle\Commons;
 
 final class Arr {
 
-     function equal(array $array1, array $array2): bool {
+     public static function equal(array $array1, array $array2): bool {
 
          if(count($array1) !== count($array2)) {
              return false;

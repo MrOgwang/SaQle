@@ -30,6 +30,8 @@ trait OrderManager{
          $this->obuilder->randomize = true;
          
          $this->after_order();
+
+         return $this;
      }
 
      /**

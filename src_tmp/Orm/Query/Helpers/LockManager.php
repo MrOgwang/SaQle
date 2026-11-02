@@ -16,6 +16,8 @@ trait LockManager {
          $this->update_locked = true;
 
          $this->after_lock();
+
+         return $this;
      }
 
      public function lock_for_share(){
@@ -25,6 +27,8 @@ trait LockManager {
          $this->share_locked = true;
 
          $this->after_lock();
+
+         return $this;
      }
 
      protected function before_lock(){
