@@ -1,7 +1,7 @@
 <?php
 namespace SaQle\Orm\Query\Order;
 
-class OrderBuilder{
+class OrderBuilder {
 
 	 public ?Order $order = null {
 	 	 set(?Order $value){
@@ -11,10 +11,15 @@ class OrderBuilder{
 	 	 get => $this->order;
 	 }
 
+	 public bool $randomize = false;
+
 	 public function construct_order_clause(){
+	     
 	     $order_clause = "";
 
-	     if(!is_null($this->order)){
+	     if($this->randomize === true){
+	     	 $order_clause = " ORDER BY RAND()";
+	     }elseif(!is_null($this->order)){
 	        $order_fields = [];
 
 	        foreach($this->order->fields as $i => $field){

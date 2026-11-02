@@ -22,6 +22,16 @@ trait OrderManager{
          $this->obuilder = new OrderBuilder();
      }
 
+     //order randomly
+     public function order_rand(){
+
+         $this->before_order();
+
+         $this->obuilder->randomize = true;
+         
+         $this->after_order();
+     }
+
      /**
      * Order the results returned by a select query.
      * @param array $fields     - the field names to order based on
