@@ -223,4 +223,34 @@ abstract class ModelCollection extends TypedCollection implements IModel, JsonSe
      public function records_to_show() : array {
          return $this->paginator ? $this->paginator->records_to_show : [];
      }
+
+     public function key_by(string $key){
+
+         $keyed = [];
+
+         foreach($this->items() as $index => $item){
+
+             $key_val = $item->$key ?? $index;
+
+             $keyed[$key_val] = $item;
+         }
+
+         $this->elements = $keyed;
+
+         return $this;
+
+     }
+
+     public function find_or_fail(mixed $key){
+
+         if(!isset($this->elements[$key])){
+             throw RuntimeException("The element with key: {$key} not found!");
+         }
+
+         return $this->elements[$key];
+     }
+
+     public function find_or_null(mixed $key){
+         return $this->elements[$key] ?? null;
+     }
 }

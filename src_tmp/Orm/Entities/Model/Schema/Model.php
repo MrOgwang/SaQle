@@ -258,7 +258,6 @@ abstract class Model implements ITableSchema, IModel, JsonSerializable {
      final static public function hydrate_collection(array $objects) {
 
      	 $model_class = get_called_class();
-
      	 $models = [];
 
      	 foreach($objects as $obj){

@@ -12,6 +12,7 @@ use ArrayAccess;
 abstract class ICollection implements IteratorAggregate, ArrayAccess, Countable{
     
     private int $position;
+    
     protected array $elements;
 
     public function __construct(array $elements){
