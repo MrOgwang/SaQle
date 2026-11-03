@@ -26,7 +26,7 @@ class FileLogger implements ReadWriteModes {
 	     
 	     try{
 	         if(flock($file_handle, LOCK_EX)){
-	         	 $entry = sprintf("[%s] %s%s", date('Y-m-d H:i:s'), $file_contents, PHP_EOL);
+	         	 $entry = sprintf("[%s] %s%s", date('Y-m-d H:i:s'), $file_contents."\n\n", PHP_EOL);
 	             fwrite($file_handle, $entry);
 	             fflush($file_handle);
 	             flock($file_handle, LOCK_UN);

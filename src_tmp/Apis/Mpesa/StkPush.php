@@ -22,7 +22,7 @@ class StkPush {
 	  * Default timezone - if not provided, defaults to DEFAULT_TIMEZONE setting.
 	  * @var string
 	  * */
-	 private string $timezone = config('app.timezone');
+	 private string $timezone;
 
 	 /**
 	  * Application consumer key as provided by safaricom on daraja portal - compulsory.
@@ -70,7 +70,7 @@ class StkPush {
      * @param array $settings: key => value array of configuration parameters
      **/
 	 public function __construct(...$settings){
-	 	$this->timezone            = $settings['timezone'];
+	 	$this->timezone            = $settings['timezone'] ?? config('app.timezone');
 	 	$this->consumer_key        = $settings['consumer_key'];
 	 	$this->consumer_secret     = $settings['consumer_secret'];
 	 	$this->business_short_code = $settings['business_short_code'];
@@ -79,7 +79,7 @@ class StkPush {
 	 	$env = $settings['environment'] ?? 'sandbox';
 
 	 	$this->access_token_url = $env === 'sandbox' ? 'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials' : '';
-	 	
+
 	 	$this->initiate_url = $env === 'sandbox' ? 'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest' : '';
 	 	$this->callback_url = $settings['callback_url'];
 	 }
@@ -95,7 +95,7 @@ class StkPush {
 	 	 date_default_timezone_set($this->timezone);
 
 	 	 //get the timestamp, format YYYYmmddhms -> 20181004151020
-         $timestamp = date('YmdHis');    
+         $timestamp = date('YmdHis');
 
          //get the base64 encoded string -> $password. The passkey is the M-PESA Public Key
          $password = base64_encode($this->business_short_code.$this->pass_key.$timestamp);
@@ -112,7 +112,7 @@ class StkPush {
          $result = curl_exec($curl);
          $status = curl_getinfo($curl, CURLINFO_HTTP_CODE);
          if((int)$status !== 200){
-         	throw new ExpoException('Access token request failed!');
+         	 throw new ExpoException('Access token request failed!');
          }
 
          $result = json_decode($result);
@@ -145,6 +145,7 @@ class StkPush {
          curl_setopt($curl, CURLOPT_POST, true);
          curl_setopt($curl, CURLOPT_POSTFIELDS, $data_string);
          $curl_response = curl_exec($curl);
+
          return json_decode($curl_response);
 	 }
 }

@@ -70,7 +70,7 @@ class EagerLoader {
                          }
                      }
                  }
-             }
+             } 
             
              //remove this from relation stack
              $relation_stack->leave();
