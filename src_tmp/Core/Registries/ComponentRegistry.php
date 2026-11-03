@@ -23,7 +23,7 @@ final class ComponentRegistry {
 
      public static function all(bool $reload = false): array {
 
-         $cache_path = path_join([config('base_path'), config('class_mappings_dir'), 'Components.php']);
+         $cache_path = path_join([config('base_path'), config('class_mappings_dir'), 'components.php']);
 
          if(!file_exists($cache_path)){
              return [];

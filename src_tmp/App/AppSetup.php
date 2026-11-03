@@ -4,6 +4,7 @@ namespace SaQle\App;
 
 use SaQle\Core\Config\Config;
 use SaQle\Core\Support\Environment;
+use SaQle\Core\Support\FrameworkEnvironment;
 use Dotenv\Dotenv;
 use Closure;
 
@@ -44,7 +45,7 @@ final class AppSetup {
              }
          };
 
-         $this->framework_path = realpath(__DIR__.'/../../../');
+         $this->framework_path = FrameworkEnvironment::framework_path();
      } 
      
      public function get_framework_configs(){
