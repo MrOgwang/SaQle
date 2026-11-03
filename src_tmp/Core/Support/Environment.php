@@ -7,4 +7,5 @@ enum Environment : string {
      case TESTING = 'testing';
      case STAGING = 'staging';
      case PRODUCTION = 'production';
+     case PUBLIC = 'public';
 }

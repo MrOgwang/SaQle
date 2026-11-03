@@ -77,7 +77,9 @@ class StkPush {
 	 	$this->pass_key            = $settings['pass_key'];
 
 	 	$env = $settings['environment'] ?? 'sandbox';
+
 	 	$this->access_token_url = $env === 'sandbox' ? 'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials' : '';
+	 	
 	 	$this->initiate_url = $env === 'sandbox' ? 'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest' : '';
 	 	$this->callback_url = $settings['callback_url'];
 	 }
