@@ -205,9 +205,6 @@ final class RelationLoader {
          $local_key = $relation->get_local_key();
          $foreign_key = $relation->get_foreign_key();
 
-         //print_r($relation);
-        // print_r($parents); 
-
          $ids = $this->extract_ids($parents, $local_key);
 
          if(empty($ids)) return;

@@ -22,9 +22,7 @@ namespace SaQle\Http\Kernel;
 
 use SaQle\Routing\RouteRegistry;
 use SaQle\Core\Support\RouteResolver;
-use SaQle\Http\Request\Request;
 use SaQle\Routing\MatchedRoute;
-use SaQle\Core\Exceptions\Route\RouteNotFoundException;
 use RuntimeException;
 
 final class RouteMatcher {

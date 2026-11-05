@@ -4,6 +4,7 @@ namespace SaQle\Http\Kernel;
 
 use SaQle\Http\Request\Request;
 use SaQle\Routing\MatchedRoute;
+use SaQle\Core\Exceptions\Route\RouteNotFoundException;
 
 final class RequestFactory {
 
