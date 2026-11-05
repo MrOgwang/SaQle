@@ -4,6 +4,7 @@ use SaQle\Commons\Url;
 use SaQle\Routing\UrlGenerator;
 use SaQle\Core\Registries\TableRegistry;
 use SaQle\Auth\Context\ActorContext;
+use SaQle\Http\Kernel\RouteMatcher;
 
 if(!function_exists('route')){
      function route(string $name, array $params = [], array $queries = []){
@@ -39,6 +40,38 @@ if(!function_exists('resource_route_name')){
          }
 
          return implode(".", [$prefix, $action]);
+
+     }
+}
+
+//given a uri and a method, return the route name
+if(!function_exists('route_name')){
+     function route_name(string $uri, ?string $method = null) : string {
+
+         $route = RouteMatcher::match($uri, $method);
+
+         if(!$route){
+             return "";
+         }
+
+         return $route->name;
+
+     }
+}
+
+//given a route name, check if current route matches.
+if(!function_exists('is_route')){
+     function is_route(string $name) : bool {
+
+         $request = request();
+
+         $route = RouteMatcher::match($request->uri(), $request->method());
+
+         if(!$route){
+             return false;
+         }
+
+         return $route->name === $name;
 
      }
 }

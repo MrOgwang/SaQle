@@ -43,6 +43,12 @@ final class MatchedRoute {
          public ?array $middleware = null,
 
          //the sse meta data
-         public ?array $sse = null
+         public ?array $sse = null,
+
+         //route params
+         public array $params = [],
+
+         //route queries
+         public array $queries = []
      ){}
 }

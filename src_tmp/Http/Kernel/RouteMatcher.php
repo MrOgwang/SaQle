@@ -29,21 +29,17 @@ use RuntimeException;
 
 final class RouteMatcher {
 
-     public static function match(Request $request){
+     public static function match(string $uri, ?string $method = null) : ?MatchedRoute{
 
-         //find matching route
-         $match = self::find_matching_route($request->method(), $request->uri());
-         
+         $method = $method ? $method : 'GET';
+
+         $match = self::find_matching_route($uri, $method);
+
          if(!$match){
-             $url = $request->uri();
-             throw new RouteNotFoundException(
-                 "The resource [".$url."] either does not exist or has been permanently moved!",
-                 ['url' => $url]
-             );
+             return null;
          }
 
-         //set request route
-         $matched_route = new MatchedRoute(
+         return new MatchedRoute(
              $match['route']['url'],
              $match['path'], 
              $match['method'], 
@@ -54,24 +50,14 @@ final class RouteMatcher {
              $match['route']['guards'],
              trim($match['prefix'] ?? ""),
              $match['route']['middleware'] ?? [],
-             $match['route']['sse_event'] ?? null
+             $match['route']['sse_event'] ?? null,
+             $match['params'],
+             $match['query']
          );
-
-         $request->route = $matched_route;
-         
-         //set path params
-         foreach($match['params'] as $pk => $pv){
-             $request->add_path_param($pk, $pv);
-         }
-
-         //set query params
-         foreach($match['query'] as $qk => $qv){
-             $request->add_query_param($qk, $qv);
-         }
 
      }
 
-     private static function find_matching_route(string $method, string $uri): ?array{
+     private static function find_matching_route(string $uri, string $method): ? array {
 
          //merge all prefixes
          $all_prefixes = config('app.api_url_prefixes');
