@@ -17,7 +17,7 @@
  	 	 > 
  	 	     <block name='picker-option'>
  	 	     	 <div class="picker-option" data-value="{{ $key }}">
- 	 	     	 	 <a class='flex v_center' href='{{ route($resource->list_route) }}?page=1&records={{ $key }}'>
+ 	 	     	 	 <a class='flex v_center' href='{{ route( $resource->list_route, $resource?->route_params ?? []) }}?page=1&records={{ $key }}'>
  	 	     	 	 	 {{ $value }}
  	 	     	     </a>
                  </div> 
@@ -27,18 +27,18 @@
  	 <div class="flex v_center row_reverse pagination-pages">
  	 	 <div class='flex v_center pagesarea'>
 			 @if($paginator->has_prev())
-			 <a href="{{ route($resource->list_route) }}?page={{ $paginator->page() - 1 }}&records={{ $paginator->per_page_count() }}" class="flex center btn"><span>«</span></a>
+			 <a href="{{ route($resource->list_route, $resource?->route_params ?? []) }}?page={{ $paginator->page() - 1 }}&records={{ $paginator->per_page_count() }}" class="flex center btn"><span>«</span></a>
 			 @endif
 
 			 @foreach($paginator->pages() as $p)
-			 <a href="{{ route($resource->list_route) }}?page={{ $p }}&records={{ $paginator->per_page_count() }}"
+			 <a href="{{ route($resource->list_route, $resource?->route_params ?? []) }}?page={{ $p }}&records={{ $paginator->per_page_count() }}"
 			   class="flex center btn {{ $p == $paginator->page() ? 'active' : '' }}">
 			   <span>{{ $p }}</span>
 			 </a>
 			 @endforeach
 
 			 @if($paginator->has_next())
-			 <a href="{{ route($resource->list_route) }}?page={{ $paginator->page() + 1 }}&records={{ $paginator->per_page_count() }}" class="flex center btn"><span>»</span></a>
+			 <a href="{{ route($resource->list_route, $resource?->route_params ?? []) }}?page={{ $paginator->page() + 1 }}&records={{ $paginator->per_page_count() }}" class="flex center btn"><span>»</span></a>
 			 @endif
 		 </div>
 	 </div>
