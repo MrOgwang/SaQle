@@ -50,11 +50,14 @@ final class ReadManager extends IReadManager {
 	 }
 
 	 public function first_or_fail(){
+
 	 	 $response = $this->get();
-	 	 if(!$response){
-	 	 	$table = $this->query_reference_map->find_table_name(0);
-	 	 	throw new NullObjectException(['table' => $table]);
+	 	 
+	 	 if(count($response) === 0){
+	 	 	 $table = $this->query_reference_map->find_table_name(0);
+	 	 	 throw new NullObjectException(['table' => $table]);
 	 	 }
+
 	 	 return $response[0];
 	 }
 

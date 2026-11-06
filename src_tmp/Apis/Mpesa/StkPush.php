@@ -117,7 +117,6 @@ class StkPush {
 
          $result = json_decode($result);
          $access_token = $result->access_token;  
-         curl_close($curl);
 
          //header for stk push
          $stkheader = ['Content-Type:application/json','Authorization:Bearer '.$access_token];
