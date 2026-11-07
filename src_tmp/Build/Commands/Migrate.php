@@ -85,7 +85,7 @@ class Migrate extends Command {
              $manager->where('tenant_id__eq', $tenant_id);
          }
          
-         return $manager->first_or_fail();
+         return $manager->first_or_null();
      }
 
      private function add_migration($name, $timestamp, $connection, $database, $migrated = 0, $tenant_id = null){
