@@ -229,6 +229,7 @@ class Field implements IField {
 	 }
 
 	 protected function get_properties_with_attribute(string $attribute_class){
+	 	 
 	 	 $reflection = new ReflectionClass($this);
 	     $result = [];
 

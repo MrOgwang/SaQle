@@ -25,6 +25,20 @@ class Renderer {
 
          return "<input type='hidden' id='".CsrfToken::get_key()."' name='".CsrfToken::get_key()."' value='".$token."'>";
 
+     }   
+
+     public function notifier(){
+
+         $component = ComponentRegistry::get('saqle.lib.message', true);
+
+         if(!$component){
+             return "<!-- component 'saqle.lib.message' not found -->";
+         }
+
+         $node = new Node($component);
+
+         return $this->render($node);
+
      }
 
      //runtime block rendering api

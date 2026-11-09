@@ -119,11 +119,11 @@ class Component {
 
                  if($t){
 
-                     $this->selected_template_name = strtolower($t);
+                     $this->selected_template_name = $t;
 
                      $this->selected_template_path = path_join([
                          config('base_path'),
-                         $this->template_variations[$this->selected_template_name]['compiled_template_path']
+                         $this->template_variations[strtolower($this->selected_template_name)]['compiled_template_path']
                      ]); 
                  }
              }

@@ -34,8 +34,6 @@ final class RedirectResponseStrategy implements ResponseStrategy {
     
      public function build(Request $request, Message $result) : Response {
 
-         print_r($result);
-
          $this->apply_flash($result);
 
          return new RedirectResponse((string)$result->get_data()['url']);

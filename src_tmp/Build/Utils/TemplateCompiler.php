@@ -174,6 +174,12 @@ class TemplateCompiler {
                      $i += 4;
                      continue;
                  }
+
+                 if(substr($template, $i, 7) === '@notify'){
+                     $output .= "<?php echo __renderer()->notifier(); ?>";
+                     $i += 6;
+                     continue;
+                 }
              }
 
              $output .= $template[$i];

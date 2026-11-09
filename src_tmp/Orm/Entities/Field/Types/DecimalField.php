@@ -19,7 +19,7 @@ class DecimalField extends FloatField {
      //digits after decimal point
      #[FieldDefinition()]
      #[ShouldValidate()]
-     #[FormControl]
+     #[FormControl()]
      protected ?int $scale = null;
 
      public function precision(int $precision){

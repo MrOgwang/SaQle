@@ -131,7 +131,7 @@ final class FormFieldsCompiler {
              if(self::skip_field($field) || !in_array($name, $whitelisted_field_names) || $name === $pk_name){
                  continue;
              }
-
+             
              $field_attrs = array_filter($field->get_form_field_attrs(), fn($v) => $v !== null);
 
              if(!$field_attrs){
