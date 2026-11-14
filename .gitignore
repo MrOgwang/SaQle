@@ -22,3 +22,9 @@ utils/communication/Messaging/AT
 
 # ignore postman files
 postman/
+
+# ignore node modules
+node_modules/
+
+docs/.vitepress/cache/
+docs/.vitepress/dist/

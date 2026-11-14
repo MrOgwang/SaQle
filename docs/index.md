@@ -1,46 +1,29 @@
-# Saqle Framework Documentation
+---
+# https://vitepress.dev/reference/default-theme-home-page
+layout: home
 
-Welcome to the documentation for the Saqle PHP framework.
+hero:
+  name: SaQle
+  text: A PHP Framework
+  tagline: Build modern web applications and APIs with simplicity and flexibility.
+  actions:
+    - theme: brand
+      text: Markdown Examples
+      link: /markdown-examples
+    - theme: alt
+      text: API Examples
+      link: /api-examples
 
-Author: Wycliffe Omondi Otieno
-Email:  wycliffomondiotieno@gmail.com
+features:
+  - title: Batteries Included
+    details: Focus on application logic without unnecessary complexity
+  - title: Flexible Architecture
+    details: Build web applications and APIs using the same components
+  - title: Powerful ORM
+    details: Work with databases through an expressive object-oriented interface
+  - title: Multi-tenancy Support
+    details: Out of the box multi-tenancy support for SaaS applications
+  - title: Admin Panel
+    details: Out of the box, customizable admin panel so you can start managing your data immediately
+---
 
-## Contents
-
-- ### Introduction
-	- #### [About SaQle?](about.md)
-	- #### [Philosophy](philosophy.md) 
-- ### Getting Started 
-	- #### [Installation](installation.md)
-	- #### [Create a Project](getstarted.md)
-	- #### [Project Structure](structure.md)
-	- #### [Your First Application](getstarted.md)
-- ### Fundamentals 
-	- #### [Application](getstarted.md)
-	- #### [Configuration](getstarted.md)
-	- #### [Routing](getstarted.md)
-	- #### [Components](getstarted.md)
-	- #### [Controllers](getstarted.md)
-	- #### [Requests](getstarted.md)
-	- #### [Responses](getstarted.md)
-	- #### [Middleware](getstarted.md)
-	- #### [Templates](getstarted.md)
-	- #### [Layouts](getstarted.md)
-	- #### [Database](getstarted.md)
-	- #### [Models](getstarted.md)
-	- #### [Migrations](getstarted.md)
-- ### Building Applications
-	- #### [Pages](getstarted.md)
-	- #### [Forms](getstarted.md)
-	- #### [CRUD](getstarted.md)
-	- #### [Authentication](getstarted.md)
-	- #### [Authorization](getstarted.md)
-	- #### [APIs](getstarted.md)
-	- #### [File Uploads](getstarted.md)
-	- #### [Modules](getstarted.md)
-- ### Reference
-	- #### [CLI](getstarted.md)
-	- #### [Configuration](getstarted.md)
-	- #### [Routing](getstarted.md)
-	- #### [Middleware](getstarted.md)
-	- #### [ORM](getstarted.md)

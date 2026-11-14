@@ -13,15 +13,18 @@ It is important that you install this project via composer
 
 ## Get starter project
 
-Inside the directory where you want to create a new application, run the following command in your terminal to download the starter project. Replace my_project with the actual name of your project
+Inside the directory where you want to create a new application, run the following command in your terminal to download the starter project. 
+
+`task_tracker` is the name of the application we want to build and will also be our application root directory.
+
 
 ```
-composer create-project mrogwang/saqle-project my_project
+composer create-project mrogwang/saqle-project task_tracker
 ```
 
 ## Update environment variables
 
-Once the installation is complete, cd into your new project's root dir.
+Once the installation is complete, cd into your new project's root directory.
 
 Open the `env/development/.env` file and update your environment variables to reflect your setup
 
@@ -54,21 +57,25 @@ MEDIA_ENCRYPT_SALT=your-media-encryption-salt
 
 ## Make migrations
 
-While still insde the project root, run the following command to make Initial migrations. 'Initial' here is the name of this migration instance.
+While still insde the project root, run the following command to make Initial migrations. `Initial` here is the name of this migration instance. 
 
-`php saqle make:migrations Initial`
+You can provide any name to your migration instances.
 
-Your project's migrations are created in: `src/Databases/Migrations`
+```
+php saqle make:migrations Initial
+```
 
-Your project's database snapshots are created in: `src/Databases/Snapshots`
+If this runs without errors, your project's migrations are created in: `src/Databases/Migrations` and the accompanying database snapshots are created in: `src/Databases/Snapshots`.
 
-We will discuss these much more later
+We will discuss these much more later.
 
 ## Migrate
 
 While still inside the project root, run the following command to set up your physical database and tables. We are assuming you have your database server running.
 
-`php saqle migrate`
+```
+php saqle migrate
+```
 
 If the migration runs successfully, you should have a database with your project's name and some tables that come with the starter project created in it
 
@@ -76,19 +83,21 @@ If the migration runs successfully, you should have a database with your project
 
 SaQle comes with an in built administrator panel that can help you start managing data immediately.
 
-To log into this panel, you will need to create a super user account
+To log into this panel, you will need to create a super user account.
 
-Run the following command to create a super user
+Run the following command to create a super user.
 
-`php saqle make:superuser`
+```
+php saqle make:superuser
+```
 
 This command runs interactively. Provide all the information required.
 
 Once the command runs, you should have a super user account created with the user name and password you provided. 
 
-You can log into the admin panel using the url: `your-project-domain/saqle/signin`
+You can log into the admin panel using the url: `/saqle/signin`.
 
-We will discuss the admin panels further in later sections
+We will discuss the admin panels further in later sections.
 
 ## Open app in browser
 
@@ -96,5 +105,5 @@ If the steps above completed without any problems, your application will be avai
 
 Example: `http://localhost`
 
-Congratulations! You have successfully setup your first project with SaQle.
+Congratulations! You have successfully setup your first SaQle application. Let's go into the application and see how it is structured.
 

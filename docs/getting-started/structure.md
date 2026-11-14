@@ -1,6 +1,6 @@
 # Project Structure
 
-A SaQle project has a conventional structure that allows the framework to automatically wire and build your application.
+A SaQle project has a conventional structure that allows the framework to automatically wire up and build your application.
 
 By following this conventional structure, you create a project that is easily recognizable, understandable and browsable by you and other developers.
 
@@ -29,7 +29,7 @@ This is where you will do most of your development. Here are the top level Src/ 
 
 The `Modules` directory contains all your application modules. A module is a collection of files, assets and resources that contribute to one complete feature of your application. Modules are designed to be self contained and reusable from project to project.
 
-For example: An e-commerce store may have an `Auth`, `Inventory` and `StoreFront` modules.
+For example: An e-commerce application may have an `Auth`, `Inventory` and `StoreFront` modules.
 
 Here are some conventional directories found in a module.
 
@@ -44,4 +44,4 @@ Here are some conventional directories found in a module.
 - **Notifications** - Contains mail and other forms of notifications. See [Emails](emails.md) for more information.
 - **Routes**        - Contains application routes. See [Routes](routes.md) for more information.
 - **Services**      - Contains business logic services. See [Services](services.md) for more information.
-- **Validators**    - Contains input validationb definitions. See [Validator](validators.md) for more information.
+- **Validators**    - Contains input validation definitions. See [Validator](validators.md) for more information.

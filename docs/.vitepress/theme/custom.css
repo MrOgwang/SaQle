@@ -1,0 +1,7 @@
+.vp-doc div[class*='language-'] {
+    background-color: #000000;
+}
+
+.vp-doc div[class*='language-'] pre {
+    background-color: #000000;
+}

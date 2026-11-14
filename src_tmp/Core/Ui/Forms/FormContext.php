@@ -24,9 +24,9 @@ final class FormContext extends RuntimeContext {
              $message = new FormMessage(type: 'error', text: 'There were errors with your submission!');
          }
 
-         return new self(
+         return new self( 
              message: $message,
-             input:   $input,
+             input:   $input,  
              errors:  $errors,
              model:   $model
          );

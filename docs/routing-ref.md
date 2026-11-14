@@ -1,43 +1,33 @@
-
 # Routing
 
-Routing is the mechanism by which you direct a request to a given controller, a controller and method or a view
+Routing is the mechanism by which you direct a request to a given component for execution. 
 
-## Defining routes
+::: tip
+In other PHP frameworks, a route is often pointed at a controller. While a controller is a part of a component in SaQle, routes are pointed at components instead of controllers.
 
-Your routes can be defined in two places:  
+Learn more about [Components](components.md).
+:::
 
-1. Project level routes are defined in the root directory of your project. Create a folder named _routes_, add a _web.php_ file and a _api.php_ file.
-2. App level routes are defined per app. Inside your app folder, create a folder named _routes_, add a _web.php_ file and a _api.php_ file.
+## Defining Routes
 
 #### _Convention_
 
-The _api.php_ file will contain your api routes. This means any routes defined here will handle api and ajax requests and will return a JSON response by default with an approrpiate response header.
-
-The _web.php_ file will contain routes for regular web requests that return a html view or a web resource. 
+Routes are defined in the `Routes.php` file inside the `Routes` directory. Each module added to the project may have only one routes file.
 
 #### _Configuration_
 
-In the project configuration file **_app.config.php_** at **_your_project_dir/config_** folder, the following configurations are available for routes:
+In **_Config/App.php_** configuration file, the following settings are available for routes:
 
-1. _api_url_prefixes_: a string array of the prefixes to be attached to your api endpoints
-2. _sse_url_prefixes_: a string array of the prefixes to be attached to your sse endpoints
+_api_url_prefixes_: a string array of the prefixes to be attached to your api endpoints.
 
-```
+```php
 <?php
-namespace YourAppName\Config;
-
-//one or more use statements here
+namespace App\Config;
 
 return [
-     //more config keys here
-     
      //api url prefixes
-     "api_url_prefixes" => ['/api/v1/', '/api/v2/'],
-     
-     //sse url prefixes
-     "sse_url_prefixes" => ['/sse/v1/', '/sse/v2/'],
- ]
+     "api_url_prefixes" => ['/api/v1/', '/api/v2/']
+]
 ?>
 ``` 
 #### Routing classes
