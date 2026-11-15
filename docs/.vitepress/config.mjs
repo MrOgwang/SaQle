@@ -81,40 +81,23 @@
                  items: [
                      {
                          text: 'Application',
-                         link: ''
+                         link: '/fundamentals/application'
                      },
                      {
                          text: 'Configuration',
-                         link: ''
+                         link: '/fundamentals/configuration'
                      },
-                     { 
-                         text: 'Routing', 
-                         link: '/core-concepts/routing' 
+                     {
+                         text: 'Modules',
+                         link: '/fundamentals/modules'
                      },
                      {
                          text: 'Components',
-                         items: [
-                             {
-                                text: 'Definition',
-                                link: ''
-                             },
-                             {
-                                text: 'Controller',
-                                link: ''
-                             },
-                             {
-                                text: 'Template',
-                                link: ''
-                             },
-                             {
-                                text: 'Style',
-                                link: ''
-                             },
-                             {
-                                text: 'Script',
-                                link: ''
-                             }
-                         ]
+                         link: '/fundamentals/components'
+                     },
+                     { 
+                         text: 'Routing', 
+                         link: '/fundamentals/routing' 
                      },
                      {
                          text: 'ORM',

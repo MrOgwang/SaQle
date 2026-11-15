@@ -5,3 +5,8 @@
 .vp-doc div[class*='language-'] pre {
     background-color: #000000;
 }
+
+.vp-doc div[class*="language-text"] pre {
+    font-family: Consolas, Monaco, monospace;
+    white-space: pre;
+}
