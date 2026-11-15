@@ -8,13 +8,7 @@ In other PHP frameworks, a route is often pointed at a controller. While a contr
 Learn more about [Components](components.md).
 :::
 
-## Defining Routes
-
-### Convention
-
-Routes are defined in the `Routes.php` file inside the `Routes` directory. Each module added to the project may have only one routes file.
-
-### Configuration
+## Route Configuration
 
 In **_Config/App.php_** configuration file, the following settings are available for routes:
 
@@ -46,6 +40,10 @@ return [
 Routes are automatically loaded, compiled and cached as long as the module where the routes are defined has been listed. Therefore it is important that you list all the modules you have installed for your application.
 :::
 
+
+## File Routes
+
+Routes are defined in the `Routes.php` file inside the `Routes` directory. Each module added to the project may have only one routes file.
 
 ### Basic Routing
 
@@ -216,6 +214,14 @@ Router::get("/profile/:user_id", 'app.auth.profile')
 ```
 ### Route Prefix
 
+provide a prefix to the route by using the `prefix` method.
+
+```php
+use SaQle\Routing\Router;
+
+Router::get("/profile/:user_id", 'app.auth.profile')->prefix('/auth');
+```
+
 ### Route Middleware
 
 Use the `middleware` method to add route specific middleware when defining routes. 
@@ -233,6 +239,39 @@ You must first define your middleware and register it with the application befor
 
 Learn more about [Middleware](components.md).
 :::
+
+### Route Permissions
+
+Protect your routes with permission guards by using the `authorize` method on your route definition.
+
+```php
+use SaQle\Routing\Router;
+
+Router::get("/profile/:user_id", 'app.auth.profile')
+->middleware(['authentication', 'authorization'])
+->authorize('authenticated && admin')
+->name('user.profile.show');
+```
+
+::: tip
+The guards `authenticated` and `admin` must first be defined and registered with the application.
+
+Learn more about [Guards](components.md).
+:::
+
+### Server Sent Event Routes
+
+Use the `sse` method on the route definition to customize server sent event routes. The method takes in a string `$event_name` and an integer `$interval`.
+
+```php
+use SaQle\Routing\Router; 
+
+Router::get("/events/notifications", 'app.feed.notifications@stream')
+->sse('notification', 3);
+```
+
+### Layouts
+
 
 ### Route Model Binding
 
@@ -254,13 +293,228 @@ use App\Modules\Auth\Models\User;
 Router::get("/user/:user_id", 'app.auth.profile')->model(User::class);
 ```
 
-### Component Routes
+## Component Routes
 
+SaQle provides you ways to define routes directly on a component's `Controller.php` file, alongside the actions to be executed for these routes.
+
+Use the attributes `Get`, `Post`, `Patch`, `Put`, `Delete`, `Query` to define routes on a component's `Controller.php` methods.
+
+Take this `Controller.php` in the `Signin` component defined in the `Auth` module:
+
+```php
+<?php
+namespace App\Modules\Auth\Components\Signin;
+
+use App\Modules\Auth\Services\AuthenticationService;
+use SaQle\Http\Message\Message;
+use SaQle\Http\Attributes\{
+     Get, 
+     Post
+};
+
+final class Controller {
+
+     //dependency injection
+     public function __construct(
+         private AuthenticationService $service
+     ){}
+
+     //handle get request
+     #[Get(url: '/signin', name: 'signin.form')]
+     public function display_form() : Message {
+         return Message::ok();
+     }
+
+     //handle post request
+     #[Post(url: '/signin', name: 'signin.submit')]
+     public function signin(string $username, string $password, ?string $next = null) : Message {
+
+         $result = $this->service->login(
+             strategy: 'password', 
+             credentials: [
+                 'username' => $username, 
+                 'password' => $password
+             ]
+         );
+
+         if(!$result->success){
+             return Message::bad_request('Invalid credentials!');
+         }
+
+         $result->next = $next;
+
+         return Message::ok('Login successful!')->with('result', $result);
+     }
+}
+```
+
+When the app is built, two routes will be compiled and cached:
+
+1. GET: /signin
+2. POST: /signin
+
+If these routes were defined in the `Routes.php` file, we would have something like this:
+
+```php
+use SaQle\Routing\Router;
+
+Router::route("/signin", 'app.auth.signin')
+     ->methods(function(){
+         Router::method("GET", "display_form")->name('signin.form');
+         Router::method("POST", "signin")->name('signin.submit');
+     });
+```
+
+Apart from `string $url` and `string $name`, the attributes `Get`, `Post`, `Patch`, `Put`, `Delete`, `Query` also accept additional attributes:
+
+1. `string $authorize = ""`: define the permission guards to protect route
+2. `array $middleware = []`: define route specific middleware
+3. `array $layout = []`: define parent layout components
+4. `?string $model = null`: bind a model class to the route in case of a resource route
+
+::: tip
+Whether you define your routes in the `Routes.php` file or on the `Controller.php` with attributes is a case of personal preference. After all, all routes are first compiled and cached before your application runs.
+
+However, if you want to see all your routes in one place at a glance, defining them in a `Routes.php` file makes more sense. Defining them in a file also allows you to group routes that share context together.
+:::
 
 ## Route Grouping
 
-## Route Functionalities
+In large applications, you can easily end up with upwards of hundreds of routes. Soon you realize that most of your routes share similar context, and instead of repeatedly defining these context individually per route, you can group routes that share similar context together.
+
+Use the `context` method chained with the `routes` method to group routes that share similar context together. The `context` method takes in an `array` of context to be shared by the routes.
+
+Consider an application with several administrator routes. You want that the administrator routes be accessible only when one is logged in and is an admin.
+
+```php
+use SaQle\Routing\Router;
+
+Router::context([
+     'middleware' => ['authentication', 'authorization'],
+     'authorize'  => 'authenticated && admin',
+     'prefix'     => '/admin',
+     'name'       => 'admin'
+])->routes(function(){
+     Router::get('/users', 'app.admin.users')->name('users.show');
+
+     Router::context([
+        'prefix' => '/settings',
+        'name'   => 'settings'
+     ])->routes(function(){
+         Router::get('/general', 'app.admin.settings@general')->name('general');
+         Router::get('/notifications', 'app.admin.settings@notifications')->name('notifications');
+         Router::get('/security', 'app.admin.settings@security')->name('security');
+     });
+});
+```
+
+We will keep this example short, but as you can see, it is possible to group within a group. 
+
+When the above route definitions are compiled, we end up with the following routes:
+
+| Route | Name | Middleware | Guards |
+|:-------|:------------|:------:|:--------:|
+| `GET: /admin/users`    | `admin.users.show` | `authentication, authorization` | `authenticated, admin` |
+| `GET: /admin/settings/general`   | `admin.settings.general` | `authentication, authorization` | `authenticated, admin` |
+| `GET: /admin/settings/notifications`   | `admin.settings.notifications` | `authentication, authorization` | `authenticated, admin` |
+| `GET: /admin/settings/security`   | `admin.settings.security` | `authentication, authorization` | `authenticated, admin` |
+
+::: tip
+While it is possible to nest groups on many levels, we recommend keeping nesting to a maximum of three levels deep only. 
+:::
+
+## Working With Routes
 
 ### Generating URLs To Named Routes
 
+When you give a route a name, you can generate its url using the `route` helper function.
+
+```php
+$url = route('signin.form');
+return Message::redirect($url)
+```
+
+If the named route defines parameters, pass the parameters as the second argument to the route function. The given parameters will automatically be inserted into the generated URL in their correct positions.
+
+```php
+use SaQle\Routing\Router;
+
+Router::get(
+     "/profile/:user_id/section/:section_id", 
+     'app.auth.profile@show_profile'
+)->name('user.profile');
+
+//somwhere else
+
+$url = route('user.profile', ['user_id' => 10, 'section_id' => 'general']);
+
+// http://myapp.com/profile/10/section/general
+```
+
 ### Inspecting The Current Route
+
+if you would like to determine whether the current request matches a certain route, you can use the `is_route` helper method. It takes in a name and determines whether the current request matches that route.
+
+```php
+//somwhere in a middleware, controller or wherever
+
+if(is_route('user.profile')){
+    //this is a user profile route
+}
+```
+
+### Get The Route Name From A URL
+
+Given a URL and an HTTP verb, determine the route name assigned using the `route_name` helper method.
+```php
+//somwhere in a middleware, controller or wherever
+
+$name = route_name('/profile/:user_id/section/:section_id', 'GET');
+
+//user.profile
+```
+
+### Accessing The Current Route
+
+Use the `request` helper method to grab the current route from the request instance.
+
+```php
+
+//route name
+$name = request()->route->name;
+
+//route url
+$url = request()->route->url;
+$url = request()->uri();
+
+//the HTTP verb
+$method = request()->route->method;
+$method = request()->method();
+
+//the component to execute request
+$target = request()->route->target;
+
+//url params
+$params = request()->route->params;
+
+//url queries
+$queries = request()->route->queries;
+
+//for api requests, e.g api/v1
+$prefix = request()->route->prefix; 
+
+//all middleware that will run for this route
+$middleware = request()->route->middleware; 
+
+//all the permission guards assigned to this route
+$guards = request()->route->guards;
+
+//the model bound to this route, if any
+$model = request()->route->model_class;
+
+//the layout components associated with this route
+$layout = request()->route->layout;
+
+//server sent event customization if this is an sse route
+$sse = request()->route->sse;
+``` 
