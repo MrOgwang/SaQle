@@ -338,12 +338,12 @@ final class Controller {
          );
 
          if(!$result->success){
-             return Message::bad_request('Invalid credentials!');
+             return Message::unauthorized('Invalid user name or password');
          }
 
          $result->next = $next;
 
-         return Message::ok('Login successful!')->with('result', $result);
+         return Message::ok('Login successful')->with('result', $result);
      }
 }
 ```
@@ -485,11 +485,11 @@ $name = request()->route->name;
 
 //route url
 $url = request()->route->url;
-$url = request()->uri();
+$url = request()->uri(); //alternatively
 
 //the HTTP verb
 $method = request()->route->method;
-$method = request()->method();
+$method = request()->method(); //alternatively
 
 //the component to execute request
 $target = request()->route->target;
@@ -518,3 +518,13 @@ $layout = request()->route->layout;
 //server sent event customization if this is an sse route
 $sse = request()->route->sse;
 ``` 
+
+### List All Project Routes
+
+Even when you define your routes in `Routes.php` files per module, it is still difficult to have one overview of all your project routes. 
+
+To do this, run the following command inside your project root:
+
+```
+php saqle route:list
+```
