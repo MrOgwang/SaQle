@@ -88,16 +88,181 @@ These are settings defined in php files. All file configurations are stored in t
 
 ### Creating Configuration
 
+You can manually add a php file that returns an associative array in the `config` directory. 
+
+Alternatively, you can use the `make:config` command by providing a file name to create a configuration file. Say we want to add **Payment** configurations to our project:
+
+```text
+php saqle make:config Payment
+```
+
+This creates a `Payment.php` file in the `config/` directory under the project root. Then add the relevant configuration keys and value to it.
+
+Consider a sample `Payment.php` configuration file below:
+
+```php
+<?php
+return [
+     'environment' => env('PAYMENT_ENV', 'sandbox'),
+     'merchant' => [
+         'merchant_id' => env('PAYMENT_MERCHANT_ID', 'MERCH_123456'),
+         'account_name' => 'SaQle Book Store',
+         'country_code' => 'KE',
+         'default_currency' => 'KES',
+         'supported_currencies' => ['KES', 'USD'],
+         'merchant_category_code' => '5999',
+     ]
+     //other payment configurations here
+];
+
+```
+
 ### Reading Configuration
+
+Use the `config` helper method to get a configuration value. Pass in a config key and a default value. Let's read some values from our `Payment` configuration above.
+
+```php
+$country_code = config('payment.merchant.country_code', 'KES');
+$environment  = config('payment.environment');
+```
+
+Notice that the config key is namespaced by the lowercase name of the file. This is to ensure that configuration keys with similar names do not conflict when defined in different files.
+
+If you don't pass in any arguments to the `config` method, it returns an instance of the entire config object.
+
+```php
+$config = config();
+```
+
+You can then access individual values using the `get` or `get_or_fail` methods on the config object. The `get` method accepts a default value argument, while the `get_or_fail` method does not, and will throw an `InvalidArgumentException` exception if the provided key is not found.
+
+```php
+$config = config();
+
+$country_code = $config->get('payment.merchant.country_code', 'KES');
+$environment  = $config->get_or_fail('payment.environment');
+```
+
+### Setting Configuration
+
+Use the `set` method of the **config** object to set the value of a configuration key or add a new key to the configuration object. It takes the name of the confuguration and the value to assign to it.
+
+```php 
+$config = config();
+
+//change environment from sandbox to production
+$config->set('payment.environment', 'production'); 
+
+//create an entirely new configuration in the payment namespace.
+$config->set('payment.newkey', 'somevalue'); 
+```
+
+### Check If Configuration Exists
+
+To confirm whether a configuration exists, use the `has` method of the **config** object by passing it the key name. This returns a bool `false` or `true` depending on the configuration exists or not.
+
+```php
+if(config()->has('payment.merchant.merchant_id')){
+     //do something
+}
+```
+
+### Get All Configurations
+
+The `all` method of the **config** object returns an associative array of all the currently existing configuration keys and their values.
+
+```php
+$configurations = config()->all();
+```
+
+Use the `namespace` method by providing a string namespace to get all the configurations defined in a particular file. For example, to get all payment configurations:
+
+```php
+$payment_configurations = config()->namespace('payment');
+```
+
+### Merge Configurations
+
+Use the `merge` method of the **config** object to merge an array of configurations with the currently existing ones. 
+
+```php
+$runtime_configuarions = [
+     'runtime.favorites.movie' => 'First Blood',
+     'runtime.favorites.actor' => 'Sylvester Stallone'
+];
+config()->merge($runtime_configuarions);
+```
+
+::: tip
+The **$runtime_configurations** above can as well be presented as follows:
+```php
+$runtime_configurations = [
+    'runtime' => [
+        'favorites' => [
+            'movie' => 'First Blood',
+            'actor' => 'Sylvester Stallone'
+        ]
+    ]
+]
+```
+:::
+
+::: tip
+The **config** methods `merge` and `set` are used not only to add new configuration items during runtime, but also to override the values of previosly defined ones.
+:::
+
+### Temporary Overrides
+
+Sometimes during runtime you want to override some configuration values temporarily for specific processes of your application, and thereafter revert to the original values.
+
+The `push` and `pop` methods allow you to do just this.
+
+Consider our `payment` configurations loaded from the file `Payment.php`.
+
+```php
+<?php
+return [
+     'environment' => env('PAYMENT_ENV', 'sandbox'),
+     'merchant' => [
+         'id' => env('PAYMENT_MERCHANT_ID', 'MERCH_123456'),
+         'account_name' => 'SaQle Book Store',
+         'country_code' => 'KE',
+         'default_currency' => 'KES',
+         'supported_currencies' => ['KES', 'USD', 'GB'],
+         'category_code' => '5999',
+     ]
+     //other payment configurations here
+];
+
+```
+
+Say I want to temporarily change the account details for specific part of my application and go back to the original account name.
+
+```php
+
+config()->push([
+      'payment.merchant.account_name' => 'SaQle Overseas Store',
+      'payment.merchant.counry_code' => 'GB',
+      'payment.merchant.default_currency' => 'GBP',
+      'payment.merchant.category_code' => '42300'
+]);
+
+//Do something here with updated account details.
+$account_name = config('payment.merchant.account_name'); //SaQle Overseas Store
+
+//revert to original account details
+config()->pop();
+
+$account_name = config('payment.merchant.account_name'); //SaQle Book Store
+```
 
 ### Standard Configurations
 
-SaQle comes with some configuration files already defined.
+SaQle comes with some configuration files already created for you. You can always add your own as per your application's reuirements.
 
 ```text
 App/
 ├── config/
-│   ├── Admin.php
 │   ├── App.php
 │   ├── Auth.php
 │   ├── Db.php
@@ -112,11 +277,9 @@ App/
 └── src/
 ```
 
-#### Admin
-
 #### Application
 
-`App.php` file.
+General application settings contained in `App.php` file.
 
 ```php
 <?php
@@ -243,8 +406,8 @@ return [
 	  * --------------------------------------------
 	  * LOG IN STRATEGIES
 	  * -------------------------------------------
-	  * These are all the ways you would like users 
-	  * to log into your app
+	  * All ll the ways you would like users 
+	  * to log into your application
 	  * */
 	 'strategies' => [
 	 	 'default' => 'password',
@@ -255,11 +418,10 @@ return [
       * --------------------------------------------------
       * USER PROVIDER
       * -------------------------------------------------
-      * The user provider takes in a User ID and returns
-      * an instance of a user object to be injected into
-      * your request as the session user.
+      * Takes in a User ID and returns a user object 
+      * that is injected into your request.
       * 
-      * This allows you to define how the session user is
+      * Allows you to define how the session user is
       * to be represented in your application
       * */
 	 'user_provider' => DefaultUserProvider::class,
@@ -287,8 +449,7 @@ return [
 	  * MODEL CLASS
 	  * ------------------------------------------------
 	  * This is the model that represents a user.
-	  * 
-	  * This class must implement a UserInterface
+	  * Must implement a `UserInterface` interface
 	  * */
 	 'model_class' => BaseUser::class,
 
@@ -296,7 +457,7 @@ return [
       * ------------------------------------------------------
       * BACKEND CLASS
       * ------------------------------------------------------
-      * This is the service class responsible for user authentication
+      * The service class responsible for user authentication
       * */
  	 'backend_class' => AuthenticationService::class,
  	 
@@ -304,7 +465,7 @@ return [
  	  * ------------------------------------------------------------
  	  * PASSWORDS
  	  * -----------------------------------------------------------
- 	  * Preferred password hashing strategies for your app
+ 	  * Preferred password hashing strategies for your application
  	  * */
  	 'passwords' => [
  	 	 'default' => [
@@ -576,8 +737,4 @@ return [
 
 ?>
 ```
-
-### Runtime Overrides
-
-dtqw87dtqwdqw8dt qwdt8qwd qwdfqwd wqd
 

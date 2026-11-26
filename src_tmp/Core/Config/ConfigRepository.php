@@ -3,6 +3,7 @@
 namespace SaQle\Core\Config;
 
 use Closure;
+use InvalidArgumentException;
 
 final class ConfigRepository {
     
@@ -13,11 +14,7 @@ final class ConfigRepository {
          $this->items = $items;
      }
 
-     public function get(?string $key = null, mixed $default = null) : mixed {
-         if(!$key){
-             return $this->items;
-         }
-
+     public function get(string $key, mixed $default = null) : mixed {
          $segments = explode('.', $key);
 
          $value = $this->items;
@@ -25,6 +22,22 @@ final class ConfigRepository {
          foreach($segments as $segment){
              if(!is_array($value) || !array_key_exists($segment, $value)){
                  return $default;
+             }
+
+             $value = $value[$segment];
+         }
+
+         return $value;
+     }
+
+     public function get_or_fail(string $key) : mixed {
+         $segments = explode('.', $key);
+
+         $value = $this->items;
+
+         foreach($segments as $segment){
+             if(!is_array($value) || !array_key_exists($segment, $value)){
+                 throw new \InvalidArgumentException("Configuration key '{$key}' does not exist.");
              }
 
              $value = $value[$segment];
