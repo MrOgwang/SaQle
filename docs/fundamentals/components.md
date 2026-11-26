@@ -343,7 +343,7 @@ Configure the structure of component routes.
 ##### `theme()`
 
 ```php
- public function theme() : string
+ public function theme(Request $request) : string
 ```
 
 Returns the theme to use when rendering the component.
@@ -368,6 +368,218 @@ The component's style is represented by a file literally called `Style.css`. Thi
 
 ### Assets
 
-### Themes
+Apart from `Script.js` and `Style.css` which get a prominent place in a component, all other assets are placed in a folder called `Assets`. Anything else that your component needs to render its interface, provide functionality, present content, or enhance the user experience that is not a component style sheet or script, must be placed here. These may include images, icons, fonts, videos, audio, documents and data files.
+
+Consider the `Signin` component structure below:
+
+```text
+App/
+└── src/
+    └── Modules/
+        ├── Auth/
+        │   ├── Components/
+        │   │   └── Signin/
+        │   │       ├── Assets
+        │   │       │   └──Images
+        │   │       │      └──handwave.png
+        │   │       ├── Controller.php
+        │   │       ├── Template.html
+        │   │       ├── Script.js
+        │   │       ├── Style.css
+        │   │       └── Definition.php
+```
+
+Unlike public assets, component assets cannot be accessed directly. Call the `asset` helper method to provide you a secure link to a component asset. The method takes in a **path** and an optional **component**.
+
+```php
+function asset(string $path, ?string $component = null) : string 
+``` 
+
+For example, I want to use the `handwave.png` icon on the `Signin` component's UI. Add this to the `Template.html` file.
+
+```html
+<form method="POST">
+     <div class="flex center">
+         <img src="{{ asset('/Images/handwave.png', 'app.auth.signin') }}">
+     </div>
+     <div class="flex center">
+         <h3>Welcome Back</h3>
+     </div>
+     <div class="flex center">
+         <p>Log into your account</p>
+     </div>
+     <div>
+         <!--The rest of the form here-->
+     </div>
+</form>
+```
+If the `asset` method is called without a component name, the asset will be searched for in the document root directory.
+
+### Component Themes
+
+Themes allow you to change the colour scheme of a component without modifying its main styles.
+
+A component's CSS defines its appearance, including layout, spacing, borders, typography and other styling properties. However, instead of hardcoding colours in this CSS, the component uses CSS variables.
+
+These variables are defined by a theme.
+
+#### How it works
+
+Every component can have a **Themes** directory containing one or more theme folders. Each theme folder contains a `Style.css` file that defines the colour variables for that theme.
+
+The component's `Definition.php` determines which theme to use at runtime through the `theme()` method.
+
+For example, consider the following component structure:
+
+```
+Button/
+├── Definition.php
+├── Template.html
+├── Style.css
+├── Script.js
+└── Themes/
+    ├── Default/
+    │   └── Style.css
+    ├── Dark/
+    │   └── Style.css
+    └── Ocean/
+        └── Style.css
+```
+
+The `theme()` method in the component's `Definition.php` file returns the name of the theme to apply:
+
+```php
+public function theme(Request $request): string {
+    return 'Default';
+}
+```
+
+SaQle uses this name to locate the corresponding theme stylesheet.
+
+#### Defining theme colours
+
+Each theme provides its own set of CSS variables.
+
+For example, the **Default** theme might define:
+
+##### Themes/Default/Style.css
+
+```css
+:root {
+    --button-background: #2563eb;
+    --button-text: #ffffff;
+    --button-border: #2563eb;
+}
+```
+
+The Dark theme could define:
+
+##### Themes/Dark/Style.css
+
+```css
+:root {
+    --button-background: #1f2937;
+    --button-text: #ffffff;
+    --button-border: #374151;
+}
+```
+
+#### Using theme variables
+
+The component's main `Style.css` references these variables instead of defining the actual colours.
+
+```css
+.button {
+    background-color: var(--button-background);
+    color: var(--button-text);
+    border: 1px solid var(--button-border);
+    padding: 10px 16px;
+    border-radius: 6px;
+}
+```
+
+Notice that the component's main stylesheet does not need to know which theme is being used.
+
+Changing the theme changes the colour scheme, while the component's structure, layout and other styling remain the same.
+
+::: tip
+Component themes allow a component to support multiple visual colour schemes while maintaining a single, reusable main stylesheet. To introduce a new colour scheme, you simply add another theme with its own variables. There is no need to rewrite the component's CSS.
+:::
+
+### Template Variations
+
+A component typically has a `Template.html` file that defines how its content is presented. This is the component's default template.
+
+However, there are situations where a component needs to present the same content in different ways. For example, a component displaying a collection of products might need to display them as a table, a grid of cards, or a simple list.
+
+Rather than creating separate components for each presentation, SaQle allows a component to have multiple template variations.
+
+Each variation provides an alternative way of rendering the component's content while retaining the same underlying component definition and functionality.
+
+#### How it works
+
+A component can have a **Templates** directory containing subdirectories for its different template variations.
+
+Each subdirectory represents a particular variation and can contain its own template, stylesheet and JavaScript file.
+
+Consider the following component structure:
+
+```
+ProductList/
+├── Definition.php
+├── Template.html
+├── Style.css
+├── Script.js
+└── Templates/
+    ├── Table/
+    │   ├── Template.html
+    │   ├── Style.css
+    │   └── Script.js
+    ├── Cards/
+    │   ├── Template.html
+    │   ├── Style.css
+    │   └── Script.js
+    └── List/
+        ├── Template.html
+        ├── Style.css
+        └── Script.js
+```
+
+The root-level `Template.html` is the component's default template. The templates inside the **Templates** directory provide alternative presentations.
+
+#### Selecting a template
+
+The component's `Definition.php` contains a `template()` method that determines which template variation should be used.
+
+For example:
+
+```php
+public function template(Request $request): string {
+     return 'Cards';
+}
+```
+
+SaQle uses the returned name to locate the corresponding template inside the component's **Templates** directory.
+
+The selection can be made dynamically at runtime, allowing the component to choose a presentation based on the current context or application requirements.
+
+When no alternative template is selected, the component uses its root-level `Template.html`.
+
+#### Independent styles and scripts
+
+Each template variation can have its own `Style.css` and `Script.js` files.
+
+This allows a particular presentation to have styling and JavaScript behaviour specific to its layout without affecting other variations.
+
+For example:
+- The Table variation can define table-specific styling and sorting behaviour.
+- The Cards variation can define card layouts and card-specific interactions.
+- The List variation can define a compact list layout.
+
+::: tip
+Template variations allow a single component to support multiple ways of presenting its content without duplicating the component itself.
+
+The component remains responsible for its definition and underlying functionality, while the selected template determines how its content is rendered.
+:::
 
 ## The Message Object

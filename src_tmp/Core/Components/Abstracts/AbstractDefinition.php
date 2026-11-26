@@ -75,7 +75,7 @@ abstract class AbstractDefinition {
      /**
       * Return a desired component theme
       * */
-     public function theme() : string {
+     public function theme(Request $request) : string {
          return "Default";
      }
 
